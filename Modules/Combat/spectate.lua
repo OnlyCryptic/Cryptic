@@ -1,5 +1,5 @@
 -- [[ Arwa Hub - استهداف اللاعبين (تحكم كامل) ]]
--- المطور: Arwa | إصلاح الإيم بوت، تقليد الشات، وترتيب الأزرار
+-- المطور: Arwa | إصلاح الإيم بوت (حرية القفز) وتقليد الشات الأصلي
 
 return function(Tab, UI)
     local players = game:GetService("Players")
@@ -12,7 +12,6 @@ return function(Tab, UI)
     
     local selectedPlayer = nil
     
-    -- متغيرات حالة الميزات
     local isSpectating = false
     local isAimbotting = false
     local isSitting = false
@@ -21,7 +20,7 @@ return function(Tab, UI)
 
     local SpectateToggle
 
-    -- وظيفة تقليد الشات (مُصلحة لتدعم تحديثات روبلوكس الجديدة)
+    -- وظيفة تقليد الشات (مُصلحة لجلب النص الخام)
     local function setupMimicConnection()
         if mimicConnection then 
             mimicConnection:Disconnect() 
@@ -30,20 +29,20 @@ return function(Tab, UI)
         
         if isMimicking and selectedPlayer then
             mimicConnection = selectedPlayer.Chatted:Connect(function(msg)
+                -- إجبار السكربت على إرسال النص الأصلي الخام بدون تدخل ترجمة روبلوكس
+                local rawMsg = tostring(msg)
                 pcall(function()
-                    -- دعم نظام الشات القديم
-                    if ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") then
-                        ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
-                    -- دعم نظام الشات الجديد (تم إصلاح المسار إلى TextChannels)
-                    elseif TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral") then
-                        TextChatService.TextChannels.RBXGeneral:SendAsync(msg)
+                    if TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral") then
+                        TextChatService.TextChannels.RBXGeneral:SendAsync(rawMsg)
+                    elseif ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") then
+                        ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(rawMsg, "All")
                     end
                 end)
             end)
         end
     end
 
-    -- 1. خانة البحث عن اللاعب
+    -- 1. خانة البحث
     local InputField = Tab:AddInput("البحث عن لاعب", "اكتب بداية اليوزر وأغلق الكيبورد...", function(txt) end)
 
     InputField.TextBox.FocusLost:Connect(function()
@@ -78,7 +77,7 @@ return function(Tab, UI)
 
     Tab:AddLine()
 
-    -- 2. ميزة الانتقال (تم نقلها لتكون الأولى فوق المراقبة)
+    -- 2. انتقال
     Tab:AddButton("🚀 انتقال إلى الهدف", function()
         if selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("HumanoidRootPart") then 
             if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
@@ -89,7 +88,7 @@ return function(Tab, UI)
         end
     end)
 
-    -- 3. ميزة المراقبة
+    -- 3. المراقبة
     SpectateToggle = Tab:AddToggle("👁️ تشغيل وضع المراقبة", function(active)
         isSpectating = active
         if active and selectedPlayer then 
@@ -103,45 +102,59 @@ return function(Tab, UI)
 
     Tab:AddLine()
 
-    -- 4. ميزة الإيم بوت (مُصلحة: توجيه الشاشة والشخصية معاً)
+    -- 4. الإيم بوت
     Tab:AddToggle("🔫 إيم بوت على الهدف (Aimbot)", function(active)
         isAimbotting = active
         UI:Notify(active and "تم تثبيت السلاح والشاشة على الهدف" or "تم إيقاف الإيم بوت")
+        
+        -- تنظيف الدوران عند إيقاف الميزة لتستعيدي تحكمك الطبيعي
+        if not active and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+            local gyro = lp.Character.HumanoidRootPart:FindFirstChild("AimbotGyro")
+            if gyro then gyro:Destroy() end
+        end
     end)
 
-    -- 5. ميزة الجلوس على الرأس
+    -- 5. الجلوس على الرأس
     Tab:AddToggle("🪑 الجلوس على رأس الهدف", function(active)
         isSitting = active
         UI:Notify(active and "أنت الآن تجلس على رأسه!" or "تم النزول")
     end)
 
-    -- 6. ميزة تقليد الكلام (مُصلحة)
+    -- 6. تقليد الكلام
     Tab:AddToggle("💬 تقليد كلام الهدف (Mimic)", function(active)
         isMimicking = active
         setupMimicConnection()
         UI:Notify(active and "أي شيء سيكتبه، ستكتبه أنت تلقائياً!" or "تم إيقاف تقليد الكلام")
     end)
 
-    -- حلقات التحديث المستمرة
+    -- حلقات التحديث
     task.spawn(function()
         RunService.RenderStepped:Connect(function()
-            -- تحديث المراقبة
             if isSpectating and selectedPlayer and selectedPlayer.Character then 
                 camera.CameraSubject = selectedPlayer.Character:FindFirstChild("Humanoid") or lp.Character.Humanoid
             end
             
-            -- تحديث الإيم بوت (التحكم في الكاميرا وحركة الشخصية)
             if isAimbotting and selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Head") then
                 local targetPos = selectedPlayer.Character.Head.Position
                 
                 -- توجيه الكاميرا (شاشتك) نحو الهدف
                 camera.CFrame = CFrame.lookAt(camera.CFrame.Position, targetPos)
                 
-                -- توجيه شخصيتك نحو الهدف (مع الحفاظ على استقامة الجسم)
                 if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
                     local root = lp.Character.HumanoidRootPart
-                    local lookPos = Vector3.new(targetPos.X, root.Position.Y, targetPos.Z)
-                    root.CFrame = CFrame.lookAt(root.Position, lookPos)
+                    
+                    -- استخدام الـ BodyGyro الجديد لترك حرية القفز!
+                    local gyro = root:FindFirstChild("AimbotGyro")
+                    if not gyro then
+                        gyro = Instance.new("BodyGyro")
+                        gyro.Name = "AimbotGyro"
+                        -- قفل الدوران على المحور الصادي (Y) فقط ليسمح بالقفز
+                        gyro.MaxTorque = Vector3.new(0, math.huge, 0) 
+                        gyro.P = 50000 -- سرعة استجابة عالية للدوران
+                        gyro.Parent = root
+                    end
+                    -- توجيه الجسم نحو الهدف يميناً ويساراً فقط
+                    gyro.CFrame = CFrame.lookAt(root.Position, Vector3.new(targetPos.X, root.Position.Y, targetPos.Z))
                 end
             end
         end)
