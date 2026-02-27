@@ -81,7 +81,7 @@ return function(Tab, UI)
     end
 
     -- إضافة التحكم في واجهة كربتك
-    Tab:AddSpeedControl("طيران حر 3D", function(active, value)
+    Tab:AddSpeedControl("طيران", function(active, value)
         toggleFly(active, value)
         if active then
             UI:Notify("الطيران الثلاثي الأبعاد مفعّل | استمتع يا أروى")
