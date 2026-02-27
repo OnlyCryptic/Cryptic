@@ -1,4 +1,4 @@
--- [[ Cryptic Hub - ميزة مراقبة اللاعبين ]]
+-- [[ Cryptic Hub - ميزة مراقبة اللاعبين المطورة ]]
 -- الملف: spectate.lua
 
 return function(Tab, UI)
@@ -8,7 +8,6 @@ return function(Tab, UI)
     local selectedPlayer = nil
     local isSpectating = false
 
-    -- وظيفة تحديث الكاميرا
     local function updateCamera()
         if isSpectating and selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Humanoid") then
             camera.CameraSubject = selectedPlayer.Character.Humanoid
@@ -19,56 +18,70 @@ return function(Tab, UI)
         end
     end
 
-    -- 1. خانة البحث
-    Tab:AddInput("البحث عن لاعب", "اكتب اسم اللاعب هنا...", function(txt)
-        local results = {}
+    -- 1. خانة البحث عن اللاعب
+    local PlayerDisplay = Tab:AddLabel("لم يتم اختيار لاعب")
+    
+    local SpectateToggle -- سنحتاج للإشارة إليه لاحقاً لإطفائه
+
+    local SearchInput = Tab:AddInput("البحث عن لاعب", "اكتب بداية الاسم هنا...", function(txt)
+        if txt == "" then
+            selectedPlayer = nil
+            PlayerDisplay:SetText("لم يتم اختيار لاعب")
+            if isSpectating then SpectateToggle.SetState(false) end
+            return
+        end
+
+        local found = nil
         for _, p in pairs(players:GetPlayers()) do
             if p ~= lp and (p.Name:lower():find(txt:lower()) or p.DisplayName:lower():find(txt:lower())) then
-                table.insert(results, p.DisplayName .. " (@" .. p.Name .. ")")
+                found = p
+                break
             end
         end
-        -- تحديث القائمة المنسدلة بالنتائج
-        if _G.UpdatePlayerList then _G.UpdatePlayerList(results) end
+
+        if found then
+            selectedPlayer = found
+            PlayerDisplay:SetText("المستهدف: " .. found.DisplayName .. " (@" .. found.Name .. ")")
+        else
+            selectedPlayer = nil
+            PlayerDisplay:SetText("❌ لا يوجد لاعب بهذا الاسم")
+            if isSpectating then SpectateToggle.SetState(false) end
+        end
     end)
 
-    -- 2. قائمة اللاعبين (Dropdown)
-    local initialNames = {}
-    for _, p in pairs(players:GetPlayers()) do
-        if p ~= lp then table.insert(initialNames, p.DisplayName .. " (@" .. p.Name .. ")") end
-    end
+    -- خط فاصل للترتيب
+    Tab:AddLine()
 
-    local PlayerDrop = Tab:AddDropdown("اختر لاعباً لمراقبته", initialNames, function(val)
-        -- استخراج اليوزر من النص (الموجود بين القوسين @)
-        local targetUser = val:match("@(%w+)")
-        selectedPlayer = players:FindFirstChild(targetUser)
-        UI:Notify("تم اختيار: " .. val)
-        if isSpectating then updateCamera() end
-    end)
-
-    -- لجعل خانة البحث قادرة على تحديث القائمة
-    _G.UpdatePlayerList = function(newList)
-        PlayerDrop:Update(newList)
-    end
-
-    -- 3. زر التشغيل/الإطفاء
-    Tab:AddToggle("تشغيل وضع المراقبة", function(active)
+    -- 2. زر تشغيل المراقبة
+    SpectateToggle = Tab:AddToggle("تشغيل وضع المراقبة", function(active)
         isSpectating = active
         if active then
             if selectedPlayer then
                 updateCamera()
-                UI:Notify("أنت الآن تشاهد " .. selectedPlayer.DisplayName)
+                UI:Notify("أنت الآن تشاهد: " .. selectedPlayer.DisplayName)
             else
-                UI:Notify("الرجاء اختيار لاعب من القائمة أولاً!")
+                UI:Notify("الرجاء البحث عن لاعب أولاً!")
+                task.spawn(function() SpectateToggle.SetState(false) end)
             end
         else
-            updateCamera() -- سيعود للكاميرا العادية
+            updateCamera()
             UI:Notify("تم العودة لكاميرا شخصيتك")
         end
     end)
 
-    -- تحديث تلقائي في حال موت اللاعب الذي تراقبه أو دخول لاعبين جدد
+    -- نظام الإطفاء التلقائي عند خروج اللاعب
+    players.PlayerRemoving:Connect(function(player)
+        if selectedPlayer and player == selectedPlayer then
+            UI:Notify("اللاعب الذي تراقبه غادر السيرفر!")
+            selectedPlayer = nil
+            PlayerDisplay:SetText("اللاعب غادر السيرفر")
+            if isSpectating then SpectateToggle.SetState(false) end
+        end
+    end)
+
+    -- تحديث الكاميرا المستمر
     task.spawn(function()
-        while task.wait(1) do
+        while task.wait(0.5) do
             if isSpectating then updateCamera() end
         end
     end)
