@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة مراقبة وانتقال اللاعبين ]]
--- المطور: Arwa | نسخة: البحث الكامل والتحكم المباشر
+-- [[ Cryptic Hub - ميزة مراقبة وانتقال اللاعبين الذكية ]]
+-- المطور: Arwa | التحديث: البحث عند إغلاق الكيبورد + أقرب يوزر
 -- تاريخ التعديل: 2026/02/27
 
 return function(Tab, UI)
@@ -9,7 +9,6 @@ return function(Tab, UI)
     local selectedPlayer = nil
     local isSpectating = false
 
-    -- وظيفة تحديث الكاميرا
     local function updateCamera()
         if isSpectating and selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Humanoid") then
             camera.CameraSubject = selectedPlayer.Character.Humanoid
@@ -20,99 +19,102 @@ return function(Tab, UI)
         end
     end
 
-    -- 1. خانة البحث (لا تحدد إلا بعد انتهاء الكتابة)
+    -- 1. خانة البحث الذكية
     local SearchInput
-    SearchInput = Tab:AddInput("البحث عن لاعب", "اكتب اليوزر واضغط Enter...", function(txt)
-        -- نترك المعالجة لحدث FocusLost لضمان انتهاء الكتابة
+    SearchInput = Tab:AddInput("البحث عن لاعب", "اكتب بداية اليوزر ثم أغلق الكيبورد...", function(txt)
+        -- نترك المعالجة لحدث FocusLost لضمان إغلاق الكيبورد تماماً
     end)
 
-    -- تعديل منطق الإدخال ليعمل عند انتهاء الكتابة فقط
+    -- منطق كشف إغلاق الكيبورد والبحث عن أقرب يوزر
     task.spawn(function()
-        -- ننتظر تحميل صندوق النص
-        repeat task.wait() until SearchInput
+        -- البحث عن عنصر الـ TextBox الحقيقي داخل الواجهة
+        local screenGui = game:GetService("CoreGui"):WaitForChild("ArwaHub_Final_V2_3", 10)
+        if not screenGui then return end
         
-        -- جلب العنصر الحقيقي من الواجهة (TextBox)
-        -- ملاحظة: هذا يتطلب الوصول المباشر لحدث FocusLost
-        local textBox = game:GetService("CoreGui").ArwaHub_Final_V2_3.Main.Content:FindFirstChild("ScrollingFrame", true):FindFirstChild("TextBox", true)
-        
+        local textBox = screenGui:FindFirstChild("TextBox", true)
         if textBox then
             textBox.FocusLost:Connect(function(enterPressed)
-                if not enterPressed then return end
                 local txt = textBox.Text
-                
                 if txt == "" then
                     selectedPlayer = nil
-                    UI:Notify("تم مسح البحث")
+                    if isSpectating then _G.SpectateToggleHandle.SetState(false) end
                     return
                 end
 
-                local found = nil
+                local bestMatch = nil
+                local search = txt:lower()
+
+                -- البحث عن أقرب لاعب يبدأ يوزره بنفس الحروف
                 for _, p in pairs(players:GetPlayers()) do
                     if p ~= lp then
-                        local name = p.Name:lower()
-                        local search = txt:lower()
-                        -- البحث في بداية اليوزر (Prefix Search)
-                        if string.sub(name, 1, #search) == search then
-                            found = p
-                            break
+                        local pName = p.Name:lower()
+                        local pDisplay = p.DisplayName:lower()
+                        
+                        -- التحقق من بداية اليوزر أو اسم العرض
+                        if string.sub(pName, 1, #search) == search or string.sub(pDisplay, 1, #search) == search then
+                            -- اختيار أول وأقرب تطابق
+                            bestMatch = p
+                            break 
                         end
                     end
                 end
 
-                if found then
-                    selectedPlayer = found
-                    SearchInput.SetText(found.DisplayName .. " (@" .. found.Name .. ")")
-                    UI:Notify("تم تحديد الهدف: " .. found.DisplayName)
+                if bestMatch then
+                    selectedPlayer = bestMatch
+                    SearchInput.SetText(bestMatch.DisplayName .. " (@" .. bestMatch.Name .. ")")
+                    UI:Notify("تم تحديد: " .. bestMatch.DisplayName)
                 else
                     selectedPlayer = nil
-                    UI:Notify("لم يتم العثور على لاعب يبدأ بهذا الاسم")
+                    UI:Notify("لم يتم العثور على لاعب يبدأ بـ: " .. txt)
+                    if isSpectating then _G.SpectateToggleHandle.SetState(false) end
                 end
             end)
         end
     end)
 
-    -- خط فاصل للتنظيم
+    -- خط فاصل للتنظيم تحت الـ ESP
     Tab:AddLine()
 
     -- 2. زر تشغيل المراقبة
-    local SpectateToggle
-    SpectateToggle = Tab:AddToggle("تشغيل وضع المراقبة", function(active)
+    _G.SpectateToggleHandle = Tab:AddToggle("تشغيل وضع المراقبة", function(active)
         isSpectating = active
         if active then
             if selectedPlayer then
                 updateCamera()
+                UI:Notify("تراقب الآن تحركات " .. selectedPlayer.DisplayName)
             else
-                UI:Notify("حدد لاعباً أولاً!")
-                task.spawn(function() SpectateToggle.SetState(false) end)
+                UI:Notify("اكتب يوزر اللاعب أولاً!")
+                task.spawn(function() _G.SpectateToggleHandle.SetState(false) end)
             end
         else
             updateCamera()
+            UI:Notify("تم العودة لكاميرا شخصيتك")
         end
     end)
 
-    -- 3. زر الانتقال للاعب (Teleport)
-    Tab:AddButton("انتقال إلى اللاعب المختار", function()
+    -- 3. زر الانتقال السريع للاعب
+    Tab:AddButton("انتقال إلى اللاعب", function()
         if selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
             if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                -- الانتقال لموقع اللاعب مع رفعة بسيطة لتجنب التعليق
                 lp.Character.HumanoidRootPart.CFrame = selectedPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 3, 0)
-                UI:Notify("تم الانتقال لـ " .. selectedPlayer.DisplayName)
+                UI:Notify("تم الانتقال بنجاح إلى " .. selectedPlayer.DisplayName)
             end
         else
-            UI:Notify("اللاعب غير موجود أو لم يتم تحديده!")
+            UI:Notify("الرجاء تحديد لاعب أولاً!")
         end
     end)
 
-    -- تتبع خروج اللاعب المختار
+    -- نظام الإيقاف التلقائي عند خروج اللاعب
     players.PlayerRemoving:Connect(function(p)
         if selectedPlayer and p == selectedPlayer then
             selectedPlayer = nil
-            if isSpectating then SpectateToggle.SetState(false) end
-            UI:Notify("اللاعب غادر السيرفر")
+            if isSpectating then _G.SpectateToggleHandle.SetState(false) end
+            SearchInput.SetText("")
+            UI:Notify("اللاعب غادر السيرفر، تم إيقاف المراقبة")
         end
     end)
 
-    -- تكرار التحديث لضمان بقاء الكاميرا على الهدف
+    -- تحديث الكاميرا المستمر
     task.spawn(function()
         while task.wait(0.5) do
             if isSpectating then updateCamera() end
