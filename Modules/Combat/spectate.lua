@@ -1,5 +1,5 @@
 -- [[ Arwa Hub - استهداف اللاعبين (تحكم كامل) ]]
--- المطور: Arwa | إصلاحات شاملة + دمج Anti-Fling تلقائي مع الجلوس
+-- المطور: Arwa | إصلاح مشكلة الموت عند الجلوس على الرأس
 
 return function(Tab, UI)
     local players = game:GetService("Players")
@@ -20,7 +20,7 @@ return function(Tab, UI)
 
     local SpectateToggle
 
-    -- وظيفة تقليد الشات (النص الخام)
+    -- وظيفة تقليد الشات
     local function setupMimicConnection()
         if mimicConnection then 
             mimicConnection:Disconnect() 
@@ -112,10 +112,16 @@ return function(Tab, UI)
         end
     end)
 
-    -- 5. الجلوس على الرأس
+    -- 5. الجلوس على الرأس (مُصلحة!)
     Tab:AddToggle("🪑 الجلوس على رأس الهدف", function(active)
         isSitting = active
-        UI:Notify(active and "أنت الآن تجلس على رأسه بأمان تام (مضاد للتطيير مفعل)!" or "تم النزول")
+        
+        -- إرسال أمر الجلوس مرة واحدة فقط لتجنب الموت
+        if lp.Character and lp.Character:FindFirstChild("Humanoid") then
+            lp.Character.Humanoid.Sit = active
+        end
+        
+        UI:Notify(active and "أنت الآن تجلس على رأسه بأمان تام!" or "تم النزول")
     end)
 
     -- 6. تقليد الكلام
@@ -127,7 +133,6 @@ return function(Tab, UI)
 
     -- ================= الحلقات المستمرة (Loops) =================
 
-    -- حلقة الكاميرا والإيم بوت (RenderStepped)
     task.spawn(function()
         RunService.RenderStepped:Connect(function()
             if isSpectating and selectedPlayer and selectedPlayer.Character then 
@@ -154,7 +159,7 @@ return function(Tab, UI)
         end)
     end)
 
-    -- حلقة مضاد التطيير التلقائي أثناء الجلوس (Stepped - الأفضل للفيزياء)
+    -- مضاد التطيير (يمنع اللاعب من الإضرار بك)
     task.spawn(function()
         RunService.Stepped:Connect(function()
             if isSitting and lp.Character then
@@ -162,7 +167,7 @@ return function(Tab, UI)
                     if otherPlayer ~= lp and otherPlayer.Character then
                         for _, part in pairs(otherPlayer.Character:GetChildren()) do
                             if part:IsA("BasePart") and part.CanCollide then
-                                part.CanCollide = false -- يجعلك تخترقينهم كالشبح
+                                part.CanCollide = false 
                             end
                         end
                     end
@@ -171,15 +176,18 @@ return function(Tab, UI)
         end)
     end)
 
-    -- حلقة الجلوس الفعلي (Heartbeat)
+    -- الجلوس الآمن تماماً
     task.spawn(function()
         RunService.Heartbeat:Connect(function()
             if isSitting and selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Head") then
                 if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                    lp.Character.HumanoidRootPart.CFrame = selectedPlayer.Character.Head.CFrame * CFrame.new(0, 1.5, 0)
-                    if lp.Character:FindFirstChild("Humanoid") then
-                        lp.Character.Humanoid.Sit = true
-                    end
+                    local root = lp.Character.HumanoidRootPart
+                    
+                    -- تصفير السرعة الفيزيائية لمنع تراكمها والموت بسببها
+                    root.Velocity = Vector3.new(0, 0, 0)
+                    
+                    -- وضع مسافة 2.2 حتى لا تندمج الأجسام وتموت الشخصية
+                    root.CFrame = selectedPlayer.Character.Head.CFrame * CFrame.new(0, 2.2, 0)
                 end
             end
         end)
