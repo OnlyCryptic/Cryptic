@@ -1,92 +1,43 @@
--- [[ Cryptic Hub - المحرك الرئيسي ]]
--- المطور: Arwa
--- هذا الملف يقوم بتحميل الواجهة ثم الأوامر من المجلدات تلقائياً
-
+-- [[ Cryptic Hub - المحرك الشامل ]]
 local Cryptic = {
-    -- 1. إعدادات الروابط الخاصة بمستودعك
-    Config = {
-        UserName = "OnlyCryptic", 
-        RepoName = "Cryptic",  
-        Branch   = "main"
-    },
+    UserName = "OnlyCryptic",
+    RepoName = "Cryptic",
+    Branch   = "main",
     
-    -- 2. هيكل المشروع (تأكدي من وجود هذه المجلدات والملفات في GitHub)
+    -- الفهرس: أضف أسماء الملفات هنا فقط وسيقوم السكربت بالباقي
     Structure = {
-        ["قسم اللاعب"] = {
-            Folder = "Player",
-            Files  = {"speed", "fly", "jump"} 
-        },
-        ["قسم القتال"] = {
-            Folder = "Combat",
-            Files  = {"kill_aura", "hitbox"}
-        },
-        ["أخرى"] = {
-            Folder = "Misc",
-            Files  = {"anti_afk", "rejoin"}
-        }
+        ["اللاعب"] = { Folder = "Player", Files = {"speed"} }, -- أضف "fly" هنا لاحقاً
+        ["القتال"] = { Folder = "Combat", Files = {} },
+        ["أخرى"]   = { Folder = "Misc",   Files = {} }
     }
 }
 
--- رابط القاعدة لجلب الملفات الخام (Raw) من مستودع OnlyCryptic
-local RawURL = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/"
+local RawURL = "https://raw.githubusercontent.com/"..Cryptic.UserName.."/"..Cryptic.RepoName.."/"..Cryptic.Branch.."/"
 
--- وظيفة ذكية لتحميل الملفات وتشغيلها
 local function Import(path)
-    local success, result = pcall(function()
-        return game:HttpGet(RawURL .. path)
-    end)
-    
-    if success and result then
-        local func, err = loadstring(result)
-        if func then
-            return func()
-        else
-            warn("❌ خطأ برمجي في ملف " .. path .. ": " .. err)
-        end
-    else
-        warn("❌ تعذر جلب الملف من المسار: " .. path)
+    local s, r = pcall(game.HttpGet, game, RawURL..path)
+    if s and r then
+        local f, e = loadstring(r)
+        if f then return f() end
+        warn("خطأ في ملف "..path..": "..tostring(e))
     end
     return nil
 end
 
--- ==========================================
--- بداية تشغيل السكربت
--- ==========================================
-
-print("🚀 جاري تشغيل Cryptic Hub الخاص بـ OnlyCryptic...")
-
--- 1. تحميل محرك الواجهة (UI_Engine.lua)
--- تأكدي أن ملف UI_Engine.lua موجود في المجلد الرئيسي للمستودع
+-- تشغيل الواجهة
 local UI = Import("UI_Engine.lua")
-
 if UI then
-    -- 2. إنشاء النافذة الرئيسية
-    local MainWin = UI:CreateWindow({
-        Title = "Cryptic Hub | كربتك",
-        Description = "نظام السكربتات المنظم",
-        AccentColor = Color3.fromRGB(0, 255, 150) -- لون النيون الأخضر
-    })
+    local MainWin = UI:CreateWindow("كربتك هب | Cryptic")
 
-    -- 3. تحميل الأقسام والملفات بناءً على الهيكل
+    -- تحميل المجلدات والملفات تلقائياً
     for tabName, info in pairs(Cryptic.Structure) do
-        -- إنشاء صفحة (Tab) لكل مجلد
-        local CurrentTab = MainWin:CreateTab(tabName)
-        
+        local Tab = MainWin:CreateTab(tabName)
         for _, fileName in pairs(info.Files) do
-            -- بناء مسار الملف (مثال: Modules/Player/speed.lua)
-            local filePath = "Modules/" .. info.Folder .. "/" .. fileName .. ".lua"
-            
-            -- تحميل ملف الميزة وتمرير الـ Tab له ليضيف أزراره فيه
-            pcall(function()
-                local featureInit = Import(filePath)
-                if type(featureInit) == "function" then
-                    featureInit(CurrentTab, UI) 
-                end
-            end)
+            local scriptFunc = Import("Modules/"..info.Folder.."/"..fileName..".lua")
+            if type(scriptFunc) == "function" then
+                scriptFunc(Tab, UI)
+            end
         end
     end
-
-    UI:Notify("تم تحميل جميع الأقسام بنجاح! استمتع يا أروى.")
-else
-    warn("❌ فشل تحميل محرك الواجهة الأساسي (UI_Engine.lua). تأكدي من رفعه على GitHub.")
+    UI:Notify("تم تشغيل Cryptic بنجاح!")
 end
