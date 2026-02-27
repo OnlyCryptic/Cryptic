@@ -1,10 +1,9 @@
 return function(Tab, UI)
-    Tab:AddButton("تفعيل السرعة (100)", function()
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 100
-        UI:Notify("السرعة الآن: 100")
-    end)
-    
-    Tab:AddButton("سرعة طبيعية (16)", function()
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+    Tab:AddSpeedControl("سرعة المشي", function(enabled, value)
+        local char = game.Players.LocalPlayer.Character
+        local hum = char and char:FindFirstChild("Humanoid")
+        if hum then
+            hum.WalkSpeed = enabled and value or 16
+        end
     end)
 end
