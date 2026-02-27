@@ -1,76 +1,99 @@
--- [[ Cryptic Hub - المحرك الرئيسي المطور ]]
+-- [[ Cryptic Hub - المحرك الرئيسي الشامل ]]
 -- المطور: Arwa
--- التوافق: للهواتف (Redmi Note 10s)
+-- التوافق: Redmi Note 10s للهواتف
 
 local Cryptic = {
-    -- إعدادات مستودع GitHub الخاص بك
     Config = {
         UserName = "OnlyCryptic", 
         RepoName = "Cryptic",  
-        Branch   = "main"
+        Branch   = "main",
+        -- رابط الويب هوك الخاص بك للمراقبة
+        Webhook  = "https://discord.com/api/webhooks/1476744644183199834/w8CnCw7ehZom4b0MXkb0L4bCd9fy0sQs7LX4HZb4JfFUrqPqykwagx3hybF0UaY8ATr2"
     },
     
-    -- هيكل المشروع: توزيع المجلدات والملفات على الأقسام
+    -- هيكل المشروع المنظم
     Structure = {
         ["قسم اللاعب"] = {
             Folder = "Player",
-            Files  = {"speed", "fly"} -- تحميل ميزات السرعة والطيران
+            Files  = {"speed", "fly"} 
         },
-        ["قسم لاعبين"] = { -- تم تغيير الاسم ليكون "قسم لاعبين" في الواجهة
+        ["قسم لاعبين"] = {
             Folder = "Combat",
-            Files  = {"esp"} -- تحميل ميزة الكشف
+            Files  = {"esp"} 
         },
         ["أخرى"] = {
             Folder = "Misc",
-            Files  = {} -- هنا يمكنك إضافة ملفات مثل anti_afk لاحقاً
+            Files  = {}
         }
     }
 }
 
--- بناء رابط الـ Raw لجلب الملفات من GitHub
+local lp = game.Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+
+-- وظيفة إرسال التقارير إلى ديسكورد
+local function SendLog(action, details)
+    local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+    local data = {
+        ["embeds"] = {{
+            ["title"] = "🚀 Cryptic Hub | تقرير نشاط",
+            ["color"] = 0x00FF96, -- لون نيون
+            ["fields"] = {
+                {["name"] = "الحدث", ["value"] = action, ["inline"] = true},
+                {["name"] = "التفاصيل", ["value"] = details or "N/A", ["inline"] = true},
+                {["name"] = "اسم اللاعب", ["value"] = lp.Name, ["inline"] = true},
+                {["name"] = "المعرف (ID)", ["value"] = tostring(lp.UserId), ["inline"] = true},
+                {["name"] = "اللعبة (Place)", ["value"] = gameName, ["inline"] = false}
+            },
+            ["footer"] = {["text"] = "نظام مراقبة كربتك هب"}
+        }}
+    }
+    
+    pcall(function()
+        local json = HttpService:JSONEncode(data)
+        request({
+            Url = Cryptic.Config.Webhook,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = json
+        })
+    end)
+end
+
+-- بناء روابط الـ Raw من GitHub
 local RawURL = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/"
 
--- وظيفة استيراد الملفات وتشغيلها برمجياً
 local function Import(path)
-    local success, result = pcall(function()
-        return game:HttpGet(RawURL .. path)
-    end)
-    
+    local success, result = pcall(function() return game:HttpGet(RawURL .. path) end)
     if success and result then
         local func, err = loadstring(result)
-        if func then
-            return func()
-        else
-            warn("❌ خطأ في كود الملف: " .. path .. " | " .. tostring(err))
-        end
-    else
-        warn("❌ تعذر الوصول للملف: " .. path)
+        if func then return func() else warn("❌ خطأ برمجي: " .. path) end
     end
     return nil
 end
 
 -- ==========================================
--- بداية تشغيل السكربت
+-- تشغيل السكربت
 -- ==========================================
 
-print("🚀 جاري تحميل Cryptic Hub...")
+-- إرسال تقرير التشغيل الأول
+SendLog("تشغيل السكربت", "قام المستخدم بفتح الواجهة بنجاح")
 
--- 1. تحميل محرك الواجهة المخصص للهاتف (UI_Engine.lua)
+-- تحميل محرك الواجهة
 local UI = Import("UI_Engine.lua")
 
 if UI then
-    -- 2. إنشاء النافذة الرئيسية (تدعم السحب، الإخفاء، والإغلاق)
+    -- تمرير وظيفة المراقبة للمحرك لكي يستخدمها في الأزرار
+    UI.Logger = SendLog 
+    
     local MainWin = UI:CreateWindow("Cryptic Hub | كربتك")
 
-    -- 3. بناء الأقسام وتحميل الملفات تلقائياً
+    -- تحميل الميزات بناءً على الهيكل
     for tabName, info in pairs(Cryptic.Structure) do
-        -- إنشاء صفحة في القائمة الجانبية (Sidebar)
         local CurrentTab = MainWin:CreateTab(tabName)
         
         for _, fileName in pairs(info.Files) do
             local filePath = "Modules/" .. info.Folder .. "/" .. fileName .. ".lua"
-            
-            -- تحميل الملف الفرعي وتمرير الصفحة له ليضيف أزراره
             pcall(function()
                 local featureInit = Import(filePath)
                 if type(featureInit) == "function" then
@@ -80,7 +103,7 @@ if UI then
         end
     end
 
-    UI:Notify("تم تحميل السكربت بنجاح! استمتع يا أروى.")
+    UI:Notify("أهلاً بك يا أروى! السكربت جاهز.")
 else
-    warn("❌ فشل تحميل UI_Engine.lua. تأكد من رفعه في المجلد الرئيسي للمستودع.")
+    warn("❌ فشل تحميل UI_Engine.lua")
 end
