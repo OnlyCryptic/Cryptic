@@ -6,7 +6,7 @@ local Cryptic = {
     
     -- الفهرس: أضف أسماء الملفات هنا فقط وسيقوم السكربت بالباقي
     Structure = {
-        ["اللاعب"] = { Folder = "Player", Files = {"speed"} }, -- أضف "fly" هنا لاحقاً
+        ["اللاعب"] = { Folder = "Player", Files = {"speed, "fly"} }, -- أضف "fly" هنا لاحقاً
         ["القتال"] = { Folder = "Combat", Files = {} },
         ["أخرى"]   = { Folder = "Misc",   Files = {} }
     }
