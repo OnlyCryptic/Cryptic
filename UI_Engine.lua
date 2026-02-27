@@ -1,6 +1,6 @@
 -- [[ Cryptic Hub - محرك الواجهة المطور والنهائي ]]
 -- المطور: Arwa
--- النسخة المتكاملة: تدعم الهاتف، المراقبة، الصور، وعرض البيانات التلقائي
+-- النسخة المتكاملة: تدعم الهاتف، المراقبة، الصور، والفتح التلقائي
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -9,7 +9,7 @@ local CoreGui = game:GetService("CoreGui")
 
 function UI:CreateWindow(title)
     local Screen = Instance.new("ScreenGui", CoreGui)
-    Screen.Name = "CrypticMobileFinal"
+    Screen.Name = "ArwaHubMobile"
     Screen.ResetOnSpawn = false
 
     -- 1. زر استرجاع الواجهة العائم (C) القابل للسحب
@@ -24,6 +24,7 @@ function UI:CreateWindow(title)
     OpenBtn.TextSize = 24
     Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
 
+    -- منطق سحب زر الاسترجاع للهاتف
     local dBtn = false; local dStart; local sPos
     OpenBtn.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.Touch then dBtn = true; dStart = i.Position; sPos = OpenBtn.Position end end)
     UserInputService.InputChanged:Connect(function(i) if dBtn and i.UserInputType == Enum.UserInputType.Touch then local d = i.Position - dStart; OpenBtn.Position = UDim2.new(sPos.X.Scale, sPos.X.Offset + d.X, sPos.Y.Scale, sPos.Y.Offset + d.Y) end end)
@@ -51,6 +52,7 @@ function UI:CreateWindow(title)
     TitleLabel.TextColor3 = Color3.new(1, 1, 1)
     TitleLabel.TextXAlignment = "Left"
 
+    -- أزرار الإغلاق والإخفاء
     local Close = Instance.new("TextButton", TitleBar)
     Close.Text = "X"; Close.Position = UDim2.new(1, -35, 0, 5); Close.Size = UDim2.new(0, 25, 0, 25); Close.TextColor3 = Color3.new(1, 0, 0); Close.BackgroundTransparency = 1
     Close.MouseButton1Click:Connect(function() Screen:Destroy() end)
@@ -60,6 +62,7 @@ function UI:CreateWindow(title)
     Hide.MouseButton1Click:Connect(function() Main.Visible = false; OpenBtn.Visible = true end)
     OpenBtn.MouseButton1Click:Connect(function() Main.Visible = true; OpenBtn.Visible = false end)
 
+    -- نظام سحب الواجهة للهواتف (Touch Support)
     local dragging, dragStart, startPos
     TitleBar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true; dragStart = input.Position; startPos = Main.Position end end)
     UserInputService.InputChanged:Connect(function(input) if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then local delta = input.Position - dragStart; Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) end end)
@@ -78,14 +81,14 @@ function UI:CreateWindow(title)
         local TabBtn = Instance.new("TextButton", Sidebar); TabBtn.Size = UDim2.new(1, 0, 0, 35); TabBtn.Text = name; TabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TabBtn.TextColor3 = Color3.new(1, 1, 1); TabBtn.BorderSizePixel = 0
         local Page = Instance.new("ScrollingFrame", Content); Page.Size = UDim2.new(1, 0, 1, 0); Page.Visible = false; Page.BackgroundTransparency = 1; Page.ScrollBarThickness = 2; Instance.new("UIListLayout", Page).Padding = UDim.new(0, 8)
 
-        -- فتح التاب الأول تلقائياً
+        -- فتح أول تاب يتم إنشاؤه تلقائياً
         if not Window.FirstTab then Window.FirstTab = Page; Page.Visible = true end
 
         TabBtn.MouseButton1Click:Connect(function() for _, v in pairs(Content:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end; Page.Visible = true end)
 
         local TabOps = {}
 
-        -- وحدة عرض الصور
+        -- وظيفة عرض الصور
         function TabOps:AddImage(url)
             local Img = Instance.new("ImageLabel", Page); Img.Size = UDim2.new(0.95, 0, 0, 120); Img.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Img.Image = url; Img.ScaleType = Enum.ScaleType.Fit; Instance.new("UICorner", Img)
         end
