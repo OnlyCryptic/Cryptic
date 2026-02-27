@@ -24,7 +24,7 @@ local Cryptic = {
         },
         ["قسم السيرفر"] = {
             Folder = "Misc",
-            Files  = {"server"} 
+            Files  = {"server", "rejoin"}
         }
     }
 }
