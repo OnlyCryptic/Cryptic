@@ -1,29 +1,53 @@
--- [[ Cryptic Hub - ميزة أداة الانتقال المطورة ]]
+-- [[ Cryptic Hub - ميزة أداة الانتقال الملكية ]]
 -- الملف: tptool.lua
--- الميزات: العودة بعد الموت + الترتيب التلقائي في الخانة 1
+-- الميزات: الخانة 1 دائماً + عودة بعد الموت + إزاحة الأدوات الأخرى
 
 return function(Tab, UI)
     local player = game.Players.LocalPlayer
     local mouse = player:GetMouse()
-    local keepGiving = false -- متغير للتحكم في استمرارية إعطاء الأداة
+    local keepGiving = false
 
-    -- وظيفة إنشاء وإعطاء الأداة
+    -- وظيفة تنظيم الحقيبة لضمان الخانة رقم 1
+    local function ForceSlotOne(tool)
+        local backpack = player:FindFirstChild("Backpack")
+        if not backpack or not tool then return end
+
+        -- جلب كل الأدوات الموجودة حالياً (ما عدا أداتنا)
+        local otherTools = {}
+        for _, item in pairs(backpack:GetChildren()) do
+            if item:IsA("Tool") and item ~= tool then
+                table.insert(otherTools, item)
+                item.Parent = nil -- إزالتها مؤقتاً من الحقيبة
+            end
+        end
+
+        -- وضع أداة الانتقال أولاً لتأخذ الرقم 1
+        tool.Parent = backpack
+        task.wait(0.05) 
+
+        -- إعادة الأدوات الأخرى خلفها بالترتيب
+        for _, item in pairs(otherTools) do
+            item.Parent = backpack
+        end
+    end
+
+    -- وظيفة إنشاء الأداة
     local function giveTPTool()
-        -- التأكد من أن الشخصية موجودة والحقيبة جاهزة
         local backpack = player:FindFirstChild("Backpack")
         if not backpack then return end
 
-        -- منع التكرار
-        if backpack:FindFirstChild("Cryptic TP") or (player.Character and player.Character:FindFirstChild("Cryptic TP")) then
+        -- إذا كانت موجودة مسبقاً، فقط ننظم مكانها
+        local existing = backpack:FindFirstChild("Cryptic TP") or (player.Character and player.Character:FindFirstChild("Cryptic TP"))
+        if existing then
+            ForceSlotOne(existing)
             return
         end
 
         local tool = Instance.new("Tool")
         tool.Name = "Cryptic TP"
         tool.RequiresHandle = false
-        tool.ToolTip = "انقر للانتقال | Arwa Hub"
+        tool.ToolTip = "Arwa Hub | Slot 1 Guaranteed"
 
-        -- منطق الانتقال
         tool.Activated:Connect(function()
             local pos = mouse.Hit.p
             if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
@@ -31,44 +55,33 @@ return function(Tab, UI)
             end
         end)
 
-        -- وضعها في الحقيبة (ستظهر في أول خانة متاحة)
-        tool.Parent = backpack
-        
-        -- لضمان ظهورها في الخانة رقم 1، نقوم بتجهيزها (Equip) ثم إعادتها
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            task.wait(0.1)
-            player.Character.Humanoid:EquipTool(tool)
-            task.wait(0.1)
-            player.Character.Humanoid:UnequipTools()
-        end
+        ForceSlotOne(tool)
     end
 
-    -- ربط الميزة بالرسبيون (العودة بعد الموت)
+    -- نظام العودة بعد الموت (Reset/Death)
     player.CharacterAdded:Connect(function()
         if keepGiving then
-            task.wait(1) -- انتظار تحميل الحقيبة الجديدة
+            task.wait(1.5) -- انتظار تحميل الحقيبة بالكامل
             giveTPTool()
         end
     end)
 
-    -- إضافة الزر للواجهة مع نظام المراقبة
-    Tab:AddToggle("أداة الانتقال المستمرة", function(active)
+    -- إضافة الزر للواجهة بنظام التبديل
+    Tab:AddToggle("أداة الانتقال (دائماً خانة 1)", function(active)
         keepGiving = active
         if active then
             giveTPTool()
-            UI:Notify("تم تفعيل الأداة (ستبقى معك حتى لو مت)")
+            UI:Notify("تم التفعيل: الأداة الآن في الخانة 1")
         else
-            UI:Notify("تم إيقاف التزويد التلقائي")
-            -- حذف الأداة إذا تم إطفاؤها
             local t = player.Backpack:FindFirstChild("Cryptic TP") or (player.Character and player.Character:FindFirstChild("Cryptic TP"))
             if t then t:Destroy() end
+            UI:Notify("تم إيقاف الأداة المستمرة")
         end
 
-        -- إرسال تقرير النشاط لديسكورد
         if UI.Logger then
-            UI.Logger("تغيير ميزة", "أداة الانتقال المستمرة: " .. (active and "ON" or "OFF"))
+            UI.Logger("تعديل أدوات", "أداة الانتقال المستمرة: " .. (active and "ON" or "OFF"))
         end
     end)
 
-    Tab:AddParagraph("عند تفعيلها، ستظهر الأداة تلقائياً في الخانة رقم 1 في كل مرة تعود فيها للحياة.")
+    Tab:AddParagraph("حتى لو حصلتِ على أسلحة جديدة، ستظل هذه الأداة في المركز الأول.")
 end
