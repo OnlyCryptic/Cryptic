@@ -7,12 +7,10 @@ return function(Tab, UI)
     local noclipActive = false
     local connection
 
-    -- وظيفة تفعيل/إيقاف اختراق الجدران
     local function toggleNoclip(active)
         noclipActive = active
         
         if noclipActive then
-            -- استخدام Stepped هو الأفضل لمنع التصادم في كل Frame
             connection = RunService.Stepped:Connect(function()
                 if noclipActive and player.Character then
                     for _, part in pairs(player.Character:GetDescendants()) do
@@ -23,20 +21,16 @@ return function(Tab, UI)
                 end
             end)
         else
-            -- إيقاف الحلقة عند التعطيل
             if connection then
                 connection:Disconnect()
                 connection = nil
             end
-            -- إعادة التصادم للوضع الطبيعي (اختياري، سيعود عند الحركة)
         end
     end
 
-    -- إضافة التحكم للواجهة باستخدام AddToggle (اللمبة)
     Tab:AddToggle("اختراق الجدران (NoClip)", function(active)
         toggleNoclip(active)
         
-        -- إرسال تقرير المراقبة
         if UI.Logger then
             UI.Logger("تغيير حالة ميزة", "قام المستخدم بـ " .. (active and "تفعيل" or "إيقاف") .. " اختراق الجدران")
         end
