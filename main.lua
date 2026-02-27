@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V2.8 ]]
--- المطور: يامي | تاريخ التحديث: 2026/02/27
+-- [[ Cryptic Hub - المحرك الرئيسي V3.0 ]]
+-- المطور: يامي | تحميل تلقائي وفواصل منظمة بين الملفات
 
 local Cryptic = {
     Config = {
@@ -9,7 +9,7 @@ local Cryptic = {
     },
     Structure = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
-        ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly"} }, -- سيعمل الآن بدون أخطاء
+        ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly"} },
         ["أدوات"] = { Folder = "Misc", Files = {"tptool"} },
         ["قسم لاعبين"] = { Folder = "Combat", Files = {"esp", "spectate"} },
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} }
@@ -32,10 +32,10 @@ if UI then
         for i, fileName in ipairs(info.Files) do
             local filePath = "Modules/" .. info.Folder .. "/" .. fileName .. ".lua"
             pcall(function()
-                local featureInit = Import(filePath)
-                if type(featureInit) == "function" then
-                    featureInit(CurrentTab, UI)
-                    -- وضع خط فاصل آلي بين الملفات لضمان التنسيق
+                local init = Import(filePath)
+                if type(init) == "function" then
+                    init(CurrentTab, UI)
+                    -- يضع خطاً فاصلاً فقط إذا كان هناك ملف ميزة آخر قادم في نفس القسم
                     if i < #info.Files then CurrentTab:AddLine() end
                 end
             end)
