@@ -15,9 +15,9 @@ local Cryptic = {
             Folder = "Player",
             Files  = {"speed", "fly"} -- ملفات المجلد Modules/Player/
         },
-        ["قسم القتال"] = {
+        ["قسم لاعبين"] = {
             Folder = "Combat",
-            Files  = {} -- يمكنك إضافة "kill_aura" هنا لاحقاً
+            Files  = {"esp"} -- يمكنك إضافة "kill_aura" هنا لاحقاً
         },
         ["أخرى"] = {
             Folder = "Misc",
