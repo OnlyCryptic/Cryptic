@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي المطور ]]
--- تحديث: إضافة الخطوط التلقائية بين الملفات لضمان التنظيم
+-- [[ Cryptic Hub - المحرك الرئيسي V2.6 ]]
+-- المطور: يامي | تاريخ التحديث: 2026/02/27
 
 local Cryptic = {
     Config = {
@@ -17,8 +17,6 @@ local Cryptic = {
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "قسم لاعبين", "قسم السيرفر"}
 }
 
--- كود النسخ والـ Log
-pcall(function() setclipboard(Cryptic.Config.Discord) end)
 local function Import(path)
     local s, r = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path)
     if s and r then local f = loadstring(r); if f then return f() end end return nil
@@ -31,14 +29,14 @@ if UI then
         local info = Cryptic.Structure[tabName]
         local CurrentTab = MainWin:CreateTab(tabName)
         
-        -- تحميل الملفات مع وضع خط فاصل بينها تلقائياً
+        -- منطق الفواصل الذكي: يوضع الخط "بين" الملفات فقط
         for i, fileName in ipairs(info.Files) do
             local filePath = "Modules/" .. info.Folder .. "/" .. fileName .. ".lua"
             pcall(function()
                 local featureInit = Import(filePath)
                 if type(featureInit) == "function" then
                     featureInit(CurrentTab, UI)
-                    -- إذا لم يكن هذا الملف هو الأخير في القائمة، أضف خطاً فاصلاً
+                    -- إذا كان هناك ملف تالي في نفس القسم، نضع خطاً فاصلاً
                     if i < #info.Files then
                         CurrentTab:AddLine()
                     end
