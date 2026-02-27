@@ -1,4 +1,5 @@
--- ملف ميزة الطيران المطور (الجويستيك)
+-- ملف ميزة الطيران ثلاثي الأبعاد (3D Movement)
+-- يتحرك اللاعب في الاتجاه الذي تنظر إليه الكاميرا باستخدام الجويستيك
 return function(Tab, UI)
     local player = game.Players.LocalPlayer
     local isFlying = false
@@ -11,40 +12,49 @@ return function(Tab, UI)
         local char = player.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
         local hum = char and char:FindFirstChild("Humanoid")
+        local cam = workspace.CurrentCamera
 
         if isFlying and root and hum then
-            -- إعداد القوى الفيزيائية
+            -- إنشاء القوى الفيزيائية للثبات والطيران
             bodyVel = Instance.new("BodyVelocity", root)
             bodyVel.MaxForce = Vector3.new(1, 1, 1) * 10^6
-            bodyVel.Velocity = Vector3.new(0, 0.1, 0) -- رفعة بسيطة للثبات
+            bodyVel.Velocity = Vector3.new(0, 0, 0)
 
             bodyGyro = Instance.new("BodyGyro", root)
             bodyGyro.MaxTorque = Vector3.new(1, 1, 1) * 10^6
             bodyGyro.CFrame = root.CFrame
 
-            -- تعطيل الجاذبية مؤقتاً لضمان سلاسة الطيران
+            -- تعطيل وضع المشي العادي لضمان سلاسة الحركة في الهواء
             hum.PlatformStand = true 
 
             task.spawn(function()
                 while isFlying and root and hum and bodyVel do
-                    -- استخدام MoveDirection المرتبط بالدائرة (Joystick)
-                    local moveDir = hum.MoveDirection
+                    local moveDir = hum.MoveDirection -- اتجاه الحركة من الجويستيك
                     
                     if moveDir.Magnitude > 0 then
-                        -- التحرك في اتجاه الجويستيك بالسرعة المحددة
-                        bodyVel.Velocity = moveDir * flySpeed
+                        -- تحويل حركة الجويستيك لتكون ثلاثية الأبعاد بناءً على اتجاه الكاميرا
+                        -- إذا وجهتِ الكاميرا للأعلى وضغطتِ للأمام، سيتم استخدام LookVector للطيران للأعلى
+                        local cameraCFrame = cam.CFrame
+                        local look = cameraCFrame.LookVector
+                        local right = cameraCFrame.RightVector
+                        
+                        -- حساب المتجه المحلي للحركة
+                        local localMove = cameraCFrame:VectorToObjectSpace(moveDir)
+                        
+                        -- تطبيق السرعة في الاتجاه الثلاثي الأبعاد
+                        bodyVel.Velocity = (look * -localMove.Z + right * localMove.X) * flySpeed
                     else
-                        -- التوقف في الهواء عند ترك الجويستيك
+                        -- التوقف التام في الهواء عند ترك الجويستيك
                         bodyVel.Velocity = Vector3.new(0, 0, 0)
                     end
                     
-                    -- الحفاظ على توازن اللاعب وتوجيهه مع الكاميرا
-                    bodyGyro.CFrame = workspace.CurrentCamera.CFrame
+                    -- جعل جسم اللاعب يواجه دائماً اتجاه الكاميرا
+                    bodyGyro.CFrame = cam.CFrame
                     task.wait()
                 end
             end)
         else
-            -- تنظيف عند الإغلاق
+            -- تنظيف الأدوات وإعادة اللاعب للوضع الطبيعي عند الإغلاق
             if bodyVel then bodyVel:Destroy() end
             if bodyGyro then bodyGyro:Destroy() end
             if hum then hum.PlatformStand = false end
@@ -52,11 +62,11 @@ return function(Tab, UI)
         end
     end
 
-    -- إضافة التحكم للواجهة
-    Tab:AddSpeedControl("طيران الجويستيك", function(active, value)
+    -- إضافة التحكم للواجهة بنفس التصميم الذي أعجبك
+    Tab:AddSpeedControl("طيران 3D", function(active, value)
         toggleFly(active, value)
         if active then
-            UI:Notify("طيران الجويستيك مفعّل | السرعة: " .. value)
+            UI:Notify("الطيران ثلاثي الأبعاد مفعّل")
         else
             UI:Notify("تم إيقاف الطيران")
         end
