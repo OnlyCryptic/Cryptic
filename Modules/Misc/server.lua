@@ -1,45 +1,60 @@
--- [[ Cryptic Hub - ميزة السيرفر المختصرة ]]
--- عرض عدد اللاعبين واسم الماب فقط
+-- [[ Cryptic Hub - ميزة السيرفر المطورة والمحسنة ]]
+-- المطور: Arwa | تحديث فوري لعدد اللاعبين وتصميم أنيق
 
 return function(Tab, UI)
+    local Players = game:GetService("Players")
     local Market = game:GetService("MarketplaceService")
-    local player = game.Players.LocalPlayer
+    local TeleportService = game:GetService("TeleportService")
+    local lp = Players.LocalPlayer
 
-    -- 1. إنشاء خانة العرض (Label)
-    local InfoDisplay = Tab:AddLabel("جاري التحميل...")
+    -- 1. عرض المعلومات بشكل منفصل وأنيق (يظهر العدد فوراً بدون انتظار)
+    local GameNameLabel = Tab:AddLabel("🎮 الماب: جاري التحميل...")
+    local PlayersLabel = Tab:AddLabel("👥 اللاعبين: " .. #Players:GetPlayers() .. " / " .. Players.MaxPlayers)
 
-    -- 2. جلب اسم الماب الحالي مرة واحدة بحذر
-    local gameName = "غير معروف"
+    -- 2. جلب اسم الماب في الخلفية دون تعطيل الواجهة
     task.spawn(function()
-        local s, res = pcall(function()
+        local success, result = pcall(function()
             return Market:GetProductInfo(game.PlaceId).Name
         end)
-        if s then gameName = res end
+        
+        -- إذا نجح الجلب يعرض الاسم، وإذا فشل يعرض اسم المكان الافتراضي لضمان السرعة
+        if success and result then
+            GameNameLabel.SetText("🎮 الماب: " .. result)
+        else
+            GameNameLabel.SetText("🎮 الماب: " .. game.Name)
+        end
     end)
 
-    -- 3. حلقة تحديث عدد اللاعبين فقط كل ثانيتين
-    task.spawn(function()
-        while task.wait(2) do
+    -- 3. التحديث "الذكي" لعدد اللاعبين (بدون Loop)
+    -- يتحدث فوراً وبدون لاج فقط عندما يدخل أو يخرج لاعب
+    local function updatePlayersCount()
+        PlayersLabel.SetText("👥 اللاعبين: " .. #Players:GetPlayers() .. " / " .. Players.MaxPlayers)
+    end
+
+    Players.PlayerAdded:Connect(updatePlayersCount)
+    Players.PlayerRemoving:Connect(updatePlayersCount)
+
+    -- خط فاصل لتنظيم الواجهة
+    Tab:AddLine()
+
+    -- 4. أزرار الدخول والنسخ بتصميم أوضح
+    Tab:AddButton("📋 نسخ رمز السيرفر (JobId)", function()
+        pcall(function()
+            setclipboard(tostring(game.JobId))
+            UI:Notify("✅ تم نسخ رمز السيرفر بنجاح!")
+        end)
+    end)
+
+    Tab:AddInput("🔗 الانضمام لسيرفر محدد", "إلصق الرمز (JobId) هنا...", function(txt)
+        if txt and #txt > 10 then
+            UI:Notify("⏳ جاري الانتقال للسيرفر...")
             pcall(function()
-                local playersCount = #game.Players:GetPlayers()
-                local maxPlayers = game.Players.MaxPlayers
-                
-                -- التنسيق المطلوب: (العدد/الأقصى) ماب (الاسم)
-                InfoDisplay:SetText(playersCount .. "/" .. maxPlayers .. " | ماب " .. gameName)
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, txt, lp)
             end)
+        else
+            UI:Notify("❌ الرمز غير صحيح أو قصير جداً")
         end
     end)
-
-    -- ميزة نسخ رمز الدخول (JobId) - أبقيناها لأهميتها في مشاركة السيرفر
-    Tab:AddButton("نسخ رمز دخول السيرفر (JobId)", function()
-        setclipboard(tostring(game.JobId))
-        UI:Notify("تم نسخ الرمز!")
-    end)
-
-    -- ميزة الدخول لسيرفر محدد
-    Tab:AddInput("دخول سيرفر محدد", "إلصق الرمز هنا...", function(txt)
-        if txt and #txt > 5 then
-            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, txt, player)
-        end
-    end)
+    
+    Tab:AddParagraph("ملاحظة: يمكنك نسخ الرمز وإرساله لأصدقائك ليلتحقوا بك في نفس السيرفر.")
 end
