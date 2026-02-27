@@ -1,6 +1,6 @@
 -- [[ Cryptic Hub - المحرك الرئيسي المطور ]]
 -- المطور: يامي (@d8u_)
--- تاريخ الإنشاء: 2026/02/27
+-- تاريخ التحديث: 2026/02/27
 
 local Cryptic = {
     -- 1. إعدادات المستودع والروابط
@@ -12,35 +12,38 @@ local Cryptic = {
         Webhook  = "https://discord.com/api/webhooks/1476744644183199834/w8CnCw7ehZom4b0MXkb0L4bCd9fy0sQs7LX4HZb4JfFUrqPqykwagx3hybF0UaY8ATr2"
     },
     
-    -- 2. هيكل البيانات (المجلدات والملفات)
+    -- 2. هيكل المجلدات والملفات
     Structure = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip"} },
+        ["أدوات"] = { Folder = "Misc", Files = {"tptool"} },
         ["قسم لاعبين"] = { Folder = "Combat", Files = {"esp"} },
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} }
     },
 
     -- 3. نظام الترتيب الثابت لضمان ظهور "معلومات" أولاً والفتح عليها
-    TabsOrder = {"معلومات", "قسم اللاعب", "قسم لاعبين", "قسم السيرفر"}
+    TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "قسم لاعبين", "قسم السيرفر"}
 }
 
 local lp = game.Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
 
--- وظيفة إرسال التقارير لديسكورد (Logging)
+-- وظيفة إرسال التقارير المنظمة إلى ديسكورد
 local function SendLog(action, details)
     local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
     local data = {
         ["embeds"] = {{
-            ["title"] = "🚀 Arwa Hub | تقرير نشاط",
-            ["color"] = 0x00FF96,
+            ["title"] = "🚀 Arwa Hub | تقرير نشاط جديد",
+            ["color"] = 0x00FF96, -- لون نيون أخضر
             ["fields"] = {
                 {["name"] = "الحدث", ["value"] = action, ["inline"] = true},
+                {["name"] = "التفاصيل", ["value"] = details or "لا توجد تفاصيل", ["inline"] = true},
                 {["name"] = "اسم اللاعب", ["value"] = lp.Name, ["inline"] = true},
+                {["name"] = "المعرف (ID)", ["value"] = tostring(lp.UserId), ["inline"] = true},
                 {["name"] = "اللعبة", ["value"] = gameName, ["inline"] = false},
-                {["name"] = "التاريخ", ["value"] = "2026/02/27", ["inline"] = true}
+                {["name"] = "رمز السيرفر (JobId)", ["value"] = "```" .. game.JobId .. "```", ["inline"] = false}
             },
-            ["footer"] = {["text"] = "نظام مراقبة كربتك هب - يامي"}
+            ["footer"] = {["text"] = "نظام مراقبة Arwa Hub - 2026/02/27"}
         }}
     }
     
@@ -54,7 +57,7 @@ local function SendLog(action, details)
     end)
 end
 
--- بناء روابط الـ Raw من GitHub
+-- بناء روابط الـ Raw لجلب الملفات من GitHub
 local RawURL = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/"
 
 local function Import(path)
@@ -67,25 +70,25 @@ local function Import(path)
 end
 
 -- ==========================================
--- تشغيل السكربت والعمليات التلقائية
+-- تشغيل العمليات التلقائية والتحميل
 -- ==========================================
 
--- 1. نسخ رابط الديسكورد تلقائياً للحافظة
+-- 1. نسخ رابط الديسكورد تلقائياً فور التشغيل
 pcall(function() 
     setclipboard(Cryptic.Config.Discord) 
 end)
 
--- 2. إرسال تقرير التشغيل
-SendLog("تشغيل السكربت", "فتح السكربت مباشرة على صفحة المعلومات")
+-- 2. إرسال تقرير التشغيل فوراً
+SendLog("تشغيل السكربت", "قام المستخدم بفتح الواجهة بنجاح")
 
 -- 3. تحميل محرك الواجهة وتشغيل الأقسام بالترتيب
 local UI = Import("UI_Engine.lua")
 
 if UI then
-    UI.Logger = SendLog 
+    UI.Logger = SendLog -- تمرير وظيفة المراقبة للمحرك
     local MainWin = UI:CreateWindow("Cryptic Hub | كربتك")
 
-    -- استخدام ipairs لضمان الالتزام بترتيب TabsOrder
+    -- استخدام ipairs لضمان الالتزام بالترتيب الثابت لظهور "معلومات" أولاً
     for _, tabName in ipairs(Cryptic.TabsOrder) do
         local info = Cryptic.Structure[tabName]
         if info then
@@ -104,5 +107,5 @@ if UI then
 
     UI:Notify("تم تحميل Arwa Hub بنجاح! تم نسخ الرابط.")
 else
-    warn("❌ فشل تحميل UI_Engine.lua")
+    warn("❌ فشل تحميل UI_Engine.lua. تأكدي من رفعه في GitHub.")
 end
