@@ -11,8 +11,8 @@ local Cryptic = {
     Structure = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling"} },
-        ["أدوات"] = { Folder = "Misc", Files = {"tptool", "emotes"} },
-        ["قسم لاعبين"] = { Folder = "Combat", Files = {"esp", "spectate"} },
+        ["أدوات"] = { Folder = "Misc", Files = {"tptool", "emotes", "esp"} },
+        ["استهداف لاعب"] = { Folder = "Combat", Files = {"spectate"} },
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} }
     },
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "قسم لاعبين", "قسم السيرفر"}
