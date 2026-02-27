@@ -1,5 +1,5 @@
 -- [[ Arwa Hub - استهداف اللاعبين (تحكم كامل) ]]
--- المطور: Arwa | إصلاح الإيم بوت (حرية القفز) وتقليد الشات الأصلي
+-- المطور: Arwa | إصلاحات شاملة + دمج Anti-Fling تلقائي مع الجلوس
 
 return function(Tab, UI)
     local players = game:GetService("Players")
@@ -20,7 +20,7 @@ return function(Tab, UI)
 
     local SpectateToggle
 
-    -- وظيفة تقليد الشات (مُصلحة لجلب النص الخام)
+    -- وظيفة تقليد الشات (النص الخام)
     local function setupMimicConnection()
         if mimicConnection then 
             mimicConnection:Disconnect() 
@@ -29,7 +29,6 @@ return function(Tab, UI)
         
         if isMimicking and selectedPlayer then
             mimicConnection = selectedPlayer.Chatted:Connect(function(msg)
-                -- إجبار السكربت على إرسال النص الأصلي الخام بدون تدخل ترجمة روبلوكس
                 local rawMsg = tostring(msg)
                 pcall(function()
                     if TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral") then
@@ -107,7 +106,6 @@ return function(Tab, UI)
         isAimbotting = active
         UI:Notify(active and "تم تثبيت السلاح والشاشة على الهدف" or "تم إيقاف الإيم بوت")
         
-        -- تنظيف الدوران عند إيقاف الميزة لتستعيدي تحكمك الطبيعي
         if not active and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
             local gyro = lp.Character.HumanoidRootPart:FindFirstChild("AimbotGyro")
             if gyro then gyro:Destroy() end
@@ -117,7 +115,7 @@ return function(Tab, UI)
     -- 5. الجلوس على الرأس
     Tab:AddToggle("🪑 الجلوس على رأس الهدف", function(active)
         isSitting = active
-        UI:Notify(active and "أنت الآن تجلس على رأسه!" or "تم النزول")
+        UI:Notify(active and "أنت الآن تجلس على رأسه بأمان تام (مضاد للتطيير مفعل)!" or "تم النزول")
     end)
 
     -- 6. تقليد الكلام
@@ -127,7 +125,9 @@ return function(Tab, UI)
         UI:Notify(active and "أي شيء سيكتبه، ستكتبه أنت تلقائياً!" or "تم إيقاف تقليد الكلام")
     end)
 
-    -- حلقات التحديث
+    -- ================= الحلقات المستمرة (Loops) =================
+
+    -- حلقة الكاميرا والإيم بوت (RenderStepped)
     task.spawn(function()
         RunService.RenderStepped:Connect(function()
             if isSpectating and selectedPlayer and selectedPlayer.Character then 
@@ -136,30 +136,42 @@ return function(Tab, UI)
             
             if isAimbotting and selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Head") then
                 local targetPos = selectedPlayer.Character.Head.Position
-                
-                -- توجيه الكاميرا (شاشتك) نحو الهدف
                 camera.CFrame = CFrame.lookAt(camera.CFrame.Position, targetPos)
                 
                 if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
                     local root = lp.Character.HumanoidRootPart
-                    
-                    -- استخدام الـ BodyGyro الجديد لترك حرية القفز!
                     local gyro = root:FindFirstChild("AimbotGyro")
                     if not gyro then
                         gyro = Instance.new("BodyGyro")
                         gyro.Name = "AimbotGyro"
-                        -- قفل الدوران على المحور الصادي (Y) فقط ليسمح بالقفز
                         gyro.MaxTorque = Vector3.new(0, math.huge, 0) 
-                        gyro.P = 50000 -- سرعة استجابة عالية للدوران
+                        gyro.P = 50000 
                         gyro.Parent = root
                     end
-                    -- توجيه الجسم نحو الهدف يميناً ويساراً فقط
                     gyro.CFrame = CFrame.lookAt(root.Position, Vector3.new(targetPos.X, root.Position.Y, targetPos.Z))
                 end
             end
         end)
     end)
 
+    -- حلقة مضاد التطيير التلقائي أثناء الجلوس (Stepped - الأفضل للفيزياء)
+    task.spawn(function()
+        RunService.Stepped:Connect(function()
+            if isSitting and lp.Character then
+                for _, otherPlayer in pairs(players:GetPlayers()) do
+                    if otherPlayer ~= lp and otherPlayer.Character then
+                        for _, part in pairs(otherPlayer.Character:GetChildren()) do
+                            if part:IsA("BasePart") and part.CanCollide then
+                                part.CanCollide = false -- يجعلك تخترقينهم كالشبح
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end)
+
+    -- حلقة الجلوس الفعلي (Heartbeat)
     task.spawn(function()
         RunService.Heartbeat:Connect(function()
             if isSitting and selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Head") then
