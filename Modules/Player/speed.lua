@@ -1,22 +1,10 @@
--- ملف ميزة السرعة (speed.lua)
--- هذا الملف يتم استدعاؤه بواسطة main.lua
-
 return function(Tab, UI)
-    -- إضافة زر لزيادة السرعة
-    Tab:AddButton("تفعيل سرعة البرق (100)", function()
-        local player = game.Players.LocalPlayer
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            player.Character.Humanoid.WalkSpeed = 100
-            UI:Notify("تم تفعيل السرعة بنجاح!")
-        end
+    Tab:AddButton("تفعيل السرعة (100)", function()
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 100
+        UI:Notify("السرعة الآن: 100")
     end)
-
-    -- إضافة زر لإعادة السرعة للطبيعي
-    Tab:AddButton("إعادة السرعة الطبيعية (16)", function()
-        local player = game.Players.LocalPlayer
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            player.Character.Humanoid.WalkSpeed = 16
-            UI:Notify("تمت العودة للوضع الطبيعي")
-        end
+    
+    Tab:AddButton("سرعة طبيعية (16)", function()
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
     end)
 end
