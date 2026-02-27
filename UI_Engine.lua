@@ -1,6 +1,6 @@
--- [[ Cryptic Hub - محرك الواجهة المطور والنهائي ]]
+-- [[ Cryptic Hub - محرك الواجهة المطور ]]
 -- المطور: Arwa
--- النسخة المتكاملة: تدعم الهاتف، المراقبة، والتحكم الثلاثي الأبعاد
+-- النسخة النهائية: تدعم الهاتف، المراقبة، وعرض البيانات التلقائي
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -13,7 +13,7 @@ function UI:CreateWindow(title)
     Screen.Name = "CrypticMobileFinal"
     Screen.ResetOnSpawn = false
 
-    -- 1. زر استرجاع الواجهة العائم (C)
+    -- 1. زر استرجاع الواجهة العائم (C) القابل للسحب
     local OpenBtn = Instance.new("TextButton", Screen)
     OpenBtn.Size = UDim2.new(0, 45, 0, 45)
     OpenBtn.Position = UDim2.new(0, 10, 0.5, -22)
@@ -25,13 +25,12 @@ function UI:CreateWindow(title)
     OpenBtn.TextSize = 24
     Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
 
-    -- منطق سحب زر الاسترجاع لضمان عدم حجب الرؤية
     local dBtn = false; local dStart; local sPos
     OpenBtn.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.Touch then dBtn = true; dStart = i.Position; sPos = OpenBtn.Position end end)
     UserInputService.InputChanged:Connect(function(i) if dBtn and i.UserInputType == Enum.UserInputType.Touch then local d = i.Position - dStart; OpenBtn.Position = UDim2.new(sPos.X.Scale, sPos.X.Offset + d.X, sPos.Y.Scale, sPos.Y.Offset + d.Y) end end)
     OpenBtn.InputEnded:Connect(function() dBtn = false end)
 
-    -- 2. الإطار الرئيسي (Main Frame)
+    -- 2. الإطار الرئيسي (Main Frame) مع تصميم نيون
     local Main = Instance.new("Frame", Screen)
     Main.Size = UDim2.new(0, 440, 0, 280)
     Main.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -39,7 +38,7 @@ function UI:CreateWindow(title)
     Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
 
-    -- 3. شريط التحكم العلوي (Title Bar)
+    -- 3. شريط التحكم العلوي (Title Bar) للسحب
     local TitleBar = Instance.new("Frame", Main)
     TitleBar.Size = UDim2.new(1, 0, 0, 35)
     TitleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -53,7 +52,7 @@ function UI:CreateWindow(title)
     TitleLabel.TextColor3 = Color3.new(1, 1, 1)
     TitleLabel.TextXAlignment = "Left"
 
-    -- أزرار الإغلاق والإخفاء
+    -- أزرار التحكم (إغلاق وإخفاء)
     local Close = Instance.new("TextButton", TitleBar)
     Close.Text = "X"; Close.Position = UDim2.new(1, -35, 0, 5); Close.Size = UDim2.new(0, 25, 0, 25); Close.TextColor3 = Color3.new(1, 0, 0); Close.BackgroundTransparency = 1
     Close.MouseButton1Click:Connect(function() Screen:Destroy() end)
@@ -63,29 +62,20 @@ function UI:CreateWindow(title)
     Hide.MouseButton1Click:Connect(function() Main.Visible = false; OpenBtn.Visible = true end)
     OpenBtn.MouseButton1Click:Connect(function() Main.Visible = true; OpenBtn.Visible = false end)
 
-    -- نظام سحب الواجهة (Dragging) للهواتف
+    -- نظام سحب الواجهة للهواتف
     local dragging, dragStart, startPos
-    TitleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true; dragStart = input.Position; startPos = Main.Position
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - dragStart
-            Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
+    TitleBar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true; dragStart = input.Position; startPos = Main.Position end end)
+    UserInputService.InputChanged:Connect(function(input) if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then local delta = input.Position - dragStart; Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) end end)
     UserInputService.InputEnded:Connect(function() dragging = false end)
 
-    -- 4. القائمة الجانبية (Sidebar)
+    -- 4. القائمة الجانبية (Sidebar) لليسار
     local Sidebar = Instance.new("Frame", Main)
     Sidebar.Position = UDim2.new(0, 0, 0, 35)
     Sidebar.Size = UDim2.new(0, 110, 1, -35)
     Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     Instance.new("UIListLayout", Sidebar).Padding = UDim.new(0, 2)
 
-    -- 5. منطقة المحتوى (Content)
+    -- 5. منطقة المحتوى لليمين
     local Content = Instance.new("Frame", Main)
     Content.Position = UDim2.new(0, 115, 0, 40)
     Content.Size = UDim2.new(1, -120, 1, -45)
@@ -100,17 +90,24 @@ function UI:CreateWindow(title)
         Page.Size = UDim2.new(1, 0, 1, 0); Page.Visible = false; Page.BackgroundTransparency = 1; Page.ScrollBarThickness = 2
         Instance.new("UIListLayout", Page).Padding = UDim.new(0, 8)
 
-        TabBtn.MouseButton1Click:Connect(function()
-            for _, v in pairs(Content:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end
-            Page.Visible = true
-        end)
+        TabBtn.MouseButton1Click:Connect(function() for _, v in pairs(Content:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end; Page.Visible = true end)
 
         local TabOps = {}
 
-        -- وحدة التحكم المتقدمة (سرعة/طيران)
-        function TabOps:AddSpeedControl(label, callback)
+        -- وحدة عرض البيانات (Label)
+        function TabOps:AddLabel(text)
             local Row = Instance.new("Frame", Page)
-            Row.Size = UDim2.new(0.98, 0, 0, 50); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
+            Row.Size = UDim2.new(0.98, 0, 0, 40); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
+            local Lbl = Instance.new("TextLabel", Row)
+            Lbl.Text = text; Lbl.Size = UDim2.new(1, -10, 1, 0); Lbl.Position = UDim2.new(0, 5, 0, 0); Lbl.TextColor3 = Color3.fromRGB(0, 255, 150); Lbl.BackgroundTransparency = 1; Lbl.Font = Enum.Font.SourceSansBold; Lbl.TextSize = 13; Lbl.TextXAlignment = "Right"
+            local Ops = {}
+            function Ops:SetText(t) Lbl.Text = t end
+            return Ops
+        end
+
+        -- وحدة السرعة والطيران
+        function TabOps:AddSpeedControl(label, callback)
+            local Row = Instance.new("Frame", Page); Row.Size = UDim2.new(0.98, 0, 0, 50); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
             local Lbl = Instance.new("TextLabel", Row); Lbl.Text = label; Lbl.Size = UDim2.new(0.3, 0, 1, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = "Right"
             local Input = Instance.new("TextBox", Row); Input.Size = UDim2.new(0, 45, 0, 30); Input.Position = UDim2.new(0.35, 0, 0.5, -15); Input.Text = "16"; Input.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Input.TextColor3 = Color3.new(1, 1, 1)
             local Plus = Instance.new("TextButton", Row); Plus.Text = "+"; Plus.Size = UDim2.new(0, 25, 0, 25); Plus.Position = UDim2.new(0.58, 0, 0.5, -12); Plus.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
@@ -122,7 +119,7 @@ function UI:CreateWindow(title)
                 active = not active
                 Toggle.BackgroundColor3 = active and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
                 callback(active, tonumber(Input.Text) or 16)
-                if UI.Logger then UI.Logger("تغيير ميزة رقمية", label .. " | القيمة: " .. Input.Text) end
+                if UI.Logger then UI.Logger("تغيير ميزة", label .. " | القيمة: " .. Input.Text) end
             end)
             Plus.MouseButton1Click:Connect(function() Input.Text = tostring((tonumber(Input.Text) or 0) + 1) if active then callback(active, tonumber(Input.Text)) end end)
             Minus.MouseButton1Click:Connect(function() Input.Text = tostring((tonumber(Input.Text) or 0) - 1) if active then callback(active, tonumber(Input.Text)) end end)
@@ -130,8 +127,7 @@ function UI:CreateWindow(title)
 
         -- وحدة التبديل البسيطة (للكشف ESP)
         function TabOps:AddToggle(label, callback)
-            local Row = Instance.new("Frame", Page)
-            Row.Size = UDim2.new(0.98, 0, 0, 50); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
+            local Row = Instance.new("Frame", Page); Row.Size = UDim2.new(0.98, 0, 0, 50); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
             local Lbl = Instance.new("TextLabel", Row); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = "Right"
             local Toggle = Instance.new("TextButton", Row); Toggle.Size = UDim2.new(0, 45, 0, 22); Toggle.Position = UDim2.new(1, -55, 0.5, -11); Toggle.Text = ""; Toggle.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", Toggle).CornerRadius = UDim.new(1, 0)
             
@@ -140,21 +136,20 @@ function UI:CreateWindow(title)
                 active = not active
                 Toggle.BackgroundColor3 = active and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
                 callback(active)
-                if UI.Logger then UI.Logger("تغيير تبديل", label .. " | الحالة: " .. (active and "ON" or "OFF")) end
+                if UI.Logger then UI.Logger("تبديل حالة", label .. " | الحالة: " .. (active and "تشغيل" or "إيقاف")) end
             end)
         end
 
-        -- وحدة الأزرار البسيطة (للأوامر المباشرة)
+        -- وحدة الأزرار البسيطة
         function TabOps:AddButton(text, callback)
             local Btn = Instance.new("TextButton", Page)
             Btn.Size = UDim2.new(0.95, 0, 0, 40); Btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); Btn.Text = text; Btn.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", Btn)
             Btn.MouseButton1Click:Connect(function() callback() if UI.Logger then UI.Logger("ضغط زر", text) end end)
         end
 
-        -- وحدة الإدخال (لرموز السيرفر)
+        -- وحدة الإدخال (Input) لرموز السيرفر
         function TabOps:AddInput(label, placeholder, callback)
-            local Row = Instance.new("Frame", Page)
-            Row.Size = UDim2.new(0.95, 0, 0, 60); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
+            local Row = Instance.new("Frame", Page); Row.Size = UDim2.new(0.95, 0, 0, 60); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
             local Lbl = Instance.new("TextLabel", Row); Lbl.Text = label; Lbl.Size = UDim2.new(1, -10, 0, 25); Lbl.Position = UDim2.new(0, 5, 0, 5); Lbl.TextColor3 = Color3.fromRGB(0, 255, 150); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = "Right"
             local Input = Instance.new("TextBox", Row); Input.Size = UDim2.new(0.9, 0, 0, 25); Input.Position = UDim2.new(0.05, 0, 0, 30); Input.PlaceholderText = placeholder; Input.Text = ""; Input.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Input.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", Input)
             Input.FocusLost:Connect(function(enter) if enter then callback(Input.Text) if UI.Logger then UI.Logger("إدخال نص", label .. " | المحتوى: " .. Input.Text) end end end)
@@ -165,7 +160,6 @@ function UI:CreateWindow(title)
     return Window
 end
 
--- نظام التنبيهات
 function UI:Notify(msg)
     warn("[Cryptic Hub]: " .. msg)
 end
