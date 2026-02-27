@@ -1,19 +1,39 @@
 local UI = {}
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
 
 function UI:CreateWindow(title)
-    local Screen = Instance.new("ScreenGui", game:GetService("CoreGui"))
+    local Screen = Instance.new("ScreenGui", CoreGui)
+    Screen.Name = "CrypticMobile"
     
-    -- الإطار الرئيسي
+    -- زر استرجاع الواجهة (يظهر فقط عند الضغط على زر الإخفاء)
+    local OpenBtn = Instance.new("TextButton", Screen)
+    OpenBtn.Size = UDim2.new(0, 45, 0, 45)
+    OpenBtn.Position = UDim2.new(0, 10, 0.5, -22)
+    OpenBtn.Visible = false
+    OpenBtn.Text = "C"
+    OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
+    OpenBtn.TextColor3 = Color3.fromRGB(15, 15, 15)
+    OpenBtn.Font = Enum.Font.SourceSansBold
+    OpenBtn.TextSize = 25
+    local OBCorner = Instance.new("UICorner", OpenBtn)
+    OBCorner.CornerRadius = UDim.new(1, 0)
+    -- جعل زر الاسترجاع قابلاً للسحب أيضاً لكي لا يزعجك في اللعب
+    local dragBtn = false; local dStart; local sPos
+    OpenBtn.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.Touch then dragBtn = true; dStart = i.Position; sPos = OpenBtn.Position end end)
+    UserInputService.InputChanged:Connect(function(i) if dragBtn and i.UserInputType == Enum.UserInputType.Touch then local d = i.Position - dStart; OpenBtn.Position = UDim2.new(sPos.X.Scale, sPos.X.Offset + d.X, sPos.Y.Scale, sPos.Y.Offset + d.Y) end end)
+    OpenBtn.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.Touch then dragBtn = false end end)
+
+    -- الإطار الرئيسي للسكربت
     local Main = Instance.new("Frame", Screen)
     Main.Size = UDim2.new(0, 420, 0, 280)
     Main.Position = UDim2.new(0.5, 0, 0.5, 0)
     Main.AnchorPoint = Vector2.new(0.5, 0.5)
     Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    Instance.new("UICorner", Main)
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
 
-    -- شريط السحب العلوي
+    -- شريط السحب والتحكم العلوي
     local TitleBar = Instance.new("Frame", Main)
     TitleBar.Size = UDim2.new(1, 0, 0, 35)
     TitleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -27,12 +47,33 @@ function UI:CreateWindow(title)
     TitleLabel.TextColor3 = Color3.new(1, 1, 1)
     TitleLabel.TextXAlignment = "Left"
 
-    -- أزرار التحكم (إغلاق - إخفاء)
+    -- زر الإغلاق (X)
     local Close = Instance.new("TextButton", TitleBar)
-    Close.Text = "X"; Close.Position = UDim2.new(1, -30, 0, 5); Close.Size = UDim2.new(0, 25, 0, 25); Close.TextColor3 = Color3.new(1,0,0); Close.BackgroundTransparency = 1
+    Close.Text = "X"
+    Close.TextColor3 = Color3.new(1, 0, 0)
+    Close.Position = UDim2.new(1, -30, 0, 5)
+    Close.Size = UDim2.new(0, 25, 0, 25)
+    Close.BackgroundTransparency = 1
     Close.MouseButton1Click:Connect(function() Screen:Destroy() end)
 
-    -- نظام السحب (للهاتف)
+    -- زر الإخفاء (-)
+    local Hide = Instance.new("TextButton", TitleBar)
+    Hide.Text = "-"
+    Hide.TextColor3 = Color3.new(1, 1, 1)
+    Hide.Position = UDim2.new(1, -60, 0, 5)
+    Hide.Size = UDim2.new(0, 25, 0, 25)
+    Hide.BackgroundTransparency = 1
+    Hide.MouseButton1Click:Connect(function()
+        Main.Visible = false
+        OpenBtn.Visible = true
+    end)
+    
+    OpenBtn.MouseButton1Click:Connect(function()
+        Main.Visible = true
+        OpenBtn.Visible = false
+    end)
+
+    -- نظام السحب للهاتف
     local dragging, dragStart, startPos
     TitleBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -45,16 +86,16 @@ function UI:CreateWindow(title)
             Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
-    UserInputService.InputEnded:Connect(function(input) dragging = false end)
+    UserInputService.InputEnded:Connect(function() dragging = false end)
 
-    -- القائمة الجانبية (Sidebar)
+    -- القائمة الجانبية (يسار)
     local Sidebar = Instance.new("Frame", Main)
     Sidebar.Position = UDim2.new(0, 0, 0, 35)
     Sidebar.Size = UDim2.new(0, 100, 1, -35)
     Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    local SideLayout = Instance.new("UIListLayout", Sidebar)
+    Instance.new("UIListLayout", Sidebar).Padding = UDim.new(0, 2)
 
-    -- حاوية المحتوى
+    -- حاوية المحتوى (يمين)
     local Content = Instance.new("Frame", Main)
     Content.Position = UDim2.new(0, 105, 0, 40)
     Content.Size = UDim2.new(1, -110, 1, -45)
@@ -63,18 +104,25 @@ function UI:CreateWindow(title)
     local Window = {}
     function Window:CreateTab(name)
         local TabBtn = Instance.new("TextButton", Sidebar)
-        TabBtn.Size = UDim2.new(1, 0, 0, 35); TabBtn.Text = name; TabBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); TabBtn.TextColor3 = Color3.new(1,1,1)
+        TabBtn.Size = UDim2.new(1, 0, 0, 35)
+        TabBtn.Text = name
+        TabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        TabBtn.TextColor3 = Color3.new(1, 1, 1)
 
         local Page = Instance.new("ScrollingFrame", Content)
-        Page.Size = UDim2.new(1, 0, 1, 0); Page.Visible = false; Page.BackgroundTransparency = 1; Page.CanvasSize = UDim2.new(0,0,2,0)
+        Page.Size = UDim2.new(1, 0, 1, 0)
+        Page.Visible = false
+        Page.BackgroundTransparency = 1
+        Page.CanvasSize = UDim2.new(0,0,2,0)
         Instance.new("UIListLayout", Page).Padding = UDim.new(0, 5)
 
         TabBtn.MouseButton1Click:Connect(function()
-            for _, v in pairs(Content:GetChildren()) do v.Visible = false end
+            for _, v in pairs(Content:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end
             Page.Visible = true
         end)
 
         local TabOps = {}
+        -- وحدة التحكم في السرعة والطيران (المستطيل المطور)
         function TabOps:AddSpeedControl(label, callback)
             local Row = Instance.new("Frame", Page)
             Row.Size = UDim2.new(0.95, 0, 0, 50); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
