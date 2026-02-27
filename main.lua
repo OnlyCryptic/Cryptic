@@ -17,7 +17,7 @@ local Cryptic = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip"} },
         ["أدوات"] = { Folder = "Misc", Files = {"tptool"} },
-        ["قسم لاعبين"] = { Folder = "Combat", Files = {"esp"} },
+        ["قسم لاعبين"] = { Folder = "Combat", Files = {"esp", "spectate"} },
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} }
     },
 
