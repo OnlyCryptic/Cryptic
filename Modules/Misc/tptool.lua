@@ -1,46 +1,74 @@
--- [[ Cryptic Hub - ميزة أداة الانتقال (TP Tool) ]]
+-- [[ Cryptic Hub - ميزة أداة الانتقال المطورة ]]
 -- الملف: tptool.lua
+-- الميزات: العودة بعد الموت + الترتيب التلقائي في الخانة 1
 
 return function(Tab, UI)
     local player = game.Players.LocalPlayer
     local mouse = player:GetMouse()
+    local keepGiving = false -- متغير للتحكم في استمرارية إعطاء الأداة
 
-    -- وظيفة إعطاء الأداة للاعب
+    -- وظيفة إنشاء وإعطاء الأداة
     local function giveTPTool()
-        -- التأكد من عدم وجود الأداة مسبقاً لمنع التكرار
-        if player.Backpack:FindFirstChild("Cryptic TP") or (player.Character and player.Character:FindFirstChild("Cryptic TP")) then
-            UI:Notify("الأداة موجودة معك بالفعل!")
+        -- التأكد من أن الشخصية موجودة والحقيبة جاهزة
+        local backpack = player:FindFirstChild("Backpack")
+        if not backpack then return end
+
+        -- منع التكرار
+        if backpack:FindFirstChild("Cryptic TP") or (player.Character and player.Character:FindFirstChild("Cryptic TP")) then
             return
         end
 
         local tool = Instance.new("Tool")
         tool.Name = "Cryptic TP"
-        tool.RequiresHandle = false -- لكي لا نحتاج لمقبض حقيقي (مريحة للهاتف)
-        tool.ToolTip = "اضغط في أي مكان للانتقال إليه"
+        tool.RequiresHandle = false
+        tool.ToolTip = "انقر للانتقال | Arwa Hub"
 
-        -- منطق الانتقال عند الضغط
+        -- منطق الانتقال
         tool.Activated:Connect(function()
-            local pos = mouse.Hit.p -- جلب إحداثيات النقطة التي ضغطتِ عليها
+            local pos = mouse.Hit.p
             if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                -- رفع اللاعب قليلاً للأعلى عند الانتقال لضمان عدم التعليق في الأرض
                 player.Character.HumanoidRootPart.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0))
-                UI:Notify("تم الانتقال بنجاح!")
             end
         end)
 
-        tool.Parent = player.Backpack
-        UI:Notify("تم إضافة أداة الانتقال للحقيبة!")
+        -- وضعها في الحقيبة (ستظهر في أول خانة متاحة)
+        tool.Parent = backpack
         
-        -- إرسال تقرير للمراقبة
-        if UI.Logger then
-            UI.Logger("استخدام ميزة", "قام المستخدم بإضافة أداة الانتقال (TP Tool)")
+        -- لضمان ظهورها في الخانة رقم 1، نقوم بتجهيزها (Equip) ثم إعادتها
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            task.wait(0.1)
+            player.Character.Humanoid:EquipTool(tool)
+            task.wait(0.1)
+            player.Character.Humanoid:UnequipTools()
         end
     end
 
-    -- إضافة الزر للواجهة
-    Tab:AddButton("الحصول على أداة الانتقال", function()
-        giveTPTool()
+    -- ربط الميزة بالرسبيون (العودة بعد الموت)
+    player.CharacterAdded:Connect(function()
+        if keepGiving then
+            task.wait(1) -- انتظار تحميل الحقيبة الجديدة
+            giveTPTool()
+        end
     end)
 
-    Tab:AddParagraph("ملاحظة: أمسك الأداة ثم اضغط في المكان الذي تريد الذهاب إليه.")
+    -- إضافة الزر للواجهة مع نظام المراقبة
+    Tab:AddToggle("أداة الانتقال المستمرة", function(active)
+        keepGiving = active
+        if active then
+            giveTPTool()
+            UI:Notify("تم تفعيل الأداة (ستبقى معك حتى لو مت)")
+        else
+            UI:Notify("تم إيقاف التزويد التلقائي")
+            -- حذف الأداة إذا تم إطفاؤها
+            local t = player.Backpack:FindFirstChild("Cryptic TP") or (player.Character and player.Character:FindFirstChild("Cryptic TP"))
+            if t then t:Destroy() end
+        end
+
+        -- إرسال تقرير النشاط لديسكورد
+        if UI.Logger then
+            UI.Logger("تغيير ميزة", "أداة الانتقال المستمرة: " .. (active and "ON" or "OFF"))
+        end
+    end)
+
+    Tab:AddParagraph("عند تفعيلها، ستظهر الأداة تلقائياً في الخانة رقم 1 في كل مرة تعود فيها للحياة.")
 end
