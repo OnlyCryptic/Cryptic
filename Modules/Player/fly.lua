@@ -1,16 +1,13 @@
--- [[ Cryptic Hub - 3D Mobile Fly Pro ]]
--- المطور: Arwa | تحديث: نظام الملاحة الفضائية المتكامل
--- هذا الكود يمنحكِ تحكماً كاملاً في جميع الاتجاهات بناءً على نظرة الكاميرا
+-- [[ Arwa Hub - الطيران الثلاثي الأبعاد ]]
+-- المطور: Arwa | تحكم كامل يتبع الكاميرا والجويستيك
 
 return function(Tab, UI)
     local player = game.Players.LocalPlayer
     local RunService = game:GetService("RunService")
     local cam = workspace.CurrentCamera
-    
     local isFlying = false
     local flySpeed = 50
-    local bodyVel, bodyGyro
-    local connection
+    local bodyVel, bodyGyro, connection
 
     local function toggleFly(active, speedValue)
         isFlying = active
@@ -25,37 +22,23 @@ return function(Tab, UI)
 
             bodyVel = Instance.new("BodyVelocity", root)
             bodyVel.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-            bodyVel.Velocity = Vector3.new(0, 0, 0)
-
+            
             bodyGyro = Instance.new("BodyGyro", root)
             bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-            bodyGyro.P = 5000 -- زيادة قوة التثبيت لمنع الارتزاز
-            bodyGyro.CFrame = root.CFrame
-
+            bodyGyro.P = 5000
+            
             hum.PlatformStand = true
 
             connection = RunService.RenderStepped:Connect(function()
                 if isFlying and root and bodyVel then
-                    local moveDir = hum.MoveDirection -- اتجاه الجويستيك بالنسبة للعالم
-                    
+                    local moveDir = hum.MoveDirection
                     if moveDir.Magnitude > 0 then
-                        -- ** السر هنا يا أروى **
-                        -- نقوم بتحويل اتجاه الحركة ليكون تابعاً لإحداثيات الكاميرا المحلية
-                        -- هذا يجعل (للأمام) في الجويستيك يعني (أمام الكاميرا) 
-                        -- و(للخلف) يعني (عكس اتجاه الكاميرا) تماماً حتى لو كنتِ تنظرين للسماء
-                        
-                        local direction = cam.CFrame:VectorToWorldSpace(
-                            cam.CFrame:VectorToObjectSpace(moveDir)
-                        )
-                        
-                        -- تطبيق السرعة بناءً على الاتجاه المحسوب
+                        -- نظام التحكم الثلاثي الأبعاد: يطابق الجويستيك مع اتجاه الكاميرا
+                        local direction = cam.CFrame:VectorToWorldSpace(cam.CFrame:VectorToObjectSpace(moveDir))
                         bodyVel.Velocity = direction * flySpeed
                     else
-                        -- فرامل فورية عند ترك الجويستيك
-                        bodyVel.Velocity = Vector3.new(0, 0, 0)
+                        bodyVel.Velocity = Vector3.new(0, 0.1, 0) -- ثبات في الهواء
                     end
-                    
-                    -- جعل اللاعب يواجه دائماً اتجاه نظر الكاميرا لثبات الرؤية
                     bodyGyro.CFrame = cam.CFrame
                 end
             end)
@@ -64,16 +47,11 @@ return function(Tab, UI)
             if bodyVel then bodyVel:Destroy() end
             if bodyGyro then bodyGyro:Destroy() end
             if hum then hum.PlatformStand = false end
-            isFlying = false
         end
     end
 
     Tab:AddSpeedControl("طيران 3D", function(active, value)
         toggleFly(active, value)
-        if active then
-            UI:Notify("تم تشغيل الطيران الحر | التحكم الآن بيدكِ يا أروى")
-        else
-            UI:Notify("تم إيقاف الطيران")
-        end
+        UI:Notify(active and "تم تشغيل الطيران الحر" or "تم إيقاف الطيران")
     end)
 end
