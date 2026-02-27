@@ -1,15 +1,14 @@
--- [[ Cryptic Hub - ميزة السيرفر المستقرة ]]
--- تم إصلاح مشكلة التعليق وضمان التحديث التلقائي
+-- [[ Cryptic Hub - ميزة السيرفر المختصرة ]]
+-- عرض عدد اللاعبين واسم الماب فقط
 
 return function(Tab, UI)
-    local TeleportService = game:GetService("TeleportService")
     local Market = game:GetService("MarketplaceService")
     local player = game.Players.LocalPlayer
 
-    -- 1. إنشاء خانة العرض أولاً لضمان عدم بقائها معلقة
-    local InfoDisplay = Tab:AddLabel("📍 جاري الاتصال بالسيرفر...")
+    -- 1. إنشاء خانة العرض (Label)
+    local InfoDisplay = Tab:AddLabel("جاري التحميل...")
 
-    -- 2. محاولة جلب اسم الماب بحذر (pcall) لعدم تعطيل السكربت
+    -- 2. جلب اسم الماب الحالي مرة واحدة بحذر
     local gameName = "غير معروف"
     task.spawn(function()
         local s, res = pcall(function()
@@ -18,37 +17,29 @@ return function(Tab, UI)
         if s then gameName = res end
     end)
 
-    -- 3. حلقة التحديث التلقائي (محمية لضمان الاستمرارية)
+    -- 3. حلقة تحديث عدد اللاعبين فقط كل ثانيتين
     task.spawn(function()
         while task.wait(2) do
             pcall(function()
-                -- حساب عدد اللاعبين
                 local playersCount = #game.Players:GetPlayers()
                 local maxPlayers = game.Players.MaxPlayers
                 
-                -- جلب البنج بدقة أفضل للهواتف
-                local ping = math.floor(player:GetNetworkPing() * 1000) 
-                if ping <= 0 then ping = "..." end -- في حال لم يقرأ البنج بعد
-
-                -- تحديث النص في الواجهة
-                InfoDisplay:SetText("📍 ماب: " .. gameName .. " | 👥 لاعبين: " .. playersCount .. "/" .. maxPlayers .. " | 📶 بنج: " .. ping .. "ms")
+                -- التنسيق المطلوب: (العدد/الأقصى) ماب (الاسم)
+                InfoDisplay:SetText(playersCount .. "/" .. maxPlayers .. " | ماب " .. gameName)
             end)
         end
     end)
 
-    -- ميزة نسخ رمز الدخول (JobId)
+    -- ميزة نسخ رمز الدخول (JobId) - أبقيناها لأهميتها في مشاركة السيرفر
     Tab:AddButton("نسخ رمز دخول السيرفر (JobId)", function()
         setclipboard(tostring(game.JobId))
-        UI:Notify("تم نسخ الرمز بنجاح!")
+        UI:Notify("تم نسخ الرمز!")
     end)
 
     -- ميزة الدخول لسيرفر محدد
-    Tab:AddInput("دخول سيرفر محدد عبر الرمز", "إلصق رمز الـ JobId هنا...", function(txt)
+    Tab:AddInput("دخول سيرفر محدد", "إلصق الرمز هنا...", function(txt)
         if txt and #txt > 5 then
-            UI:Notify("جاري الانتقال للسيرفر...")
-            TeleportService:TeleportToPlaceInstance(game.PlaceId, txt, player)
-        else
-            UI:Notify("الرمز غير صالح!")
+            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, txt, player)
         end
     end)
 end
