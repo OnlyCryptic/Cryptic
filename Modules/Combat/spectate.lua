@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة مراقبة اللاعبين المطورة ]]
--- الملف: spectate.lua | تحديث: البحث الذكي والتحكم الموحد
+-- [[ Cryptic Hub - ميزة مراقبة اللاعبين الذكية ]]
+-- الملف: spectate.lua | تحديث: البحث ببادئة الاسم + الدمج في TextBox
 
 return function(Tab, UI)
     local players = game:GetService("Players")
@@ -8,39 +8,43 @@ return function(Tab, UI)
     local selectedPlayer = nil
     local isSpectating = false
 
-    local SpectateToggle -- سنحتاج للإشارة إليه لاحقاً
+    local SpectateToggle -- مرجع لمفتاح التشغيل
 
-    -- 1. زر عرض النتيجة (الذي يظهر فيه الاسم @اليوزر)
-    local ResultBtn = Tab:AddButton("لم يتم العثور على لاعب", function()
-        -- عند الضغط على الاسم، يتم مسحه وإيقاف المراقبة
-        selectedPlayer = nil
-        if isSpectating then SpectateToggle.SetState(false) end
-        UI:Notify("تم مسح الاختيار")
-    end)
-
-    -- 2. خانة البحث
-    Tab:AddInput("البحث عن لاعب", "اكتب بداية الاسم...", function(txt)
-        if txt == "" then 
+    -- 1. كود الـ ESP (يأتي من ملف esp.lua تلقائياً بفضل main.lua)
+    
+    -- 2. خانة البحث الذكية (تظهر فيها النتائج)
+    local SearchBox
+    SearchBox = Tab:AddInput("البحث عن لاعب لمراقبته", "اكتب بداية الاسم هنا...", function(txt)
+        -- إذا تم مسح النص (أو ضغط المستخدم عليه)، نوقف كل شيء
+        if txt == "" then
             selectedPlayer = nil
-            ResultBtn:SetText("لم يتم العثور على لاعب")
             if isSpectating then SpectateToggle.SetState(false) end
-            return 
+            return
         end
 
+        -- البحث في بداية اليوزر أو بداية اسم العرض (Prefix Search)
         local found = nil
         for _, p in pairs(players:GetPlayers()) do
-            if p ~= lp and (p.Name:lower():find(txt:lower()) or p.DisplayName:lower():find(txt:lower())) then
-                found = p
-                break
+            if p ~= lp then
+                local name = p.Name:lower()
+                local display = p.DisplayName:lower()
+                local search = txt:lower()
+                
+                -- التأكد أن البحث يطابق "بداية" الاسم (Starting with)
+                if string.sub(name, 1, #search) == search or string.sub(display, 1, #search) == search then
+                    found = p
+                    break
+                end
             end
         end
 
         if found then
             selectedPlayer = found
-            ResultBtn:SetText(found.DisplayName .. " (@" .. found.Name .. ")")
+            -- كتابة النتيجة داخل الـ TextBox فور العثور عليها
+            SearchBox.SetText(found.DisplayName .. " (@" .. found.Name .. ")")
+            UI:Notify("تم تحديد: " .. found.DisplayName)
         else
             selectedPlayer = nil
-            ResultBtn:SetText("❌ لا يوجد لاعب بهذا الاسم")
             if isSpectating then SpectateToggle.SetState(false) end
         end
     end)
@@ -51,19 +55,27 @@ return function(Tab, UI)
         if active then
             if selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Humanoid") then
                 camera.CameraSubject = selectedPlayer.Character.Humanoid
-                UI:Notify("تراقب الآن: " .. selectedPlayer.DisplayName)
             else
-                UI:Notify("اختر لاعباً أولاً!")
+                UI:Notify("ابحث عن لاعب أولاً!")
                 task.spawn(function() SpectateToggle.SetState(false) end)
             end
         else
+            -- العودة للكاميرا العادية
             if lp.Character and lp.Character:FindFirstChild("Humanoid") then
                 camera.CameraSubject = lp.Character.Humanoid
             end
         end
     end)
 
-    -- تحديث الكاميرا المستمر
+    -- تحديث الكاميرا المستمر وتتبع خروج اللاعب
+    players.PlayerRemoving:Connect(function(p)
+        if selectedPlayer and p == selectedPlayer then
+            selectedPlayer = nil
+            if isSpectating then SpectateToggle.SetState(false) end
+            SearchBox.SetText("")
+        end
+    end)
+
     task.spawn(function()
         while task.wait(0.5) do
             if isSpectating and selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Humanoid") then
