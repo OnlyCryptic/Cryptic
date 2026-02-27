@@ -1,9 +1,13 @@
+-- [[ Arwa Hub - ميزة السرعة المطورة ]]
 return function(Tab, UI)
-    Tab:AddSpeedControl("سرعة المشي", function(enabled, value)
-        local char = game.Players.LocalPlayer.Character
-        local hum = char and char:FindFirstChild("Humanoid")
+    local player = game.Players.LocalPlayer
+    
+    Tab:AddSpeedControl("سرعة المشي", function(active, value)
+        local hum = player.Character and player.Character:FindFirstChild("Humanoid")
         if hum then
-            hum.WalkSpeed = enabled and value or 16
+            hum.WalkSpeed = active and value or 16
         end
     end)
+    
+    Tab:AddParagraph("ملاحظة: السرعة العادية هي 16.")
 end
