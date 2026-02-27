@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة مراقبة اللاعبين المصلحة ]]
--- التحديث: إصلاح البحث عند إغلاق الكيبورد + زر الانتقال
+-- [[ Cryptic Hub - ميزة مراقبة اللاعبين المحدثة ]]
+-- الملف: spectate.lua | تحديث: بحث البداية فقط + إغلاق الكيبورد
 
 return function(Tab, UI)
     local players = game:GetService("Players")
@@ -7,13 +7,12 @@ return function(Tab, UI)
     local camera = workspace.CurrentCamera
     local selectedPlayer = nil
     local isSpectating = false
+    local SpectateToggle
 
-    local SpectateToggle -- مرجع للإطفاء التلقائي
+    -- خانة البحث (الخط الفاصل سيتم وضعه خارجياً بواسطة main.lua)
+    local InputField = Tab:AddInput("البحث عن لاعب لمراقبته", "اكتب بداية اليوزر...", function(txt) end)
 
-    -- 1. خانة البحث (المصلحة)
-    local InputField = Tab:AddInput("البحث عن لاعب", "اكتب بداية اليوزر...", function(txt) end)
-
-    -- منطق البحث عند إغلاق الكيبورد
+    -- البحث لا يعمل إلا عند إغلاق الكيبورد (FocusLost)
     InputField.TextBox.FocusLost:Connect(function()
         local txt = InputField.TextBox.Text
         if txt == "" then 
@@ -25,14 +24,14 @@ return function(Tab, UI)
         local bestMatch = nil
         local search = txt:lower()
 
-        -- البحث في "بداية" يوزرات اللاعبين
+        -- البحث في "بداية" يوزرات اللاعبين فقط
         for _, p in pairs(players:GetPlayers()) do
             if p ~= lp then
                 local pName = p.Name:lower()
-                -- التحقق أن اليوزر يبدأ بنفس الحروف المكتوبة
+                -- التحقق أن اليوزر يبدأ بنفس الحروف المكتوبة (Prefix match)
                 if string.sub(pName, 1, #search) == search then
                     bestMatch = p
-                    break -- نأخذ أول وأقرب لاعب
+                    break 
                 end
             end
         end
@@ -48,37 +47,25 @@ return function(Tab, UI)
         end
     end)
 
-    -- خط فاصل للتنظيم
-    Tab:AddLine()
-
-    -- 2. زر تشغيل المراقبة
+    -- زر تشغيل المراقبة (لا يوجد AddLine هنا)
     SpectateToggle = Tab:AddToggle("تشغيل وضع المراقبة", function(active)
         isSpectating = active
-        if active then
-            if selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Humanoid") then
-                camera.CameraSubject = selectedPlayer.Character.Humanoid
-            else
-                UI:Notify("ابحث عن لاعب أولاً!")
-                task.spawn(function() SpectateToggle.SetState(false) end)
-            end
+        if active and selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Humanoid") then
+            camera.CameraSubject = selectedPlayer.Character.Humanoid
         else
-            if lp.Character and lp.Character:FindFirstChild("Humanoid") then
-                camera.CameraSubject = lp.Character.Humanoid
-            end
+            camera.CameraSubject = lp.Character.Humanoid
+            if active then task.spawn(function() SpectateToggle.SetState(false) end) end
         end
     end)
 
-    -- 3. زر الانتقال السريع
+    -- زر الانتقال السريع
     Tab:AddButton("انتقال إلى اللاعب المختار", function()
         if selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
             lp.Character.HumanoidRootPart.CFrame = selectedPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 3, 0)
-            UI:Notify("تم الانتقال لـ " .. selectedPlayer.DisplayName)
-        else
-            UI:Notify("حدد لاعباً أولاً!")
         end
     end)
 
-    -- تحديث الكاميرا المستمر
+    -- نظام المتابعة المستمر
     task.spawn(function()
         while task.wait(0.5) do
             if isSpectating and selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Humanoid") then
