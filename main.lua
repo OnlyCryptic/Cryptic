@@ -16,7 +16,7 @@ local Cryptic = {
     Structure = {
         ["قسم اللاعب"] = {
             Folder = "Player",
-            Files  = {"speed", "fly"} 
+            Files  = {"speed", "fly", "noclip"} 
         },
         ["قسم لاعبين"] = {
             Folder = "Combat",
