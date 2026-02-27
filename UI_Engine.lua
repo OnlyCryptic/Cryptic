@@ -1,6 +1,6 @@
--- [[ Cryptic Hub - محرك الواجهة المطور ]]
--- النسخة V2.1: تدعم الفواصل، الصور، والتحكم السلس للهاتف
--- المطور: Arwa
+-- [[ Cryptic Hub - محرك الواجهة المطور V2.1 ]]
+-- المطور: Arwa | نسخة 2026/02/27
+-- ميزات إضافية: خطوط الفصل، التحكم البرمجي بالحالات، وسلاسة الجوال
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -77,19 +77,17 @@ function UI:CreateWindow(title)
         local TabBtn = Instance.new("TextButton", Sidebar); TabBtn.Size = UDim2.new(1, 0, 0, 35); TabBtn.Text = name; TabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TabBtn.TextColor3 = Color3.new(1, 1, 1); TabBtn.BorderSizePixel = 0
         local Page = Instance.new("ScrollingFrame", Content); Page.Size = UDim2.new(1, 0, 1, 0); Page.Visible = false; Page.BackgroundTransparency = 1; Page.ScrollBarThickness = 2; Instance.new("UIListLayout", Page).Padding = UDim.new(0, 8)
 
-        -- فتح أول تاب تلقائياً (خانة معلومات)
         if not Window.FirstTab then Window.FirstTab = Page; Page.Visible = true end
         TabBtn.MouseButton1Click:Connect(function() for _, v in pairs(Content:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end; Page.Visible = true end)
 
         local TabOps = {}
 
-        -- وظيفة وضع الخط الفاصل (Separator)
+        -- وظيفة وضع الخط الفاصل (Separator) كما في الصور
         function TabOps:AddLine()
             local LineFrame = Instance.new("Frame", Page)
             LineFrame.Size = UDim2.new(0.95, 0, 0, 1)
             LineFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            LineFrame.BackgroundTransparency = 0.4
-            LineFrame.BorderSizePixel = 0
+            LineFrame.BackgroundTransparency = 0.4; LineFrame.BorderSizePixel = 0
         end
 
         function TabOps:AddLabel(text)
@@ -105,7 +103,11 @@ function UI:CreateWindow(title)
             local Lbl = Instance.new("TextLabel", Row); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = "Right"
             local Tgl = Instance.new("TextButton", Row); Tgl.Size = UDim2.new(0, 45, 0, 22); Tgl.Position = UDim2.new(1, -55, 0.5, -11); Tgl.Text = ""; Tgl.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", Tgl).CornerRadius = UDim.new(1, 0)
             local active = false
-            local function update() Tgl.BackgroundColor3 = active and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60); callback(active); if UI.Logger then UI.Logger("تغيير تبديل", label .. " | " .. (active and "ON" or "OFF")) end end
+            local function update() 
+                Tgl.BackgroundColor3 = active and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
+                callback(active) 
+                if UI.Logger then UI.Logger("تغيير تبديل", label .. " | " .. (active and "ON" or "OFF")) end 
+            end
             Tgl.MouseButton1Click:Connect(function() active = not active; update() end)
             return { SetState = function(s) active = s; update() end }
         end
@@ -118,8 +120,9 @@ function UI:CreateWindow(title)
         function TabOps:AddInput(label, placeholder, callback)
             local Row = Instance.new("Frame", Page); Row.Size = UDim2.new(0.95, 0, 0, 60); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
             local Lbl = Instance.new("TextLabel", Row); Lbl.Text = label; Lbl.Size = UDim2.new(1, -10, 0, 25); Lbl.TextColor3 = Color3.fromRGB(0, 255, 150); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = "Right"
-            local Inp = Instance.new("TextBox", Row); Inp.Size = UDim2.new(0.9, 0, 0, 25); Inp.Position = UDim2.new(0.05, 0, 0, 30); Inp.PlaceholderText = placeholder; Inp.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Inp.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", Inp)
+            local Inp = Instance.new("TextBox", Row); Inp.Size = UDim2.new(0.9, 0, 0, 25); Inp.Position = UDim2.new(0.05, 0, 0, 30); Inp.PlaceholderText = placeholder; Inp.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Inp.TextColor3 = Color3.new(1, 1, 1); Inp.Text = ""; Instance.new("UICorner", Inp)
             Inp:GetPropertyChangedSignal("Text"):Connect(function() callback(Inp.Text) end)
+            return { SetText = function(t) Inp.Text = t end, Clear = function() Inp.Text = "" end }
         end
 
         function TabOps:AddImage(url)
