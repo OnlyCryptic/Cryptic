@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - ميزة مراقبة اللاعبين المطورة ]]
--- الملف: spectate.lua | تحديث: البحث الذكي والترتيب المنظم
+-- الملف: spectate.lua | تحديث: البحث الذكي والتحكم الموحد
 
 return function(Tab, UI)
     local players = game:GetService("Players")
@@ -8,25 +8,25 @@ return function(Tab, UI)
     local selectedPlayer = nil
     local isSpectating = false
 
-    -- 1. كشف اللاعبين (ESP)
-    Tab:AddToggle("كشف اللاعبين (ESP)", function(v)
-        -- كود الـ ESP هنا
+    local SpectateToggle -- سنحتاج للإشارة إليه لاحقاً
+
+    -- 1. زر عرض النتيجة (الذي يظهر فيه الاسم @اليوزر)
+    local ResultBtn = Tab:AddButton("لم يتم العثور على لاعب", function()
+        -- عند الضغط على الاسم، يتم مسحه وإيقاف المراقبة
+        selectedPlayer = nil
+        if isSpectating then SpectateToggle.SetState(false) end
+        UI:Notify("تم مسح الاختيار")
     end)
 
-    -- 2. وضع الخط الفاصل تحت الـ ESP مباشرة للتنظيم
-    Tab:AddLine()
-
-    -- 3. نظام البحث الذكي (تم حذف الخانة الزائدة)
-    local SpectateToggle -- سنستخدمه لاحقاً
-
-    local SearchBox = Tab:AddInput("البحث عن لاعب لمراقبته", "اكتب اسم اللاعب هنا...", function(txt)
-        if txt == "" then
+    -- 2. خانة البحث
+    Tab:AddInput("البحث عن لاعب", "اكتب بداية الاسم...", function(txt)
+        if txt == "" then 
             selectedPlayer = nil
+            ResultBtn:SetText("لم يتم العثور على لاعب")
             if isSpectating then SpectateToggle.SetState(false) end
-            return
+            return 
         end
 
-        -- البحث التلقائي بمجرد الكتابة
         local found = nil
         for _, p in pairs(players:GetPlayers()) do
             if p ~= lp and (p.Name:lower():find(txt:lower()) or p.DisplayName:lower():find(txt:lower())) then
@@ -37,43 +37,33 @@ return function(Tab, UI)
 
         if found then
             selectedPlayer = found
-            -- إظهار الاسم واليوزر داخل التيكست بوكس ليسهل عليكِ معرفة من اخترتِ
-            UI:Notify("المستهدف الحالي: " .. found.DisplayName)
+            ResultBtn:SetText(found.DisplayName .. " (@" .. found.Name .. ")")
         else
             selectedPlayer = nil
+            ResultBtn:SetText("❌ لا يوجد لاعب بهذا الاسم")
             if isSpectating then SpectateToggle.SetState(false) end
         end
     end)
 
-    -- 4. مفتاح تشغيل المراقبة
+    -- 3. مفتاح تشغيل المراقبة
     SpectateToggle = Tab:AddToggle("تشغيل وضع المراقبة", function(active)
         isSpectating = active
         if active then
             if selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Humanoid") then
                 camera.CameraSubject = selectedPlayer.Character.Humanoid
-                UI:Notify("أنت الآن تراقب: " .. selectedPlayer.DisplayName)
+                UI:Notify("تراقب الآن: " .. selectedPlayer.DisplayName)
             else
-                UI:Notify("لم يتم العثور على اللاعب أو أنه غير موجود!")
+                UI:Notify("اختر لاعباً أولاً!")
                 task.spawn(function() SpectateToggle.SetState(false) end)
             end
         else
-            -- العودة للكاميرا العادية
             if lp.Character and lp.Character:FindFirstChild("Humanoid") then
                 camera.CameraSubject = lp.Character.Humanoid
             end
-            UI:Notify("تم العودة لكاميرا شخصيتك")
         end
     end)
 
-    -- إطفاء تلقائي عند خروج اللاعب
-    players.PlayerRemoving:Connect(function(player)
-        if selectedPlayer and player == selectedPlayer then
-            selectedPlayer = nil
-            if isSpectating then SpectateToggle.SetState(false) end
-        end
-    end)
-
-    -- تحديث الكاميرا المستمر طالما الميزة مفعلة
+    -- تحديث الكاميرا المستمر
     task.spawn(function()
         while task.wait(0.5) do
             if isSpectating and selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Humanoid") then
