@@ -1,78 +1,44 @@
--- [[ Arwa Hub - ميزة التطيير الصامت + حماية Anti-Fling ]]
--- المطور: Arwa | الميزات: تطيير مضمون، حماية تلقائية، مظهر طبيعي
+-- [[ Arwa Hub - ميزة التطيير بالمشي الصامت (Walk Fling) ]]
+-- المطور: Arwa | المظهر: لاعب طبيعي | الميزة: تطيير خارق عند اللمس
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
     local lp = game.Players.LocalPlayer
-    
     local isWalkFling = false
-    local flingPart = nil
 
-    -- وظيفة إنشاء قطعة التطيير "المدمرة"
-    local function createFlingPart()
-        if flingPart then flingPart:Destroy() end
-        
-        flingPart = Instance.new("Part")
-        flingPart.Name = "ArwaDestructivePart"
-        flingPart.Transparency = 1 -- مخفية
-        flingPart.Size = Vector3.new(1.2, 1.2, 1.2) -- حجم مركز لزيادة قوة الاصطدام
-        flingPart.CanCollide = true -- يجب أن تصطدم بالآخرين لتطيرهم
-        flingPart.Parent = workspace
-        
-        -- إضافة قوة دوران خرافية
-        local bAV = Instance.new("BodyAngularVelocity")
-        bAV.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-        bAV.AngularVelocity = Vector3.new(0, 45000, 0) -- رفع القوة لضمان التطيير
-        bAV.Parent = flingPart
-        
-        -- إلغاء الجاذبية
-        local bF = Instance.new("BodyForce")
-        bF.Force = Vector3.new(0, workspace.Gravity * flingPart:GetMass(), 0)
-        bF.Parent = flingPart
-    end
-
-    Tab:AddToggle("🌪️ تطيير + حماية (Walk Fling)", function(active)
+    Tab:AddToggle("🌪️ تطيير صامت (Walk Fling)", function(active)
         isWalkFling = active
         if active then
-            createFlingPart()
-            UI:Notify("✅ التطيير والحماية (Anti-Fling) مفعلان!")
+            UI:Notify("✅ تم التفعيل. شخصيتك الآن طبيعية، فقط المسي اللاعبين!")
         else
-            if flingPart then flingPart:Destroy() end
-            UI:Notify("❌ تم إيقاف النظام")
+            UI:Notify("❌ تم إيقاف التطيير")
         end
     end)
 
-    Tab:AddParagraph("📝 ملاحقة: بمجرد التفعيل، ستصبحين محصنة ضد التطيير وأي لاعب تلمسينه سيطير فوراً.")
+    -- الملحوظة المطلوبة
+    Tab:AddParagraph("📝 ملاحقة: شخصيتك ستظهر بشكل طبيعي جداً، فقط المسيهم وسيطيرون فوراً.")
 
-    -- الحلقة الذهبية: دمج التطيير مع الحماية (Anti-Fling)
     runService.Heartbeat:Connect(function()
-        local char = lp.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-
-        if isWalkFling and root then
-            if not flingPart or not flingPart.Parent then createFlingPart() end
+        if isWalkFling and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+            local root = lp.Character.HumanoidRootPart
             
-            -- 1. نظام الـ Anti-Fling (حمايتك من الآخرين)
-            -- جعل كل أجزاء جسمك لا تصطدم بأحد لكي لا يتم تطييرك
-            for _, part in pairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                    part.Velocity = Vector3.new(0, 0, 0) -- منع تراكم السرعة القاتلة
+            -- 1. الحفاظ على المظهر الطبيعي (إلغاء قوة الرفع لكي لا يطير اللاعب)
+            -- نترك السرعة (Velocity) كما هي لكي يتحرك اللاعب بشكل عادي
+            
+            -- 2. إلغاء التصادم الداخلي لمنع تطيير نفسك
+            for _, part in pairs(lp.Character:GetDescendants()) do
+                if part:IsA("BasePart") then 
+                    part.CanCollide = false 
                 end
             end
 
-            -- 2. جعل القطعة المخفية تتبعك وتطيرهم
-            flingPart.CFrame = root.CFrame
-            -- إعطاء القطعة سرعة هجومية
-            flingPart.Velocity = Vector3.new(500, 500, 500) 
+            -- 3. تطبيق "قوة التدوير المغناطيسية" (RotVelocity)
+            -- نستخدم قيمة ضخمة جداً لضمان التطيير الفوري عند التلامس
+            -- القوة هنا لا تؤثر على مظهر المشي بل تؤثر فقط على من يلمسك
+            root.RotVelocity = Vector3.new(0, 30000, 0) 
             
-            -- 3. جعل القطعة تتجاهل جسمك أنتِ فقط لكي لا تطيرك
-            local params = RaycastParams.new()
-            params.FilterDescendantsInstances = {char}
-            params.FilterType = Enum.RaycastFilterType.Exclude
-        elseif not isWalkFling and flingPart then
-            flingPart:Destroy()
-            flingPart = nil
+            -- لضمان عدم اهتزاز الشخصية، نجعل القوة تتركز في ثبات الجاذبية
+            root.Velocity = Vector3.new(0, -2, 0) -- قوة جذب خفيفة جداً لتبقي قدمك على الأرض
         end
     end)
 end
