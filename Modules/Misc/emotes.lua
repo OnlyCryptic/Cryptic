@@ -3,7 +3,7 @@
 
 return function(Tab, UI)
     -- زر تشغيل السكربت
-    Tab:AddButton("تشغيل سكربت الرقصات (All Emotes)", function()
+    Tab:AddButton("تشغيل سكربت الرقصات", function()
         UI:Notify("⏳ جاري تحميل الرقصات... يرجى الانتظار في الماب")
         
         -- تشغيل السكربت باستخدام pcall لمنع أي أخطاء من إيقاف كربتك هاب
