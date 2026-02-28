@@ -13,7 +13,7 @@ return function(Tab, UI)
     end)
 
     -- زر البحث عن سيرفر جديد (Server Hop)
-    Tab:AddButton("تغيير السيرفر (Server Hop)", function()
+    Tab:AddButton("تغيير السيرفر", function()
         UI:Notify("جاري البحث عن سيرفر جديد...")
         pcall(function()
             local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")).data
