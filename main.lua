@@ -17,7 +17,7 @@ local Cryptic = {
         -- التقسيم الجديد هنا:
         ["استهداف لاعب"] = { 
             Folder = "Combat", 
-            Files = {"target_select", "target_tp", "target_aimbot", "target_sit"} 
+            Files = {"target_select", "target_tp", "target_aimbot", "target_sit", "target_mimic"} 
         },
         
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} }
