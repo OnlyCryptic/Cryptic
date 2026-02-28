@@ -4,7 +4,7 @@ return function(Tab, UI)
     local isNoFallActive = false
     local NoFallConnection = nil
 
-    Tab:AddToggle("بدون دمج سقوط 🪂", function(state)
+    Tab:AddToggle("بدون دمج سقوط", function(state)
         isNoFallActive = state
         
         if isNoFallActive then
