@@ -13,7 +13,7 @@ return function(Tab, UI)
     end
 
     -- استخدام AddToggle هنا لإزالة الأزرار الزائدة (+ و -)
-    Tab:AddToggle("كشف اللاعبين (ESP)", function(active)
+    Tab:AddToggle("كشف اللاعبين", function(active)
         if active then
             for _, p in pairs(game.Players:GetPlayers()) do applyESP(p) end
             UI:Notify("تم تفعيل الكشف")
