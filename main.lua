@@ -1,5 +1,5 @@
--- [[ Arwa Hub - المحرك الرئيسي V4.4 ]]
--- الإصلاح: ترتيب الأزرار + اسم "خدع" + إصلاح الإشعارات
+-- [[ Arwa Hub - المحرك الرئيسي V4.5 ]]
+-- الإصلاح: ترتيب الأزرار + اسم "خدع" + إصلاح الإشعارات + منع الـ Nil Error
 
 local Cryptic = {
     Config = {
@@ -11,10 +11,10 @@ local Cryptic = {
     
     Structure = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
-        ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk"} },
+        ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling"} },
         ["أدوات"] = { Folder = "Misc", Files = {"tptool", "emotes", "esp", "camera", "shiftlock"} },
         
-        -- تعديل الترتيب ليصبح الانتقال فوق المراقبة
+        -- ترتيب الأزرار المصلح (الانتقال فوق المراقبة)
         ["استهداف لاعب"] = { 
             Folder = "Combat", 
             Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} 
@@ -22,25 +22,33 @@ local Cryptic = {
         
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
 
-        -- تغيير الاسم من "تعديل الخصوم" إلى "خدع"
+        -- الاسم الجديد "خدع" في نهاية القائمة
         ["خدع"] = { Folder = "Combat", Files = {"hitbox", "anime_aura"} }
     },
 
-    -- الترتيب النهائي للأقسام (خدع في آخر القائمة)
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "خدع"}
 }
 
-local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-local lp = Players.LocalPlayer
+local function SendNotify(title, text)
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = 5
+    })
+end
 
 local function Import(path)
-    local cacheBuster = "?v=" .. math.random(1, 1000000)
-    local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. cacheBuster
+    -- استخدام tick() لضمان كسر الكاش وتحميل أحدث نسخة فوراً
+    local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. "?v=" .. tick()
     local s, r = pcall(game.HttpGet, game, url)
     if s and r then 
-        local f = loadstring(r)
-        if f then return f() end 
+        local f, err = loadstring(r)
+        if f then 
+            local success, result = pcall(f)
+            if success then return result end
+        else
+            warn("Arwa Hub Error in " .. path .. ": " .. tostring(err))
+        end
     end 
     return nil
 end
@@ -56,6 +64,7 @@ if UI then
                 pcall(function()
                     local filePath = "Modules/" .. info.Folder .. "/" .. fileName .. ".lua"
                     local init = Import(filePath)
+                    -- التأكد من أن الملف ليس nil وأنه يحتوي على وظيفة
                     if type(init) == "function" then
                         init(CurrentTab, UI)
                         CurrentTab:AddLine()
@@ -64,5 +73,5 @@ if UI then
             end
         end
     end
-    UI:Notify("✅ تم التحديث بنجاح! تفحصي قسم خدع الآن")
+    SendNotify("Arwa Hub", "✅ تم التحميل بنجاح يا أروى!")
 end
