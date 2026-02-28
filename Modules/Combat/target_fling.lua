@@ -6,7 +6,7 @@ return function(Tab, UI)
     local lp = game.Players.LocalPlayer
     local isFlinging = false
 
-    Tab:AddToggle("🌪️ تطيير الهدف (Fling Target)", function(active)
+    Tab:AddToggle("🌪️ تطيير الهدف", function(active)
         isFlinging = active
         if active then
             if _G.ArwaTarget then
