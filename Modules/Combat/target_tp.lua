@@ -1,5 +1,5 @@
 return function(Tab, UI)
-    Tab:AddButton("🚀 انتقال إلى الهدف", function()
+    Tab:AddButton("🚀 انتقال إلى لاعب", function()
         local target = _G.ArwaTarget
         local lp = game.Players.LocalPlayer
         if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then 
