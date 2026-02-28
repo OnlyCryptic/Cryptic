@@ -15,18 +15,20 @@ return function(Tab, UI)
                 
                 local root = Character.HumanoidRootPart
                 
-                -- مسح سريع لكل الأجزاء في الخريطة
+                -- مسح سريع للأجزاء في الخريطة
                 for _, part in pairs(workspace:GetDescendants()) do
+                    -- التأكد أنها بلوكة، غير مثبتة، وليست من جسمك
                     if part:IsA("BasePart") and not part.Anchored and not part:IsDescendantOf(Character) then
                         
-                        -- إذا اقتربت البلوكة منك (مسافة 40)
+                        -- إذا اقتربت البلوكة منك (داخل نطاق 40 خطوة)
                         if (part.Position - root.Position).Magnitude < 40 then
                             
-                            -- 1. إيقاف التصادم (تخترقك)
-                            part.CanCollide = false 
-                            
-                            -- 2. إبطال السرعة (إيقاف هجوم السكربتات الأخرى)
+                            -- 🚨 التعديل هنا: السكربت يتدخل فقط إذا كانت البلوكة تتحرك بسرعة عالية (أكثر من 30)
                             if part.AssemblyLinearVelocity.Magnitude > 30 then
+                                -- 1. إيقاف التصادم لتخترقك بأمان
+                                part.CanCollide = false 
+                                
+                                -- 2. تصفير السرعة تماماً لتسقط على الأرض فوراً
                                 part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                                 part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
                             end
@@ -38,7 +40,7 @@ return function(Tab, UI)
             
             game:GetService("StarterGui"):SetCore("SendNotification", {
                 Title = "Arwa Hub",
-                Text = "تم تفعيل الدرع المضاد للبلوكات! 🛡️ لا أحد يستطيع تطييرك",
+                Text = "الرادار شغال! 🛡️ سيتم صد البلوكات السريعة فقط",
                 Duration = 4
             })
         else
