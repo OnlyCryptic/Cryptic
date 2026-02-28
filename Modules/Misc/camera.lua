@@ -1,68 +1,99 @@
--- [[ Arwa Hub - ميزة الكاميرا الحرة المصلحة ]]
--- المطور: Arwa | الميزات: تثبيت اللاعب + حركة 3D كاملة باتجاه النظر
+-- [[ Arwa Hub - FreeCam PRO ]]
+-- حركة احترافية + دوران ماوس سلس + تسارع
 
 return function(Tab, UI)
-    local lp = game:GetService("Players").LocalPlayer
-    local runService = game:GetService("RunService")
+    local Players = game:GetService("Players")
+    local UIS = game:GetService("UserInputService")
+    local RunService = game:GetService("RunService")
+
+    local lp = Players.LocalPlayer
     local camera = workspace.CurrentCamera
-    
+
     local isFreeCam = false
-    local camPart = nil
-    local speed = 2
+    local camCF
+    local velocity = Vector3.zero
+    local speed = 50
+    local sensitivity = 0.2
+    local smoothness = 0.15
+
+    local keys = {
+        W = false,
+        A = false,
+        S = false,
+        D = false,
+        E = false,
+        Q = false
+    }
+
+    -- إدخال الكيبورد
+    UIS.InputBegan:Connect(function(input, gpe)
+        if gpe then return end
+        if keys[input.KeyCode.Name] ~= nil then
+            keys[input.KeyCode.Name] = true
+        end
+    end)
+
+    UIS.InputEnded:Connect(function(input)
+        if keys[input.KeyCode.Name] ~= nil then
+            keys[input.KeyCode.Name] = false
+        end
+    end)
+
+    local function getMoveVector()
+        local move = Vector3.zero
+        if keys.W then move += Vector3.new(0,0,-1) end
+        if keys.S then move += Vector3.new(0,0,1) end
+        if keys.A then move += Vector3.new(-1,0,0) end
+        if keys.D then move += Vector3.new(1,0,0) end
+        if keys.E then move += Vector3.new(0,1,0) end
+        if keys.Q then move += Vector3.new(0,-1,0) end
+        return move
+    end
 
     local function toggleFreeCam(active)
         isFreeCam = active
         local char = lp.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
-        local hum = char and char:FindFirstChild("Humanoid")
 
-        if active and root and hum then
-            -- 1. تثبيت اللاعب في مكانه لكي لا يتحرك مع الجويستيك
+        if active and root then
             root.Anchored = true
-            
-            -- 2. إنشاء قطعة الكاميرا الحرة
-            camPart = Instance.new("Part")
-            camPart.Name = "ArwaFreeCam"
-            camPart.Transparency = 1
-            camPart.CanCollide = false
-            camPart.Anchored = true
-            camPart.CFrame = camera.CFrame
-            camPart.Parent = workspace
-            
-            camera.CameraSubject = camPart
-            UI:Notify("✅ تم تفعيل الكاميرا الحرة (اللاعب ثابت)")
-            
-            task.spawn(function()
-                while isFreeCam do
-                    runService.RenderStepped:Wait()
-                    if camPart and hum.MoveDirection.Magnitude > 0 then
-                        -- نظام الحركة 3D الاحترافي:
-                        -- نأخذ اتجاه نظرة الكاميرا (LookVector) ونضربه في حركة الجويستيك
-                        local lookVector = camera.CFrame.LookVector
-                        local rightVector = camera.CFrame.RightVector
-                        local moveDir = hum.MoveDirection
-                        
-                        -- حساب الاتجاه الجديد بناءً على أين تنظر الكاميرا حالياً
-                        local finalVec = (lookVector * -moveDir.Z) + (rightVector * moveDir.X)
-                        
-                        camPart.CFrame = camPart.CFrame + (finalVec * speed)
-                    end
-                    -- جعل الكاميرا تتبع القطعة دائماً
-                    if camPart then
-                        camera.CFrame = CFrame.new(camPart.Position) * (camera.CFrame - camera.CFrame.Position)
-                    end
+            camCF = camera.CFrame
+            UIS.MouseBehavior = Enum.MouseBehavior.LockCenter
+            UI:Notify("✅ FreeCam PRO Activated")
+
+            RunService:BindToRenderStep("FreeCam", Enum.RenderPriority.Camera.Value + 1, function(dt)
+                -- دوران الماوس
+                local delta = UIS:GetMouseDelta()
+                camCF *= CFrame.Angles(
+                    math.rad(-delta.Y * sensitivity),
+                    math.rad(-delta.X * sensitivity),
+                    0
+                )
+
+                -- حركة
+                local moveDir = getMoveVector()
+                if moveDir.Magnitude > 0 then
+                    moveDir = moveDir.Unit
                 end
+
+                local targetVel =
+                    (camCF.LookVector * -moveDir.Z +
+                     camCF.RightVector * moveDir.X +
+                     Vector3.new(0,1,0) * moveDir.Y) * speed
+
+                velocity = velocity:Lerp(targetVel, smoothness)
+
+                camCF += velocity * dt
+                camera.CFrame = camCF
             end)
+
         else
-            -- إرجاع كل شيء لوضعه الطبيعي
-            if root then root.Anchored = false end -- فك تثبيت اللاعب
-            if camPart then camPart:Destroy() end
-            if hum then camera.CameraSubject = hum end
-            UI:Notify("❌ عاد التحكم للاعب")
+            if root then root.Anchored = false end
+            UIS.MouseBehavior = Enum.MouseBehavior.Default
+            RunService:UnbindFromRenderStep("FreeCam")
+            UI:Notify("❌ FreeCam Disabled")
         end
     end
 
-    Tab:AddToggle("🎥 الكاميرا الحرة", function(active)
-        toggleFreeCam(active)
-    end)
+    Tab:AddToggle("🎥 FreeCam PRO", toggleFreeCam)
 end
