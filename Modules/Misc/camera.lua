@@ -18,8 +18,8 @@ return function(Tab, UI)
     local targetPitch = 0
 
     local camPos
-    local sensitivity = 0.20
-    local smoothness = 0.15
+    local sensitivity = 0.40
+    local smoothness = 0.18
 
     local function toggleFreeCam(active, speedValue)
         isFreeCam = active
