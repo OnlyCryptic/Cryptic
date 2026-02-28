@@ -10,7 +10,7 @@ return function(Tab, UI)
     local customWalkSpeed = 70 -- سرعة المشي (تمت زيادتها)
     local originalWalkSpeed = 16
 
-    Tab:AddToggle("🌪️ إعصار تطير", function(active)
+    Tab:AddToggle("تطيير لاعبين", function(active)
         isFlinging = active
         local char = lp.Character
         local hum = char and char:FindFirstChild("Humanoid")
