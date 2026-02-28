@@ -1,195 +1,78 @@
--- [[ Arwa Hub - استهداف اللاعبين (تحكم كامل) ]]
--- المطور: Arwa | إصلاح مشكلة الموت عند الجلوس على الرأس
+-- [[ Arwa Hub - ميزات الكاميرا الاحترافية ]]
+-- المطور: Arwa | الإصدار المصلح (بدون AddSlider)
 
 return function(Tab, UI)
     local players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local TextChatService = game:GetService("TextChatService")
-    
+    local runService = game:GetService("RunService")
     local lp = players.LocalPlayer
     local camera = workspace.CurrentCamera
     
-    local selectedPlayer = nil
-    
-    local isSpectating = false
-    local isAimbotting = false
-    local isSitting = false
-    local isMimicking = false
-    local mimicConnection = nil
+    -- متغيرات الكاميرا الحرة
+    local isFreeCam = false
+    local camPart = nil
+    local freeCamSpeed = 2
 
-    local SpectateToggle
-
-    -- وظيفة تقليد الشات
-    local function setupMimicConnection()
-        if mimicConnection then 
-            mimicConnection:Disconnect() 
-            mimicConnection = nil 
-        end
-        
-        if isMimicking and selectedPlayer then
-            mimicConnection = selectedPlayer.Chatted:Connect(function(msg)
-                local rawMsg = tostring(msg)
-                pcall(function()
-                    if TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral") then
-                        TextChatService.TextChannels.RBXGeneral:SendAsync(rawMsg)
-                    elseif ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") then
-                        ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(rawMsg, "All")
+    -- 1. ميزة الكاميرا الحرة
+    local function toggleFreeCam(active)
+        isFreeCam = active
+        if active then
+            camPart = Instance.new("Part")
+            camPart.Name = "ArwaFreeCamPart"
+            camPart.Transparency = 1
+            camPart.CanCollide = false
+            camPart.Anchored = true
+            camPart.CFrame = camera.CFrame
+            camPart.Parent = workspace
+            camera.CameraSubject = camPart
+            
+            task.spawn(function()
+                while isFreeCam do
+                    runService.RenderStepped:Wait()
+                    if camPart and lp.Character and lp.Character:FindFirstChild("Humanoid") then
+                        local hum = lp.Character.Humanoid
+                        if hum.MoveDirection.Magnitude > 0 then
+                            camPart.CFrame = camPart.CFrame * CFrame.new(hum.MoveDirection * freeCamSpeed)
+                        end
+                        camera.CFrame = camPart.CFrame
                     end
-                end)
+                end
             end)
+            UI:Notify("✅ تم تفعيل الكاميرا الحرة")
+        else
+            if camPart then camPart:Destroy() end
+            if lp.Character and lp.Character:FindFirstChild("Humanoid") then
+                camera.CameraSubject = lp.Character.Humanoid
+            end
+            UI:Notify("❌ تم إيقاف الكاميرا الحرة")
         end
     end
 
-    -- 1. خانة البحث
-    local InputField = Tab:AddInput("البحث عن لاعب", "اكتب بداية اليوزر وأغلق الكيبورد...", function(txt) end)
-
-    InputField.TextBox.FocusLost:Connect(function()
-        local txt = InputField.TextBox.Text
-        if txt == "" then 
-            selectedPlayer = nil
-            setupMimicConnection() 
-            if isSpectating and SpectateToggle then SpectateToggle.SetState(false) end
-            return 
-        end
-
-        local bestMatch = nil
-        local search = txt:lower()
-
-        for _, p in pairs(players:GetPlayers()) do
-            if p ~= lp and string.sub(p.Name:lower(), 1, #search) == search then
-                bestMatch = p; break 
-            end
-        end
-
-        if bestMatch then
-            selectedPlayer = bestMatch
-            InputField.SetText(bestMatch.DisplayName .. " (@" .. bestMatch.Name .. ")")
-            UI:Notify("🎯 تم تحديد الهدف: " .. bestMatch.DisplayName)
-            setupMimicConnection() 
-        else
-            selectedPlayer = nil
-            UI:Notify("❌ لم يتم العثور على لاعب")
-            setupMimicConnection()
+    Tab:AddToggle("🎥 تشغيل الكاميرا الحرة (Free Cam)", function(active)
+        toggleFreeCam(active)
+    end)
+    
+    -- استخدمنا AddInput هنا لأن الواجهة لا تدعم AddSlider
+    Tab:AddInput("🚀 سرعة الكاميرا (أرقام فقط)", "اكتبي السرعة هنا مثل 2", function(val)
+        local num = tonumber(val)
+        if num then
+            freeCamSpeed = num
+            UI:Notify("تم تغيير السرعة إلى: " .. num)
         end
     end)
 
     Tab:AddLine()
 
-    -- 2. انتقال
-    Tab:AddButton("🚀 انتقال إلى الهدف", function()
-        if selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("HumanoidRootPart") then 
-            if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                lp.Character.HumanoidRootPart.CFrame = selectedPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 3, 0) 
-            end
-        else
-            UI:Notify("حدد هدفاً أولاً!")
-        end
-    end)
-
-    -- 3. المراقبة
-    SpectateToggle = Tab:AddToggle("👁️ تشغيل وضع المراقبة", function(active)
-        isSpectating = active
-        if active and selectedPlayer then 
-            camera.CameraSubject = selectedPlayer.Character.Humanoid
-        else 
-            if lp.Character and lp.Character:FindFirstChild("Humanoid") then
-                camera.CameraSubject = lp.Character.Humanoid 
-            end
-        end
+    -- 2. ميزة اختراق الجدران بالكاميرا (No Camera Clip)
+    Tab:AddToggle("👻 اختراق الجدران بالكاميرا (No Clip)", function(active)
+        lp.DevCameraOcclusionMode = active and Enum.DevCameraOcclusionMode.Invisicam or Enum.DevCameraOcclusionMode.Zoom
+        UI:Notify(active and "الكاميرا الآن تخترق الجدران" or "عادت الكاميرا لوضعها الطبيعي")
     end)
 
     Tab:AddLine()
 
-    -- 4. الإيم بوت
-    Tab:AddToggle("🔫 إيم بوت على الهدف (Aimbot)", function(active)
-        isAimbotting = active
-        UI:Notify(active and "تم تثبيت السلاح والشاشة على الهدف" or "تم إيقاف الإيم بوت")
-        
-        if not active and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-            local gyro = lp.Character.HumanoidRootPart:FindFirstChild("AimbotGyro")
-            if gyro then gyro:Destroy() end
-        end
-    end)
-
-    -- 5. الجلوس على الرأس (مُصلحة!)
-    Tab:AddToggle("🪑 الجلوس على رأس الهدف", function(active)
-        isSitting = active
-        
-        -- إرسال أمر الجلوس مرة واحدة فقط لتجنب الموت
-        if lp.Character and lp.Character:FindFirstChild("Humanoid") then
-            lp.Character.Humanoid.Sit = active
-        end
-        
-        UI:Notify(active and "أنت الآن تجلس على رأسه بأمان تام!" or "تم النزول")
-    end)
-
-    -- 6. تقليد الكلام
-    Tab:AddToggle("💬 تقليد كلام الهدف (Mimic)", function(active)
-        isMimicking = active
-        setupMimicConnection()
-        UI:Notify(active and "أي شيء سيكتبه، ستكتبه أنت تلقائياً!" or "تم إيقاف تقليد الكلام")
-    end)
-
-    -- ================= الحلقات المستمرة (Loops) =================
-
-    task.spawn(function()
-        RunService.RenderStepped:Connect(function()
-            if isSpectating and selectedPlayer and selectedPlayer.Character then 
-                camera.CameraSubject = selectedPlayer.Character:FindFirstChild("Humanoid") or lp.Character.Humanoid
-            end
-            
-            if isAimbotting and selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Head") then
-                local targetPos = selectedPlayer.Character.Head.Position
-                camera.CFrame = CFrame.lookAt(camera.CFrame.Position, targetPos)
-                
-                if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                    local root = lp.Character.HumanoidRootPart
-                    local gyro = root:FindFirstChild("AimbotGyro")
-                    if not gyro then
-                        gyro = Instance.new("BodyGyro")
-                        gyro.Name = "AimbotGyro"
-                        gyro.MaxTorque = Vector3.new(0, math.huge, 0) 
-                        gyro.P = 50000 
-                        gyro.Parent = root
-                    end
-                    gyro.CFrame = CFrame.lookAt(root.Position, Vector3.new(targetPos.X, root.Position.Y, targetPos.Z))
-                end
-            end
-        end)
-    end)
-
-    -- مضاد التطيير (يمنع اللاعب من الإضرار بك)
-    task.spawn(function()
-        RunService.Stepped:Connect(function()
-            if isSitting and lp.Character then
-                for _, otherPlayer in pairs(players:GetPlayers()) do
-                    if otherPlayer ~= lp and otherPlayer.Character then
-                        for _, part in pairs(otherPlayer.Character:GetChildren()) do
-                            if part:IsA("BasePart") and part.CanCollide then
-                                part.CanCollide = false 
-                            end
-                        end
-                    end
-                end
-            end
-        end)
-    end)
-
-    -- الجلوس الآمن تماماً
-    task.spawn(function()
-        RunService.Heartbeat:Connect(function()
-            if isSitting and selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Head") then
-                if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                    local root = lp.Character.HumanoidRootPart
-                    
-                    -- تصفير السرعة الفيزيائية لمنع تراكمها والموت بسببها
-                    root.Velocity = Vector3.new(0, 0, 0)
-                    
-                    -- وضع مسافة 2.2 حتى لا تندمج الأجسام وتموت الشخصية
-                    root.CFrame = selectedPlayer.Character.Head.CFrame * CFrame.new(0, 2.2, 0)
-                end
-            end
-        end)
+    -- 3. ميزة الزوم اللانهائي (No Max Zoom)
+    Tab:AddButton("🔍 تفعيل الزوم اللانهائي (No Max Zoom)", function()
+        lp.CameraMaxZoomDistance = 1000000
+        UI:Notify("✅ يمكنك الآن الزوم لأبعد مسافة ممكنة!")
     end)
 end
