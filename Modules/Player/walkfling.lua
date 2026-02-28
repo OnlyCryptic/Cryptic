@@ -1,36 +1,68 @@
--- [[ Arwa Hub - ميزة تطيير اللاعبين بالمشي (Walk Fling) ]]
--- المطور: Arwa | الميزات: تطيير صامت، حماية شخصية، إخفاء الدوران
+-- [[ Arwa Hub - ميزة التطيير الصامت (بدون دوران للشخصية) ]]
+-- المطور: Arwa | المظهر: طبيعي 100% | التقنية: القطعة المخفية
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
     local lp = game.Players.LocalPlayer
+    
     local isWalkFling = false
+    local flingPart = nil
 
-    Tab:AddToggle("🌪️ تطيير اللاعبين (Walk Fling)", function(active)
+    -- وظيفة إنشاء وتدشين قطعة التطيير المخفية
+    local function createFlingPart()
+        if flingPart then flingPart:Destroy() end
+        
+        flingPart = Instance.new("Part")
+        flingPart.Name = "ArwaSilentFling"
+        flingPart.Transparency = 1 -- مخفية تماماً
+        flingPart.CanCollide = false
+        flingPart.Anchored = false
+        flingPart.Size = Vector3.new(2, 2, 2)
+        flingPart.Parent = workspace
+        
+        -- إضافة قوة الدوران للقطعة وليس للاعب
+        local bAV = Instance.new("BodyAngularVelocity")
+        bAV.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+        bAV.AngularVelocity = Vector3.new(0, 30000, 0) -- السرعة في القطعة المخفية
+        bAV.Parent = flingPart
+        
+        -- إلغاء الجاذبية للقطعة لكي لا تسقط
+        local bF = Instance.new("BodyForce")
+        bF.Force = Vector3.new(0, workspace.Gravity * flingPart:GetMass(), 0)
+        bF.Parent = flingPart
+    end
+
+    Tab:AddToggle("🌪️ تطيير صامت (بدون دوران)", function(active)
         isWalkFling = active
         if active then
-            UI:Notify("✅ تم تفعيل Walk Fling. فقط اقتربي من أي لاعب!")
+            createFlingPart()
+            UI:Notify("✅ تم التفعيل. شخصيتك طبيعية والقطعة المخفية جاهزة!")
         else
+            if flingPart then flingPart:Destroy() end
             UI:Notify("❌ تم إيقاف التطيير")
         end
     end)
 
-    -- الملحوظة التي طلبتِها
-    Tab:AddParagraph("📝 ملحوظة: لا تحتاجي للضغط على أي شيء، فقط المسيهم وسيطيرون فوراً.")
+    Tab:AddParagraph("📝 ملاحقة: شخصيتك لن تدور أبداً، القطعة المخفية هي من ستطيرهم.")
 
+    -- حلقة التحديث: جعل القطعة تتبع اللاعب بدقة
     runService.Heartbeat:Connect(function()
         if isWalkFling and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
             local root = lp.Character.HumanoidRootPart
             
-            -- إلغاء التصادم لضمان عدم تعثركِ أثناء التطيير
+            if not flingPart or not flingPart.Parent then createFlingPart() end
+            
+            -- جعل القطعة المخفية في نفس موقع اللاعب تماماً
+            flingPart.CFrame = root.CFrame
+            flingPart.Velocity = root.Velocity -- لضمان بقائها معك أثناء المشي السريع
+            
+            -- إلغاء تصادم اللاعب مع الآخرين لضمان لمسهم للقطعة المخفية
             for _, part in pairs(lp.Character:GetDescendants()) do
                 if part:IsA("BasePart") then part.CanCollide = false end
             end
-
-            -- تطبيق قوة دفع مخفية (Velocity)
-            -- نستخدم قوة دوران هائلة لكن في اتجاه واحد لكي لا تظهر الشخصية وهي تهتز
-            root.Velocity = Vector3.new(0, 30, 0) -- رفعة خفيفة جداً
-            root.RotVelocity = Vector3.new(0, 20000, 0) -- قوة تطيير جبارة عند التلامس
+        elseif not isWalkFling and flingPart then
+            flingPart:Destroy()
+            flingPart = nil
         end
     end)
 end
