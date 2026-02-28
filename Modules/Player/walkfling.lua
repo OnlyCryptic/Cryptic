@@ -32,7 +32,7 @@ return function(Tab, UI)
         bF.Parent = flingPart
     end
 
-    Tab:AddToggle("🌪️ تطيير صامت (بدون دوران)", function(active)
+    Tab:AddToggle("🌪️ تطير لاعبين", function(active)
         isWalkFling = active
         if active then
             createFlingPart()
@@ -43,7 +43,7 @@ return function(Tab, UI)
         end
     end)
 
-    Tab:AddParagraph("📝 ملاحقة: شخصيتك لن تدور أبداً، القطعة المخفية هي من ستطيرهم.")
+    Tab:AddParagraph("📝 ملاحقة: فقط المس لاعبين وسوف يطيرون.")
 
     -- حلقة التحديث: جعل القطعة تتبع اللاعب بدقة
     runService.Heartbeat:Connect(function()
