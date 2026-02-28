@@ -10,7 +10,7 @@ return function(Tab, UI)
     local smoothness = 0.15 -- درجة التنعيم (كلما قل الرقم كان الإيم أهدأ وأكثر واقعية)
     local shiftLockOffset = Vector3.new(1.7, 0.5, 0) -- إزاحة الكاميرا الجانبية
 
-    Tab:AddToggle("🔫 إيم بوت + شيفت لوك تلقائي", function(active)
+    Tab:AddToggle("🔫 إيم بوت", function(active)
         isAimbotting = active
         local char = lp.Character
         local hum = char and char:FindFirstChild("Humanoid")
