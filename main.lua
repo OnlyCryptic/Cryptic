@@ -106,7 +106,7 @@ end
 local UI = Import("UI_Engine.lua")
 if UI then
     _G.ArwaUI = UI -- تخزين الواجهة عالمياً لضمان الوصول للإشعارات
-    local MainWin = UI:CreateWindow("Arwa Hub | أروى")
+    local MainWin = UI:CreateWindow("Cryptic hub / https://discord.gg/QSvQJs7BdP ")
     
     for _, tabName in ipairs(Cryptic.TabsOrder) do
         local info = Cryptic.Structure[tabName]
