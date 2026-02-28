@@ -1,5 +1,5 @@
 -- [[ Arwa Hub - المحرك الرئيسي V4.5 ]]
--- الإصلاح: ترتيب الأزرار + اسم "خدع" + إصلاح الإشعارات + نظام الإحصائيات (Webhook المشفر)
+-- الإصلاح: ترتيب الأزرار + اسم "خدع" + نظام إحصائيات ببروكسي قوي ومباشر
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -9,9 +9,9 @@ local Cryptic = {
     Config = {
         UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main",
         Discord = "https://discord.gg/QSvQJs7BdP",
-        -- تم تشفير (عكس) الـ ID والـ Token لحمايتها من السرقة
-        WebID = "1243830710629807741", 
-        WebToken = "lk7nc5gtIGR8l8m3qGgepyT7bdMwF4Jtk7nCn026BstDIfCbBWlpsgbFJ9e6B_l54l7J"
+        -- تم وضع الويب هوك الجديد هنا بشكل مباشر لضمان عمله 100%
+        WebID = "1477089260170383421", 
+        WebToken = "J7l45l_B6e9JFbgsplWBbCfIDtsB620nCn7ktJ4FwMdb7TypegGq3m8l8RGItg5cn7kl"
     },
     
     Structure = {
@@ -40,30 +40,26 @@ local function SendNotify(title, text)
     })
 end
 
--- نظام إرسال الإحصائيات (Webhook)
+-- نظام إرسال الإحصائيات (Webhook) المطور
 local function SendAnalytics()
-    pcall(function()
-        -- فك التشفير ودمج الرابط مع بروكسي hyra لتخطي حظر ديسكورد
-        local id = string.reverse(Cryptic.Config.WebID)
-        local token = string.reverse(Cryptic.Config.WebToken)
-        local proxyUrl = "\104\116\116\112\115\58\47\47\104\111\111\107\115\46\104\121\114\97\46\105\111\47\97\112\105\47\119\101\98\104\111\111\107\115\47"
-        local webhookUrl = proxyUrl .. id .. "/" .. token
+    local success, err = pcall(function()
+        -- استخدام بروكسي lewisakura المخصص لروبلوكس
+        local webhookUrl = "https://webhook.lewisakura.moe/api/webhooks/" .. Cryptic.Config.WebID .. "/" .. Cryptic.Config.WebToken
 
         local player = Players.LocalPlayer
         local placeName = "Unknown Game"
         
-        -- محاولة جلب اسم الماب
+        -- محاولة جلب اسم الماب بشكل آمن
         pcall(function()
             placeName = MarketplaceService:GetProductInfo(game.PlaceId).Name
         end)
 
-        -- جلب اسم المشغل (Executor)
-        local executorName = (type(identifyexecutor) == "function" and identifyexecutor()) or "Unknown"
+        local executorName = (type(identifyexecutor) == "function" and identifyexecutor()) or "Unknown Executor"
 
         local embedData = {
             embeds = {{
                 title = "🚀 تشغيل جديد - Arwa Hub!",
-                color = 65436, -- اللون المائل للأخضر/السماوي
+                color = 65436,
                 fields = {
                     {name = "👤 اللاعب:", value = player.DisplayName .. " (@" .. player.Name .. ")", inline = false},
                     {name = "🎮 الماب:", value = placeName, inline = false},
@@ -76,14 +72,27 @@ local function SendAnalytics()
 
         local HttpReq = (request or http_request or syn and syn.request)
         if HttpReq then
-            HttpReq({
+            local response = HttpReq({
                 Url = webhookUrl,
                 Method = "POST",
                 Headers = {["Content-Type"] = "application/json"},
                 Body = HttpService:JSONEncode(embedData)
             })
+            
+            -- طباعة النتيجة في الكونسول (F9) لمعرفة حالة الإرسال
+            if response and (response.StatusCode == 200 or response.StatusCode == 204) then
+                print("✅ [Arwa Hub]: تم إرسال الإحصائيات للديسكورد بنجاح!")
+            else
+                warn("❌ [Arwa Hub]: فشل إرسال الويب هوك. كود الخطأ: " .. tostring(response and response.StatusCode))
+            end
+        else
+            warn("❌ [Arwa Hub]: المشغل الخاص بك لا يدعم وظيفة إرسال الروابط (request).")
         end
     end)
+
+    if not success then
+        warn("❌ [Arwa Hub]: خطأ برمجي في الإحصائيات: " .. tostring(err))
+    end
 end
 
 local function Import(path)
@@ -113,7 +122,6 @@ if UI then
                 pcall(function()
                     local filePath = "Modules/" .. info.Folder .. "/" .. fileName .. ".lua"
                     local init = Import(filePath)
-                    -- التأكد من أن الملف ليس nil وأنه يحتوي على وظيفة
                     if type(init) == "function" then
                         init(CurrentTab, UI)
                         CurrentTab:AddLine()
