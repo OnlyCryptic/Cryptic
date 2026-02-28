@@ -62,7 +62,7 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddToggle("🎥 الكاميرا الحرة 3D (تثبيت اللاعب)", function(active)
+    Tab:AddToggle("🎥 الكاميرا الحرة", function(active)
         toggleFreeCam(active)
     end)
 end
