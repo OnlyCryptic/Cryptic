@@ -23,7 +23,7 @@ local Cryptic = {
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
 
         -- الاسم الجديد "خدع" في نهاية القائمة
-        ["خدع"] = { Folder = "Combat", Files = {"hitbox", "anime_aura", "invisibility"} }
+        ["خدع"] = { Folder = "Combat", Files = {"hitbox", "anime_aura", "invisibility", "giant"} }
     },
 
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "خدع"}
