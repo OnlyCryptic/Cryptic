@@ -14,7 +14,7 @@ local Cryptic = {
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk"} },
         
         -- أضفنا "camera" هنا في قسم أدوات
-        ["أدوات"] = { Folder = "Misc", Files = {"tptool", "emotes", "esp", "camera"} },
+        ["أدوات"] = { Folder = "Misc", Files = {"tptool", "emotes", "esp", "camera", "shiftlock"} },
         
         ["استهداف لاعب"] = { Folder = "Combat", Files = {"spectate"} },
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} }
