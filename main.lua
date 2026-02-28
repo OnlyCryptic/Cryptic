@@ -26,7 +26,7 @@ local Cryptic = {
         
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
 
-        ["خدع"] = { Folder = "Combat", Files = {"hitbox", "anime_aura", "invisibility", "zero_gravity"} }
+        ["خدع"] = { Folder = "Combat", Files = {"hitbox", "anime_aura", "invisibility", "zero_gravity", "telekinesis"} }
     },
 
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "خدع"}
