@@ -9,16 +9,20 @@ local Cryptic = {
         WebToken = "J7l45l_B6e9JFbgsplWBbCfIDtsB620nCn7ktJ4FwMdb7TypegGq3m8l8RGItg5cn7kl"
     },
     
-    Structure = {
+        Structure = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk"} },
+        ["أدوات"] = { Folder = "Misc", Files = {"tptool", "emotes", "esp", "camera", "shiftlock"} },
         
-        -- أضفنا "camera" هنا في قسم أدوات
-        ["أدوات"] = { Folder = "Misc", Files = {"tptool", "emotes", "esp", "camera"} },
+        -- التقسيم الجديد هنا:
+        ["استهداف لاعب"] = { 
+            Folder = "Combat", 
+            Files = {"target_select", "target_tp", "target_aimbot", "target_sit"} 
+        },
         
-        ["استهداف لاعب"] = { Folder = "Combat", Files = {"spectate"} },
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} }
     },
+
     
     -- ترتيب الأقسام النهائي
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر"}
