@@ -1,44 +1,49 @@
--- [[ Arwa Hub - ميزة التطيير بالمشي الصامت (Walk Fling) ]]
--- المطور: Arwa | المظهر: لاعب طبيعي | الميزة: تطيير خارق عند اللمس
+-- [[ Arwa Hub - ميزة الإعصار (Spin Fling) مع Anti-Fling ]]
+-- المطور: Arwa | المظهر: دوران مستمر | الميزة: تطيير + حماية مطلقة
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
     local lp = game.Players.LocalPlayer
-    local isWalkFling = false
+    local isSpinFling = false
+    local spinSpeed = 25 -- سرعة الدوران المرئي
 
-    Tab:AddToggle("🌪️ تطيير صامت (Walk Fling)", function(active)
-        isWalkFling = active
+    Tab:AddToggle("🌪️ إعصار التطيير (Spin Fling)", function(active)
+        isSpinFling = active
         if active then
-            UI:Notify("✅ تم التفعيل. شخصيتك الآن طبيعية، فقط المسي اللاعبين!")
+            UI:Notify("✅ تم تفعيل الإعصار والحماية! يمكنك المشي والدوران الآن")
         else
-            UI:Notify("❌ تم إيقاف التطيير")
+            UI:Notify("❌ تم إيقاف الإعصار")
         end
     end)
 
-    -- الملحوظة المطلوبة
-    Tab:AddParagraph("📝 ملاحقة: شخصيتك ستظهر بشكل طبيعي جداً، فقط المسيهم وسيطيرون فوراً.")
+    Tab:AddParagraph("📝 ملاحقة: ستدور شخصيتك باستمرار سواء كنتِ واقفة أو تمشين، وأي لاعب تلمسينه سيطير.")
 
     runService.Heartbeat:Connect(function()
-        if isWalkFling and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-            local root = lp.Character.HumanoidRootPart
-            
-            -- 1. الحفاظ على المظهر الطبيعي (إلغاء قوة الرفع لكي لا يطير اللاعب)
-            -- نترك السرعة (Velocity) كما هي لكي يتحرك اللاعب بشكل عادي
-            
-            -- 2. إلغاء التصادم الداخلي لمنع تطيير نفسك
-            for _, part in pairs(lp.Character:GetDescendants()) do
-                if part:IsA("BasePart") then 
-                    part.CanCollide = false 
+        local char = lp.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChild("Humanoid")
+
+        if isSpinFling and root and hum then
+            -- 1. نظام الـ Anti-Fling (حماية شخصيتك)
+            -- جعل كل أجزاء جسمك لا تصطدم بأحد لكي لا يتم تطييرك
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                    -- تصفير السرعة الخطية لمنع تراكم قوة التطيير ضدك
+                    part.Velocity = Vector3.new(0, 0, 0) 
                 end
             end
 
-            -- 3. تطبيق "قوة التدوير المغناطيسية" (RotVelocity)
-            -- نستخدم قيمة ضخمة جداً لضمان التطيير الفوري عند التلامس
-            -- القوة هنا لا تؤثر على مظهر المشي بل تؤثر فقط على من يلمسك
-            root.RotVelocity = Vector3.new(0, 30000, 0) 
+            -- 2. الدوران المرئي (يجعلك تدورين وأنت واقفة أو تمشين)
+            -- نغير زاوية الجسم فقط دون التأثير على موقعك
+            root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
+
+            -- 3. قوة التطيير الفيزيائية (RotVelocity)
+            -- هذه القوة هي المسؤولة عن تطيير الخصوم فور التلامس
+            root.RotVelocity = Vector3.new(0, 50000, 0) -- قوة جبارة
             
-            -- لضمان عدم اهتزاز الشخصية، نجعل القوة تتركز في ثبات الجاذبية
-            root.Velocity = Vector3.new(0, -2, 0) -- قوة جذب خفيفة جداً لتبقي قدمك على الأرض
+            -- ضمان بقاءك على الأرض بشكل طبيعي أثناء المشي
+            root.Velocity = Vector3.new(root.Velocity.X, -2, root.Velocity.Z)
         end
     end)
 end
