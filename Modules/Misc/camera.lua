@@ -1,15 +1,23 @@
--- [[ Arwa Hub - FreeCam 3D Joystick ]]
--- تحكم مثل الطيران + تثبيت كامل للاعب
+-- [[ Arwa Hub - FreeCam 3D Mobile PRO ]]
+-- جويستيك + سحب للشاشة + تثبيت كامل للاعب
 
 return function(Tab, UI)
 
     local player = game.Players.LocalPlayer
     local RunService = game:GetService("RunService")
+    local UIS = game:GetService("UserInputService")
     local cam = workspace.CurrentCamera
 
     local isFreeCam = false
-    local flySpeed = 60
+    local flySpeed = 70
     local connection
+
+    local yaw = 0
+    local pitch = 0
+    local camPos
+    local sensitivity = 0.25
+
+    local lastTouchPos
 
     local function toggleFreeCam(active, speedValue)
         isFreeCam = active
@@ -21,53 +29,68 @@ return function(Tab, UI)
 
         if isFreeCam and root and hum then
             
-            -- تثبيت اللاعب بالكامل
+            -- تثبيت كامل
             root.Anchored = true
             hum.PlatformStand = true
             hum.AutoRotate = false
 
-            -- فصل الكاميرا عن اللاعب
             cam.CameraType = Enum.CameraType.Scriptable
-            local camPos = cam.CFrame.Position
-            local camRot = cam.CFrame - cam.CFrame.Position
+            camPos = cam.CFrame.Position
 
-            UI:Notify("🎥 FreeCam 3D ON")
+            yaw = 0
+            pitch = 0
 
-            connection = RunService.RenderStepped:Connect(function()
+            UI:Notify("🎥 FreeCam Mobile PRO ON")
+
+            -- تحريك الكاميرا بالسحب
+            UIS.TouchMoved:Connect(function(touch)
+                if not isFreeCam then return end
+                
+                if lastTouchPos then
+                    local delta = touch.Position - lastTouchPos
+                    
+                    yaw -= delta.X * sensitivity
+                    pitch -= delta.Y * sensitivity
+
+                    pitch = math.clamp(pitch, -80, 80)
+                end
+
+                lastTouchPos = touch.Position
+            end)
+
+            UIS.TouchEnded:Connect(function()
+                lastTouchPos = nil
+            end)
+
+            connection = RunService.RenderStepped:Connect(function(dt)
+
+                -- حساب اتجاه الكاميرا
+                local rotation =
+                    CFrame.Angles(0, math.rad(yaw), 0) *
+                    CFrame.Angles(math.rad(pitch), 0, 0)
 
                 local moveDir = hum.MoveDirection
 
                 if moveDir.Magnitude > 0 then
-                    
-                    local look = cam.CFrame.LookVector
-                    local right = cam.CFrame.RightVector
+                    local forward = rotation.LookVector
+                    local right = rotation.RightVector
 
-                    -- تسطيح الاتجاه لاستخدام قراءة الجويستيك
-                    local flatLook = Vector3.new(look.X, 0, look.Z)
-                    if flatLook.Magnitude > 0 then
-                        flatLook = flatLook.Unit
-                    end
+                    local flatForward = Vector3.new(forward.X, 0, forward.Z).Unit
+                    local flatRight = Vector3.new(right.X, 0, right.Z).Unit
 
-                    local flatRight = Vector3.new(right.X, 0, right.Z)
-                    if flatRight.Magnitude > 0 then
-                        flatRight = flatRight.Unit
-                    end
-
-                    local zInput = moveDir:Dot(flatLook)
+                    local zInput = moveDir:Dot(flatForward)
                     local xInput = moveDir:Dot(flatRight)
 
                     local finalMove =
-                        (look * zInput) +
+                        (forward * zInput) +
                         (right * xInput)
 
                     if finalMove.Magnitude > 0 then
-                        camPos += finalMove.Unit * flySpeed * RunService.RenderStepped:Wait()
+                        camPos += finalMove.Unit * flySpeed * dt
                     end
                 end
 
-                -- تحديث الكاميرا
-                cam.CFrame = CFrame.new(camPos) * (cam.CFrame - cam.CFrame.Position)
-
+                cam.CFrame = CFrame.new(camPos) * rotation
             end)
 
         else
@@ -83,7 +106,7 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddSpeedControl("FreeCam 3D", function(active, value)
+    Tab:AddSpeedControl("FreeCam 3D Mobile", function(active, value)
         toggleFreeCam(active, value)
     end)
 
