@@ -11,7 +11,7 @@ local Cryptic = {
     
     Structure = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
-        ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling"} },
+        ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk"} },
         ["أدوات"] = { Folder = "Misc", Files = {"tptool", "emotes", "esp", "camera", "shiftlock"} },
         
         -- ترتيب الأزرار: الانتقال فوق المراقبة
@@ -31,7 +31,7 @@ local Cryptic = {
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
         
         -- قسم "خدع" في النهاية
-        ["خدع"] = { Folder = "Combat", Files = {"hitbox"} }
+        ["خدع"] = { Folder = "Combat", Files = {"hitbox", "anime_aura.lua"} }
     },
 
     -- الترتيب النهائي للأقسام
