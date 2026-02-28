@@ -1,49 +1,54 @@
--- [[ Arwa Hub - ميزة الإعصار (Spin Fling) مع Anti-Fling ]]
--- المطور: Arwa | المظهر: دوران مستمر | الميزة: تطيير + حماية مطلقة
+-- [[ Arwa Hub - إعصار الاختراق (Walk Fling + Ghost Mode) ]]
+-- المطور: Arwa | الميزات: اختراق اللاعبين، دوران خارق، مشي سريع
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
     local lp = game.Players.LocalPlayer
-    local isSpinFling = false
-    local spinSpeed = 25 -- سرعة الدوران المرئي
+    
+    local isFlinging = false
+    local visualSpinSpeed = 50 -- سرعة الدوران المرئي
+    local customWalkSpeed = 70 -- سرعة المشي (تمت زيادتها)
+    local originalWalkSpeed = 16
 
-    Tab:AddToggle("🌪️ إعصار التطيير (Spin Fling)", function(active)
-        isSpinFling = active
+    Tab:AddToggle("🌪️ إعصار الاختراق (Phantom Fling)", function(active)
+        isFlinging = active
+        local char = lp.Character
+        local hum = char and char:FindFirstChild("Humanoid")
+        
         if active then
-            UI:Notify("✅ تم تفعيل الإعصار والحماية! يمكنك المشي والدوران الآن")
+            if hum then hum.WalkSpeed = customWalkSpeed end
+            UI:Notify("👻 وضع الشبح مفعل! يمكنك الآن اختراق اللاعبين وتطييرهم")
         else
-            UI:Notify("❌ تم إيقاف الإعصار")
+            if hum then hum.WalkSpeed = originalWalkSpeed end
+            UI:Notify("❌ تم إيقاف النظام")
         end
     end)
 
-    Tab:AddParagraph("📝 ملاحقة: ستدور شخصيتك باستمرار سواء كنتِ واقفة أو تمشين، وأي لاعب تلمسينه سيطير.")
+    Tab:AddParagraph("📝 ملاحقة: يمكنكِ الآن المشي 'داخل' اللاعبين؛ وبمجرد تداخل جسمكِ معهم سيطيرون فوراً.")
 
-    runService.Heartbeat:Connect(function()
+    -- الحلقة الفيزيائية (تستخدم Stepped لضمان إلغاء التصادم)
+    runService.Stepped:Connect(function()
         local char = lp.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
-        local hum = char and char:FindFirstChild("Humanoid")
-
-        if isSpinFling and root and hum then
-            -- 1. نظام الـ Anti-Fling (حماية شخصيتك)
-            -- جعل كل أجزاء جسمك لا تصطدم بأحد لكي لا يتم تطييرك
+        
+        if isFlinging and root then
+            -- 1. خاصية الاختراق (No-Collision)
+            -- هذا الكود يسمح لكِ بالمرور من خلال اللاعبين الآخرين
             for _, part in pairs(char:GetDescendants()) do
                 if part:IsA("BasePart") then
-                    part.CanCollide = false
-                    -- تصفير السرعة الخطية لمنع تراكم قوة التطيير ضدك
-                    part.Velocity = Vector3.new(0, 0, 0) 
+                    part.CanCollide = false -- إلغاء التصادم تماماً
                 end
             end
 
-            -- 2. الدوران المرئي (يجعلك تدورين وأنت واقفة أو تمشين)
-            -- نغير زاوية الجسم فقط دون التأثير على موقعك
-            root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
+            -- 2. الدوران المرئي السريع
+            root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(visualSpinSpeed), 0)
 
-            -- 3. قوة التطيير الفيزيائية (RotVelocity)
-            -- هذه القوة هي المسؤولة عن تطيير الخصوم فور التلامس
-            root.RotVelocity = Vector3.new(0, 50000, 0) -- قوة جبارة
+            -- 3. قوة التطيير (RotVelocity)
+            -- جعلناها "غير محدودة" لضمان أقوى تطيير ممكن عند التلامس الداخلي
+            root.RotVelocity = Vector3.new(0, 200000, 0) 
             
-            -- ضمان بقاءك على الأرض بشكل طبيعي أثناء المشي
-            root.Velocity = Vector3.new(root.Velocity.X, -2, root.Velocity.Z)
+            -- 4. الثبات الأرضي (منع شخصيتك من الطيران العشوائي)
+            root.Velocity = Vector3.new(0, -10, 0) 
         end
     end)
 end
