@@ -49,7 +49,7 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddToggle("🕷️ نظام سبايدر المتطور (Spider 2D)", function(active)
+    Tab:AddToggle("مشي على جدران", function(active)
         toggleSpider(active)
         UI:Notify(active and "تم تفعيل المشي المطور.. جرب تسلق المباني الآن!" or "تم إيقاف سبايدر")
     end)
