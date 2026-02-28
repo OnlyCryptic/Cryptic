@@ -75,7 +75,7 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddSpeedControl("طيران 3D", function(active, value)
+    Tab:AddSpeedControl("طيران", function(active, value)
         toggleFly(active, value)
     end)
 end
