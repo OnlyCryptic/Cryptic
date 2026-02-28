@@ -12,7 +12,7 @@ return function(Tab, UI)
     local shiftLockOffset = Vector3.new(1.7, 0.5, 0)
 
     -- زر التشغيل الوحيد (نظام احترافي بسيط)
-    Tab:AddToggle("ايم بوت 🔫", function(active)
+    Tab:AddToggle("🔫 ايم بوت", function(active)
         isAimbotting = active
         local char = lp.Character
         local hum = char and char:FindFirstChild("Humanoid")
