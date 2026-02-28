@@ -102,7 +102,7 @@ return function(Tab, UI)
     Tab:AddLine()
 
     -- 4. الإيم بوت المستقر (يسمح بالقفز ولا يعلق)
-    Tab:AddToggle("🔫 إيم بوت على الهدف (Aimbot)", function(active)
+    Tab:AddToggle("🔫 إيم بوت على الهدف", function(active)
         isAimbotting = active
         if not active and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
             local gyro = lp.Character.HumanoidRootPart:FindFirstChild("AimbotGyro")
@@ -119,7 +119,7 @@ return function(Tab, UI)
     end)
 
     -- 6. تقليد الكلام
-    Tab:AddToggle("💬 تقليد كلام الهدف (Mimic)", function(active)
+    Tab:AddToggle("💬 تقليد كلام الهدف", function(active)
         isMimicking = active
         setupMimicConnection()
     end)
