@@ -1,5 +1,5 @@
--- [[ Arwa Hub - الإيم بوت المطور (نسخة بدون قيود) ]]
--- المطور: Arwa | الميزات: إيم بوت عدواني، تحكم كامل بالسرعة، شيفت لوك مدمج
+-- [[ Arwa Hub - إيم بوت وشيفت لوك (نظام بلوكس فروت) ]]
+-- المطور: Arwa | الميزات: تثبيت كامل (Character & Camera)، قوة 100% تلقائية
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -7,11 +7,12 @@ return function(Tab, UI)
     local camera = workspace.CurrentCamera
     
     local isAimbotting = false
-    local smoothness = 0.2 -- القيمة الافتراضية (كلما زادت أصبح الإيم أسرع وأقوى)
+    -- القوة تم ضبطها تلقائياً على 1 لأقصى تثبيت
+    local power = 1 
     local shiftLockOffset = Vector3.new(1.7, 0.5, 0)
 
-    -- زر التشغيل
-    Tab:AddToggle("🔫 إيم بوت عدواني + شيفت لوك", function(active)
+    -- زر التشغيل الوحيد (نظام احترافي بسيط)
+    Tab:AddToggle("ايم بوت", function(active)
         isAimbotting = active
         local char = lp.Character
         local hum = char and char:FindFirstChild("Humanoid")
@@ -19,26 +20,17 @@ return function(Tab, UI)
 
         if active then
             if hum then hum.CameraOffset = shiftLockOffset end
-            UI:Notify("🔥 تم تفعيل الإيم بوت العدواني!")
+            UI:Notify("✅ الوضع القتالي مفعل (تثبيت كامل)")
         else
+            -- إرجاع الحالة الطبيعية عند الإيقاف
             if hum then hum.CameraOffset = Vector3.new(0, 0, 0) end
             local gyro = root and root:FindFirstChild("AimbotGyro")
             if gyro then gyro:Destroy() end
-            UI:Notify("❌ تم الإيقاف")
+            UI:Notify("❌ تم إلغاء القفل")
         end
     end)
 
-    -- خانة إدخال السرعة (التنعيم) - كما طلبتِ
-    Tab:AddInput("🚀 قوة الالتصاق (0.1 إلى 1)", "0.2", function(val)
-        local n = tonumber(val)
-        if n then 
-            -- حصر القيمة لضمان عدم حدوث لاج في الكاميرا
-            smoothness = math.clamp(n, 0.01, 1)
-            UI:Notify("تم ضبط قوة الإيم على: " .. smoothness)
-        end
-    end)
-
-    -- حلقة التحكم المطورة
+    -- حلقة التحديث بنظام الالتصاق المغناطيسي
     runService.RenderStepped:Connect(function()
         local target = _G.ArwaTarget
         local char = lp.Character
@@ -48,20 +40,24 @@ return function(Tab, UI)
         if isAimbotting and target and target.Character and target.Character:FindFirstChild("Head") then
             local head = target.Character.Head
             
-            -- تم حذف فحص الجدران هنا؛ الإيم سيلتصق بالهدف دائماً
+            -- 1. تثبيت الكاميرا فوراً على الهدف (بدون تنعيم ليكون القفل 100%)
+            camera.CFrame = CFrame.lookAt(camera.CFrame.Position, head.Position)
             
-            -- 1. تثبيت الكاميرا بنظام Lerp سريع
-            local targetCF = CFrame.lookAt(camera.CFrame.Position, head.Position)
-            camera.CFrame = camera.CFrame:Lerp(targetCF, smoothness)
-            
-            -- 2. توجيه جسم اللاعب لمواجهة الخصم (نظام الشيفت لوك)
+            -- 2. تثبيت جسم اللاعب (Character Pin) لمواجهة الخصم دائماً
             if root then
                 local gyro = root:FindFirstChild("AimbotGyro") or Instance.new("BodyGyro", root)
                 gyro.Name = "AimbotGyro"
-                gyro.MaxTorque = Vector3.new(0, math.huge, 0)
-                gyro.P = 50000 -- زيادة القوة ليكون الدوران فورياً
-                gyro.D = 50 -- تقليل الارتداد
+                gyro.MaxTorque = Vector3.new(0, math.huge, 0) -- قفل الدوران الأفقي فقط للسماح بالقفز
+                gyro.P = 100000 -- قوة جبارة تمنع الجسم من الانحراف عن الهدف
+                gyro.D = 100
+                
+                -- جعل الشخصية والكاميرا والهدف في خط واحد مستقيم
                 gyro.CFrame = CFrame.lookAt(root.Position, Vector3.new(head.Position.X, root.Position.Y, head.Position.Z))
+            end
+
+            -- الحفاظ على إزاحة الشيفت لوك الجانبية (مثل أيقونة بلوكس فروت الخضراء)
+            if hum and hum.CameraOffset ~= shiftLockOffset then
+                hum.CameraOffset = shiftLockOffset
             end
         end
     end)
