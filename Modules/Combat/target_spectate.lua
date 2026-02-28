@@ -8,7 +8,7 @@ return function(Tab, UI)
     
     local isSpectating = false
 
-    Tab:AddToggle("👁️ مراقبة الهدف (Spectate)", function(active)
+    Tab:AddToggle("👁️ مراقبة الهدف", function(active)
         isSpectating = active
         if active then
             if _G.ArwaTarget then
