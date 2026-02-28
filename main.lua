@@ -11,7 +11,7 @@ local Cryptic = {
     
         Structure = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
-        ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk"} },
+        ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling"} },
         ["أدوات"] = { Folder = "Misc", Files = {"tptool", "emotes", "esp", "camera", "shiftlock"} },
         
         -- التقسيم الجديد هنا:
