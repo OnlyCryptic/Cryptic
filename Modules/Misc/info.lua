@@ -13,5 +13,5 @@ return function(Tab, UI)
     end)
 
     -- الرسالة الشخصية بالخط الصغير
-    Tab:AddParagraph("لسا مبتدئ في سكربت بس يخليه احسن")
+    Tab:AddParagraph("سلام عليكم")
 end
