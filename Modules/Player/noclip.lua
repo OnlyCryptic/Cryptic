@@ -28,7 +28,7 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddToggle("اختراق الجدران (NoClip)", function(active)
+    Tab:AddToggle("اختراق الجدران", function(active)
         toggleNoclip(active)
         
         if UI.Logger then
