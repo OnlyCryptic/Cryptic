@@ -41,7 +41,7 @@ return function(Tab, UI)
     end
 
     -- إضافة زر التبديل للواجهة
-    Tab:AddToggle("مضاد التطيير (Anti-Fling)", function(active)
+    Tab:AddToggle("مضاد التطيير", function(active)
         toggleAntiFling(active)
         UI:Notify(active and "تم تفعيل حماية الشبح (Anti-Fling) 🛡️" or "تم إيقاف الحماية")
     end)
