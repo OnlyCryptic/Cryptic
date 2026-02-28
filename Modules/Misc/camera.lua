@@ -1,91 +1,90 @@
--- [[ Arwa Hub - FreeCam Mobile PRO ]]
--- تثبيت اللاعب + دوران Touch حقيقي + حركة سلسة
+-- [[ Arwa Hub - FreeCam 3D Joystick ]]
+-- تحكم مثل الطيران + تثبيت كامل للاعب
 
 return function(Tab, UI)
 
-    local Players = game:GetService("Players")
-    local UIS = game:GetService("UserInputService")
+    local player = game.Players.LocalPlayer
     local RunService = game:GetService("RunService")
-
-    local lp = Players.LocalPlayer
-    local camera = workspace.CurrentCamera
+    local cam = workspace.CurrentCamera
 
     local isFreeCam = false
-    local camCF
-    local velocity = Vector3.zero
+    local flySpeed = 60
+    local connection
 
-    local speed = 50
-    local sensitivity = 0.18
-    local smoothness = 0.12
+    local function toggleFreeCam(active, speedValue)
+        isFreeCam = active
+        flySpeed = speedValue
 
-    local movingForward = false
-    local lastTouchPos
-
-    local function toggleFreeCam(state)
-        isFreeCam = state
-
-        local char = lp.Character
+        local char = player.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChild("Humanoid")
 
-        if state and root then
+        if isFreeCam and root and hum then
             
-            -- تثبيت الشخصية
+            -- تثبيت اللاعب بالكامل
             root.Anchored = true
+            hum.PlatformStand = true
+            hum.AutoRotate = false
 
-            camCF = camera.CFrame
-            camera.CameraType = Enum.CameraType.Scriptable
+            -- فصل الكاميرا عن اللاعب
+            cam.CameraType = Enum.CameraType.Scriptable
+            local camPos = cam.CFrame.Position
+            local camRot = cam.CFrame - cam.CFrame.Position
 
-            UI:Notify("📱 FreeCam Mobile PRO ON")
+            UI:Notify("🎥 FreeCam 3D ON")
 
-            -- تتبع السحب الحقيقي
-            UIS.TouchStarted:Connect(function(touch)
-                lastTouchPos = touch.Position
-                movingForward = true
-            end)
+            connection = RunService.RenderStepped:Connect(function()
 
-            UIS.TouchMoved:Connect(function(touch)
-                if not lastTouchPos then return end
+                local moveDir = hum.MoveDirection
 
-                local delta = touch.Position - lastTouchPos
-                lastTouchPos = touch.Position
+                if moveDir.Magnitude > 0 then
+                    
+                    local look = cam.CFrame.LookVector
+                    local right = cam.CFrame.RightVector
 
-                camCF *= CFrame.Angles(
-                    math.rad(-delta.Y * sensitivity),
-                    math.rad(-delta.X * sensitivity),
-                    0
-                )
-            end)
+                    -- تسطيح الاتجاه لاستخدام قراءة الجويستيك
+                    local flatLook = Vector3.new(look.X, 0, look.Z)
+                    if flatLook.Magnitude > 0 then
+                        flatLook = flatLook.Unit
+                    end
 
-            UIS.TouchEnded:Connect(function()
-                movingForward = false
-                lastTouchPos = nil
-            end)
+                    local flatRight = Vector3.new(right.X, 0, right.Z)
+                    if flatRight.Magnitude > 0 then
+                        flatRight = flatRight.Unit
+                    end
 
-            RunService:BindToRenderStep("MobileFreeCamPro", Enum.RenderPriority.Camera.Value + 1, function(dt)
+                    local zInput = moveDir:Dot(flatLook)
+                    local xInput = moveDir:Dot(flatRight)
 
-                local targetVel = Vector3.zero
+                    local finalMove =
+                        (look * zInput) +
+                        (right * xInput)
 
-                if movingForward then
-                    targetVel = camCF.LookVector * speed
+                    if finalMove.Magnitude > 0 then
+                        camPos += finalMove.Unit * flySpeed * RunService.RenderStepped:Wait()
+                    end
                 end
 
-                -- سلاسة احترافية
-                velocity = velocity:Lerp(targetVel, smoothness)
+                -- تحديث الكاميرا
+                cam.CFrame = CFrame.new(camPos) * (cam.CFrame - cam.CFrame.Position)
 
-                camCF += velocity * dt
-                camera.CFrame = camCF
             end)
 
         else
-            -- رجوع طبيعي
+            if connection then connection:Disconnect() end
             if root then root.Anchored = false end
-            camera.CameraType = Enum.CameraType.Custom
-            RunService:UnbindFromRenderStep("MobileFreeCamPro")
+            if hum then
+                hum.PlatformStand = false
+                hum.AutoRotate = true
+            end
 
+            cam.CameraType = Enum.CameraType.Custom
             UI:Notify("❌ FreeCam OFF")
         end
     end
 
-    Tab:AddToggle("🎥 FreeCam Mobile PRO", toggleFreeCam)
+    Tab:AddSpeedControl("FreeCam 3D", function(active, value)
+        toggleFreeCam(active, value)
+    end)
 
 end
