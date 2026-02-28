@@ -67,7 +67,7 @@ return function(Tab, UI)
     end)
 
     -- إضافة الزر للواجهة بنظام التبديل
-    Tab:AddToggle("أداة الانتقال (دائماً خانة 1)", function(active)
+    Tab:AddToggle("أداة الانتقال", function(active)
         keepGiving = active
         if active then
             giveTPTool()
