@@ -1,5 +1,5 @@
--- [[ Arwa Hub - إيم بوت وشيفت لوك (نظام بلوكس فروت) ]]
--- المطور: Arwa | الميزات: تثبيت كامل (Character & Camera)، قوة 100% تلقائية
+-- [[ Arwa Hub - إيم بوت وشيفت لوك (نظام التثبيت المطلق) ]]
+-- المطور: Arwa | الميزات: قفل الكاميرا (Scriptable)، تثبيت 100%، قوة Blox Fruits
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -7,30 +7,28 @@ return function(Tab, UI)
     local camera = workspace.CurrentCamera
     
     local isAimbotting = false
-    -- القوة تم ضبطها تلقائياً على 1 لأقصى تثبيت
-    local power = 1 
-    local shiftLockOffset = Vector3.new(1.7, 0.5, 0)
+    local shiftLockOffset = Vector3.new(1.7, 2, 8) -- إزاحة الكاميرا (يمين، فوق، خلف)
 
-    -- زر التشغيل الوحيد (نظام احترافي بسيط)
-    Tab:AddToggle("ايم بوت", function(active)
+    Tab:AddToggle("🟢 شيفت لوك + إيم بوت (قفل الكاميرا)", function(active)
         isAimbotting = active
         local char = lp.Character
         local hum = char and char:FindFirstChild("Humanoid")
         local root = char and char:FindFirstChild("HumanoidRootPart")
 
         if active then
-            if hum then hum.CameraOffset = shiftLockOffset end
-            UI:Notify("✅ الوضع القتالي مفعل (تثبيت كامل)")
+            -- تحويل الكاميرا لوضع البرمجة لمنع اللعبة من تحريكها
+            camera.CameraType = Enum.CameraType.Scriptable
+            UI:Notify("✅ تم قفل الكاميرا والجسم على الهدف")
         else
-            -- إرجاع الحالة الطبيعية عند الإيقاف
+            -- إعادة الكاميرا لوضعها الطبيعي فوراً
+            camera.CameraType = Enum.CameraType.Custom
             if hum then hum.CameraOffset = Vector3.new(0, 0, 0) end
             local gyro = root and root:FindFirstChild("AimbotGyro")
             if gyro then gyro:Destroy() end
-            UI:Notify("❌ تم إلغاء القفل")
+            UI:Notify("❌ تم فك القفل")
         end
     end)
 
-    -- حلقة التحديث بنظام الالتصاق المغناطيسي
     runService.RenderStepped:Connect(function()
         local target = _G.ArwaTarget
         local char = lp.Character
@@ -40,25 +38,28 @@ return function(Tab, UI)
         if isAimbotting and target and target.Character and target.Character:FindFirstChild("Head") then
             local head = target.Character.Head
             
-            -- 1. تثبيت الكاميرا فوراً على الهدف (بدون تنعيم ليكون القفل 100%)
+            -- 1. إجبار الكاميرا على البقاء في وضع Scriptable
+            camera.CameraType = Enum.CameraType.Scriptable
+            
+            -- 2. حساب موقع الكاميرا بحيث تتبع اللاعب من الخلف والجانب (نظام بلوكس فروت)
+            -- الكاميرا ستكون دائماً خلف اللاعب بمسافة محددة وتنظر للهدف
+            local relativeOffset = root.CFrame:VectorToWorldSpace(shiftLockOffset)
+            local camPos = root.Position + relativeOffset
+            
+            -- تثبيت الكاميرا لتنظر للهدف مباشرة
             camera.CFrame = CFrame.lookAt(camera.CFrame.Position, head.Position)
             
-            -- 2. تثبيت جسم اللاعب (Character Pin) لمواجهة الخصم دائماً
+            -- 3. تثبيت جسم اللاعب (Character Pin)
             if root then
                 local gyro = root:FindFirstChild("AimbotGyro") or Instance.new("BodyGyro", root)
                 gyro.Name = "AimbotGyro"
-                gyro.MaxTorque = Vector3.new(0, math.huge, 0) -- قفل الدوران الأفقي فقط للسماح بالقفز
-                gyro.P = 100000 -- قوة جبارة تمنع الجسم من الانحراف عن الهدف
-                gyro.D = 100
-                
-                -- جعل الشخصية والكاميرا والهدف في خط واحد مستقيم
+                gyro.MaxTorque = Vector3.new(0, math.huge, 0) 
+                gyro.P = 100000 -- قوة جبارة للتثبيت
                 gyro.CFrame = CFrame.lookAt(root.Position, Vector3.new(head.Position.X, root.Position.Y, head.Position.Z))
             end
-
-            -- الحفاظ على إزاحة الشيفت لوك الجانبية (مثل أيقونة بلوكس فروت الخضراء)
-            if hum and hum.CameraOffset ~= shiftLockOffset then
-                hum.CameraOffset = shiftLockOffset
-            end
+        elseif not isAimbotting and camera.CameraType == Enum.CameraType.Scriptable then
+            -- تأمين العودة للوضع الطبيعي إذا فقد السكربت الهدف
+            camera.CameraType = Enum.CameraType.Custom
         end
     end)
 end
