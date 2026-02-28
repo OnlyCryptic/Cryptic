@@ -16,7 +16,7 @@ local Cryptic = {
     
     Structure = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
-        ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling"} },
+        ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall"} },
         ["أدوات"] = { Folder = "Misc", Files = {"tptool", "emotes", "esp", "camera", "shiftlock", "anti_block"} },
         
         ["استهداف لاعب"] = { 
