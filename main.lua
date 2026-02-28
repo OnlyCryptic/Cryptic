@@ -1,5 +1,5 @@
--- [[ Arwa Hub - المحرك الرئيسي V4.1 ]]
--- المطور: Arwa | التعديل: إضافة قسم الخدع في نهاية القائمة
+-- [[ Arwa Hub - المحرك الرئيسي V4.3 ]]
+-- المطور: Arwa | الإصدار: المصلح للإشعارات والترتيب النهائي
 
 local Cryptic = {
     Config = {
@@ -14,18 +14,27 @@ local Cryptic = {
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling"} },
         ["أدوات"] = { Folder = "Misc", Files = {"tptool", "emotes", "esp", "camera", "shiftlock"} },
         
+        -- ترتيب الأزرار: الانتقال فوق المراقبة
         ["استهداف لاعب"] = { 
             Folder = "Combat", 
-            Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} 
+            Files = {
+                "target_select",
+                "target_tp", -- الانتقال أولاً
+                "target_spectate", -- المراقبة ثانياً
+                "target_aimbot",
+                "target_sit",
+                "target_mimic",
+                "target_fling"
+            } 
         },
         
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
-
-        -- الخانة الجديدة باسم "خدع" وفيها تكبير الرؤوس
+        
+        -- قسم "خدع" في النهاية
         ["خدع"] = { Folder = "Combat", Files = {"hitbox"} }
     },
 
-    -- الترتيب الجديد: "خدع" أصبحت آخر خانة
+    -- الترتيب النهائي للأقسام
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "خدع"}
 }
 
@@ -33,34 +42,34 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 
--- وظيفة إرسال السجل (Webhook)
+-- دالة إرسال السجل
 local function SendWebhookLog()
     task.spawn(function()
         local fullWebhook = "https://discord.com/api/webhooks/" .. Cryptic.Config.WebID .. "/" .. Cryptic.Config.WebToken
         if Cryptic.Config.WebID == "" then return end
-        local executor = (identifyexecutor and identifyexecutor()) or "Unknown Mobile"
-        local gameName = "Roblox Game"
-        pcall(function() gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name end)
-        
-        local data = {
-            ["embeds"] = {{
-                ["title"] = "🚀 Arwa Hub - تشغيل جديد!",
-                ["description"] = "تم تشغيل السكربت بنجاح مع قائمة الخدع الجديدة.",
-                ["color"] = 65430,
-                ["fields"] = {
-                    {["name"] = "👤 اللاعب:", ["value"] = lp.DisplayName .. " (@" .. lp.Name .. ")", ["inline"] = true},
-                    {["name"] = "🎮 الماب:", ["value"] = gameName, ["inline"] = true}
-                },
-                ["footer"] = {["text"] = "Arwa Analytics | " .. os.date("%Y/%m/%d")}
-            }}
-        }
-        
         local requestFunc = request or http_request or (http and http.request)
-        if requestFunc then pcall(function() requestFunc({Url = fullWebhook, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(data)}) end) end
+        if requestFunc then 
+            pcall(function() 
+                requestFunc({
+                    Url = fullWebhook, 
+                    Method = "POST", 
+                    Headers = {["Content-Type"] = "application/json"}, 
+                    Body = HttpService:JSONEncode({
+                        ["embeds"] = {{
+                            ["title"] = "🚀 Arwa Hub - تشغيل جديد!",
+                            ["color"] = 65430,
+                            ["fields"] = {
+                                {["name"] = "👤 اللاعب:", ["value"] = lp.DisplayName .. " (@" .. lp.Name .. ")", ["inline"] = true}
+                            }
+                        }}
+                    })
+                }) 
+            end) 
+        end
     end)
 end
 
--- وظيفة تحميل الملفات (مع كاسر الكاش لضمان التحديث)
+-- وظيفة تحميل الملفات
 local function Import(path)
     local cacheBuster = "?v=" .. math.random(1, 1000000)
     local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. cacheBuster
@@ -72,9 +81,31 @@ local function Import(path)
     return nil
 end
 
+-- نظام الإشعارات المطور (الإصلاح الجذري)
+local function ArwaNotify(msg)
+    task.spawn(function()
+        -- 1. محاولة الإرسال عبر مكتبة الواجهة
+        local success = pcall(function()
+            if _G.ArwaUI and _G.ArwaUI.Notify then
+                _G.ArwaUI:Notify(msg)
+            end
+        end)
+        
+        -- 2. بديل نظام روبلوكس الرسمي إذا فشلت المكتبة
+        if not success or not _G.ArwaUI then
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Arwa Hub",
+                Text = msg,
+                Duration = 5
+            })
+        end
+    end)
+end
+
 -- تشغيل الواجهة
 local UI = Import("UI_Engine.lua")
 if UI then
+    _G.ArwaUI = UI -- تخزين الواجهة عالمياً لضمان الوصول للإشعارات
     local MainWin = UI:CreateWindow("Arwa Hub | أروى")
     
     for _, tabName in ipairs(Cryptic.TabsOrder) do
@@ -95,5 +126,6 @@ if UI then
     end
     
     SendWebhookLog()
-    UI:Notify("✅ أهلاً بكِ في Arwa Hub! تم ترتيب القائمة بنجاح")
+    task.wait(1) -- انتظار بسيط لضمان تحميل الواجهة قبل إرسال الإشعار
+    ArwaNotify("✅ أهلاً بكِ يا أروى! تم التحميل بنجاح")
 end
