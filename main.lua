@@ -30,9 +30,11 @@ local Cryptic = {
         
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
         
-        -- قسم "خدع" في النهاية
-        ["خدع"] = { Folder = "Combat", Files = {"hitbox", "anime_aura.lua"} }
-    },
+                -- قسم "خدع" في النهاية
+        ["خدع"] = { 
+            Folder = "Combat", 
+            Files = {"hitbox", "anime_aura"} -- أضفنا الهالة هنا
+        }
 
     -- الترتيب النهائي للأقسام
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "خدع"}
