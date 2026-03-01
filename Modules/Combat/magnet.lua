@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - مغناطيس السيرفر V2 ]]
--- المطور: Cryptic | التحديث: منع اللاج، رفع القطع عالياً جداً، فلترة ذكية للقطع المثبتة
+-- [[ Cryptic Hub - مغناطيس السيرفر FE الحقيقي V3 ]]
+-- المطور: Cryptic | التحديث: رؤية السيرفر للقطع (FE) + منع سحب الملحومات (Welds) + حماية اللاق
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -7,77 +7,74 @@ return function(Tab, UI)
     local lp = players.LocalPlayer
     
     local isMagnet = false
-    local magnetParts = {}
-    local maxParts = 40 -- تحديد أقصى عدد للقطع لمنع اللاج نهائياً
+    local looseParts = {}
+    local magnetRadius = 45 -- مسافة السحب (الحد الأقصى لكي يراها السيرفر)
 
-    -- وظيفة الفحص الذكي (مقسمة لكي لا تجمد الجوال)
-    local function scanParts()
-        table.clear(magnetParts) -- تنظيف القائمة القديمة
-        local count = 0
+    -- 1. وظيفة الفحص العميق (تتأكد إن القطعة مفكوكة 100% وما فيها لحام)
+    local function isTrulyLoose(part)
+        if part.Anchored or part.Locked then return false end
         
-        for _, v in pairs(workspace:GetDescendants()) do
-            -- التحقق الصارم: يجب أن تكون قطعة، وغير مثبتة، وليست مقفلة (Locked)
-            if v:IsA("BasePart") and not v.Anchored and not v.Locked then
-                -- التأكد التام أنها ليست جزءاً من لاعب أو شخصية حية
-                if v.Parent and not v.Parent:FindFirstChildOfClass("Humanoid") and not v:IsDescendantOf(lp.Character) then
-                    table.insert(magnetParts, v)
-                    
-                    -- السر وراء منع اللاج: تعطيل تصادم القطع المجمعة ببعضها
-                    v.CanCollide = false 
-                    
-                    if #magnetParts >= maxParts then break end -- التوقف عند 40 قطعة لحماية المعالج
-                end
-            end
-            
-            -- تقسيم عملية البحث لتخفيف الضغط على الجوال
-            count = count + 1
-            if count % 200 == 0 then task.wait() end 
+        -- البحث عن القطع الملتصقة بها (Welds)
+        local connected = part:GetConnectedParts()
+        for _, p in ipairs(connected) do
+            if p.Anchored then return false end -- إذا ملصوقة بشيء مثبت، اتركها!
         end
+        return true
     end
 
-    Tab:AddToggle("🧲 مغناطيس السيرفر (V2)", function(active)
+    -- 2. حلقة فحص الماب كل 3 ثواني (خفيفة جداً على Redmi Note 10s)
+    task.spawn(function()
+        while task.wait(3) do
+            if isMagnet then
+                local tempParts = {}
+                for _, part in ipairs(workspace:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        -- استثناء اللاعبين وشخصيتك
+                        if not part.Parent:FindFirstChild("Humanoid") and not part:IsDescendantOf(lp.Character) then
+                            if isTrulyLoose(part) then
+                                table.insert(tempParts, part)
+                            end
+                        end
+                    end
+                end
+                looseParts = tempParts -- تحديث القائمة بالقطع الآمنة فقط
+            end
+        end
+    end)
+
+    -- 3. زر التفعيل
+    Tab:AddToggle("🧲 مغناطيس السيرفر (FE V3)", function(active)
         isMagnet = active
         if active then
-            UI:Notify("🔍 جاري الفحص الآمن للماب (بدون لاج)...")
-            task.spawn(scanParts)
-            UI:Notify("✨ تم التشغيل! انظر عالياً فوق رأسك.")
+            UI:Notify("🚀 تم تفعيل المغناطيس FE. امشِ بجانب القطع لرفعها للسماء!")
         else
-            table.clear(magnetParts)
+            looseParts = {}
             UI:Notify("❌ تم إيقاف المغناطيس")
         end
     end)
 
-    -- تحديث القطع كل 5 ثواني بدلاً من 3 لتخفيف استهلاك البطارية
-    task.spawn(function()
-        while task.wait(5) do
-            if isMagnet then
-                scanParts()
-            end
-        end
-    end)
-
-    -- المحرك الفعلي لرفع القطع عالياً جداً
+    -- 4. محرك السحب الفيزيائي (يراه السيرفر)
     runService.Heartbeat:Connect(function()
         if not isMagnet then return end
         
         local char = lp.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
-        
-        if root then
-            for _, part in ipairs(magnetParts) do
-                -- تحقق إضافي لضمان عدم سحب قطع تم تثبيتها فجأة
-                if part and part.Parent and not part.Anchored then
-                    -- [[ رفع القطع عالياً جداً وتوزيعها ]]
-                    -- Y = بين 20 و 35 مسمار فوق رأسك (عالية جداً كما طلبت)
-                    -- X و Z = توزيع عشوائي واسع لكي تشكل سحابة فوقك
-                    local randomX = math.random(-15, 15)
-                    local randomY = math.random(25, 40) -- الارتفاع الشاهق
-                    local randomZ = math.random(-15, 15)
+        if not root then return end
+
+        for _, part in ipairs(looseParts) do
+            if part and part.Parent then
+                -- حساب المسافة بينك وبين القطعة
+                local dist = (part.Position - root.Position).Magnitude
+                
+                -- السر هنا: القطعة ترتفع فقط إذا كانت قريبة منك (لكي يراها السيرفر)
+                if dist <= magnetRadius then
+                    part.CanCollide = false -- منع التصادم لقتل اللاق
                     
-                    part.CFrame = root.CFrame * CFrame.new(randomX, randomY, randomZ)
+                    -- رفعها عالياً جداً فوق رأسك (بين 25 و 40 مسمار)
+                    part.CFrame = root.CFrame * CFrame.new(math.random(-15, 15), math.random(25, 40), math.random(-15, 15))
                     
-                    -- تجميد فيزياء القطعة وهي بالهواء لقتل اللاج نهائياً
-                    part.Velocity = Vector3.new(0, 0, 0)
+                    -- إعطاء قوة دفع خفيفة لإجبار السيرفر على تحديث موقعها للجميع
+                    part.Velocity = Vector3.new(0, 5, 0)
                     part.RotVelocity = Vector3.new(0, 0, 0)
                 end
             end
