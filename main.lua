@@ -134,5 +134,5 @@ if UI then
     -- تشغيل نظام الإحصائيات في الخلفية
     task.spawn(SendAnalytics)
     
-    SendNotify("Arwa Hub", "✅ تم التحميل بنجاح يا بطل!")
+    SendNotify("cryptic hub", "✅ تم التحميل بنجاح يا بطل!")
 end
