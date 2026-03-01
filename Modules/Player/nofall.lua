@@ -4,7 +4,7 @@ return function(Tab, UI)
     local isNoFallActive = false
     local NoFallConnection = nil
 
-    Tab:AddToggle("بدون دمج سقوط", function(state)
+    Tab:AddToggle("سقوط بدون دمج", function(state)
         isNoFallActive = state
         
         if isNoFallActive then
@@ -24,7 +24,7 @@ return function(Tab, UI)
             end)
             
             game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "Arwa Hub",
+                Title = "cryptic hub",
                 Text = "تم تفعيل حماية السقوط! 🪂 انقز من أي مكان بأمان",
                 Duration = 4
             })
@@ -36,7 +36,7 @@ return function(Tab, UI)
             end
             
             game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "Arwa Hub",
+                Title = "cryptic hub",
                 Text = "تم إيقاف حماية السقوط.",
                 Duration = 3
             })
