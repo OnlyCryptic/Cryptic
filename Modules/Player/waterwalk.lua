@@ -16,7 +16,7 @@ return function(Tab, UI)
     waterPlatform.CanCollide = false
     waterPlatform.Parent = workspace
 
-    Tab:AddToggle("🌊 المشي على الماء (Water Walk)", function(active)
+    Tab:AddToggle("المشي على الماء", function(active)
         isWaterWalking = active
         if active then
             UI:Notify("✅ تم تفعيل المشي على الماء في Cryptic Hub")
