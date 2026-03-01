@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة المشي على الماء ]]
--- المطور: Cryptic | الميزة: إنشاء سطح صلب فوق الماء تلقائياً
+-- [[ Cryptic Hub - المشي على الماء المطور ]]
+-- المطور: Cryptic | الميزة: التعرف على كافة أنواع المياه
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -8,18 +8,18 @@ return function(Tab, UI)
     local isWaterWalking = false
     local waterPlatform = Instance.new("Part")
     
-    -- إعداد المنصة المخفية
+    -- إعداد المنصة
     waterPlatform.Name = "CrypticWaterPart"
-    waterPlatform.Size = Vector3.new(10, 1, 10)
+    waterPlatform.Size = Vector3.new(20, 1, 20) -- تكبير حجم المنصة لثبات أكثر
     waterPlatform.Transparency = 1
     waterPlatform.Anchored = true
     waterPlatform.CanCollide = false
     waterPlatform.Parent = workspace
 
-    Tab:AddToggle("المشي على الماء", function(active)
+    Tab:AddToggle("🌊 المشي على الماء (Water Walk)", function(active)
         isWaterWalking = active
         if active then
-            UI:Notify("✅ تم تفعيل المشي على الماء في Cryptic Hub")
+            UI:Notify("✅ تم تفعيل الكاشف العالمي للماء في Cryptic Hub")
         else
             waterPlatform.CanCollide = false
             UI:Notify("❌ تم إيقاف الميزة")
@@ -29,23 +29,28 @@ return function(Tab, UI)
     runService.Heartbeat:Connect(function()
         local char = lp.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
         
-        if isWaterWalking and root and hum then
-            -- البحث عن مستوى الماء أو الأرض تحت اللاعب
+        if isWaterWalking and root then
+            -- زيادة طول شعاع البحث لـ 20 مسمار لضمان التعرف
             local raycastParams = RaycastParams.new()
             raycastParams.FilterType = Enum.RaycastFilterType.Exclude
             raycastParams.FilterDescendantsInstances = {char, waterPlatform}
             
-            local ray = workspace:Raycast(root.Position, Vector3.new(0, -10, 0), raycastParams)
+            local ray = workspace:Raycast(root.Position, Vector3.new(0, -20, 0), raycastParams)
             
-            -- إذا كان اللاعب فوق الماء مباشرة
-            if ray and ray.Material == Enum.Material.Water then
+            -- كاشف ذكي: يتعرف على مادة الماء أو أي قطعة تسمى "Water"
+            local isDetected = false
+            if ray then
+                if ray.Material == Enum.Material.Water or ray.Instance.Name:lower():find("water") then
+                    isDetected = true
+                end
+            end
+
+            if isDetected then
                 waterPlatform.CanCollide = true
-                -- وضع المنصة تحت قدم اللاعب بالضبط عند مستوى سطح الماء
+                -- وضع المنصة تحت اللاعب بالضبط
                 waterPlatform.CFrame = CFrame.new(root.Position.X, ray.Position.Y + 0.9, root.Position.Z)
             else
-                -- إلغاء التصادم إذا لم يكن هناك ماء لكي لا تعيق حركتك العادية
                 waterPlatform.CanCollide = false
             end
         else
