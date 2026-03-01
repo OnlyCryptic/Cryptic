@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - مغناطيس السيرفر FE الحقيقي V3 ]]
--- المطور: Cryptic | التحديث: رؤية السيرفر للقطع (FE) + منع سحب الملحومات (Welds) + حماية اللاق
+-- [[ Cryptic Hub - مغناطيس السيرفر الديناميكي V5 ]]
+-- المطور: Cryptic | التحديث: استجابة للكسر المباشر + السحب ضمن نطاق الملكية (45) فقط
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -7,53 +7,41 @@ return function(Tab, UI)
     local lp = players.LocalPlayer
     
     local isMagnet = false
-    local looseParts = {}
-    local magnetRadius = 45 -- مسافة السحب (الحد الأقصى لكي يراها السيرفر)
+    local scanList = {} -- قائمة للمراقبة فقط
+    local magnetRadius = 45 -- المسافة الآمنة لكي يراها السيرفر
 
-    -- 1. وظيفة الفحص العميق (تتأكد إن القطعة مفكوكة 100% وما فيها لحام)
-    local function isTrulyLoose(part)
-        if part.Anchored or part.Locked then return false end
-        
-        -- البحث عن القطع الملتصقة بها (Welds)
-        local connected = part:GetConnectedParts()
-        for _, p in ipairs(connected) do
-            if p.Anchored then return false end -- إذا ملصوقة بشيء مثبت، اتركها!
-        end
-        return true
-    end
-
-    -- 2. حلقة فحص الماب كل 3 ثواني (خفيفة جداً على Redmi Note 10s)
+    -- 1. حلقة المراقبة (تفحص الماب بهدوء كل ثانيتين وتجهز القطع القابلة للسحب)
     task.spawn(function()
-        while task.wait(3) do
+        while task.wait(2) do
             if isMagnet then
                 local tempParts = {}
                 for _, part in ipairs(workspace:GetDescendants()) do
                     if part:IsA("BasePart") then
-                        -- استثناء اللاعبين وشخصيتك
-                        if not part.Parent:FindFirstChild("Humanoid") and not part:IsDescendantOf(lp.Character) then
-                            if isTrulyLoose(part) then
+                        -- نتأكد إنها مو تابعة للاعبين وإنها مو مقفلة
+                        if not part.Locked and not part.Parent:FindFirstChildOfClass("Humanoid") and not part:IsDescendantOf(lp.Character) then
+                            -- نستثني القطع العملاقة جداً (الأراضي)
+                            if part.Size.X <= 40 and part.Size.Y <= 40 and part.Size.Z <= 40 then
                                 table.insert(tempParts, part)
                             end
                         end
                     end
                 end
-                looseParts = tempParts -- تحديث القائمة بالقطع الآمنة فقط
+                scanList = tempParts
             end
         end
     end)
 
-    -- 3. زر التفعيل
-    Tab:AddToggle("🧲 مغناطيس السيرفر (FE V3)", function(active)
+    Tab:AddToggle("🧲 مغناطيس ذكي (FE V5)", function(active)
         isMagnet = active
         if active then
-            UI:Notify("🚀 تم تفعيل المغناطيس FE. امشِ بجانب القطع لرفعها للسماء!")
+            UI:Notify("🚀 المغناطيس جاهز! اكسر الأشياء أو اقترب منها لسحبها.")
         else
-            looseParts = {}
-            UI:Notify("❌ تم إيقاف المغناطيس")
+            scanList = {}
+            UI:Notify("❌ تم إيقاف المغناطيس.")
         end
     end)
 
-    -- 4. محرك السحب الفيزيائي (يراه السيرفر)
+    -- 2. المحرك الفيزيائي (هنا يتم تطبيق فكرتك الذكية)
     runService.Heartbeat:Connect(function()
         if not isMagnet then return end
         
@@ -61,21 +49,34 @@ return function(Tab, UI)
         local root = char and char:FindFirstChild("HumanoidRootPart")
         if not root then return end
 
-        for _, part in ipairs(looseParts) do
+        for _, part in ipairs(scanList) do
+            -- نتأكد إن القطعة لسا موجودة باللعبة
             if part and part.Parent then
-                -- حساب المسافة بينك وبين القطعة
-                local dist = (part.Position - root.Position).Magnitude
                 
-                -- السر هنا: القطعة ترتفع فقط إذا كانت قريبة منك (لكي يراها السيرفر)
-                if dist <= magnetRadius then
-                    part.CanCollide = false -- منع التصادم لقتل اللاق
+                -- [[ تطبيق فكرتك الأولى: التحقق اللحظي من الانفصال ]]
+                -- السكربت يتأكد "الآن" هل القطعة مفكوكة تماماً؟ 
+                -- إذا كانت ملحومة بجدار، بيتجاهلها.. وإذا انكسر الجدار وطاحت، بيبدأ يسحبها!
+                local rootOfPart = part:GetRootPart()
+                if not part.Anchored and rootOfPart and not rootOfPart.Anchored then
                     
-                    -- رفعها عالياً جداً فوق رأسك (بين 25 و 40 مسمار)
-                    part.CFrame = root.CFrame * CFrame.new(math.random(-15, 15), math.random(25, 40), math.random(-15, 15))
-                    
-                    -- إعطاء قوة دفع خفيفة لإجبار السيرفر على تحديث موقعها للجميع
-                    part.Velocity = Vector3.new(0, 5, 0)
-                    part.RotVelocity = Vector3.new(0, 0, 0)
+                    -- [[ تطبيق فكرتك الثانية: السحب ضمن مسافة الـ 45 فقط ]]
+                    local dist = (part.Position - root.Position).Magnitude
+                    if dist <= magnetRadius then
+                        
+                        -- تعطيل التصادم لمنع اللاق على جوالك
+                        part.CanCollide = false 
+                        
+                        -- تحديد نقطة التجمع (30 مسمار فوق راسك)
+                        local targetPos = root.Position + Vector3.new(0, 30, 0)
+                        
+                        -- حساب اتجاه السحب
+                        local pullDirection = (targetPos - part.Position)
+                        
+                        -- الدفع الفيزيائي (Velocity) الذي يراه السيرفر
+                        -- كلما كانت القطعة بعيدة، تُسحب بسرعة، ولما تقرب فوقك تبطئ وتستقر
+                        part.Velocity = pullDirection * 3 
+                        part.RotVelocity = Vector3.new(0, 0, 0)
+                    end
                 end
             end
         end
