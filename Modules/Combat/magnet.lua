@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - مغناطيس السيرفر الصاروخي V6 ]]
--- المطور: Cryptic | التحديث: تحكم بسرعة السحب + تمركز سريع فوق الرأس
+-- [[ Cryptic Hub - إعصار القطع الدوار V7 ]]
+-- المطور: Cryptic | التحديث: دوران القطع حول الرأس (Orbiting) + توزيع رياضي منتظم
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -8,21 +8,23 @@ return function(Tab, UI)
     
     local isMagnet = false
     local scanList = {}
-    local magnetRadius = 45 -- مسافة ملكية السيرفر (FE)
-    local pullSpeed = 4 -- السرعة الافتراضية
+    local magnetRadius = 45 -- مسافة السحب FE
+    local pullSpeed = 8 -- سرعة الجذب والتتبع
+    local orbitSpeed = 3 -- سرعة الدوران (الإعصار)
+    local orbitRadius = 10 -- وسع الدائرة حول رأسك
 
-    -- 1. خانة التحكم بسرعة السحب
-    Tab:AddInput("سرعة المغناطيس (رقم)", "اكتب رقم (مثال: 10 أو 20)", function(txt)
+    -- 1. التحكم بقوة الجذب
+    Tab:AddInput("قوة الجذب الدوار (رقم)", "اكتب رقم (مثال: 8 أو 15)", function(txt)
         local num = tonumber(txt)
         if num then
             pullSpeed = num
-            UI:Notify("⚡ تم تعيين سرعة السحب إلى: " .. num)
+            UI:Notify("⚡ تم تعيين قوة التجاذب إلى: " .. num)
         else
             UI:Notify("⚠️ الرجاء كتابة رقم صحيح!")
         end
     end)
 
-    -- 2. حلقة المراقبة (تفحص القطع المكسورة والمرمية كل ثانيتين)
+    -- 2. حلقة المراقبة الذكية
     task.spawn(function()
         while task.wait(2) do
             if isMagnet then
@@ -42,17 +44,17 @@ return function(Tab, UI)
     end)
 
     -- 3. زر التفعيل
-    Tab:AddToggle("🧲 مغناطيس فوق الرأس (V6)", function(active)
+    Tab:AddToggle("🌪️ إعصار القطع (Orbit V7)", function(active)
         isMagnet = active
         if active then
-            UI:Notify("🚀 المغناطيس جاهز! امشِ لشفط القطع فوق رأسك.")
+            UI:Notify("🚀 تم تفعيل الإعصار! القطع ستدور في حلقة فوق رأسك.")
         else
             scanList = {}
-            UI:Notify("❌ تم إيقاف المغناطيس وسقطت القطع.")
+            UI:Notify("❌ تم إيقاف الإعصار.")
         end
     end)
 
-    -- 4. المحرك الفيزيائي السريع (هنا التمركز فوق الرأس)
+    -- 4. المحرك الفيزيائي والرياضي (هنا سحر الدوران)
     runService.Heartbeat:Connect(function()
         if not isMagnet then return end
         
@@ -60,25 +62,38 @@ return function(Tab, UI)
         local root = char and char:FindFirstChild("HumanoidRootPart")
         if not root then return end
 
-        for _, part in ipairs(scanList) do
+        local timeNow = tick() -- نستخدم الوقت لحساب الحركة الدائرية المستمرة
+        local totalParts = #scanList -- عدد القطع المسحوبة
+
+        for i, part in ipairs(scanList) do
             if part and part.Parent then
                 local rootOfPart = part:GetRootPart()
                 
-                -- التحقق من أن القطعة مفكوكة تماماً
+                -- التأكد أن القطعة مفكوكة تماماً
                 if not part.Anchored and rootOfPart and not rootOfPart.Anchored then
                     local dist = (part.Position - root.Position).Magnitude
                     
                     if dist <= magnetRadius then
-                        part.CanCollide = false -- منع اللاق
+                        part.CanCollide = false -- منع اللاق نهائياً
                         
-                        -- [[ التمركز فوق الرأس مباشرة بـ 20 مسمار ]]
-                        local targetPos = root.Position + Vector3.new(0, 20, 0)
+                        -- [[ الرياضيات السحرية لتشكيل الحلقة الدوارة ]]
+                        -- توزيع القطع بالتساوي على الدائرة
+                        local angleOffset = (i / totalParts) * (math.pi * 2)
+                        local currentAngle = (timeNow * orbitSpeed) + angleOffset
+                        
+                        -- حساب إحداثيات الدوران (X و Z) والارتفاع (Y)
+                        local targetX = root.Position.X + (math.cos(currentAngle) * orbitRadius)
+                        local targetZ = root.Position.Z + (math.sin(currentAngle) * orbitRadius)
+                        local targetY = root.Position.Y + 15 -- ترتفع 15 مسمار فوق رأسك
+                        
+                        local targetPos = Vector3.new(targetX, targetY, targetZ)
                         local pullDirection = (targetPos - part.Position)
                         
-                        -- [[ تطبيق السرعة الصاروخية التي اخترتها ]]
-                        -- السيرفر سيشاهد القطع تطير بسرعة وتستقر فوق رأسك
+                        -- تطبيق السحب نحو المسار الدائري
                         part.Velocity = pullDirection * pullSpeed 
-                        part.RotVelocity = Vector3.new(0, 0, 0)
+                        
+                        -- جعل القطعة تدور حول نفسها أيضاً لتعطي شكل عشوائي وجميل للإعصار
+                        part.RotVelocity = Vector3.new(math.random(-5, 5), math.random(-5, 5), math.random(-5, 5))
                     end
                 end
             end
