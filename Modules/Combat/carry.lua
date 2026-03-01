@@ -8,7 +8,7 @@ return function(Tab, UI)
     
     local isCarrying = false
     local liftHeight = 0
-    local liftSpeed = 0.05 -- سرعة الصعود البطيئة جداً من تحت الأرض
+    local liftSpeed = 0.03 -- سرعة الصعود البطيئة جداً من تحت الأرض
     local startY = 0 -- لتسجيل نقطة البداية تحت الأرض
 
     -- 1. نظام البحث الذكي (جاهز ومصلح)
@@ -38,7 +38,7 @@ return function(Tab, UI)
     end)
 
     -- 2. زر التفعيل
-    Tab:AddToggle("🛌 مصعد فيزيائي نائم (FE Sleep Lift)", function(active)
+    Tab:AddToggle("تخلي واحد يطير معك ما تشتغل بكل مابات", function(active)
         isCarrying = active
         local char = lp.Character
         
