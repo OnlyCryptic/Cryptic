@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - الرفع الفيزيائي الحقيقي (FE Elevator) ]]
--- المطور: Cryptic | التحديث: رفع يعتمد على فيزياء شخصيتك فقط لكي يراه السيرفر بالكامل
+-- [[ Cryptic Hub - المصعد الفيزيائي المطور (Sleeping Elevator) ]]
+-- المطور: Cryptic | الميزات: وضعية النوم، خروج من تحت الأرض ببطء، Anti-Fling، Noclip
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -7,9 +7,11 @@ return function(Tab, UI)
     local lp = players.LocalPlayer
     
     local isCarrying = false
-    local liftSpeed = 8 -- سرعة الرفع الفيزيائية للأعلى (قوة الدفع)
+    local liftHeight = 0
+    local liftSpeed = 0.05 -- سرعة الصعود البطيئة جداً من تحت الأرض
+    local startY = 0 -- لتسجيل نقطة البداية تحت الأرض
 
-    -- 1. نظام البحث الذكي (نفس النظام المعتمد)
+    -- 1. نظام البحث الذكي (جاهز ومصلح)
     local InputField = Tab:AddInput("البحث عن لاعب", "اكتب اليوزر وأغلق الكيبورد...", function() end)
 
     InputField.TextBox.FocusLost:Connect(function()
@@ -35,8 +37,8 @@ return function(Tab, UI)
         end
     end)
 
-    -- 2. التفعيل
-    Tab:AddToggle("🛌 رفع فيزيائي للسيرفر (FE Elevator)", function(active)
+    -- 2. زر التفعيل
+    Tab:AddToggle("🛌 مصعد فيزيائي نائم (FE Sleep Lift)", function(active)
         isCarrying = active
         local char = lp.Character
         
@@ -46,15 +48,17 @@ return function(Tab, UI)
                 UI:Notify("⚠️ حدد لاعباً أولاً!")
                 return
             end
-            UI:Notify("🚀 شخصيتك الآن تعمل كمصعد فيزيائي تحت الهدف...")
             
-            -- إعداد شخصيتك لتكون منصة (إيقاف الحركة العادية لمنع السقوط)
+            -- تجميد حركة شخصيتك (عشان تبان كأنها لوح ميت)
             if char then
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 if hum then hum.PlatformStand = true end
             end
+            
+            liftHeight = -7 -- نبدأ من تحت الهدف بـ 7 مسامير (تحت الأرض)
+            UI:Notify("🚀 شخصيتك تخرج الآن من تحت الأرض بوضعية النوم...")
         else
-            -- إعادة الشخصية لوضعها الطبيعي عند الإيقاف
+            -- إرجاع شخصيتك لوضعها الطبيعي
             if char then
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 if hum then hum.PlatformStand = false end
@@ -63,7 +67,7 @@ return function(Tab, UI)
         end
     end)
 
-    -- 3. المحرك الفيزيائي (السر هنا: لا نلمس إحداثيات الخصم أبداً)
+    -- 3. المحرك الفيزيائي (العمل الحقيقي هنا)
     runService.Heartbeat:Connect(function()
         if not isCarrying or not _G.CrypticTarget then return end
         
@@ -73,26 +77,36 @@ return function(Tab, UI)
         local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
 
         if root and targetRoot then
-            -- 1. جعل أجزاء شخصيتك صلبة ليقف عليها الخصم
+            -- [[ تفعيل Anti-Fling و Noclip لشخصيتك ]]
             for _, part in pairs(char:GetDescendants()) do
                 if part:IsA("BasePart") then
-                    part.CanCollide = true
-                    part.Massless = true -- تقليل وزن شخصيتك لعدم إعاقة الرفع
+                    -- نجعل الجزء الأساسي (Root/Torso) فقط صلب لرفع الخصم
+                    if part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso" then
+                        part.CanCollide = true
+                    else
+                        -- الأطراف (اليدين والرجلين) Noclip عشان ما تضرب في الماب وتسوي Fling
+                        part.CanCollide = false
+                    end
+                    part.Massless = true
                 end
             end
 
-            -- 2. جلب موقع الخصم الحالي
+            -- زيادة الارتفاع ببطء شديد
+            liftHeight = liftHeight + liftSpeed
+            
+            -- أخذ موقع الخصم الحالي في X و Z
             local tPos = targetRoot.Position
             
-            -- 3. تتبع الخصم في المحورين X و Z فقط (أنت دائماً تحته)
-            -- لا نغير الـ Y بـ CFrame حتى لا نكسر الفيزياء
-            root.CFrame = CFrame.new(tPos.X, root.Position.Y, tPos.Z)
+            -- [[ تطبيق وضعية النوم (90 درجة) والصعود من تحت الأرض ]]
+            -- ندمج الإحداثيات (تحت الخصم) مع الدوران (كأنك نايم على ظهرك)
+            root.CFrame = CFrame.new(tPos.X, tPos.Y + liftHeight, tPos.Z) * CFrame.Angles(math.rad(90), 0, 0)
             
-            -- 4. استخدام قوة الدفع (Velocity) لشخصيتك للأعلى
-            -- السيرفر سيقرأ أن شخصيتك ترتفع، وبما أن الخصم فوقك، سيرتفع معك غصباً عنه
-            root.Velocity = Vector3.new(0, liftSpeed, 0)
+            -- [[ الدفع الفيزيائي للسيرفر (FE) ]]
+            -- نعطي شخصيتك قوة دفع للأعلى عشان السيرفر يقتنع إنك منصة ترتفع
+            -- هذا اللي بيخلي الخصم يطير غصب عنه لما تلامس رجله
+            root.Velocity = Vector3.new(0, 15, 0)
             
-            -- لمنع شخصيتك من الدوران أو السقوط
+            -- تصفير دوران شخصيتك عشان ما تتشقلب (Anti-Fling)
             root.RotVelocity = Vector3.new(0, 0, 0)
         end
     end)
