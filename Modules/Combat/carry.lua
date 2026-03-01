@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة حمل اللاعبين الاحترافية ]]
--- المطور: Cryptic | الميزات: بحث ذكي، رفع حقيقي (FE)، تحديث تلقائي للأسماء
+-- [[ Cryptic Hub - ميزة الرفع الحقيقي والواقعي ]]
+-- المطور: Cryptic | الميزة: رفع فيزيائي (FE) يراه المستهدف والسيرفر
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -8,9 +8,9 @@ return function(Tab, UI)
     
     local isCarrying = false
     local liftHeight = 0
-    local liftSpeed = 0.05 -- سرعة الرفع البطيئة جداً لتظهر بشكل حقيقي
+    local liftSpeed = 0.04 -- سرعة رفع بطيئة جداً لتبدو واقعية
 
-    -- 1. خانة البحث بنظام البحث الذكي المطور
+    -- 1. خانة البحث الذكي (كما طلبت تماماً)
     local InputField = Tab:AddInput("البحث عن لاعب", "اكتب بداية اليوزر وأغلق الكيبورد...", function() end)
 
     InputField.TextBox.FocusLost:Connect(function()
@@ -24,7 +24,7 @@ return function(Tab, UI)
         local search = txt:lower()
 
         for _, p in pairs(players:GetPlayers()) do
-            -- نظام البحث الذكي (مطابقة بداية الاسم)
+            -- البحث بمطابقة بداية الاسم
             if p ~= lp and string.sub(p.Name:lower(), 1, #search) == search then
                 bestMatch = p
                 break 
@@ -33,33 +33,33 @@ return function(Tab, UI)
 
         if bestMatch then
             _G.CrypticTarget = bestMatch
-            -- تحديث نص الخانة ليظهر الاسم الكامل والاسم المستعار
+            -- تحديث النص ليظهر الاسم الكامل والاسم المستعار
             InputField.SetText(bestMatch.DisplayName .. " (@" .. bestMatch.Name .. ")")
-            UI:Notify("🎯 تم تحديد الهدف: " .. bestMatch.DisplayName)
+            UI:Notify("🎯 تم تحديد الهدف للرفع: " .. bestMatch.DisplayName)
         else
             _G.CrypticTarget = nil
             UI:Notify("❌ لم يتم العثور على اللاعب")
         end
     end)
 
-    -- 2. زر تفعيل ميزة الحمل والرفع الحقيقي
+    -- 2. زر تفعيل الرفع الحقيقي
     Tab:AddToggle("🛌 تفعيل الرفع الحقيقي (Carry)", function(active)
         isCarrying = active
         liftHeight = 0
         
         if active then
-            if not _G.CrypticTarget then
+            if not _G.CrypticTarget or not _G.CrypticTarget.Character then
                 isCarrying = false
-                UI:Notify("⚠️ يجب تحديد لاعب من خانة البحث أولاً!")
+                UI:Notify("⚠️ حدد لاعباً أولاً من الخانة أعلاه!")
                 return
             end
-            UI:Notify("✨ جاري البدء في الرفع الحقيقي لـ " .. _G.CrypticTarget.DisplayName)
+            UI:Notify("✨ بدأ الرفع الحقيقي لـ " .. _G.CrypticTarget.DisplayName)
         else
-            UI:Notify("❌ تم إيقاف الرفع")
+            UI:Notify("❌ توقف الرفع")
         end
     end)
 
-    -- المحرك البرمجي للرفع الفيزيائي (Real Physics Lift)
+    -- المحرك الفيزيائي للرفع (FE Synchronization)
     runService.Heartbeat:Connect(function()
         if not isCarrying or not _G.CrypticTarget then return end
         
@@ -69,28 +69,24 @@ return function(Tab, UI)
         local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
 
         if root and targetRoot then
-            -- تفعيل Noclip و Anti-Fling لضمان ثبات العملية
+            -- تفعيل Noclip لشخصيتك لتجنب التصادمات
             for _, part in pairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
+                if part:IsA("BasePart") then part.CanCollide = false end
             end
 
-            -- زيادة الارتفاع ببطء شديد (الرفع الحقيقي)
+            -- زيادة الارتفاع "شوي بشوي"
             liftHeight = liftHeight + liftSpeed
             
-            -- لكي يظهر الرفع للآخرين (FE)، نستخدم الـ Velocity مع الـ CFrame
+            -- [[ سر الرفع الحقيقي ]]
+            -- نستخدم Velocity لإجبار سيرفر روبلوكس على قبول إحداثيات اللاعب الجديدة
+            targetRoot.Velocity = Vector3.new(0, 15, 0) 
+            
+            -- وضع شخصيتك تحت الهدف لتظهر كأنك "أنت" من ترفعه
             local targetPos = targetRoot.Position
-            
-            -- وضع شخصيتك تحت اللاعب المستهدف بالضبط لكي تبدو كأنها تحمله
             root.CFrame = CFrame.new(targetPos.X, targetPos.Y - 3.5 + liftHeight, targetPos.Z)
-            root.Velocity = Vector3.new(0, 5, 0) -- دفع خفيف للأعلى لضمان المزامنة
 
-            -- تثبيت اللاعب المستهدف فوقك بوضعية "النوم"
+            -- تثبيت الهدف بوضعية النوم فوقك
             targetRoot.CFrame = root.CFrame * CFrame.new(0, 3.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
-            
-            -- إعطاء اللاعب المستهدف سرعة للأعلى لكي يراه الجميع وهو يرتفع
-            targetRoot.Velocity = Vector3.new(0, 10, 0) 
         end
     end)
 end
