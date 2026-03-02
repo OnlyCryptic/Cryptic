@@ -52,7 +52,7 @@ return function(Tab, UI)
     end
 
     -- إضافة زر التبديل للواجهة
-    Tab:AddToggle("مضاد التطيير (Anti-Fling)", function(active)
+    Tab:AddToggle("مضاد التطيير", function(active)
         toggleAntiFling(active)
         
         -- إظهار الإشعار على الشاشة بناءً على حالة الزر
