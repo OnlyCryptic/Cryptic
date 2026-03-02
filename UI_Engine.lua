@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V3.3 ]]
--- المطور: Arwa | إصلاح الترتيب (LayoutOrder) والتفاف النصوص الطويلة
+-- [[ Cryptic Hub - محرك الواجهة المطور V3.4 ]]
+-- المطور: Arwa | الإصلاح: سكرول للقائمة الجانبية، قص الحواف، ومسافات سفلية مريحة
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -7,7 +7,7 @@ local CoreGui = game:GetService("CoreGui")
 
 function UI:CreateWindow(title)
     local Screen = Instance.new("ScreenGui", CoreGui)
-    Screen.Name = "ArwaHub_V3_3"
+    Screen.Name = "ArwaHub_V3_4"
     Screen.ResetOnSpawn = false
 
     local OpenBtn = Instance.new("TextButton", Screen)
@@ -23,7 +23,11 @@ function UI:CreateWindow(title)
 
     local Main = Instance.new("Frame", Screen)
     Main.Size = UDim2.new(0, 440, 0, 280); Main.Position = UDim2.new(0.5, 0, 0.5, 0); Main.AnchorPoint = Vector2.new(0.5, 0.5)
-    Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Main.Active = true; Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+    Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Main.Active = true
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+    
+    -- [[ الإصلاح 1: منع خروج العناصر عن إطار الواجهة الأساسي ]]
+    Main.ClipDescendants = true 
 
     local TitleBar = Instance.new("Frame", Main)
     TitleBar.Size = UDim2.new(1, 0, 0, 35); TitleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", TitleBar)
@@ -38,8 +42,21 @@ function UI:CreateWindow(title)
     UserInputService.InputChanged:Connect(function(i) if dragM and i.UserInputType == Enum.UserInputType.Touch then local d = i.Position - dragStartM; Main.Position = UDim2.new(startPosM.X.Scale, startPosM.X.Offset + d.X, startPosM.Y.Scale, startPosM.Y.Offset + d.Y) end end)
     UserInputService.InputEnded:Connect(function() dragM = false end)
 
-    local Sidebar = Instance.new("Frame", Main)
-    Sidebar.Position = UDim2.new(0, 0, 0, 35); Sidebar.Size = UDim2.new(0, 110, 1, -35); Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Instance.new("UIListLayout", Sidebar).Padding = UDim.new(0, 2)
+    -- [[ الإصلاح 2: تحويل القائمة الجانبية إلى قائمة قابلة للسحب اللانهائي ]]
+    local Sidebar = Instance.new("ScrollingFrame", Main)
+    Sidebar.Position = UDim2.new(0, 0, 0, 35); Sidebar.Size = UDim2.new(0, 110, 1, -35); Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    Sidebar.BorderSizePixel = 0; Sidebar.ScrollBarThickness = 2 -- شريط سكرول نحيف جداً
+    Sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
+    Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    
+    local SidebarLayout = Instance.new("UIListLayout", Sidebar)
+    SidebarLayout.Padding = UDim.new(0, 2)
+    
+    -- مسافة مريحة من الأعلى والأسفل للقائمة الجانبية
+    local SidebarPadding = Instance.new("UIPadding", Sidebar)
+    SidebarPadding.PaddingTop = UDim.new(0, 5)
+    SidebarPadding.PaddingBottom = UDim.new(0, 10)
+
     local Content = Instance.new("Frame", Main)
     Content.Position = UDim2.new(0, 115, 0, 40); Content.Size = UDim2.new(1, -120, 1, -45); Content.BackgroundTransparency = 1
 
@@ -49,19 +66,23 @@ function UI:CreateWindow(title)
         local TabBtn = Instance.new("TextButton", Sidebar); TabBtn.Size = UDim2.new(1, 0, 0, 35); TabBtn.Text = name; TabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TabBtn.TextColor3 = Color3.new(1, 1, 1); TabBtn.BorderSizePixel = 0
         
         local Page = Instance.new("ScrollingFrame", Content); Page.Size = UDim2.new(1, 0, 1, 0); Page.Visible = false; Page.BackgroundTransparency = 1; Page.ScrollBarThickness = 2
-        -- التمدد التلقائي للصفحة لتجنب تقطيع العناصر
         Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
         Page.CanvasSize = UDim2.new(0, 0, 0, 0)
         
         local ListLayout = Instance.new("UIListLayout", Page)
         ListLayout.Padding = UDim.new(0, 8)
-        ListLayout.SortOrder = Enum.SortOrder.LayoutOrder -- إجبار الترتيب بالرقم
+        ListLayout.SortOrder = Enum.SortOrder.LayoutOrder 
+
+        -- [[ الإصلاح 3: إضافة مسافة من الأسفل للمحتوى عشان ما يلصق الإطار بالأزرار ]]
+        local PagePadding = Instance.new("UIPadding", Page)
+        PagePadding.PaddingTop = UDim.new(0, 5)
+        PagePadding.PaddingBottom = UDim.new(0, 20) -- يترك مساحة فارغة في الأسفل دائماً
 
         if not Window.FirstTab then Window.FirstTab = Page; Page.Visible = true end
         TabBtn.MouseButton1Click:Connect(function() for _, v in pairs(Content:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end; Page.Visible = true end)
 
         local TabOps = {}
-        local orderIndex = 0 -- عداد الترتيب لضمان مكان كل أداة
+        local orderIndex = 0 
 
         function TabOps:AddLine()
             orderIndex = orderIndex + 1
@@ -121,15 +142,13 @@ function UI:CreateWindow(title)
             R.Size = UDim2.new(0.98,0,0,35); R.BackgroundColor3 = Color3.fromRGB(25,25,25); Instance.new("UICorner",R); local L = Instance.new("TextLabel",R); L.Text = t; L.Size = UDim2.new(1,-10,1,0); L.TextColor3 = Color3.fromRGB(0,255,150); L.BackgroundTransparency = 1; L.TextXAlignment = Enum.TextXAlignment.Right; return {SetText=function(nt) L.Text=nt end} 
         end
 
-        -- إصلاح مشكلة النص المقطوع والترتيب العشوائي للملاحظات
         function TabOps:AddParagraph(text)
             orderIndex = orderIndex + 1
             local Lbl = Instance.new("TextLabel", Page)
             Lbl.LayoutOrder = orderIndex
-            -- استخدام الحجم التلقائي للارتفاع
             Lbl.Size = UDim2.new(0.95, 0, 0, 0)
             Lbl.AutomaticSize = Enum.AutomaticSize.Y
-            Lbl.TextWrapped = true -- هذا يجعل النص ينزل لسطر جديد إذا كان طويلاً
+            Lbl.TextWrapped = true 
             Lbl.Text = text
             Lbl.TextColor3 = Color3.fromRGB(170, 170, 170)
             Lbl.BackgroundTransparency = 1
