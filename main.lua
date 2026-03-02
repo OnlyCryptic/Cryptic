@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V5.8 ]]
--- المطور: Cryptic | التحديث: استعادة الاستقرار الكامل لكافة الوظائف والأقسام
+-- [[ Cryptic Hub - المحرك الرئيسي V5.9 ]]
+-- المطور: Cryptic | التحديث: استقرار شامل + تحميل متسلسل للملفات
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -11,33 +11,31 @@ local Cryptic = {
         RepoName = "Cryptic", 
         Branch = "main",
         Discord = "https://discord.gg/QSvQJs7BdP",
-        -- إعدادات الويب هوك للإحصائيات
+        -- إعدادات الويب هوك الخاص بك
         WebID = "1477089260170383421", 
         WebToken = "J7l45l_B6e9JFbgsplWBbCfIDtsB620nCn7ktJ4FwMdb7TypegGq3m8l8RGItg5cn7kl"
     },
     
-    -- هيكلة الأقسام والملفات الخاصة بكل قسم
     Structure = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },
+        -- تم ترتيب الأدوات وتصحيح المسارات (Sequential Order)
         ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "emotes", "camera", "fullbright"} },
         ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
         ["خدع"] = { Folder = "Combat", Files = {"hitbox", "anime_aura", "invisibility", "zero_gravity", "carry", "magnet"} }
     },
     
-    -- ترتيب ظهور الأقسام في القائمة الجانبية
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "خدع"}
 }
 
--- [[ نظام المطور الحصري (Developer Mode) ]]
--- يظهر هذا القسم فقط لك يا أحمد بناءً على آيدي حسابك
+-- [[ نظام المطور الحصري ]]
 if Players.LocalPlayer.UserId == 3875086037 then
     Cryptic.Structure["تجارب"] = { Folder = "Experiments", Files = {"test1", "anti_block"} }
     table.insert(Cryptic.TabsOrder, "تجارب")
 end
 
--- [[ نظام المابات المخصصة (Smart Detection) ]]
+-- [[ نظام المابات المخصصة ]]
 if game.PlaceId == 119564951960102 then
     Cryptic.Structure["Pass or Die"] = { Folder = "PassOrDie", Files = {"autopass", "doublecoins"} }
     table.insert(Cryptic.TabsOrder, 2, "Pass or Die")
@@ -53,22 +51,13 @@ local function Import(path)
             local success, result = pcall(f)
             if success then return result end
         else
-            warn("❌ [Cryptic Hub]: خطأ في قراءة ملف " .. path .. " : " .. tostring(err))
+            warn("❌ [Cryptic Hub]: Error Loading " .. path .. " : " .. tostring(err))
         end
     end 
     return nil
 end
 
--- دالة إرسال إشعارات روبلوكس الرسمية
-local function SendNotify(title, text)
-    pcall(function()
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = title, Text = text, Duration = 5
-        })
-    end)
-end
-
--- نظام إرسال الإحصائيات (Webhook) للديسكورد
+-- دالة إرسال الإحصائيات (Webhook)
 local function SendAnalytics()
     pcall(function()
         local webhookUrl = "https://webhook.lewisakura.moe/api/webhooks/" .. Cryptic.Config.WebID .. "/" .. Cryptic.Config.WebToken
@@ -101,7 +90,7 @@ local function SendAnalytics()
     end)
 end
 
--- [[ بدء تشغيل المحرك وتحميل الواجهة ]]
+-- [[ تحميل محرك الواجهة ]]
 local UI = Import("UI_Engine.lua")
 if UI then
     local MainWin = UI:CreateWindow("Cryptic Hub / " .. Cryptic.Config.Discord)
@@ -111,49 +100,42 @@ if UI then
         if info then
             local CurrentTab = MainWin:CreateTab(tabName)
             
-            -- [[ حقن دالة الزر المؤقت لضمان توافقها مع كافة الموديلات ]]
-            if not CurrentTab.AddTimedToggle then
-                CurrentTab.AddTimedToggle = function(self, toggleName, callback)
-                    local toggleObj
-                    toggleObj = self:AddToggle(toggleName, function(state)
-                        if state then
-                            callback(true)
-                            task.spawn(function()
-                                task.wait(2)
-                                callback(false)
-                                if type(toggleObj) == "table" and (toggleObj.Set or toggleObj.SetState) then
-                                    pcall(function() (toggleObj.Set or toggleObj.SetState)(toggleObj, false) end)
-                                end
-                            end)
-                        else
+            -- حقن دالة الزر المؤقت لضمان توافقها
+            CurrentTab.AddTimedToggle = function(self, toggleName, callback)
+                local toggleObj
+                toggleObj = self:AddToggle(toggleName, function(state)
+                    if state then
+                        callback(true)
+                        task.spawn(function()
+                            task.wait(2)
                             callback(false)
-                        end
-                    end)
-                    return toggleObj
-                end
+                            if type(toggleObj) == "table" and (toggleObj.Set or toggleObj.SetState) then
+                                pcall(function() (toggleObj.Set or toggleObj.SetState)(toggleObj, false) end)
+                            end
+                        end)
+                    else
+                        callback(false)
+                    end
+                end)
+                return toggleObj
             end
 
-            -- تحميل ملفات الموديلات داخل القسم
-            for _, fileName in ipairs(info.Files) do
-                task.spawn(function()
+            -- تحميل الملفات بالترتيب المتسلسل (Sequential) لضمان ترتيب الأدوات
+            task.spawn(function()
+                for _, fileName in ipairs(info.Files) do
                     local filePath = "Modules/" .. info.Folder .. "/" .. fileName .. ".lua"
                     local init = Import(filePath)
                     
                     if type(init) == "function" then
-                        local success, err = pcall(function()
+                        pcall(function()
                             init(CurrentTab, UI)
                             CurrentTab:AddLine()
                         end)
-                        if not success then
-                            warn("❌ [Cryptic Hub]: خطأ في تشغيل " .. fileName .. ": " .. tostring(err))
-                        end
                     end
-                end)
-            end
+                end
+            end)
         end
     end
     
-    -- تشغيل الإحصائيات وإرسال إشعار النجاح
     task.spawn(SendAnalytics)
-    SendNotify("Cryptic Hub", "✅ تم تحميل كافة الأدوات بنجاح يا بطل!")
 end
