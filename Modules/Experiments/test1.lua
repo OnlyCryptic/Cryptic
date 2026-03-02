@@ -1,78 +1,85 @@
 -- [[ Cryptic Hub - قسم التجارب ]]
--- المطور: Cryptic | التجربة الأولى: تطيير جميع اللاعبين (Fling All)
+-- المطور: Cryptic | التجربة: إعصار تطيير الجميع (Auto Fling All) كزر تشغيل
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
     local lp = Players.LocalPlayer
 
-    -- عنوان للقسم
+    local autoFling = false
+    local spinner = nil
+
     Tab:AddLabel("🌪️ تجارب الفيزياء الفتاكة")
 
-    -- زر تطيير الجميع
-    Tab:AddButton("🚀 تطيير الجميع (Fling All)", function()
+    Tab:AddToggle("🚀 إعصار تطيير الجميع (Auto Fling)", function(active)
+        autoFling = active
         local char = lp.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
-        
-        if not root then
-            UI:Notify("❌ لم يتم العثور على شخصيتك!")
-            return
-        end
+        local hum = char and char:FindFirstChild("Humanoid")
 
-        UI:Notify("⚠️ جاري تطيير الجميع... استمتع بالمشهد!")
-
-        task.spawn(function()
-            -- 1. حفظ مكانك الأصلي عشان ترجع له بعد ما تخلص الجريمة 🤫
-            local originalCFrame = root.CFrame
-
-            -- 2. صنع أداة دوران وهمية (BodyAngularVelocity) بقوة لا نهائية
-            local spinner = Instance.new("BodyAngularVelocity")
-            spinner.Name = "CrypticFling"
-            spinner.AngularVelocity = Vector3.new(0, 99999, 0) -- سرعة دوران مرعبة
-            spinner.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-            spinner.P = math.huge
-            spinner.Parent = root
-
-            -- 3. حلقة المرور على كل لاعب في السيرفر
-            for _, targetPlayer in ipairs(Players:GetPlayers()) do
-                if targetPlayer ~= lp then
-                    pcall(function()
-                        local targetChar = targetPlayer.Character
-                        local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
-                        local targetHum = targetChar and targetChar:FindFirstChild("Humanoid")
-
-                        -- التأكد أن اللاعب حي وموجود
-                        if targetRoot and targetHum and targetHum.Health > 0 then
-                            local startTime = tick()
-                            
-                            -- الالتصاق باللاعب لمدة 0.5 ثانية لضمان تطييره
-                            while tick() - startTime < 0.5 do
-                                RunService.Heartbeat:Wait()
-                                if char and root and targetRoot then
-                                    -- جعل شخصيتك موازية له تماماً ليطير بقوة
-                                    root.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 0)
-                                    root.Velocity = Vector3.new(0, 0, 0)
-                                else
-                                    break
-                                end
-                            end
-                        end
-                    end)
-                end
+        if active then
+            UI:Notify("🔥 تم تشغيل الإعصار! جاري تصفية السيرفر...")
+            if root and hum then
+                -- [[ الحل هنا ]]: إلغاء وقوف الشخصية عشان تقدر تدور بحرية
+                hum.PlatformStand = true 
+                
+                -- إضافة قوة الدوران
+                spinner = Instance.new("BodyAngularVelocity")
+                spinner.Name = "CrypticSpinner"
+                spinner.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                spinner.AngularVelocity = Vector3.new(0, 50000, 0) -- سرعة جنونية
+                spinner.Parent = root
             end
-
-            -- 4. إيقاف الدوران وتنظيف السكربت
+        else
+            UI:Notify("🛑 تم إيقاف الإعصار.")
+            -- إرجاع الشخصية لحالتها الطبيعية
+            if hum then hum.PlatformStand = false end
             if spinner then spinner:Destroy() end
-            
-            -- تصفير سرعة اللاعب عشان ما تطير أنت كمان
             if root then
                 root.RotVelocity = Vector3.new(0, 0, 0)
                 root.Velocity = Vector3.new(0, 0, 0)
-                -- 5. العودة لمكانك الأصلي
-                root.CFrame = originalCFrame
             end
+        end
+    end)
 
-            UI:Notify("✅ تمت المهمة بنجاح! تم مسح السيرفر.")
-        end)
+    -- [[ محرك المطاردة التلقائي ]]
+    task.spawn(function()
+        while task.wait(0.1) do
+            if autoFling then
+                local char = lp.Character
+                local root = char and char:FindFirstChild("HumanoidRootPart")
+                
+                if root then
+                    -- المرور على كل لاعب في السيرفر
+                    for _, targetPlayer in ipairs(Players:GetPlayers()) do
+                        -- التأكد أن زر التشغيل لا يزال فعالاً وأن الهدف ليس أنت
+                        if autoFling and targetPlayer ~= lp then
+                            pcall(function()
+                                local tChar = targetPlayer.Character
+                                local tRoot = tChar and tChar:FindFirstChild("HumanoidRootPart")
+                                local tHum = tChar and tChar:FindFirstChild("Humanoid")
+
+                                -- إذا كان اللاعب حي وموجود
+                                if tRoot and tHum and tHum.Health > 0 then
+                                    local startTime = tick()
+                                    
+                                    -- الالتصاق باللاعب لمدة 0.3 ثانية لضمان تطييره بقوة
+                                    while tick() - startTime < 0.3 and autoFling do
+                                        RunService.Heartbeat:Wait()
+                                        if root and tRoot then
+                                            -- النقل المستمر لداخل شخصية الهدف
+                                            root.CFrame = tRoot.CFrame
+                                            root.Velocity = Vector3.new(0, 0, 0) -- منع شخصيتك من الطيران بعيداً
+                                        else
+                                            break
+                                        end
+                                    end
+                                end
+                            end)
+                        end
+                    end
+                end
+            end
+        end
     end)
 end
