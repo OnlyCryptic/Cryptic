@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V5.1 ]]
--- المطور: Cryptic | التحديث: إصلاح دالة الزر المؤقت (ثانيتين + إيقاف شكلي وبرمجي)
+-- [[ Cryptic Hub - المحرك الرئيسي V5.5 ]]
+-- المطور: Cryptic | الإصلاح: حل قلتش اختفاء الأدوات وتصحيح مسارات الملفات
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -16,7 +16,8 @@ local Cryptic = {
     Structure = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },
-        ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "emotes", "camera", "shiftlock", "fullbright.lua"} },
+        -- تم إصلاح قلتش fullbright وإضافة الكاميرا والشيفت لوك
+        ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "emotes", "camera", "shiftlock", "fullbright"} },
         ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
         ["خدع"] = { Folder = "Combat", Files = {"hitbox", "anime_aura", "invisibility", "zero_gravity", "carry", "magnet"} }
@@ -25,15 +26,13 @@ local Cryptic = {
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "خدع"}
 }
 
--- [[ نظام المابات المخصصة (Smart Games Detection) ]]
-
--- 1. إعدادات ماب Pass or Die
+-- [[ نظام المابات المخصصة ]]
 if game.PlaceId == 119564951960102 then
     Cryptic.Structure["Pass or Die"] = { Folder = "PassOrDie", Files = {"autopass", "doublecoins"} }
-    table.insert(Cryptic.TabsOrder, 2, "Pass or Die") -- يظهر في المركز الثاني (تحت معلومات)
+    table.insert(Cryptic.TabsOrder, 2, "Pass or Die")
 end
 
--- [[ نظام المطور الحصري (Developer Mode) ]]
+-- [[ نظام المطور الحصري ]]
 if Players.LocalPlayer.UserId == 3875086037 then
     Cryptic.Structure["تجارب"] = { Folder = "Experiments", Files = {"test1", "anti_block"} }
     table.insert(Cryptic.TabsOrder, "تجارب")
@@ -47,16 +46,12 @@ local function SendNotify(title, text)
     })
 end
 
--- نظام إرسال الإحصائيات (Webhook)
 local function SendAnalytics()
     local success, err = pcall(function()
         local webhookUrl = "https://webhook.lewisakura.moe/api/webhooks/" .. Cryptic.Config.WebID .. "/" .. Cryptic.Config.WebToken
-
         local player = Players.LocalPlayer
         local placeName = "Unknown Game"
-        
         pcall(function() placeName = MarketplaceService:GetProductInfo(game.PlaceId).Name end)
-
         local executorName = (type(identifyexecutor) == "function" and identifyexecutor()) or "Unknown Executor"
 
         local embedData = {
@@ -75,22 +70,13 @@ local function SendAnalytics()
 
         local HttpReq = (request or http_request or syn and syn.request)
         if HttpReq then
-            local response = HttpReq({
+            HttpReq({
                 Url = webhookUrl, Method = "POST",
                 Headers = {["Content-Type"] = "application/json"},
                 Body = HttpService:JSONEncode(embedData)
             })
-            if response and (response.StatusCode == 200 or response.StatusCode == 204) then
-                print("✅ [Cryptic Hub]: تم إرسال الإحصائيات للديسكورد بنجاح!")
-            else
-                warn("❌ [Cryptic Hub]: فشل إرسال الويب هوك. كود الخطأ: " .. tostring(response and response.StatusCode))
-            end
-        else
-            warn("❌ [Cryptic Hub]: المشغل الخاص بك لا يدعم وظيفة إرسال الروابط (request).")
         end
     end)
-
-    if not success then warn("❌ [Cryptic Hub]: خطأ برمجي في الإحصائيات: " .. tostring(err)) end
 end
 
 local function Import(path)
@@ -116,30 +102,25 @@ if UI then
         if info then
             local CurrentTab = MainWin:CreateTab(tabName)
             
-            -- [[ برمجة زر التفعيل المؤقت (ينطفي بعد ثانيتين) ]]
+            -- دالة الزر المؤقت
             CurrentTab.AddTimedToggle = function(self, toggleName, callback)
-                local toggleObj -- لحفظ مسار الزر في الواجهة
-                
+                local toggleObj
                 toggleObj = self:AddToggle(toggleName, function(state)
                     if state then
-                        callback(true) -- تشغيل الكود
+                        callback(true)
                         task.spawn(function()
-                            task.wait(2) -- الانتظار لمدة ثانيتين بدلاً من ثانية
-                            callback(false) -- إيقاف الكود برمجياً
-                            
-                            -- محاولة إطفاء الزر شكلياً في الواجهة (إذا كانت مكتبة UI تدعم ذلك)
+                            task.wait(2)
+                            callback(false)
                             if type(toggleObj) == "table" and toggleObj.Set then
                                 pcall(function() toggleObj:Set(false) end)
                             end
                         end)
                     else
-                        callback(false) -- إيقاف يدوي
+                        callback(false)
                     end
                 end)
-                
                 return toggleObj
             end
-            -------------------------------------------------------------------------
 
             for _, fileName in ipairs(info.Files) do
                 pcall(function()
