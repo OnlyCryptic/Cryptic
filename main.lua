@@ -36,7 +36,7 @@ local Cryptic = {
 -- التحقق من الآيدي الخاص بماب Pass or Die
 if game.PlaceId == 119564951960102 then
     -- إضافة مجلد خاص بالماب 
-    Cryptic.Structure["Pass or Die"] = { Folder = "PassOrDie", Files = {"autopass"} }
+    Cryptic.Structure["Pass or Die"] = { Folder = "PassOrDie", Files = {"autopass", "doublecoins"} }
     
     -- [[ التعديل الجديد ]]: وضع الخانة مباشرة تحت "معلومات" (المركز الثاني)
     table.insert(Cryptic.TabsOrder, 2, "Pass or Die")
