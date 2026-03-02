@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - سكربت الرقصات (All Emotes) ]]
--- المطور: Cryptic | التحديث: استخدام الزر المؤقت + إشعار روبلوكس لمدة 10 ثواني
+-- المطور: Cryptic | التحديث: عزل التحميل لمنع تجميد الواجهة والزر المؤقت
 
 return function(Tab, UI)
     -- دالة إرسال الإشعارات على شاشة اللعبة مباشرة
@@ -13,19 +13,24 @@ return function(Tab, UI)
         end)
     end
 
-    -- استخدام دالة الزر المؤقت الجديدة (تشتغل وتطفي تلقائياً)
     Tab:AddTimedToggle("تشغيل سكربت الرقصات", function(active)
         if active then
-            -- إرسال الإشعار لمدة 10 ثواني في شاشة روبلوكس
+            -- 1. إرسال الإشعار فوراً
             SendScreenNotify(
                 "Cryptic Hub", 
                 "تم تشغيل سكربت رقصات رجاءا انتضر 3 دقائق على اقل لتحميل كل رقصات روبلوكس ⏳", 
                 10
             )
             
-            -- تشغيل السكربت الخارجي باستخدام pcall لمنع أي كراش
-            pcall(function()
-                loadstring(game:HttpGet("http://scriptblox.com/raw/Baseplate-Fe-All-Emote-7386"))()
+            -- 2. عزل التحميل الثقيل في مسار منفصل تماماً (عشان ما يعلق الزر)
+            task.spawn(function()
+                -- نعطي الواجهة نصف ثانية عشان تحدث شكل الزر بدون لاق
+                task.wait(0.5) 
+                
+                -- تشغيل السكربت الخارجي
+                pcall(function()
+                    loadstring(game:HttpGet("http://scriptblox.com/raw/Baseplate-Fe-All-Emote-7386"))()
+                end)
             end)
         end
     end)
