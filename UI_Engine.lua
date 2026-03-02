@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V4.3 ]]
--- المطور: Cryptic | التحديث: إصلاح نهائي للزر المؤقت (Timed Toggle) 
+-- [[ Cryptic Hub - محرك الواجهة المطور V4.4 ]]
+-- المطور: Cryptic | الإصلاح: استعادة AddSpeedControl وكل الدوال المفقودة
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -10,14 +10,13 @@ function UI:CreateWindow(title)
     Screen.Name = "CrypticHub_V4"
     Screen.ResetOnSpawn = false
 
-    -- زر الفتح والإغلاق الصغير (C)
     local OpenBtn = Instance.new("TextButton", Screen)
     OpenBtn.Size = UDim2.new(0, 45, 0, 45); OpenBtn.Position = UDim2.new(0, 10, 0.5, -22)
     OpenBtn.Visible = false; OpenBtn.Text = "C"; OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
     OpenBtn.TextColor3 = Color3.fromRGB(15, 15, 15); OpenBtn.Font = Enum.Font.SourceSansBold; OpenBtn.TextSize = 24
     Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
 
-    -- نظام سحب الزر (Drag) للجوال
+    -- نظام سحب الزر للجوال
     local dragC, dragStartC, startPosC
     OpenBtn.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.Touch then dragC = true; dragStartC = i.Position; startPosC = OpenBtn.Position end end)
     UserInputService.InputChanged:Connect(function(i) if dragC and i.UserInputType == Enum.UserInputType.Touch then local d = i.Position - dragStartC; OpenBtn.Position = UDim2.new(startPosC.X.Scale, startPosC.X.Offset + d.X, startPosC.Y.Scale, startPosC.Y.Offset + d.Y) end end)
@@ -39,7 +38,8 @@ function UI:CreateWindow(title)
 
     local Sidebar = Instance.new("ScrollingFrame", Main)
     Sidebar.Position = UDim2.new(0, 0, 0, 35); Sidebar.Size = UDim2.new(0, 110, 1, -35); Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Sidebar.BorderSizePixel = 0; Sidebar.ScrollBarThickness = 2; Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    
+    local SidebarLayout = Instance.new("UIListLayout", Sidebar); SidebarLayout.Padding = UDim.new(0, 2)
+
     local Content = Instance.new("Frame", Main)
     Content.Position = UDim2.new(0, 115, 0, 40); Content.Size = UDim2.new(1, -120, 1, -45); Content.BackgroundTransparency = 1
 
@@ -56,67 +56,82 @@ function UI:CreateWindow(title)
         local TabOps = {}
         local orderIndex = 0 
 
-        function TabOps:AddToggle(label, callback)
+        -- 1. الخط الفاصل
+        function TabOps:AddLine()
             orderIndex = orderIndex + 1
-            local R = Instance.new("Frame", Page)
-            R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
-            local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
-            local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
+            local L = Instance.new("Frame", Page); L.LayoutOrder = orderIndex; L.Size = UDim2.new(0.95, 0, 0, 1); L.BackgroundColor3 = Color3.fromRGB(50, 50, 50); L.BackgroundTransparency = 0.5; L.BorderSizePixel = 0
+        end
+
+        -- 2. التحكم بالسرعة (مهم للطيران والسرعة)
+        function TabOps:AddSpeedControl(label, callback)
+            orderIndex = orderIndex + 1
+            local Row = Instance.new("Frame", Page); Row.LayoutOrder = orderIndex; Row.Size = UDim2.new(0.98, 0, 0, 45); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
+            local Lbl = Instance.new("TextLabel", Row); Lbl.Text = label; Lbl.Size = UDim2.new(0.6, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
+            local Tgl = Instance.new("TextButton", Row); Tgl.Size = UDim2.new(0, 45, 0, 22); Tgl.Position = UDim2.new(1, -55, 0.5, -11); Tgl.Text = ""; Tgl.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", Tgl).CornerRadius = UDim.new(1, 0)
+            local Inp = Instance.new("TextBox", Row); Inp.Size = UDim2.new(0, 40, 0, 22); Inp.Position = UDim2.new(1, -105, 0.5, -11); Inp.Text = "50"; Inp.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Inp.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", Inp)
             
-            local a = false
-            local function SetVisual(s)
-                a = s
-                B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
+            local active = false
+            local function update()
+                Tgl.BackgroundColor3 = active and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
+                callback(active, tonumber(Inp.Text) or 50)
             end
-
-            B.MouseButton1Click:Connect(function() 
-                SetVisual(not a)
-                callback(a) 
-            end)
-            
-            return { 
-                Set = function(self, s) SetVisual(s) end,
-                SetState = function(s) SetVisual(s) end
-            }
+            Tgl.MouseButton1Click:Connect(function() active = not active; update() end)
+            Inp:GetPropertyChangedSignal("Text"):Connect(function() if active then update() end end)
         end
 
-        -- [[ الزر المؤقت المحسن: يطفي نفسه غصب بعد ثانيتين ]]
-        function TabOps:AddTimedToggle(label, callback)
-            orderIndex = orderIndex + 1
-            local R = Instance.new("Frame", Page)
-            R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
-            local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
-            local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
-            
-            local isActive = false
-            B.MouseButton1Click:Connect(function() 
-                if isActive then return end 
-                isActive = true 
-                B.BackgroundColor3 = Color3.fromRGB(0, 150, 255) 
-                
-                task.spawn(function()
-                    pcall(function() callback(true) end)
-                    task.wait(2) 
-                    if B then B.BackgroundColor3 = Color3.fromRGB(60, 60, 60) end
-                    isActive = false
-                    pcall(function() callback(false) end)
-                end)
-            end)
-
-            return { Set = function() end } -- إرجاع كائن فارغ للموافقة
-        end
-
+        -- 3. الزر العادي
         function TabOps:AddButton(t, c) 
             orderIndex = orderIndex + 1
             local B = Instance.new("TextButton", Page); B.LayoutOrder = orderIndex; B.Size = UDim2.new(0.95, 0, 0, 40); B.BackgroundColor3 = Color3.fromRGB(30, 30, 30); B.Text = t; B.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", B); B.MouseButton1Click:Connect(c) 
         end
 
-        function TabOps:AddLine()
+        -- 4. التوجل العادي
+        function TabOps:AddToggle(label, callback)
             orderIndex = orderIndex + 1
-            local L = Instance.new("Frame", Page); L.LayoutOrder = orderIndex; L.Size = UDim2.new(0.95, 0, 0, 1); L.BackgroundColor3 = Color3.fromRGB(50, 50, 50); L.BackgroundTransparency = 0.5
+            local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
+            local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
+            local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
+            local a = false
+            local function SetVisual(s) a = s; B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60) end
+            B.MouseButton1Click:Connect(function() SetVisual(not a); callback(a) end)
+            return { Set = function(self, s) SetVisual(s) end, SetState = function(s) SetVisual(s) end }
         end
-        
-        -- إضافة بقية الدوال (Input, SpeedControl, Label, Paragraph) بنفس الطريقة...
+
+        -- 5. الزر المؤقت (إصدار V4.4 الثابت)
+        function TabOps:AddTimedToggle(label, callback)
+            orderIndex = orderIndex + 1
+            local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
+            local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
+            local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
+            
+            local isActive = false
+            B.MouseButton1Click:Connect(function() 
+                if isActive then return end; isActive = true
+                B.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+                task.spawn(function()
+                    pcall(function() callback(true) end)
+                    task.wait(2); if B then B.BackgroundColor3 = Color3.fromRGB(60, 60, 60) end; isActive = false
+                    pcall(function() callback(false) end)
+                end)
+            end)
+        end
+
+        -- 6. الإدخال النصي
+        function TabOps:AddInput(label, placeholder, callback)
+            orderIndex = orderIndex + 1
+            local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.95, 0, 0, 60); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
+            local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(1, -10, 0, 25); Lbl.TextColor3 = Color3.fromRGB(0, 255, 150); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
+            local I = Instance.new("TextBox", R); I.Size = UDim2.new(0.9, 0, 0, 25); I.Position = UDim2.new(0.05, 0, 0, 30); I.PlaceholderText = placeholder; I.BackgroundColor3 = Color3.fromRGB(40, 40, 40); I.TextColor3 = Color3.new(1, 1, 1); I.Text = ""; Instance.new("UICorner", I)
+            I:GetPropertyChangedSignal("Text"):Connect(function() callback(I.Text) end)
+            return { SetText = function(t) I.Text = t end }
+        end
+
+        -- 7. النص التوضيحي
+        function TabOps:AddParagraph(text)
+            orderIndex = orderIndex + 1
+            local Lbl = Instance.new("TextLabel", Page); Lbl.LayoutOrder = orderIndex; Lbl.Size = UDim2.new(0.95, 0, 0, 0); Lbl.AutomaticSize = Enum.AutomaticSize.Y; Lbl.TextWrapped = true; Lbl.Text = text; Lbl.TextColor3 = Color3.fromRGB(170, 170, 170); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; Lbl.TextSize = 13
+        end
+
         return TabOps
     end
     return Window
