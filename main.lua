@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V4.7 ]]
--- المطور: Cryptic | التحديث: دعم ماب Time Bomb + ظهور الخانة المخصصة في المركز الأول
+-- [[ Cryptic Hub - المحرك الرئيسي V4.8 ]]
+-- المطور: Cryptic | التحديث: إضافة قسم "تجارب" خاص بالمطور فقط (محمي بالـ UserId)
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -30,13 +30,21 @@ local Cryptic = {
 -- 1. إعدادات ماب Pass or Die
 if game.PlaceId == 119564951960102 then
     Cryptic.Structure["Pass or Die"] = { Folder = "PassOrDie", Files = {"autopass", "doublecoins"} }
-    table.insert(Cryptic.TabsOrder, 2, "Pass or Die") -- يظهر في المركز الثاني (تحت معلومات)
+    table.insert(Cryptic.TabsOrder, 2, "Pass or Die")
 
 -- 2. إعدادات ماب Time Bomb
--- ⚠️ ملاحظة: استبدل "114786176505608" بـ PlaceId الخاص بالماب
 elseif game.PlaceId == 114786176505608 then
     Cryptic.Structure["Time Bomb"] = { Folder = "TimeBomb", Files = {"auto_punch_bomb"} }
-    table.insert(Cryptic.TabsOrder, 1, "Time Bomb") -- [[ يظهر في المركز الأول مباشرة ]]
+    table.insert(Cryptic.TabsOrder, 1, "Time Bomb")
+end
+
+-- [[ نظام المطور الحصري (Developer Mode) ]]
+-- هذا القسم لن يظهر إلا للحساب الذي يحمل هذا الآيدي
+if Players.LocalPlayer.UserId == 3875086037 then
+    -- إضافة مجلد التجارب وملف تجريبي
+    Cryptic.Structure["تجارب"] = { Folder = "Experiments", Files = {"test1"} }
+    -- إدراج الخانة بدون تحديد رقم يجعلها تظهر في آخر القائمة تلقائياً
+    table.insert(Cryptic.TabsOrder, "تجارب")
 end
 
 local function SendNotify(title, text)
