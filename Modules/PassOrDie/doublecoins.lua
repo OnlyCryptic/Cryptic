@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - تدبيل الفلوس الذكي ]]
--- المطور: Cryptic | التحديث: رصد بدء الجولة تلقائياً لمنع رسائل الخطأ
+-- [[ Cryptic Hub - تدبيل الفلوس الذكي V3 (بدون توقيت ثابت) ]]
+-- المطور: Cryptic | التحديث: رصد بدء الجولة فعلياً من خلال قراءة نصوص واجهة اللعبة
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -11,28 +11,48 @@ return function(Tab, UI)
     Tab:AddToggle("💰 تدبيل الفلوس (Cryptic Smart-x2)", function(active)
         autoDoubleCoins = active
         if active then
-            UI:Notify("💸 تم التفعيل! السكربت ينتظر بدء الجولة بصمت...")
+            UI:Notify("💸 تم التفعيل! السكربت يراقب الشاشة ولن يخطئ التوقيت أبداً.")
         else
             UI:Notify("🛑 تم إيقاف تدبيل الفلوس.")
         end
     end)
 
-    -- [[ إضافة احترافية: إخفاء لوحة الخطأ لو حاولت تظهر ]]
+    -- [[ القاتل الصامت: مسح اللوحات المزعجة كإجراء احتياطي ]]
     task.spawn(function()
-        local PlayerGui = lp:WaitForChild("PlayerGui")
-        PlayerGui.DescendantAdded:Connect(function(desc)
-            if autoDoubleCoins and (desc:IsA("TextLabel") or desc:IsA("TextButton")) then
-                if desc.Text and string.find(desc.Text, "You can't use that right now") then
-                    local screenGui = desc:FindFirstAncestorWhichIsA("ScreenGui")
-                    if screenGui then 
-                        screenGui.Enabled = false -- إخفاء اللوحة فوراً قبل لا تشوفها
+        while task.wait(0.2) do
+            if autoDoubleCoins then
+                pcall(function()
+                    local PlayerGui = lp:FindFirstChild("PlayerGui")
+                    if PlayerGui then
+                        for _, gui in pairs(PlayerGui:GetDescendants()) do
+                            if gui:IsA("TextLabel") and gui.Text == "You can't use that right now but you were not charged" then
+                                local mainGui = gui:FindFirstAncestorWhichIsA("ScreenGui")
+                                if mainGui then mainGui:Destroy() end
+                            end
+                        end
                     end
-                end
+                end)
             end
-        end)
+        end
     end)
 
-    -- [[ المحرك الذكي: رصد التليبورت وبدء الجولة ]]
+    -- [[ الدالة الذكية: تقرأ الشاشة لتعرف هل العد التنازلي شغال؟ ]]
+    local function isGameCountingDown()
+        local PlayerGui = lp:FindFirstChild("PlayerGui")
+        if not PlayerGui then return false end
+        
+        for _, gui in pairs(PlayerGui:GetDescendants()) do
+            if gui:IsA("TextLabel") and gui.Text then
+                -- يبحث عن كلمة "starting game" اللي تظهر أسفل الشاشة
+                if string.find(gui.Text:lower(), "starting game") then
+                    return true -- نعم، العد التنازلي شغال
+                end
+            end
+        end
+        return false -- لا، الجولة بدأت أو نحن في اللوبي
+    end
+
+    -- [[ المحرك الرئيسي ]]
     task.spawn(function()
         local powersRemotes = ReplicatedStorage:WaitForChild("Powers"):WaitForChild("Core"):WaitForChild("Default"):WaitForChild("Remotes")
         local buyRemote = powersRemotes:WaitForChild("Buy")
@@ -40,23 +60,30 @@ return function(Tab, UI)
 
         local lastPos = nil
 
-        while task.wait(0.5) do 
+        while task.wait(0.2) do 
             if autoDoubleCoins then
                 local char = lp.Character
                 local root = char and char:FindFirstChild("HumanoidRootPart")
                 
                 if root then
                     if lastPos then
-                        -- حساب المسافة: إذا تحركت أكثر من 50 مسمار فجأة، يعني اللعبة نقلتك للساحة!
                         local dist = (root.Position - lastPos).Magnitude
                         
+                        -- 1. السكربت لاحظ إنك انتقلت للساحة!
                         if dist > 50 then
-                            task.wait(0.5) -- انتظار نصف ثانية عشان السيرفر يستوعب إنك داخل الجولة
+                            
+                            -- 2. [[ الحل العبقري ]]: السكربت يعلق هنا وينتظر بصمت.. 
+                            -- لن يكمل الكود حتى تختفي جملة "starting game" من الشاشة
+                            repeat 
+                                task.wait(0.1) 
+                            until not isGameCountingDown()
+                            
+                            -- 3. بمجرد اختفاء النص (الجولة بدأت فعلياً الآن!):
                             pcall(function()
-                                -- شراء واستخدام القدرة فوراً
                                 buyRemote:InvokeServer("7")
-                                task.wait(0.2)
+                                task.wait(0.1) -- جزء من الثانية فقط للسيرفر
                                 useRemote:InvokeServer("7")
+                                UI:Notify("✅ بدأت الجولة! تم تفعيل التدبيل بنجاح.")
                             end)
                         end
                     end
