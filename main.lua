@@ -17,7 +17,7 @@ local Cryptic = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },
         -- تم إصلاح قلتش fullbright وإضافة الكاميرا والشيفت لوك
-        ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "emotes", "camera", "shiftlock", "fullbright"} },
+        ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "camera", "shiftlock", "fullbright", "emotes"} },
         ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
         ["خدع"] = { Folder = "Combat", Files = {"hitbox", "anime_aura", "invisibility", "zero_gravity", "carry", "magnet"} }
