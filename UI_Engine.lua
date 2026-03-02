@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V4.1 ]]
--- المطور: Cryptic | التحديث: إضافة AddTimedToggle رسمياً للمحرك مع حماية من السبام
+-- [[ Cryptic Hub - محرك الواجهة المطور V4.2 ]]
+-- المطور: Cryptic | التحديث: حل مشكلة تعليق الزر المؤقت (فصل المسارات باستخدام task.spawn)
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -106,7 +106,7 @@ function UI:CreateWindow(title)
             }
         end
 
-        -- [[ الدالة الجديدة السحرية للزر المؤقت ]]
+        -- [[ الحل السحري: فصل مسار التشغيل عن مسار الإيقاف ]]
         function TabOps:AddTimedToggle(label, callback)
             orderIndex = orderIndex + 1
             local R = Instance.new("Frame", Page)
@@ -117,16 +117,21 @@ function UI:CreateWindow(title)
             
             local isActive = false
             B.MouseButton1Click:Connect(function() 
-                if isActive then return end -- يمنع اللاعب من الضغط عليه وهو شغال (حماية)
+                if isActive then return end 
                 isActive = true 
                 B.BackgroundColor3 = Color3.fromRGB(0, 150, 255) -- أزرق فورا
-                callback(true) 
                 
+                -- المسار الأول: تشغيل الكود في الخلفية عشان ما يجمد الواجهة
+                task.spawn(function()
+                    pcall(function() callback(true) end)
+                end)
+                
+                -- المسار الثاني: عداد الثانيتين المعزول تماماً
                 task.spawn(function()
                     task.wait(2) -- انتظار ثانيتين
                     isActive = false
-                    if B then B.BackgroundColor3 = Color3.fromRGB(60, 60, 60) end -- يرجع رصاصي تلقائياً
-                    callback(false)
+                    if B then B.BackgroundColor3 = Color3.fromRGB(60, 60, 60) end -- يرجع رصاصي غصب
+                    pcall(function() callback(false) end)
                 end)
             end)
         end
