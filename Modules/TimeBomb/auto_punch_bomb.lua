@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - اللكم/التمرير التلقائي (Auto-Punch) ]]
--- المطور: Cryptic | التحديث: الانتقال السريع لأقرب لاعب واللكم فور إمساك القنبلة
+-- [[ Cryptic Hub - اللكم/التمرير التلقائي V2 ]]
+-- المطور: Cryptic | التحديث: نظام رصد القنابل الذكي (يدعم المجسمات والأدوات)
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -11,13 +11,13 @@ return function(Tab, UI)
     Tab:AddToggle("🥊 تمرير/لكم تلقائي (Auto-Punch)", function(active)
         autoPass = active
         if active then
-            UI:Notify("🔥 تم التفعيل! بمجرد إمساك القنبلة سيتم قصف أقرب لاعب.")
+            UI:Notify("🔥 تم التفعيل! سيتم قصف أقرب لاعب بمجرد رصد القنبلة.")
         else
             UI:Notify("🛑 تم إيقاف التمرير التلقائي.")
         end
     end)
 
-    -- [[ دالة البحث عن أقرب ضحية ]]
+    -- دالة البحث عن أقرب ضحية
     local function getClosestPlayer()
         local closest = nil
         local shortestDistance = math.huge
@@ -26,10 +26,8 @@ return function(Tab, UI)
         if not myRoot then return nil end
 
         for _, p in pairs(Players:GetPlayers()) do
-            -- التأكد أنه لاعب آخر وشخصيته موجودة
             if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                 local hum = p.Character:FindFirstChild("Humanoid")
-                -- التأكد أن اللاعب حي (وليس ميتاً أو مختفياً)
                 if hum and hum.Health > 0 then
                     local dist = (myRoot.Position - p.Character.HumanoidRootPart.Position).Magnitude
                     if dist < shortestDistance then
@@ -42,24 +40,37 @@ return function(Tab, UI)
         return closest
     end
 
-    -- [[ دالة التحقق من إمساك القنبلة ]]
+    -- [[ التحديث الجديد: فحص شامل للقنبلة ]]
     local function hasBomb()
-        -- في أغلب الألعاب، عندما تمسك القنبلة تتحول إلى (Tool) داخل شخصيتك
-        if lp.Character and lp.Character:FindFirstChildOfClass("Tool") then
+        if not lp.Character then return false end
+        
+        -- الفحص 1: هل هي أداة (Tool) كلاسيكية؟
+        if lp.Character:FindFirstChildOfClass("Tool") then return true end
+        
+        -- الفحص 2: هل اللعبة أضافت مجسم (Part/Model/Accessory) اسمه يحتوي على كلمة Bomb؟
+        for _, child in pairs(lp.Character:GetChildren()) do
+            if string.find(child.Name:lower(), "bomb") then
+                return true
+            end
+        end
+        
+        -- الفحص 3: في بعض الألعاب القنبلة توضع داخل HumanoidRootPart كـ Particle أو Fire
+        local root = lp.Character:FindFirstChild("HumanoidRootPart")
+        if root and (root:FindFirstChild("Bomb") or root:FindFirstChild("TimeBomb")) then
             return true
         end
+
         return false
     end
 
-    -- [[ المحرك الفتاك (Teleport & Punch) ]]
+    -- المحرك الفتاك
     task.spawn(function()
-        -- مسار ريموت اللكم اللي أنت استخرجته
         local punchRemote = ReplicatedStorage:WaitForChild("Packages")
             :WaitForChild("Networker")
             :WaitForChild("Holder")
             :WaitForChild("RE/RoundService/Punch")
 
-        while task.wait(0.05) do -- سرعة استجابة خارقة (50 جزء من الثانية)
+        while task.wait(0.05) do 
             if autoPass then
                 pcall(function()
                     if hasBomb() then
@@ -67,10 +78,10 @@ return function(Tab, UI)
                         if targetRoot and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
                             local myRoot = lp.Character.HumanoidRootPart
                             
-                            -- 1. الانتقال اللحظي (Teleport) خلف أقرب لاعب مباشرة بمسافة 2 مسمار
+                            -- الانتقال خلف اللاعب مباشرة
                             myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 2)
                             
-                            -- 2. إرسال أمر اللكم للسيرفر عشان يعطيه القنبلة
+                            -- لكمه فوراً
                             punchRemote:FireServer()
                         end
                     end
