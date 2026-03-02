@@ -1,10 +1,21 @@
--- [[ Arwa Hub - ميزة مضاد الطيران (Anti-Fling) ]]
--- المطور: Arwa | تجعلك تخترقين اللاعبين لمنع التخريب
+-- [[ Cryptic Hub - ميزة مضاد الطيران (Anti-Fling) ]]
+-- المطور: Cryptic | تجعلك تخترق اللاعبين لمنع التخريب
 
 return function(Tab, UI)
     local RunService = game:GetService("RunService")
     local Players = game:GetService("Players")
     local lp = Players.LocalPlayer
+    
+    -- [[ دالة إرسال الإشعارات على شاشة اللعبة مباشرة ]]
+    local function SendScreenNotify(title, text)
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = title,
+                Text = text,
+                Duration = 3 -- مدة بقاء الإشعار على الشاشة (3 ثواني)
+            })
+        end)
+    end
     
     local isAntiFling = false
     local connection
@@ -19,9 +30,9 @@ return function(Tab, UI)
                 
                 -- المرور على كل اللاعبين في السيرفر
                 for _, otherPlayer in pairs(Players:GetPlayers()) do
-                    -- التأكد أنه ليس أنتِ، وأن لديه شخصية
+                    -- التأكد أنه ليس أنت، وأن لديه شخصية
                     if otherPlayer ~= lp and otherPlayer.Character then
-                        -- نستخدم GetChildren بدلاً من GetDescendants لتخفيف الضغط على الجوال
+                        -- نستخدم GetChildren بدلاً من GetDescendants لتخفيف الضغط
                         for _, part in pairs(otherPlayer.Character:GetChildren()) do
                             if part:IsA("BasePart") and part.CanCollide then
                                 -- إغلاق التصادم محلياً (على شاشتك فقط)
@@ -41,11 +52,14 @@ return function(Tab, UI)
     end
 
     -- إضافة زر التبديل للواجهة
-    Tab:AddToggle("مضاد التطيير", function(active)
+    Tab:AddToggle("مضاد التطيير (Anti-Fling)", function(active)
         toggleAntiFling(active)
-        UI:Notify(active and "تم تفعيل حماية الشبح (Anti-Fling) 🛡️" or "تم إيقاف الحماية")
+        
+        -- إظهار الإشعار على الشاشة بناءً على حالة الزر
+        if active then
+            SendScreenNotify("Cryptic Hub", "تم تفعيل حماية الشبح (Anti-Fling) 🛡️")
+        else
+            SendScreenNotify("Cryptic Hub", "تم إيقاف الحماية 🛑")
+        end
     end)
-    
-    -- إضافة وصف صغير تحت الزر للتوضيح
-    Tab:AddParagraph("هذه الميزة تجعلكِ تخترقين اللاعبين لمنعهم من تطييرك خارج الماب.")
 end
