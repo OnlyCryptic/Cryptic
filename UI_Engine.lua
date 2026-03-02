@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V4.4 ]]
--- المطور: Cryptic | الإصلاح: استعادة AddSpeedControl وكل الدوال المفقودة
+-- [[ Cryptic Hub - محرك الواجهة الشامل V4.5 ]]
+-- المطور: Cryptic | الإصلاح: استعادة كافة الدوال (Input, Speed, Label, Paragraph)
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -56,67 +56,50 @@ function UI:CreateWindow(title)
         local TabOps = {}
         local orderIndex = 0 
 
-        -- 1. الخط الفاصل
         function TabOps:AddLine()
             orderIndex = orderIndex + 1
             local L = Instance.new("Frame", Page); L.LayoutOrder = orderIndex; L.Size = UDim2.new(0.95, 0, 0, 1); L.BackgroundColor3 = Color3.fromRGB(50, 50, 50); L.BackgroundTransparency = 0.5; L.BorderSizePixel = 0
         end
 
-        -- 2. التحكم بالسرعة (مهم للطيران والسرعة)
         function TabOps:AddSpeedControl(label, callback)
             orderIndex = orderIndex + 1
             local Row = Instance.new("Frame", Page); Row.LayoutOrder = orderIndex; Row.Size = UDim2.new(0.98, 0, 0, 45); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
             local Lbl = Instance.new("TextLabel", Row); Lbl.Text = label; Lbl.Size = UDim2.new(0.6, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
             local Tgl = Instance.new("TextButton", Row); Tgl.Size = UDim2.new(0, 45, 0, 22); Tgl.Position = UDim2.new(1, -55, 0.5, -11); Tgl.Text = ""; Tgl.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", Tgl).CornerRadius = UDim.new(1, 0)
             local Inp = Instance.new("TextBox", Row); Inp.Size = UDim2.new(0, 40, 0, 22); Inp.Position = UDim2.new(1, -105, 0.5, -11); Inp.Text = "50"; Inp.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Inp.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", Inp)
-            
             local active = false
-            local function update()
-                Tgl.BackgroundColor3 = active and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
-                callback(active, tonumber(Inp.Text) or 50)
-            end
+            local function update() Tgl.BackgroundColor3 = active and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60); callback(active, tonumber(Inp.Text) or 50) end
             Tgl.MouseButton1Click:Connect(function() active = not active; update() end)
             Inp:GetPropertyChangedSignal("Text"):Connect(function() if active then update() end end)
         end
 
-        -- 3. الزر العادي
-        function TabOps:AddButton(t, c) 
-            orderIndex = orderIndex + 1
-            local B = Instance.new("TextButton", Page); B.LayoutOrder = orderIndex; B.Size = UDim2.new(0.95, 0, 0, 40); B.BackgroundColor3 = Color3.fromRGB(30, 30, 30); B.Text = t; B.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", B); B.MouseButton1Click:Connect(c) 
-        end
-
-        -- 4. التوجل العادي
         function TabOps:AddToggle(label, callback)
             orderIndex = orderIndex + 1
             local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
-            local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
             local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
+            local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
             local a = false
-            local function SetVisual(s) a = s; B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60) end
-            B.MouseButton1Click:Connect(function() SetVisual(not a); callback(a) end)
-            return { Set = function(self, s) SetVisual(s) end, SetState = function(s) SetVisual(s) end }
+            local function set(s) a = s; B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60) end
+            B.MouseButton1Click:Connect(function() set(not a); callback(a) end)
+            return { Set = function(self, s) set(s) end, SetState = function(s) set(s) end }
         end
 
-        -- 5. الزر المؤقت (إصدار V4.4 الثابت)
         function TabOps:AddTimedToggle(label, callback)
             orderIndex = orderIndex + 1
             local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
             local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
             local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
-            
             local isActive = false
             B.MouseButton1Click:Connect(function() 
-                if isActive then return end; isActive = true
-                B.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+                if isActive then return end; isActive = true; B.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
                 task.spawn(function()
-                    pcall(function() callback(true) end)
+                    pcall(callback, true)
                     task.wait(2); if B then B.BackgroundColor3 = Color3.fromRGB(60, 60, 60) end; isActive = false
-                    pcall(function() callback(false) end)
+                    pcall(callback, false)
                 end)
             end)
         end
 
-        -- 6. الإدخال النصي
         function TabOps:AddInput(label, placeholder, callback)
             orderIndex = orderIndex + 1
             local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.95, 0, 0, 60); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
@@ -126,7 +109,16 @@ function UI:CreateWindow(title)
             return { SetText = function(t) I.Text = t end }
         end
 
-        -- 7. النص التوضيحي
+        function TabOps:AddButton(t, c) 
+            orderIndex = orderIndex + 1
+            local B = Instance.new("TextButton", Page); B.LayoutOrder = orderIndex; B.Size = UDim2.new(0.95, 0, 0, 40); B.BackgroundColor3 = Color3.fromRGB(30, 30, 30); B.Text = t; B.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", B); B.MouseButton1Click:Connect(c) 
+        end
+
+        function TabOps:AddLabel(t) 
+            orderIndex = orderIndex + 1
+            local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98,0,0,35); R.BackgroundColor3 = Color3.fromRGB(25,25,25); Instance.new("UICorner",R); local L = Instance.new("TextLabel",R); L.Text = t; L.Size = UDim2.new(1,-10,1,0); L.TextColor3 = Color3.fromRGB(0,255,150); L.BackgroundTransparency = 1; L.TextXAlignment = Enum.TextXAlignment.Right; return {SetText=function(nt) L.Text=nt end} 
+        end
+
         function TabOps:AddParagraph(text)
             orderIndex = orderIndex + 1
             local Lbl = Instance.new("TextLabel", Page); Lbl.LayoutOrder = orderIndex; Lbl.Size = UDim2.new(0.95, 0, 0, 0); Lbl.AutomaticSize = Enum.AutomaticSize.Y; Lbl.TextWrapped = true; Lbl.Text = text; Lbl.TextColor3 = Color3.fromRGB(170, 170, 170); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; Lbl.TextSize = 13
