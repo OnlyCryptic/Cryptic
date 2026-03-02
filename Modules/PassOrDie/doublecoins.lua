@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - تدبيل الفلوس الذكي V5 ]]
--- المطور: Cryptic | التحديث: رادار حساب اللاعبين في الدائرة (توفير القدرة)
+-- [[ Cryptic Hub - تدبيل الفلوس الذكي V6 ]]
+-- المطور: Cryptic | التحديث: إصلاح تعليق العد التنازلي (Visible Check) + تأخير الرادار لضمان الترسبن
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -7,13 +7,13 @@ return function(Tab, UI)
     local lp = Players.LocalPlayer
     
     local autoDoubleCoins = false
-    local minPlayersRequired = 12 -- الحد الأدنى الافتراضي اللي طلبته
+    local minPlayersRequired = 12
 
     -- 1. أزرار التحكم
     Tab:AddToggle("💰 تدبيل الفلوس (Cryptic Smart-x2)", function(active)
         autoDoubleCoins = active
         if active then
-            UI:Notify("💸 تم التفعيل! لن يتم التدبيل إلا إذا كان هناك " .. minPlayersRequired .. " لاعبين أو أكثر.")
+            UI:Notify("💸 تم التفعيل! السكربت ينتظر انتقالك للساحة...")
         else
             UI:Notify("🛑 تم إيقاف تدبيل الفلوس.")
         end
@@ -48,21 +48,33 @@ return function(Tab, UI)
         end
     end)
 
-    -- [[ الدالة 1: قراءة الشاشة لمعرفة العد التنازلي ]]
+    -- [[ الدالة 1 المصلحة: التأكد أن النص "ظاهر" فعلياً وليس مخفياً ]]
     local function isGameCountingDown()
         local PlayerGui = lp:FindFirstChild("PlayerGui")
         if not PlayerGui then return false end
+        
         for _, gui in pairs(PlayerGui:GetDescendants()) do
             if gui:IsA("TextLabel") and gui.Text then
                 if string.find(gui.Text:lower(), "starting game") then
-                    return true
+                    -- التحقق ما إذا كان النص وأي إطار يحمله مرئياً (Visible)
+                    local current = gui
+                    local isVisible = true
+                    while current and current ~= PlayerGui do
+                        if current:IsA("GuiObject") and not current.Visible then
+                            isVisible = false
+                            break
+                        end
+                        current = current.Parent
+                    end
+                    
+                    if isVisible then return true end
                 end
             end
         end
         return false
     end
 
-    -- [[ الدالة 2 (الجديدة): رادار حساب اللاعبين داخل الدائرة ]]
+    -- [[ الدالة 2: رادار حساب اللاعبين ]]
     local function getPlayersInCircle()
         local count = 0
         local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
@@ -71,9 +83,7 @@ return function(Tab, UI)
         for _, player in ipairs(Players:GetPlayers()) do
             local targetRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
             if targetRoot then
-                -- حساب المسافة بينك وبين كل لاعب في السيرفر
                 local dist = (targetRoot.Position - myRoot.Position).Magnitude
-                -- إذا كان اللاعب ضمن 150 مسمار (يعني في ساحة اللعب معك ومو باللوبي)
                 if dist <= 150 then
                     count = count + 1
                 end
@@ -102,23 +112,24 @@ return function(Tab, UI)
                         -- 1. اكتشاف الانتقال لساحة اللعب
                         if dist > 50 then
                             task.spawn(function()
+                                -- UI:Notify("🔍 [نظام]: تم رصد الساحة، ننتظر بدء الجولة...") -- إشعار مخفي للمطور
+                                
                                 task.wait(1)
                                 
-                                -- 2. انتظار انتهاء العد التنازلي
+                                -- 2. انتظار اختفاء العد التنازلي تماماً من الشاشة
                                 while isGameCountingDown() do
                                     task.wait(0.2)
                                 end
                                 
-                                -- 3. الجولة بدأت الآن! ننتظر نصف ثانية لضمان نزول جميع اللاعبين
-                                task.wait(0.5)
+                                -- 3. الجولة بدأت! ننتظر 1.5 ثانية لضمان ترسبن كل اللاعبين بالساحة
+                                task.wait(1.5)
                                 
-                                -- 4. [[ اللحظة الحاسمة ]]: تشغيل الرادار وحساب اللاعبين
+                                -- 4. تشغيل الرادار
                                 local playersInArena = getPlayersInCircle()
                                 
                                 if playersInArena >= minPlayersRequired then
-                                    UI:Notify("✅ الجولة بدأت بعدد (" .. playersInArena .. ") لاعبين! جاري تفعيل التدبيل...")
+                                    UI:Notify("✅ عدد اللاعبين (" .. playersInArena .. ")! جاري تفعيل التدبيل...")
                                     
-                                    -- محاولة التفعيل المتكرر لضمان الشراء
                                     for i = 1, 5 do
                                         if not autoDoubleCoins then break end
                                         task.spawn(function()
@@ -131,8 +142,7 @@ return function(Tab, UI)
                                         task.wait(1.5)
                                     end
                                 else
-                                    -- إذا العدد قليل، نلغي التفعيل ونعطيك إشعار!
-                                    UI:Notify("⚠️ عدد اللاعبين قليل (" .. playersInArena .. "). تم إلغاء التدبيل لتوفير فلوسك!")
+                                    UI:Notify("⚠️ عدد اللاعبين قليل (" .. playersInArena .. "). تم إلغاء التدبيل!")
                                 end
                             end)
                         end
