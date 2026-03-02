@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V3.4 ]]
--- المطور: Arwa | الإصلاح: سكرول للقائمة الجانبية، قص الحواف، ومسافات سفلية مريحة
+-- [[ Cryptic Hub - محرك الواجهة المطور V3.4.1 ]]
+-- المطور: Arwa | الإصلاح: سكرول للقائمة، قص الحواف (ClipsDescendants)، ومسافات سفلية
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -26,8 +26,8 @@ function UI:CreateWindow(title)
     Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Main.Active = true
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
     
-    -- [[ الإصلاح 1: منع خروج العناصر عن إطار الواجهة الأساسي ]]
-    Main.ClipDescendants = true 
+    -- [[ تم إصلاح الخطأ الإملائي هنا بإضافة حرف S ]]
+    Main.ClipsDescendants = true 
 
     local TitleBar = Instance.new("Frame", Main)
     TitleBar.Size = UDim2.new(1, 0, 0, 35); TitleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", TitleBar)
@@ -42,17 +42,16 @@ function UI:CreateWindow(title)
     UserInputService.InputChanged:Connect(function(i) if dragM and i.UserInputType == Enum.UserInputType.Touch then local d = i.Position - dragStartM; Main.Position = UDim2.new(startPosM.X.Scale, startPosM.X.Offset + d.X, startPosM.Y.Scale, startPosM.Y.Offset + d.Y) end end)
     UserInputService.InputEnded:Connect(function() dragM = false end)
 
-    -- [[ الإصلاح 2: تحويل القائمة الجانبية إلى قائمة قابلة للسحب اللانهائي ]]
+    -- تحويل القائمة الجانبية إلى قائمة قابلة للسحب اللانهائي
     local Sidebar = Instance.new("ScrollingFrame", Main)
     Sidebar.Position = UDim2.new(0, 0, 0, 35); Sidebar.Size = UDim2.new(0, 110, 1, -35); Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    Sidebar.BorderSizePixel = 0; Sidebar.ScrollBarThickness = 2 -- شريط سكرول نحيف جداً
+    Sidebar.BorderSizePixel = 0; Sidebar.ScrollBarThickness = 2
     Sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
     Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.Y
     
     local SidebarLayout = Instance.new("UIListLayout", Sidebar)
     SidebarLayout.Padding = UDim.new(0, 2)
     
-    -- مسافة مريحة من الأعلى والأسفل للقائمة الجانبية
     local SidebarPadding = Instance.new("UIPadding", Sidebar)
     SidebarPadding.PaddingTop = UDim.new(0, 5)
     SidebarPadding.PaddingBottom = UDim.new(0, 10)
@@ -73,10 +72,9 @@ function UI:CreateWindow(title)
         ListLayout.Padding = UDim.new(0, 8)
         ListLayout.SortOrder = Enum.SortOrder.LayoutOrder 
 
-        -- [[ الإصلاح 3: إضافة مسافة من الأسفل للمحتوى عشان ما يلصق الإطار بالأزرار ]]
         local PagePadding = Instance.new("UIPadding", Page)
         PagePadding.PaddingTop = UDim.new(0, 5)
-        PagePadding.PaddingBottom = UDim.new(0, 20) -- يترك مساحة فارغة في الأسفل دائماً
+        PagePadding.PaddingBottom = UDim.new(0, 20)
 
         if not Window.FirstTab then Window.FirstTab = Page; Page.Visible = true end
         TabBtn.MouseButton1Click:Connect(function() for _, v in pairs(Content:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end; Page.Visible = true end)
