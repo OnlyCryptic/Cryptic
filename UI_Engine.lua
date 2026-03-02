@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V3.4.1 ]]
--- المطور: Arwa | الإصلاح: سكرول للقائمة، قص الحواف (ClipsDescendants)، ومسافات سفلية
+-- [[ Cryptic Hub - محرك الواجهة المطور V4.0 ]]
+-- المطور: Cryptic | التحديث: دعم دالة الإيقاف الشكلي (Set) للزر المؤقت + تنظيف الأسماء
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -7,7 +7,7 @@ local CoreGui = game:GetService("CoreGui")
 
 function UI:CreateWindow(title)
     local Screen = Instance.new("ScreenGui", CoreGui)
-    Screen.Name = "ArwaHub_V3_4"
+    Screen.Name = "CrypticHub_V4" -- تم تعديل الاسم هنا
     Screen.ResetOnSpawn = false
 
     local OpenBtn = Instance.new("TextButton", Screen)
@@ -26,7 +26,6 @@ function UI:CreateWindow(title)
     Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Main.Active = true
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
     
-    -- [[ تم إصلاح الخطأ الإملائي هنا بإضافة حرف S ]]
     Main.ClipsDescendants = true 
 
     local TitleBar = Instance.new("Frame", Main)
@@ -42,7 +41,6 @@ function UI:CreateWindow(title)
     UserInputService.InputChanged:Connect(function(i) if dragM and i.UserInputType == Enum.UserInputType.Touch then local d = i.Position - dragStartM; Main.Position = UDim2.new(startPosM.X.Scale, startPosM.X.Offset + d.X, startPosM.Y.Scale, startPosM.Y.Offset + d.Y) end end)
     UserInputService.InputEnded:Connect(function() dragM = false end)
 
-    -- تحويل القائمة الجانبية إلى قائمة قابلة للسحب اللانهائي
     local Sidebar = Instance.new("ScrollingFrame", Main)
     Sidebar.Position = UDim2.new(0, 0, 0, 35); Sidebar.Size = UDim2.new(0, 110, 1, -35); Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     Sidebar.BorderSizePixel = 0; Sidebar.ScrollBarThickness = 2
@@ -110,8 +108,18 @@ function UI:CreateWindow(title)
             R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
             local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
             local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
-            local a = false; B.MouseButton1Click:Connect(function() a = not a; B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60); callback(a) end)
-            return { SetState = function(s) a = s; B.BackgroundColor3 = s and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60) end }
+            local a = false
+            B.MouseButton1Click:Connect(function() 
+                a = not a 
+                B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60) 
+                callback(a) 
+            end)
+            
+            -- [[ التعديل السحري: إضافة دالة Set لدعم الزر المؤقت ]]
+            return { 
+                SetState = function(s) a = s; B.BackgroundColor3 = s and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60) end,
+                Set = function(self, s) a = s; B.BackgroundColor3 = s and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60) end
+            }
         end
 
         function TabOps:AddInput(label, placeholder, callback)
