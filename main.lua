@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - المحرك الرئيسي V4.9 ]]
--- المطور: Cryptic | التحديث: إزالة ماب Time Bomb + الإبقاء على Pass or Die ولوحة المطور
+-- المطور: Cryptic | التحديث: إضافة دالة الزر المؤقت (AddTimedToggle)
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -118,6 +118,23 @@ if UI then
         local info = Cryptic.Structure[tabName]
         if info then
             local CurrentTab = MainWin:CreateTab(tabName)
+            
+            -- [[ الإضافة الجديدة: برمجة زر التفعيل المؤقت (ينطفي برمجياً بعد ثانية) ]]
+            CurrentTab.AddTimedToggle = function(self, toggleName, callback)
+                self:AddToggle(toggleName, function(state)
+                    if state then
+                        callback(true) -- تشغيل الكود
+                        task.spawn(function()
+                            task.wait(1) -- الانتظار لمدة ثانية واحدة
+                            callback(false) -- إيقاف الكود برمجياً تلقائياً
+                        end)
+                    else
+                        callback(false) -- إيقاف يدوي
+                    end
+                end)
+            end
+            -------------------------------------------------------------------------
+
             for _, fileName in ipairs(info.Files) do
                 pcall(function()
                     local filePath = "Modules/" .. info.Folder .. "/" .. fileName .. ".lua"
