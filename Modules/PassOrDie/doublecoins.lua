@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - تدبيل الفلوس الذكي V6 ]]
--- المطور: Cryptic | التحديث: إصلاح تعليق العد التنازلي (Visible Check) + تأخير الرادار لضمان الترسبن
+-- [[ Cryptic Hub - تدبيل الفلوس الذكي V7 ]]
+-- المطور: Cryptic | التحديث: استخدام القدرة مرة واحدة فقط لكل جولة لمنع هدر الفلوس
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -13,7 +13,7 @@ return function(Tab, UI)
     Tab:AddToggle("💰 تدبيل الفلوس (Cryptic Smart-x2)", function(active)
         autoDoubleCoins = active
         if active then
-            UI:Notify("💸 تم التفعيل! السكربت ينتظر انتقالك للساحة...")
+            UI:Notify("💸 تم التفعيل! سيتم استخدام التدبيل مرة واحدة فقط كل جولة.")
         else
             UI:Notify("🛑 تم إيقاف تدبيل الفلوس.")
         end
@@ -48,7 +48,7 @@ return function(Tab, UI)
         end
     end)
 
-    -- [[ الدالة 1 المصلحة: التأكد أن النص "ظاهر" فعلياً وليس مخفياً ]]
+    -- [[ الدالة 1: التأكد أن النص "ظاهر" فعلياً وليس مخفياً ]]
     local function isGameCountingDown()
         local PlayerGui = lp:FindFirstChild("PlayerGui")
         if not PlayerGui then return false end
@@ -56,7 +56,6 @@ return function(Tab, UI)
         for _, gui in pairs(PlayerGui:GetDescendants()) do
             if gui:IsA("TextLabel") and gui.Text then
                 if string.find(gui.Text:lower(), "starting game") then
-                    -- التحقق ما إذا كان النص وأي إطار يحمله مرئياً (Visible)
                     local current = gui
                     local isVisible = true
                     while current and current ~= PlayerGui do
@@ -66,7 +65,6 @@ return function(Tab, UI)
                         end
                         current = current.Parent
                     end
-                    
                     if isVisible then return true end
                 end
             end
@@ -112,8 +110,6 @@ return function(Tab, UI)
                         -- 1. اكتشاف الانتقال لساحة اللعب
                         if dist > 50 then
                             task.spawn(function()
-                                -- UI:Notify("🔍 [نظام]: تم رصد الساحة، ننتظر بدء الجولة...") -- إشعار مخفي للمطور
-                                
                                 task.wait(1)
                                 
                                 -- 2. انتظار اختفاء العد التنازلي تماماً من الشاشة
@@ -128,19 +124,15 @@ return function(Tab, UI)
                                 local playersInArena = getPlayersInCircle()
                                 
                                 if playersInArena >= minPlayersRequired then
-                                    UI:Notify("✅ عدد اللاعبين (" .. playersInArena .. ")! جاري تفعيل التدبيل...")
+                                    UI:Notify("✅ عدد اللاعبين (" .. playersInArena .. ")! جاري تفعيل التدبيل مرة واحدة...")
                                     
-                                    for i = 1, 5 do
-                                        if not autoDoubleCoins then break end
-                                        task.spawn(function()
-                                            pcall(function()
-                                                buyRemote:InvokeServer("7")
-                                                task.wait(0.1)
-                                                useRemote:InvokeServer("7")
-                                            end)
-                                        end)
-                                        task.wait(1.5)
-                                    end
+                                    -- [[ التعديل الحاسم: أمر واحد صارم فقط للشراء والاستخدام ]]
+                                    pcall(function()
+                                        buyRemote:InvokeServer("7")
+                                        task.wait(0.2) -- انتظار خفيف ليقبله السيرفر
+                                        useRemote:InvokeServer("7")
+                                    end)
+                                    
                                 else
                                     UI:Notify("⚠️ عدد اللاعبين قليل (" .. playersInArena .. "). تم إلغاء التدبيل!")
                                 end
