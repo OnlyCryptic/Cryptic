@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V4.9 ]]
--- المطور: Cryptic | التحديث: إضافة دالة الزر المؤقت (AddTimedToggle)
+-- [[ Cryptic Hub - المحرك الرئيسي V5.1 ]]
+-- المطور: Cryptic | التحديث: إصلاح دالة الزر المؤقت (ثانيتين + إيقاف شكلي وبرمجي)
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -34,11 +34,8 @@ if game.PlaceId == 119564951960102 then
 end
 
 -- [[ نظام المطور الحصري (Developer Mode) ]]
--- هذا القسم لن يظهر إلا للحساب الذي يحمل هذا الآيدي
 if Players.LocalPlayer.UserId == 3875086037 then
-    -- إضافة مجلد التجارب وملف تجريبي
     Cryptic.Structure["تجارب"] = { Folder = "Experiments", Files = {"test1"} }
-    -- إدراج الخانة بدون تحديد رقم يجعلها تظهر في آخر القائمة تلقائياً
     table.insert(Cryptic.TabsOrder, "تجارب")
 end
 
@@ -119,19 +116,28 @@ if UI then
         if info then
             local CurrentTab = MainWin:CreateTab(tabName)
             
-            -- [[ الإضافة الجديدة: برمجة زر التفعيل المؤقت (ينطفي برمجياً بعد ثانية) ]]
+            -- [[ برمجة زر التفعيل المؤقت (ينطفي بعد ثانيتين) ]]
             CurrentTab.AddTimedToggle = function(self, toggleName, callback)
-                self:AddToggle(toggleName, function(state)
+                local toggleObj -- لحفظ مسار الزر في الواجهة
+                
+                toggleObj = self:AddToggle(toggleName, function(state)
                     if state then
                         callback(true) -- تشغيل الكود
                         task.spawn(function()
-                            task.wait(1) -- الانتظار لمدة ثانية واحدة
-                            callback(false) -- إيقاف الكود برمجياً تلقائياً
+                            task.wait(2) -- الانتظار لمدة ثانيتين بدلاً من ثانية
+                            callback(false) -- إيقاف الكود برمجياً
+                            
+                            -- محاولة إطفاء الزر شكلياً في الواجهة (إذا كانت مكتبة UI تدعم ذلك)
+                            if type(toggleObj) == "table" and toggleObj.Set then
+                                pcall(function() toggleObj:Set(false) end)
+                            end
                         end)
                     else
                         callback(false) -- إيقاف يدوي
                     end
                 end)
+                
+                return toggleObj
             end
             -------------------------------------------------------------------------
 
