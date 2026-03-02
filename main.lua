@@ -1,5 +1,5 @@
 -- [[ Arwa Hub - المحرك الرئيسي V4.5 ]]
--- الإصلاح: ترتيب الأزرار + اسم "خدع" + نظام إحصائيات ببروكسي قوي ومباشر
+-- الإصلاح: ترتيب الأزرار + اسم "خدع" + نظام إحصائيات ببروكسي قوي ومباشر + نظام المابات المخصصة
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -31,6 +31,15 @@ local Cryptic = {
 
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "خدع"}
 }
+
+-- [[ نظام المابات المخصصة (Smart Games Detection) ]]
+-- التحقق من الآيدي الخاص بماب Pass or Die
+if game.PlaceId == 119564951960102 then
+    -- إضافة مجلد خاص بالماب (كما طلبت)
+    Cryptic.Structure["Pass or Die"] = { Folder = "PassOrDie", Files = {"autopass"} }
+    -- إظهار الخانة الجديدة في نهاية القائمة
+    table.insert(Cryptic.TabsOrder, "Pass or Die")
+end
 
 local function SendNotify(title, text)
     game:GetService("StarterGui"):SetCore("SendNotification", {
