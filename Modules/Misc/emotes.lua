@@ -13,7 +13,7 @@ return function(Tab, UI)
         end)
     end
 
-    Tab:AddTimedToggle("تشغيل سكربت الرقصات", function(active)
+    Tab:AddTimedToggle("سكربت الرقصات / Emotes", function(active)
         if active then
             -- 1. إرسال الإشعار فوراً
             SendScreenNotify(
