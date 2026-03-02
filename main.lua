@@ -16,10 +16,10 @@ local Cryptic = {
     Structure = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },
-        ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "emotes", "camera", "shiftlock"} },
+        ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "emotes", "camera", "shiftlock", "fullbright.lua"} },
         ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
-        ["خدع"] = { Folder = "Combat", Files = {"hitbox", "anime_aura", "invisibility", "zero_gravity", "fullbright", "carry", "magnet"} }
+        ["خدع"] = { Folder = "Combat", Files = {"hitbox", "anime_aura", "invisibility", "zero_gravity", "carry", "magnet"} }
     },
 
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "خدع"}
