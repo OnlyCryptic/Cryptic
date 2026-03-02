@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V4.0 ]]
--- المطور: Cryptic | التحديث: دعم دالة الإيقاف الشكلي (Set) للزر المؤقت + تنظيف الأسماء
+-- [[ Cryptic Hub - محرك الواجهة المطور V4.1 ]]
+-- المطور: Cryptic | التحديث: إضافة AddTimedToggle رسمياً للمحرك مع حماية من السبام
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -7,7 +7,7 @@ local CoreGui = game:GetService("CoreGui")
 
 function UI:CreateWindow(title)
     local Screen = Instance.new("ScreenGui", CoreGui)
-    Screen.Name = "CrypticHub_V4" -- تم تعديل الاسم هنا
+    Screen.Name = "CrypticHub_V4"
     Screen.ResetOnSpawn = false
 
     local OpenBtn = Instance.new("TextButton", Screen)
@@ -87,20 +87,6 @@ function UI:CreateWindow(title)
             L.Size = UDim2.new(0.95, 0, 0, 1); L.BackgroundColor3 = Color3.fromRGB(50, 50, 50); L.BackgroundTransparency = 0.5; L.BorderSizePixel = 0
         end
 
-        function TabOps:AddSpeedControl(label, callback)
-            orderIndex = orderIndex + 1
-            local Row = Instance.new("Frame", Page)
-            Row.LayoutOrder = orderIndex
-            Row.Size = UDim2.new(0.98, 0, 0, 45); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
-            local Lbl = Instance.new("TextLabel", Row); Lbl.Text = label; Lbl.Size = UDim2.new(0.6, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
-            local Tgl = Instance.new("TextButton", Row); Tgl.Size = UDim2.new(0, 45, 0, 22); Tgl.Position = UDim2.new(1, -55, 0.5, -11); Tgl.Text = ""; Tgl.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", Tgl).CornerRadius = UDim.new(1, 0)
-            local Inp = Instance.new("TextBox", Row); Inp.Size = UDim2.new(0, 40, 0, 22); Inp.Position = UDim2.new(1, -105, 0.5, -11); Inp.Text = "50"; Inp.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Inp.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", Inp)
-            local active = false
-            local function update() Tgl.BackgroundColor3 = active and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60); callback(active, tonumber(Inp.Text) or 50) end
-            Tgl.MouseButton1Click:Connect(function() active = not active; update() end)
-            Inp:GetPropertyChangedSignal("Text"):Connect(function() if active then update() end end)
-        end
-
         function TabOps:AddToggle(label, callback)
             orderIndex = orderIndex + 1
             local R = Instance.new("Frame", Page)
@@ -114,13 +100,37 @@ function UI:CreateWindow(title)
                 B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60) 
                 callback(a) 
             end)
-            
-            -- [[ التعديل السحري: إضافة دالة Set لدعم الزر المؤقت ]]
             return { 
                 SetState = function(s) a = s; B.BackgroundColor3 = s and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60) end,
                 Set = function(self, s) a = s; B.BackgroundColor3 = s and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60) end
             }
         end
+
+        -- [[ الدالة الجديدة السحرية للزر المؤقت ]]
+        function TabOps:AddTimedToggle(label, callback)
+            orderIndex = orderIndex + 1
+            local R = Instance.new("Frame", Page)
+            R.LayoutOrder = orderIndex
+            R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
+            local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
+            local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
+            
+            local isActive = false
+            B.MouseButton1Click:Connect(function() 
+                if isActive then return end -- يمنع اللاعب من الضغط عليه وهو شغال (حماية)
+                isActive = true 
+                B.BackgroundColor3 = Color3.fromRGB(0, 150, 255) -- أزرق فورا
+                callback(true) 
+                
+                task.spawn(function()
+                    task.wait(2) -- انتظار ثانيتين
+                    isActive = false
+                    if B then B.BackgroundColor3 = Color3.fromRGB(60, 60, 60) end -- يرجع رصاصي تلقائياً
+                    callback(false)
+                end)
+            end)
+        end
+        -----------------------------------------------------
 
         function TabOps:AddInput(label, placeholder, callback)
             orderIndex = orderIndex + 1
