@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V4.8 ]]
--- المطور: Cryptic | التحديث: إضافة قسم "تجارب" خاص بالمطور فقط (محمي بالـ UserId)
+-- [[ Cryptic Hub - المحرك الرئيسي V4.9 ]]
+-- المطور: Cryptic | التحديث: إزالة ماب Time Bomb + الإبقاء على Pass or Die ولوحة المطور
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -30,12 +30,7 @@ local Cryptic = {
 -- 1. إعدادات ماب Pass or Die
 if game.PlaceId == 119564951960102 then
     Cryptic.Structure["Pass or Die"] = { Folder = "PassOrDie", Files = {"autopass", "doublecoins"} }
-    table.insert(Cryptic.TabsOrder, 2, "Pass or Die")
-
--- 2. إعدادات ماب Time Bomb
-elseif game.PlaceId == 114786176505608 then
-    Cryptic.Structure["Time Bomb"] = { Folder = "TimeBomb", Files = {"auto_punch_bomb"} }
-    table.insert(Cryptic.TabsOrder, 1, "Time Bomb")
+    table.insert(Cryptic.TabsOrder, 2, "Pass or Die") -- يظهر في المركز الثاني (تحت معلومات)
 end
 
 -- [[ نظام المطور الحصري (Developer Mode) ]]
