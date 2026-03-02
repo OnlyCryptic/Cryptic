@@ -77,7 +77,7 @@ return function(Tab, UI)
         table.insert(connections, charAddedConn)
     end
 
-    Tab:AddToggle("كشف اللاعبين", function(active)
+    Tab:AddToggle("كشف اللاعبين / ESP", function(active)
         if active then
             -- تطبيق الكشف على الجميع
             for _, p in pairs(Players:GetPlayers()) do 
