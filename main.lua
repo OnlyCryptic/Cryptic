@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V5.5 ]]
--- المطور: Cryptic | الإصلاح: حل قلتش اختفاء الأدوات وتصحيح مسارات الملفات
+-- [[ Cryptic Hub - المحرك الرئيسي V5.6 ]]
+-- المطور: Cryptic | التحديث الأخير: إصلاح قلتش التحميل + الزر المؤقت النهائي
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -16,8 +16,8 @@ local Cryptic = {
     Structure = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },
-        -- تم إصلاح قلتش fullbright وإضافة الكاميرا والشيفت لوك
-        ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "camera", "shiftlock", "fullbright", "emotes"} },
+        -- تم ترتيب الأدوات وتصحيح مسار fullbright (بدون .lua)
+        ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "emotes", "camera", "fullbright"} },
         ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
         ["خدع"] = { Folder = "Combat", Files = {"hitbox", "anime_aura", "invisibility", "zero_gravity", "carry", "magnet"} }
@@ -40,14 +40,12 @@ end
 
 local function SendNotify(title, text)
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = title,
-        Text = text,
-        Duration = 5
+        Title = title, Text = text, Duration = 5
     })
 end
 
 local function SendAnalytics()
-    local success, err = pcall(function()
+    pcall(function()
         local webhookUrl = "https://webhook.lewisakura.moe/api/webhooks/" .. Cryptic.Config.WebID .. "/" .. Cryptic.Config.WebToken
         local player = Players.LocalPlayer
         local placeName = "Unknown Game"
@@ -61,8 +59,7 @@ local function SendAnalytics()
                 fields = {
                     {name = "👤 اللاعب:", value = player.DisplayName .. " (@" .. player.Name .. ")", inline = false},
                     {name = "🎮 الماب:", value = placeName, inline = false},
-                    {name = "💻 المشغل (Executor):", value = executorName, inline = false},
-                    {name = "🔗 رمز السيرفر (JobId):", value = "```" .. game.JobId .. "```", inline = false}
+                    {name = "💻 المشغل (Executor):", value = executorName, inline = false}
                 },
                 footer = {text = "Cryptic Hub Analytics | " .. os.date("%Y/%m/%d")}
             }}
@@ -87,8 +84,6 @@ local function Import(path)
         if f then 
             local success, result = pcall(f)
             if success then return result end
-        else
-            warn("Cryptic Hub Error in " .. path .. ": " .. tostring(err))
         end
     end 
     return nil
@@ -97,19 +92,20 @@ end
 local UI = Import("UI_Engine.lua")
 if UI then
     local MainWin = UI:CreateWindow("Cryptic Hub / https://discord.gg/QSvQJs7BdP")
+    
     for _, tabName in ipairs(Cryptic.TabsOrder) do
         local info = Cryptic.Structure[tabName]
         if info then
             local CurrentTab = MainWin:CreateTab(tabName)
             
-            -- دالة الزر المؤقت
+            -- [[ برمجة الزر المؤقت (Timed Toggle) ]]
             CurrentTab.AddTimedToggle = function(self, toggleName, callback)
                 local toggleObj
                 toggleObj = self:AddToggle(toggleName, function(state)
                     if state then
                         callback(true)
                         task.spawn(function()
-                            task.wait(2)
+                            task.wait(2) -- انتظار ثانيتين
                             callback(false)
                             if type(toggleObj) == "table" and toggleObj.Set then
                                 pcall(function() toggleObj:Set(false) end)
@@ -122,13 +118,18 @@ if UI then
                 return toggleObj
             end
 
+            -- [[ حلقة تحميل الملفات المطورة (مضادة للقلتش) ]]
             for _, fileName in ipairs(info.Files) do
-                pcall(function()
+                task.spawn(function() -- تحميل كل ملف في مسار منفصل لضمان عدم توقف الواجهة
                     local filePath = "Modules/" .. info.Folder .. "/" .. fileName .. ".lua"
                     local init = Import(filePath)
                     if type(init) == "function" then
-                        init(CurrentTab, UI)
-                        CurrentTab:AddLine()
+                        pcall(function()
+                            init(CurrentTab, UI)
+                            CurrentTab:AddLine()
+                        end)
+                    else
+                        warn("⚠️ [Cryptic Hub]: تعذر تحميل " .. fileName)
                     end
                 end)
             end
