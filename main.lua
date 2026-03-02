@@ -1,5 +1,5 @@
--- [[ Arwa Hub - المحرك الرئيسي V4.5 ]]
--- الإصلاح: ترتيب الأزرار + اسم "خدع" + نظام إحصائيات ببروكسي قوي ومباشر + نظام المابات المخصصة (موضع ذكي)
+-- [[ Cryptic Hub - المحرك الرئيسي V4.7 ]]
+-- المطور: Cryptic | التحديث: دعم ماب Time Bomb + ظهور الخانة المخصصة في المركز الأول
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -9,7 +9,6 @@ local Cryptic = {
     Config = {
         UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main",
         Discord = "https://discord.gg/QSvQJs7BdP",
-        -- تم وضع الويب هوك الجديد هنا بشكل مباشر لضمان عمله 100%
         WebID = "1477089260170383421", 
         WebToken = "J7l45l_B6e9JFbgsplWBbCfIDtsB620nCn7ktJ4FwMdb7TypegGq3m8l8RGItg5cn7kl"
     },
@@ -18,14 +17,8 @@ local Cryptic = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },
         ["أدوات"] = { Folder = "Misc", Files = {"tptool", "emotes", "esp", "camera", "shiftlock", "anti_block"} },
-        
-        ["استهداف لاعب"] = { 
-            Folder = "Combat", 
-            Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} 
-        },
-        
+        ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
-
         ["خدع"] = { Folder = "Combat", Files = {"hitbox", "anime_aura", "invisibility", "zero_gravity", "fullbright", "carry", "magnet"} }
     },
 
@@ -33,13 +26,17 @@ local Cryptic = {
 }
 
 -- [[ نظام المابات المخصصة (Smart Games Detection) ]]
--- التحقق من الآيدي الخاص بماب Pass or Die
+
+-- 1. إعدادات ماب Pass or Die
 if game.PlaceId == 119564951960102 then
-    -- إضافة مجلد خاص بالماب 
     Cryptic.Structure["Pass or Die"] = { Folder = "PassOrDie", Files = {"autopass", "doublecoins"} }
-    
-    -- [[ التعديل الجديد ]]: وضع الخانة مباشرة تحت "معلومات" (المركز الثاني)
-    table.insert(Cryptic.TabsOrder, 2, "Pass or Die")
+    table.insert(Cryptic.TabsOrder, 2, "Pass or Die") -- يظهر في المركز الثاني (تحت معلومات)
+
+-- 2. إعدادات ماب Time Bomb
+-- ⚠️ ملاحظة: استبدل "114786176505608" بـ PlaceId الخاص بالماب
+elseif game.PlaceId == 114786176505608 then
+    Cryptic.Structure["Time Bomb"] = { Folder = "TimeBomb", Files = {"auto_punch_bomb"} }
+    table.insert(Cryptic.TabsOrder, 1, "Time Bomb") -- [[ يظهر في المركز الأول مباشرة ]]
 end
 
 local function SendNotify(title, text)
@@ -50,25 +47,21 @@ local function SendNotify(title, text)
     })
 end
 
--- نظام إرسال الإحصائيات (Webhook) المطور
+-- نظام إرسال الإحصائيات (Webhook)
 local function SendAnalytics()
     local success, err = pcall(function()
-        -- استخدام بروكسي lewisakura المخصص لروبلوكس
         local webhookUrl = "https://webhook.lewisakura.moe/api/webhooks/" .. Cryptic.Config.WebID .. "/" .. Cryptic.Config.WebToken
 
         local player = Players.LocalPlayer
         local placeName = "Unknown Game"
         
-        -- محاولة جلب اسم الماب بشكل آمن
-        pcall(function()
-            placeName = MarketplaceService:GetProductInfo(game.PlaceId).Name
-        end)
+        pcall(function() placeName = MarketplaceService:GetProductInfo(game.PlaceId).Name end)
 
         local executorName = (type(identifyexecutor) == "function" and identifyexecutor()) or "Unknown Executor"
 
         local embedData = {
             embeds = {{
-                title = "🚀 تشغيل جديد - Arwa Hub!",
+                title = "🚀 تشغيل جديد - Cryptic Hub!",
                 color = 65436,
                 fields = {
                     {name = "👤 اللاعب:", value = player.DisplayName .. " (@" .. player.Name .. ")", inline = false},
@@ -76,37 +69,31 @@ local function SendAnalytics()
                     {name = "💻 المشغل (Executor):", value = executorName, inline = false},
                     {name = "🔗 رمز السيرفر (JobId):", value = "```" .. game.JobId .. "```", inline = false}
                 },
-                footer = {text = "Arwa Hub Analytics | " .. os.date("%Y/%m/%d")}
+                footer = {text = "Cryptic Hub Analytics | " .. os.date("%Y/%m/%d")}
             }}
         }
 
         local HttpReq = (request or http_request or syn and syn.request)
         if HttpReq then
             local response = HttpReq({
-                Url = webhookUrl,
-                Method = "POST",
+                Url = webhookUrl, Method = "POST",
                 Headers = {["Content-Type"] = "application/json"},
                 Body = HttpService:JSONEncode(embedData)
             })
-            
-            -- طباعة النتيجة في الكونسول (F9) لمعرفة حالة الإرسال
             if response and (response.StatusCode == 200 or response.StatusCode == 204) then
-                print("✅ [Arwa Hub]: تم إرسال الإحصائيات للديسكورد بنجاح!")
+                print("✅ [Cryptic Hub]: تم إرسال الإحصائيات للديسكورد بنجاح!")
             else
-                warn("❌ [Arwa Hub]: فشل إرسال الويب هوك. كود الخطأ: " .. tostring(response and response.StatusCode))
+                warn("❌ [Cryptic Hub]: فشل إرسال الويب هوك. كود الخطأ: " .. tostring(response and response.StatusCode))
             end
         else
-            warn("❌ [Arwa Hub]: المشغل الخاص بك لا يدعم وظيفة إرسال الروابط (request).")
+            warn("❌ [Cryptic Hub]: المشغل الخاص بك لا يدعم وظيفة إرسال الروابط (request).")
         end
     end)
 
-    if not success then
-        warn("❌ [Arwa Hub]: خطأ برمجي في الإحصائيات: " .. tostring(err))
-    end
+    if not success then warn("❌ [Cryptic Hub]: خطأ برمجي في الإحصائيات: " .. tostring(err)) end
 end
 
 local function Import(path)
-    -- استخدام tick() لضمان كسر الكاش وتحميل أحدث نسخة فوراً
     local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. "?v=" .. tick()
     local s, r = pcall(game.HttpGet, game, url)
     if s and r then 
@@ -115,7 +102,7 @@ local function Import(path)
             local success, result = pcall(f)
             if success then return result end
         else
-            warn("Arwa Hub Error in " .. path .. ": " .. tostring(err))
+            warn("Cryptic Hub Error in " .. path .. ": " .. tostring(err))
         end
     end 
     return nil
@@ -123,7 +110,7 @@ end
 
 local UI = Import("UI_Engine.lua")
 if UI then
-    local MainWin = UI:CreateWindow("Cryptic hub / https://discord.gg/QSvQJs7BdP ")
+    local MainWin = UI:CreateWindow("Cryptic Hub / https://discord.gg/QSvQJs7BdP")
     for _, tabName in ipairs(Cryptic.TabsOrder) do
         local info = Cryptic.Structure[tabName]
         if info then
@@ -141,8 +128,6 @@ if UI then
         end
     end
     
-    -- تشغيل نظام الإحصائيات في الخلفية
     task.spawn(SendAnalytics)
-    
-    SendNotify("cryptic hub", "✅ تم التحميل بنجاح يا بطل!")
+    SendNotify("Cryptic Hub", "✅ تم التحميل بنجاح يا بطل!")
 end
