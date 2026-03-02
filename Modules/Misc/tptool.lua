@@ -1,11 +1,21 @@
 -- [[ Cryptic Hub - ميزة أداة الانتقال الملكية ]]
--- الملف: tptool.lua
--- الميزات: الخانة 1 دائماً + عودة بعد الموت + إزاحة الأدوات الأخرى
+-- المطور: Cryptic | التحديث: إشعارات الشاشة + إزالة الملاحظات + تنظيف الكود
 
 return function(Tab, UI)
     local player = game.Players.LocalPlayer
     local mouse = player:GetMouse()
     local keepGiving = false
+
+    -- دالة إرسال الإشعارات على شاشة اللعبة مباشرة
+    local function SendScreenNotify(title, text)
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = title,
+                Text = text,
+                Duration = 3
+            })
+        end)
+    end
 
     -- وظيفة تنظيم الحقيبة لضمان الخانة رقم 1
     local function ForceSlotOne(tool)
@@ -46,8 +56,9 @@ return function(Tab, UI)
         local tool = Instance.new("Tool")
         tool.Name = "Cryptic TP"
         tool.RequiresHandle = false
-        tool.ToolTip = "Arwa Hub | Slot 1 Guaranteed"
+        tool.ToolTip = "Cryptic Hub | Slot 1 Guaranteed" -- تم تعديل الاسم هنا
 
+        -- حدث النقر للانتقال
         tool.Activated:Connect(function()
             local pos = mouse.Hit.p
             if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
@@ -71,17 +82,11 @@ return function(Tab, UI)
         keepGiving = active
         if active then
             giveTPTool()
-            UI:Notify("تم التفعيل: الأداة الآن في الخانة 1")
+            SendScreenNotify("Cryptic Hub", "✨ تم التفعيل: أداة الانتقال الآن في الخانة 1")
         else
             local t = player.Backpack:FindFirstChild("Cryptic TP") or (player.Character and player.Character:FindFirstChild("Cryptic TP"))
             if t then t:Destroy() end
-            UI:Notify("تم إيقاف الأداة المستمرة")
-        end
-
-        if UI.Logger then
-            UI.Logger("تعديل أدوات", "أداة الانتقال المستمرة: " .. (active and "ON" or "OFF"))
+            SendScreenNotify("Cryptic Hub", "🛑 تم إيقاف أداة الانتقال")
         end
     end)
-
-    Tab:AddParagraph("حتى لو حصلتِ على أسلحة جديدة، ستظل هذه الأداة في المركز الأول.")
 end
