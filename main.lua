@@ -17,7 +17,7 @@ Structure = {
     ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },  
     ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "emotes", "camera", "fullbright"} },  
     ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },  
-    ["قسم السيرفر"] = { Folder = "Server", Files = {"server", "rejoin"} },  
+    ["قسم السيرفر"] = { Folder = "Server", Files = {"server", "rejoin", "join_id"} },  
       
     -- [[ التعديل هنا: اسم القسم "اخرى" ومجلد جديد باسم "Other" ]]  
     ["اخرى"] = { Folder = "Other", Files = {"zero_gravity", "anti_block"} }  
