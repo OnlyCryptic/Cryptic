@@ -9,7 +9,7 @@ return function(Tab, UI)
       
     local isCarrying = false  
     local liftHeight = 0  
-    local liftSpeed = 0.05 
+    local liftSpeed = 0.03 
     
     local function SendRobloxNotification(title, text)
         pcall(function()
@@ -49,7 +49,7 @@ return function(Tab, UI)
     end)  
   
     -- [[ 2. زر التفعيل للرفع الفيزيائي ]]  
-    Tab:AddToggle("🛌 مصعد فيزيائي نائم (FE Sleep Lift)", function(active)  
+    Tab:AddToggle("حمل لاعب / PFlying", function(active)  
         isCarrying = active  
         local char = lp.Character  
         local root = char and char:FindFirstChild("HumanoidRootPart")
