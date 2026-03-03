@@ -1,13 +1,11 @@
 -- [[ Cryptic Hub - قسم السيرفر ]]
--- المطور: يامي (Yami) | التحديث: دمج المعلومات وإزالة الزوائد
+-- المطور: يامي (Yami) | التحديث: انتقال تلقائي بمجرد لصق الآيدي بدون أزرار
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
     local Market = game:GetService("MarketplaceService")
     local TeleportService = game:GetService("TeleportService")
     local lp = Players.LocalPlayer
-    
-    local TargetJobId = ""
 
     -- 1. حالة السيرفر (مدمجة في سطر واحد لتوفير المساحة)
     local StatusLabel = Tab:AddLabel("📊 جاري جلب المعلومات...")
@@ -30,7 +28,7 @@ return function(Tab, UI)
 
     Tab:AddLine()
 
-    -- 2. أدوات النسخ والدخول (بدون عنوان إضافي)
+    -- 2. أدوات النسخ والدخول التلقائي
     Tab:AddTimedToggle("📋 نسخ رمز السيرفر (JobId)", function(active)
         if active then
             pcall(function()
@@ -40,18 +38,14 @@ return function(Tab, UI)
         end
     end)
 
-    Tab:AddInput("🔗 آيدي السيرفر المستهدف", "إلصق الرمز هنا...", function(txt)
-        TargetJobId = txt
-    end)
-
-    Tab:AddButton("🚀 دخول السيرفر المحدد", function()
-        if TargetJobId and #TargetJobId > 10 then
-            UI:Notify("⏳ جاري محاولة الانتقال...")
+    -- دمج الانتقال التلقائي بمجرد إدخال الآيدي
+    Tab:AddInput("🔗 آيدي السيرفر المستهدف", "إلصق الرمز هنا للانتقال فوراً...", function(txt)
+        -- نتحقق إن النص المدخل طويل كفاية ليكون JobId (عادة الـ JobId يتكون من 36 حرف)
+        if txt and #txt > 20 then
+            UI:Notify("⏳ جاري محاولة الانتقال التلقائي...")
             pcall(function()
-                TeleportService:TeleportToPlaceInstance(game.PlaceId, TargetJobId, lp)
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, txt, lp)
             end)
-        else
-            UI:Notify("⚠️ يرجى إدخال آيدي صحيح أولاً!")
         end
     end)
 end
