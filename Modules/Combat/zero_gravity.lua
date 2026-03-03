@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - العوم في الفضاء (3D) ]]
--- المطور: Cryptic | التحديث: تحكم كامل بالكاميرا والجويستيك + دوران الشخصية
+-- المطور: Cryptic | التحديث: إضافة دفعة انطلاق للأمام عند التفعيل
 
 return function(Tab, UI)
     local Player = game.Players.LocalPlayer
@@ -10,7 +10,7 @@ return function(Tab, UI)
     local connection
     local force, attachment, gyro
 
-    Tab:AddToggle("العوم في الفضاء 🚀", function(state)
+    Tab:AddToggle("جادبيه صفر / zero gravity", function(state)
         isZeroGravity = state
 
         local Character = Player.Character
@@ -47,7 +47,11 @@ return function(Tab, UI)
             gyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
             gyro.P = 3000 -- نعومة الالتفاف
 
-            UI:Notify("🚀 عوم الفضاء مفعل: وجه الشاشة وتحرك!")
+            -- [[ التعديل هنا: إعطاء دفعة انطلاق فورية باتجاه الكاميرا ]]
+            -- الرقم 50 يمثل قوة الدفعة (تقدر تزيده لو تبيها أقوى)
+            root.AssemblyLinearVelocity = cam.CFrame.LookVector * 50
+
+            UI:Notify("🚀 عوم الفضاء مفعل: انطلاق!")
 
             local floatSpeed = 40 -- السرعة القصوى للسباحة
 
@@ -82,7 +86,7 @@ return function(Tab, UI)
                         root.AssemblyLinearVelocity = root.AssemblyLinearVelocity:Lerp(floatDir.Unit * floatSpeed, 0.04)
                     end
                 else
-                    -- الانزلاق الفضائي البطيء عند ترك الجويستيك (عكس التوقف المفاجئ)
+                    -- الانزلاق الفضائي البطيء عند ترك الجويستيك
                     root.AssemblyLinearVelocity = root.AssemblyLinearVelocity:Lerp(Vector3.zero, 0.01)
                 end
             end)
