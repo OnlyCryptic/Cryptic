@@ -20,7 +20,7 @@ local Cryptic = {
         ["قسم السيرفر"] = { Folder = "Server", Files = {"server", "rejoin"} },
         
         -- [[ التعديل هنا: اسم القسم "اخرى" ومجلد جديد باسم "Other" ]]
-        ["اخرى"] = { Folder = "Other", Files = {"zero_gravity", "anti_block", "carry"} }
+        ["اخرى"] = { Folder = "Other", Files = {"zero_gravity", "anti_block"} }
     },
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "اخرى"}
 }
@@ -29,7 +29,7 @@ local Cryptic = {
 if Players.LocalPlayer.UserId == 3875086037 then
     Cryptic.Structure["تجارب"] = { 
         Folder = "Experiments", 
-        Files = {"test1", "hitbox", "invisibility", "magnet", "anime_aura"} 
+        Files = {"test1", "hitbox", "invisibility", "magnet", "anime_aura", "carry"} 
     }
     table.insert(Cryptic.TabsOrder, "تجارب")
 end
