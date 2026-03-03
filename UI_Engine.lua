@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V5.7 ]]
--- المطور: يامي (Yami) | التحديث: زر فتح أنيق مع إطار + إصلاح السحب اللانهائي للقوائم
+-- [[ Cryptic Hub - محرك الواجهة المطور V5.8 ]]
+-- المطور: يامي (Yami) | التحديث: نظام سحب سلس جداً للنافذة الرئيسية وزر الفتح + إصلاحات القوائم
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -9,45 +9,77 @@ function UI:CreateWindow(title)
     local Screen = Instance.new("ScreenGui", CoreGui)
     Screen.Name = "CrypticHub_V5"; Screen.ResetOnSpawn = false
 
-    -- [[ تعديل زر الفتح: شكل بيضاوي أنيق، نص Cryptic، وإطار خارجي ]]
+    -- [[ 1. زر الفتح الأنيق ]]
     local OpenBtn = Instance.new("TextButton", Screen)
     OpenBtn.Size = UDim2.new(0, 85, 0, 35); OpenBtn.Position = UDim2.new(0, 10, 0.5, -17)
     OpenBtn.Visible = false; OpenBtn.Text = "Cryptic"; OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
     OpenBtn.TextColor3 = Color3.fromRGB(15, 15, 15); OpenBtn.Font = Enum.Font.GothamBold; OpenBtn.TextSize = 14
-    Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0) -- حواف دائرية كاملة
+    Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
     
     local OpenStroke = Instance.new("UIStroke", OpenBtn)
     OpenStroke.Color = Color3.fromRGB(255, 255, 255)
     OpenStroke.Thickness = 2
     OpenStroke.Transparency = 0.5
 
-    -- نظام سحب زر الفتح
-    local dragC, dragStartC, startPosC
-    OpenBtn.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.Touch then dragC = true; dragStartC = i.Position; startPosC = OpenBtn.Position end end)
-    UserInputService.InputChanged:Connect(function(i) if dragC and i.UserInputType == Enum.UserInputType.Touch then local d = i.Position - dragStartC; OpenBtn.Position = UDim2.new(startPosC.X.Scale, startPosC.X.Offset + d.X, startPosC.Y.Scale, startPosC.Y.Offset + d.Y) end end)
-    OpenBtn.InputEnded:Connect(function() dragC = false end)
+    -- [[ نظام السحب السلس لزر الفتح ]]
+    local dragToggle, dragInputT, dragStartT, startPosT
+    OpenBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragToggle = true; dragStartT = input.Position; startPosT = OpenBtn.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragToggle = false end end)
+        end
+    end)
+    OpenBtn.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInputT = input end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInputT and dragToggle then
+            local delta = input.Position - dragStartT
+            OpenBtn.Position = UDim2.new(startPosT.X.Scale, startPosT.X.Offset + delta.X, startPosT.Y.Scale, startPosT.Y.Offset + delta.Y)
+        end
+    end)
 
+    -- [[ 2. النافذة الرئيسية ]]
     local Main = Instance.new("Frame", Screen)
     Main.Size = UDim2.new(0, 440, 0, 280); Main.Position = UDim2.new(0.5, 0, 0.5, 0); Main.AnchorPoint = Vector2.new(0.5, 0.5)
     Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Main.Active = true
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
     Main.ClipsDescendants = true 
 
+    -- الشريط العلوي
     local TitleBar = Instance.new("Frame", Main)
     TitleBar.Size = UDim2.new(1, 0, 0, 35); TitleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", TitleBar)
     local TitleLabel = Instance.new("TextLabel", TitleBar)
     TitleLabel.Text = title; TitleLabel.Size = UDim2.new(1, -120, 1, 0); TitleLabel.Position = UDim2.new(0, 10, 0, 0); TitleLabel.BackgroundTransparency = 1; TitleLabel.TextColor3 = Color3.new(1, 1, 1); TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
+    -- [[ نظام السحب السلس للنافذة الرئيسية (من الشريط العلوي) ]]
+    local draggingMain, dragInputMain, dragStartMain, startPosMain
+    TitleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingMain = true; dragStartMain = input.Position; startPosMain = Main.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then draggingMain = false end end)
+        end
+    end)
+    TitleBar.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInputMain = input end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInputMain and draggingMain then
+            local delta = input.Position - dragStartMain
+            Main.Position = UDim2.new(startPosMain.X.Scale, startPosMain.X.Offset + delta.X, startPosMain.Y.Scale, startPosMain.Y.Offset + delta.Y)
+        end
+    end)
+
+    -- أزرار الإغلاق والإخفاء
     local Close = Instance.new("TextButton", TitleBar); Close.Text = "X"; Close.Position = UDim2.new(1, -35, 0, 5); Close.Size = UDim2.new(0, 25, 0, 25); Close.TextColor3 = Color3.new(1, 0, 0); Close.BackgroundTransparency = 1; Close.MouseButton1Click:Connect(function() Screen:Destroy() end)
     local Hide = Instance.new("TextButton", TitleBar); Hide.Text = "-"; Hide.Position = UDim2.new(1, -70, 0, 5); Hide.Size = UDim2.new(0, 25, 0, 25); Hide.TextColor3 = Color3.new(1, 1, 1); Hide.BackgroundTransparency = 1; Hide.MouseButton1Click:Connect(function() Main.Visible = false; OpenBtn.Visible = true end); OpenBtn.MouseButton1Click:Connect(function() Main.Visible = true; OpenBtn.Visible = false end)
 
-    -- [[ القائمة الجانبية (إصلاح السحب اللانهائي) ]]
+    -- [[ 3. القائمة الجانبية (بدون قلتش السحب اللانهائي) ]]
     local Sidebar = Instance.new("ScrollingFrame", Main)
     Sidebar.Position = UDim2.new(0, 0, 0, 35); Sidebar.Size = UDim2.new(0, 110, 1, -35); Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Sidebar.BorderSizePixel = 0; Sidebar.ScrollBarThickness = 2
-    Sidebar.CanvasSize = UDim2.new(0, 0, 0, 0) -- إيقاف الحجم التلقائي المقلتش
+    Sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
     local SidebarLayout = Instance.new("UIListLayout", Sidebar); SidebarLayout.Padding = UDim.new(0, 2)
     
-    -- حساب حجم القائمة الجانبية بناءً على الأزرار فقط
     SidebarLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         Sidebar.CanvasSize = UDim2.new(0, 0, 0, SidebarLayout.AbsoluteContentSize.Y + 5)
     end)
@@ -60,12 +92,11 @@ function UI:CreateWindow(title)
     function Window:CreateTab(name)
         local TabBtn = Instance.new("TextButton", Sidebar); TabBtn.Size = UDim2.new(1, 0, 0, 35); TabBtn.Text = name; TabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TabBtn.TextColor3 = Color3.new(1, 1, 1); TabBtn.BorderSizePixel = 0
         
-        -- [[ قائمة المحتوى (إصلاح السحب اللانهائي) ]]
+        -- [[ 4. قائمة المحتوى (بدون قلتش السحب اللانهائي) ]]
         local Page = Instance.new("ScrollingFrame", Content); Page.Size = UDim2.new(1, 0, 1, 0); Page.Visible = false; Page.BackgroundTransparency = 1; Page.ScrollBarThickness = 2
         Page.CanvasSize = UDim2.new(0, 0, 0, 0)
         local ListLayout = Instance.new("UIListLayout", Page); ListLayout.Padding = UDim.new(0, 8); ListLayout.SortOrder = Enum.SortOrder.LayoutOrder 
         
-        -- حساب حجم المحتوى الداخلي بدقة
         ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
             Page.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 15)
         end)
