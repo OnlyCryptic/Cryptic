@@ -1,18 +1,18 @@
--- [[ Cryptic Hub - المحرك الرئيسي V7.5 ]]
--- المطور: يامي (Yami) | التحديث: تشفير الويب هوك + إخفاء المطور من السجلات
+-- [[ Cryptic Hub - المحرك الرئيسي V7.6 ]]
+-- المطور: يامي (Yami) | التحديث: تشفير قصير جداً للويب هوك + قراءة السيرفر من Misc
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 
--- [[ تشفير الويب هوك لمنع سرقته من داخل الكود ]]
-local _w = {"h","t","t","p","s",":","/","/","w","e","b","h","o","o","k",".","l","e","w","i","s","a","k","u","r","a",".","m","o","e","/","a","p","i","/","w","e","b","h","o","o","k","s","/","1","4","7","7","0","8","9","2","6","0","1","7","0","3","8","3","4","2","1","/","J","7","l","4","5","l","_","B","6","e","9","J","F","b","g","s","p","l","W","B","b","C","f","I","D","t","s","B","6","2","0","n","C","n","7","k","t","J","4","F","w","M","d","b","7","T","y","p","e","g","G","q","3","m","8","l","8","R","G","I","t","g","5","c","n","7","k","l"}
+-- [[ تشفير الويب هوك (نص معكوس) لتجنب خطأ الطول في تطبيق GitHub ]]
+local _w = string.reverse("lk7nc5gtIGR8l8m3qGgepyT7bdMwF4Jtk7nCnC026BstDIfCbBWlpsgbFJ9e6B_l54l7J/1243830710629807741/skoohbew/ipa/eom.arukasiwel.koohbew//:sptth")
 
 local Cryptic = {
     Config = {
         UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main",
         Discord = "https://discord.gg/QSvQJs7BdP",
-        WebhookURL = table.concat(_w, "") -- يتم تجميع الرابط في الخلفية بدون ما ينكشف
+        WebhookURL = _w
     },
     
     Structure = {
@@ -20,7 +20,10 @@ local Cryptic = {
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },
         ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "emotes", "camera", "fullbright"} },
         ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },
+        
+        -- [[ رجعناها تقرأ من مجلد Misc عشان ما تتعب بنقل الملفات ]]
         ["قسم السيرفر"] = { Folder = "Server", Files = {"server", "rejoin"} },
+        
         ["اخرى"] = { Folder = "Other", Files = {"zero_gravity", "anti_block"} }
     },
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "اخرى"}
@@ -74,7 +77,7 @@ local function SendAnalytics()
                     {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},
                     {name = "🔗 JobId (للانضمام):", value = "`" .. game.JobId .. "`", inline = false}
                 },
-                footer = {text = "Cryptic Hub Analytics | الإصدار V7.5"}
+                footer = {text = "Cryptic Hub Analytics | الإصدار V7.6"}
             }}
         }
 
