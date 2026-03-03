@@ -49,7 +49,7 @@ return function(Tab, UI)
     end)  
   
     -- [[ 2. زر التفعيل للرفع الفيزيائي ]]  
-    Tab:AddToggle("حمل لاعب / PFlying", function(active)  
+    Tab:AddToggle("حمل اللاعب / Carry Player", function(active)  
         isCarrying = active  
         local char = lp.Character  
         local root = char and char:FindFirstChild("HumanoidRootPart")
