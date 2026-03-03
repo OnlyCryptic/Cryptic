@@ -1,18 +1,15 @@
--- [[ Cryptic Hub - المحرك الرئيسي V7.6 ]]
--- المطور: يامي (Yami) | التحديث: تشفير قصير جداً للويب هوك + قراءة السيرفر من Misc
+-- [[ Cryptic Hub - المحرك الرئيسي V7.4 ]]
+-- المطور: يامي (Yami) | التحديث: إضافة قسم ومجلد "اخرى"
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 
--- [[ ياخي البشر ]]
-local _w = string.reverse("lk7nc5gtIGR8l8m3qGgepyT7bdMwF4Jtk7nCnC026BstDIfCbBWlpsgbFJ9e6B_l54l7J/1243830710629807741/skoohbew/ipa/eom.arukasiwel.koohbew//:sptth")
-
 local Cryptic = {
     Config = {
         UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main",
         Discord = "https://discord.gg/QSvQJs7BdP",
-        WebhookURL = _w
+        WebhookURL = "https://webhook.lewisakura.moe/api/webhooks/1477089260170383421/J7l45l_B6e9JFbgsplWBbCfIDtsB620nCn7ktJ4FwMdb7TypegGq3m8l8RGItg5cn7kl"
     },
     
     Structure = {
@@ -20,10 +17,9 @@ local Cryptic = {
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },
         ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "emotes", "camera", "fullbright"} },
         ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },
+        ["قسم السيرفر"] = { Folder = "Server", Files = {"server", "rejoin"} },
         
-        -- [[ رجعناها تقرأ من مجلد Misc عشان ما تتعب بنقل الملفات ]]
-        ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
-        
+        -- [[ التعديل هنا: اسم القسم "اخرى" ومجلد جديد باسم "Other" ]]
         ["اخرى"] = { Folder = "Other", Files = {"zero_gravity", "anti_block"} }
     },
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "اخرى"}
@@ -52,10 +48,6 @@ end
 local function SendAnalytics()
     task.spawn(function()
         local player = Players.LocalPlayer
-        
-        -- [[ تجاهل إرسال السجل إذا كان اللاعب هو المطور يامي ]]
-        if player.UserId == 3875086037 then return end
-        
         local placeName = "Unknown Game"
         pcall(function() placeName = MarketplaceService:GetProductInfo(game.PlaceId).Name end)
         
@@ -77,7 +69,7 @@ local function SendAnalytics()
                     {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},
                     {name = "🔗 JobId (للانضمام):", value = "`" .. game.JobId .. "`", inline = false}
                 },
-                footer = {text = "Cryptic Hub Analytics | الإصدار V7.6"}
+                footer = {text = "Cryptic Hub Analytics | الإصدار V7.4"}
             }}
         }
 
