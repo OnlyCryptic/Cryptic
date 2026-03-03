@@ -31,7 +31,7 @@ return function(Tab, UI)
     Tab:AddLine()
 
     -- 2. خانة الانتقال الفوري (بمجرد اللصق وإغلاق الكيبورد)
-    local InputField = Tab:AddInput("🔗 آيدي السيرفر المستهدف", "إلصق الرمز وأغلق الكيبورد...", function() end)
+    local InputField = Tab:AddInput("🔗 آيدي السيرفر المستهدف / jobId", "إلصق الرمز وأغلق الكيبورد...", function() end)
 
     task.spawn(function()
         repeat task.wait() until InputField and InputField.TextBox
