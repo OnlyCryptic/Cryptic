@@ -10,7 +10,7 @@ return function(Tab, UI)
     local connection
     local force, attachment
 
-    Tab:AddToggle("العوم في الفضاء 🚀", function(state)
+    Tab:AddToggle("صفر جاذبيه / zero gravity", function(state)
         isZeroGravity = state
 
         local Character = Player.Character
