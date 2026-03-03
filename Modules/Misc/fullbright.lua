@@ -1,10 +1,10 @@
 -- [[ Cryptic Hub - سكربت الإضاءة المطور ]]
--- المطور: Cryptic | التحديث: تحويل التحكم إلى شريط (Slider) + قيمة افتراضية 3
+-- المطور: Cryptic | التحديث: ضبط القيمة الافتراضية على 3 لمنع السطوع الزائد
 
 return function(Tab, UI)
     local Lighting = game:GetService("Lighting")
     
-    -- حفظ الإعدادات الأصلية
+    -- حفظ الإعدادات الأصلية للماب عشان نقدر نرجع لها عند الإيقاف
     local orig = {
         Ambient = Lighting.Ambient,
         Outdoor = Lighting.OutdoorAmbient,
@@ -16,15 +16,15 @@ return function(Tab, UI)
 
     local function updateLighting(active, intensity)
         if active then
-            -- تفعيل الإضاءة الكاملة بالشدة المختارة
+            -- تفعيل الإضاءة الكاملة بالشدة التي يختارها المستخدم
             Lighting.Ambient = Color3.fromRGB(255, 255, 255)
             Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
             Lighting.Brightness = intensity
-            Lighting.ClockTime = 14
-            Lighting.FogEnd = 100000
-            Lighting.GlobalShadows = false
+            Lighting.ClockTime = 14 -- جعل الوقت ظهراً لضمان أقصى سطوع
+            Lighting.FogEnd = 100000 -- إزالة الضباب
+            Lighting.GlobalShadows = false -- إزالة الظلال المزعجة
         else
-            -- إرجاع الإعدادات الأصلية
+            -- إرجاع الإعدادات الأصلية للماب بدقة
             Lighting.Ambient = orig.Ambient
             Lighting.OutdoorAmbient = orig.Outdoor
             Lighting.Brightness = orig.Brightness
@@ -34,12 +34,9 @@ return function(Tab, UI)
         end
     end
 
-    -- استخدام نظام التحكم الموحد (مثل الطيران والسرعة)
-    -- القيمة الافتراضية 3، وأقصى شدة 10
+    -- [[ التعديل الأهم ]]
+    -- أضفنا الرقم 3 في نهاية الدالة ليقرأه محرك الواجهة V4.6 كقيمة بداية تلقائية
     Tab:AddSpeedControl("إضاءة / lighting", function(active, value)
         updateLighting(active, value)
-    end)
-    
-    -- ضبط القيمة التلقائية عند التحميل لتكون 3
-    -- ملاحظة: مكتبة UI لديك ستحتاج لتمرير القيمة 3 افتراضياً
+    end, 3) 
 end
