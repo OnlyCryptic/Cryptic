@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V7.0 ]]
--- المطور: Cryptic | التحديث: تنظيف السكربت واعتماد المحرك الجديد لحل الزر المؤقت
+-- [[ Cryptic Hub - المحرك الرئيسي V7.1 ]]
+-- المطور: Cryptic | التحديث: دعم الملفات الخارجية (بدون مجلد) لتشغيل البطاقة التعريفية
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -13,7 +13,9 @@ local Cryptic = {
     },
     
     Structure = {
-        ["معلومات"] = { Folder = "Misc", Files = {"info"} },
+        -- تم التعديل هنا: مجلد فارغ "" يعني أن ملف info.lua موجود في الصفحة الرئيسية
+        ["معلومات"] = { Folder = "", Files = {"info"} }, 
+        
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },
         ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "emotes", "camera", "fullbright"} },
         ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },
@@ -51,11 +53,19 @@ if UI then
         if tabData then
             local CurrentTab = MainWin:CreateTab(tabName)
             
-            -- تمت إزالة الدالة التي كانت تسبب تعليق الزر
             -- التحميل يعتمد الآن كلياً على UI_Engine
             task.spawn(function(data, tab)
                 for _, fileName in ipairs(data.Files) do
-                    local filePath = "Modules/" .. data.Folder .. "/" .. fileName .. ".lua"
+                    local filePath
+                    
+                    -- [[ إضافة المسار الذكي ]]
+                    -- إذا كان المجلد فارغ يقرأ الملف مباشرة، غير كذا يدخل مجلد Modules
+                    if data.Folder == "" then
+                        filePath = fileName .. ".lua"
+                    else
+                        filePath = "Modules/" .. data.Folder .. "/" .. fileName .. ".lua"
+                    end
+
                     local init = Import(filePath)
                     if type(init) == "function" then
                         pcall(function() 
