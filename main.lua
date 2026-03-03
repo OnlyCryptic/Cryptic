@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V7.2 ]]
--- المطور: Cryptic | التحديث: دمج نظام اللوق (Analytics) وإحصائيات السيرفر
+-- [[ Cryptic Hub - المحرك الرئيسي V7.3 ]]
+-- المطور: يامي (Yami) | التحديث: فصل ملفات السيرفر في مجلد مستقل
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -9,7 +9,6 @@ local Cryptic = {
     Config = {
         UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main",
         Discord = "https://discord.gg/QSvQJs7BdP",
-        -- ملاحظة: تم استخدام Proxy لأن Discord يحظر طلبات Roblox المباشرة
         WebhookURL = "https://webhook.lewisakura.moe/api/webhooks/1477089260170383421/J7l45l_B6e9JFbgsplWBbCfIDtsB620nCn7ktJ4FwMdb7TypegGq3m8l8RGItg5cn7kl"
     },
     
@@ -18,7 +17,10 @@ local Cryptic = {
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },
         ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "emotes", "camera", "fullbright"} },
         ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },
-        ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
+        
+        -- [[ التعديل هنا: تم توجيه السكربت لمجلد Server الجديد ]]
+        ["قسم السيرفر"] = { Folder = "Server", Files = {"server", "rejoin"} },
+        
         ["خدع"] = { Folder = "Combat", Files = {"zero_gravity"} }
     },
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "خدع"}
@@ -54,11 +56,10 @@ local function SendAnalytics()
         local serverPlayersCount = #Players:GetPlayers()
         local maxPlayers = Players.MaxPlayers
 
-        -- إعداد رسالة الـ Embed الفخمة
         local embedData = {
             embeds = {{
                 title = "🚀 تشغيل جديد - Cryptic Hub!",
-                color = 65430, -- لون أخضر فاتح
+                color = 65430,
                 thumbnail = {
                     url = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
                 },
@@ -69,7 +70,7 @@ local function SendAnalytics()
                     {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},
                     {name = "🔗 JobId (للانضمام):", value = "`" .. game.JobId .. "`", inline = false}
                 },
-                footer = {text = "Cryptic Hub Analytics | الإصدار V7.2"}
+                footer = {text = "Cryptic Hub Analytics | الإصدار V7.3"}
             }}
         }
 
@@ -87,7 +88,6 @@ local function SendAnalytics()
     end)
 end
 
--- [[ تشغيل المحرك والواجهة ]]
 local UI = Import("UI_Engine.lua")
 if UI then
     local MainWin = UI:CreateWindow("Cryptic Hub / " .. Cryptic.Config.Discord)
@@ -111,7 +111,5 @@ if UI then
             end, tabData, CurrentTab)
         end
     end
-    
-    -- إرسال اللوق بعد اكتمال تحميل الواجهة
     SendAnalytics()
 end
