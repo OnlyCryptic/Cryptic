@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V6.8 ]]
--- المطور: Cryptic | التحديث: إصلاح نطاق المتغيرات وضمان ظهور كافة الأقسام
+-- [[ Cryptic Hub - المحرك الرئيسي V6.9 ]]
+-- المطور: Cryptic | التحديث: استعادة الزر المؤقت + استقرار كامل للأقسام
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -23,7 +23,7 @@ local Cryptic = {
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "خدع"}
 }
 
--- [[ نظام المطور الحصري لأحمد بناءً على صورته الجديدة ]]
+-- [[ نظام المطور الحصري لأحمد بناءً على صورته ]]
 if Players.LocalPlayer.UserId == 3875086037 then
     Cryptic.Structure["تجارب"] = { 
         Folder = "Experiments", 
@@ -46,26 +46,12 @@ local UI = Import("UI_Engine.lua")
 if UI then
     local MainWin = UI:CreateWindow("Cryptic Hub / " .. Cryptic.Config.Discord)
     
-    -- تحميل كل قسم بشكل مستقل لضمان الظهور
     for _, tabName in ipairs(Cryptic.TabsOrder) do
         local tabData = Cryptic.Structure[tabName]
         if tabData then
             local CurrentTab = MainWin:CreateTab(tabName)
             
-            -- حقن دالة الزر المؤقت يدوياً لضمان التوافق
-            CurrentTab.AddTimedToggle = function(self, label, callback)
-                return self:AddToggle(label, function(active)
-                    if active then
-                        pcall(callback, true)
-                        task.spawn(function()
-                            task.wait(2)
-                            pcall(callback, false)
-                        end)
-                    end
-                end)
-            end
-
-            -- [[ التعديل الجوهري: تمرير البيانات داخل task.spawn لضمان عدم الخلط ]]
+            -- تحميل الملفات بشكل متسلسل داخل كل تاب
             task.spawn(function(data, tab)
                 for _, fileName in ipairs(data.Files) do
                     local filePath = "Modules/" .. data.Folder .. "/" .. fileName .. ".lua"
