@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V5.1 ]]
--- الإصلاح: دعم كامل للنصوص (Paragraph/Label) لمنع الفراغات في الأقسام
+-- [[ Cryptic Hub - محرك الواجهة المطور V5.2 ]]
+-- المطور: Cryptic | الإصلاح: ثبات القائمة الجانبية ودعم كامل للنصوص والإدخال
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -15,7 +15,7 @@ function UI:CreateWindow(title)
     OpenBtn.TextColor3 = Color3.fromRGB(15, 15, 15); OpenBtn.Font = Enum.Font.SourceSansBold; OpenBtn.TextSize = 24
     Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
 
-    -- نظام سحب الزر للجوال (Redmi Note 10s)
+    -- نظام سحب الزر للجوال
     local dragC, dragStartC, startPosC
     OpenBtn.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.Touch then dragC = true; dragStartC = i.Position; startPosC = OpenBtn.Position end end)
     UserInputService.InputChanged:Connect(function(i) if dragC and i.UserInputType == Enum.UserInputType.Touch then local d = i.Position - dragStartC; OpenBtn.Position = UDim2.new(startPosC.X.Scale, startPosC.X.Offset + d.X, startPosC.Y.Scale, startPosC.Y.Offset + d.Y) end end)
@@ -23,7 +23,9 @@ function UI:CreateWindow(title)
 
     local Main = Instance.new("Frame", Screen)
     Main.Size = UDim2.new(0, 440, 0, 280); Main.Position = UDim2.new(0.5, 0, 0.5, 0); Main.AnchorPoint = Vector2.new(0.5, 0.5)
-    Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Main.Active = true; Instance.new("UICorner", Main)
+    Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Main.Active = true
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+    Main.ClipsDescendants = true 
 
     local TitleBar = Instance.new("Frame", Main)
     TitleBar.Size = UDim2.new(1, 0, 0, 35); TitleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", TitleBar)
@@ -35,7 +37,8 @@ function UI:CreateWindow(title)
 
     local Sidebar = Instance.new("ScrollingFrame", Main)
     Sidebar.Position = UDim2.new(0, 0, 0, 35); Sidebar.Size = UDim2.new(0, 110, 1, -35); Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Sidebar.BorderSizePixel = 0; Sidebar.ScrollBarThickness = 2; Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    
+    local SidebarLayout = Instance.new("UIListLayout", Sidebar); SidebarLayout.Padding = UDim.new(0, 2)
+
     local Content = Instance.new("Frame", Main)
     Content.Position = UDim2.new(0, 115, 0, 40); Content.Size = UDim2.new(1, -120, 1, -45); Content.BackgroundTransparency = 1
 
@@ -47,7 +50,10 @@ function UI:CreateWindow(title)
         local ListLayout = Instance.new("UIListLayout", Page); ListLayout.Padding = UDim.new(0, 8); ListLayout.SortOrder = Enum.SortOrder.LayoutOrder 
 
         if not Window.FirstTab then Window.FirstTab = Page; Page.Visible = true end
-        TabBtn.MouseButton1Click:Connect(function() for _, v in pairs(Content:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end; Page.Visible = true end)
+        TabBtn.MouseButton1Click:Connect(function() 
+            for _, v in pairs(Content:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end
+            Page.Visible = true 
+        end)
 
         local TabOps = {}
         local orderIndex = 0 
