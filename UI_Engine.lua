@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V4.7 ]]
--- المطور: Cryptic | الإصلاح: إتاحة الوصول لصندوق النص (TextBox) لعمليات البحث
+-- [[ Cryptic Hub - محرك الواجهة الشامل V4.8 ]]
+-- المطور: Cryptic | الإصلاح: استعادة الخطوط الفاصلة + نظام الإدخال المتقدم
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -16,6 +16,7 @@ function UI:CreateWindow(title)
     OpenBtn.TextColor3 = Color3.fromRGB(15, 15, 15); OpenBtn.Font = Enum.Font.SourceSansBold; OpenBtn.TextSize = 24
     Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
 
+    -- نظام سحب الزر للجوال
     local dragC, dragStartC, startPosC
     OpenBtn.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.Touch then dragC = true; dragStartC = i.Position; startPosC = OpenBtn.Position end end)
     UserInputService.InputChanged:Connect(function(i) if dragC and i.UserInputType == Enum.UserInputType.Touch then local d = i.Position - dragStartC; OpenBtn.Position = UDim2.new(startPosC.X.Scale, startPosC.X.Offset + d.X, startPosC.Y.Scale, startPosC.Y.Offset + d.Y) end end)
@@ -55,6 +56,13 @@ function UI:CreateWindow(title)
         local TabOps = {}
         local orderIndex = 0 
 
+        -- 1. الخط الفاصل (AddLine)
+        function TabOps:AddLine()
+            orderIndex = orderIndex + 1
+            local L = Instance.new("Frame", Page); L.LayoutOrder = orderIndex; L.Size = UDim2.new(0.95, 0, 0, 1); L.BackgroundColor3 = Color3.fromRGB(50, 50, 50); L.BackgroundTransparency = 0.5; L.BorderSizePixel = 0
+        end
+
+        -- 2. التحكم بالسرعة (Speed/Fly/Bright)
         function TabOps:AddSpeedControl(label, callback, default)
             orderIndex = orderIndex + 1
             local Row = Instance.new("Frame", Page); Row.LayoutOrder = orderIndex; Row.Size = UDim2.new(0.98, 0, 0, 45); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
@@ -68,21 +76,17 @@ function UI:CreateWindow(title)
             Inp:GetPropertyChangedSignal("Text"):Connect(function() if active then update() end end)
         end
 
+        -- 3. الإدخال النصي (لآيدي السيرفر والبحث)
         function TabOps:AddInput(label, placeholder, callback)
             orderIndex = orderIndex + 1
             local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.95, 0, 0, 60); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
             local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(1, -10, 0, 25); Lbl.TextColor3 = Color3.fromRGB(0, 255, 150); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
             local I = Instance.new("TextBox", R); I.Size = UDim2.new(0.9, 0, 0, 25); I.Position = UDim2.new(0.05, 0, 0, 30); I.PlaceholderText = placeholder; I.BackgroundColor3 = Color3.fromRGB(40, 40, 40); I.TextColor3 = Color3.new(1, 1, 1); I.Text = ""; Instance.new("UICorner", I)
-            
             I:GetPropertyChangedSignal("Text"):Connect(function() callback(I.Text) end)
-            
-            -- [[ التعديل الجوهري: إرسال الـ TextBox والوظيفة معاً ]]
-            return { 
-                SetText = function(t) I.Text = t end,
-                TextBox = I 
-            }
+            return { SetText = function(t) I.Text = t end, TextBox = I }
         end
 
+        -- 4. التوجل (Toggle)
         function TabOps:AddToggle(label, callback)
             orderIndex = orderIndex + 1
             local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
@@ -94,6 +98,7 @@ function UI:CreateWindow(title)
             return { Set = function(self, s) set(s) end, SetState = function(s) set(s) end }
         end
 
+        -- 5. التوجل المؤقت (Timed Toggle)
         function TabOps:AddTimedToggle(label, callback)
             orderIndex = orderIndex + 1
             local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
@@ -102,25 +107,15 @@ function UI:CreateWindow(title)
             local isActive = false
             B.MouseButton1Click:Connect(function() 
                 if isActive then return end; isActive = true; B.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-                task.spawn(function()
-                    pcall(callback, true)
-                    task.wait(2); if B then B.BackgroundColor3 = Color3.fromRGB(60, 60, 60) end; isActive = false
-                    pcall(callback, false)
-                end)
+                task.spawn(function() pcall(callback, true); task.wait(2); if B then B.BackgroundColor3 = Color3.fromRGB(60, 60, 60) end; isActive = false; pcall(callback, false) end)
             end)
             return { Set = function() end }
         end
 
-        function TabOps:AddButton(t, c) 
-            orderIndex = orderIndex + 1
-            local B = Instance.new("TextButton", Page); B.LayoutOrder = orderIndex; B.Size = UDim2.new(0.95, 0, 0, 40); B.BackgroundColor3 = Color3.fromRGB(30, 30, 30); B.Text = t; B.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", B); B.MouseButton1Click:Connect(c) 
-        end
-
+        -- 6. النصوص (Label / Paragraph)
         function TabOps:AddLabel(t) 
             orderIndex = orderIndex + 1
-            local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98,0,0,35); R.BackgroundColor3 = Color3.fromRGB(25,25,25); Instance.new("UICorner",R)
-            local L = Instance.new("TextLabel",R); L.Text = t; L.Size = UDim2.new(1,-10,1,0); L.TextColor3 = Color3.fromRGB(0,255,150); L.BackgroundTransparency = 1; L.TextXAlignment = Enum.TextXAlignment.Right
-            return {SetText=function(nt) L.Text=nt end} 
+            local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98,0,0,35); R.BackgroundColor3 = Color3.fromRGB(25,25,25); Instance.new("UICorner",R); local L = Instance.new("TextLabel",R); L.Text = t; L.Size = UDim2.new(1,-10,1,0); L.TextColor3 = Color3.fromRGB(0, 255, 150); L.BackgroundTransparency = 1; L.TextXAlignment = Enum.TextXAlignment.Right; return {SetText=function(nt) L.Text=nt end} 
         end
 
         function TabOps:AddParagraph(text)
@@ -132,6 +127,4 @@ function UI:CreateWindow(title)
     end
     return Window
 end
-
-function UI:Notify(msg) warn("[Cryptic Hub]: " .. msg) end
 return UI
