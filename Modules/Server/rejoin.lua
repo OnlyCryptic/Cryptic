@@ -7,13 +7,13 @@ return function(Tab, UI)
     local player = game.Players.LocalPlayer
 
     -- زر إعادة الدخول لنفس السيرفر
-    Tab:AddButton("إعادة دخول السيرفر (Rejoin)", function()
+    Tab:AddButton("إعادة دخول / rejoin", function()
         UI:Notify("جاري إعادة الاتصال بالسيرفر الحالي...")
         TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
     end)
 
     -- زر البحث عن سيرفر جديد (Server Hop)
-    Tab:AddButton("تغيير السيرفر", function()
+    Tab:AddButton("تغيير السيرفر / server hop", function()
         UI:Notify("جاري البحث عن سيرفر جديد...")
         pcall(function()
             local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")).data
