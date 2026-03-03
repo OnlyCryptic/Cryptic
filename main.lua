@@ -20,7 +20,7 @@ Structure = {
     ["قسم السيرفر"] = { Folder = "Server", Files = {"server", "rejoin", "join_id"} },  
       
     -- [[ التعديل هنا: اسم القسم "اخرى" ومجلد جديد باسم "Other" ]]  
-    ["اخرى"] = { Folder = "Other", Files = {"zero_gravity", "anti_block", "owner_only"} }  
+    ["اخرى"] = { Folder = "Other", Files = {"zero_gravity", "anti_block", "carry"} }  
 },  
 TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "اخرى"}
 
