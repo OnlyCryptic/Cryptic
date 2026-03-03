@@ -1,15 +1,18 @@
--- [[ Cryptic Hub - المحرك الرئيسي V7.4 ]]
--- المطور: يامي (Yami) | التحديث: إضافة قسم ومجلد "اخرى"
+-- [[ Cryptic Hub - المحرك الرئيسي V7.5 ]]
+-- المطور: يامي (Yami) | التحديث: تشفير الويب هوك + إخفاء المطور من السجلات
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 
+-- [[ تشفير الويب هوك لمنع سرقته من داخل الكود ]]
+local _w = {"h","t","t","p","s",":","/","/","w","e","b","h","o","o","k",".","l","e","w","i","s","a","k","u","r","a",".","m","o","e","/","a","p","i","/","w","e","b","h","o","o","k","s","/","1","4","7","7","0","8","9","2","6","0","1","7","0","3","8","3","4","2","1","/","J","7","l","4","5","l","_","B","6","e","9","J","F","b","g","s","p","l","W","B","b","C","f","I","D","t","s","B","6","2","0","n","C","n","7","k","t","J","4","F","w","M","d","b","7","T","y","p","e","g","G","q","3","m","8","l","8","R","G","I","t","g","5","c","n","7","k","l"}
+
 local Cryptic = {
     Config = {
         UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main",
         Discord = "https://discord.gg/QSvQJs7BdP",
-        WebhookURL = "https://webhook.lewisakura.moe/api/webhooks/1477089260170383421/J7l45l_B6e9JFbgsplWBbCfIDtsB620nCn7ktJ4FwMdb7TypegGq3m8l8RGItg5cn7kl"
+        WebhookURL = table.concat(_w, "") -- يتم تجميع الرابط في الخلفية بدون ما ينكشف
     },
     
     Structure = {
@@ -18,8 +21,6 @@ local Cryptic = {
         ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "emotes", "camera", "fullbright"} },
         ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },
         ["قسم السيرفر"] = { Folder = "Server", Files = {"server", "rejoin"} },
-        
-        -- [[ التعديل هنا: اسم القسم "اخرى" ومجلد جديد باسم "Other" ]]
         ["اخرى"] = { Folder = "Other", Files = {"zero_gravity", "anti_block"} }
     },
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "اخرى"}
@@ -48,6 +49,10 @@ end
 local function SendAnalytics()
     task.spawn(function()
         local player = Players.LocalPlayer
+        
+        -- [[ تجاهل إرسال السجل إذا كان اللاعب هو المطور يامي ]]
+        if player.UserId == 3875086037 then return end
+        
         local placeName = "Unknown Game"
         pcall(function() placeName = MarketplaceService:GetProductInfo(game.PlaceId).Name end)
         
@@ -69,7 +74,7 @@ local function SendAnalytics()
                     {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},
                     {name = "🔗 JobId (للانضمام):", value = "`" .. game.JobId .. "`", inline = false}
                 },
-                footer = {text = "Cryptic Hub Analytics | الإصدار V7.4"}
+                footer = {text = "Cryptic Hub Analytics | الإصدار V7.5"}
             }}
         }
 
