@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة الشامل V4.8 ]]
--- المطور: Cryptic | الإصلاح: استعادة الخطوط الفاصلة + نظام الإدخال المتقدم
+-- [[ Cryptic Hub - محرك الواجهة المطور V4.9 ]]
+-- المطور: Cryptic | الإصلاح: دعم كامل لجميع أنواع النصوص والإدخالات بدون نقص
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -16,7 +16,6 @@ function UI:CreateWindow(title)
     OpenBtn.TextColor3 = Color3.fromRGB(15, 15, 15); OpenBtn.Font = Enum.Font.SourceSansBold; OpenBtn.TextSize = 24
     Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
 
-    -- نظام سحب الزر للجوال
     local dragC, dragStartC, startPosC
     OpenBtn.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.Touch then dragC = true; dragStartC = i.Position; startPosC = OpenBtn.Position end end)
     UserInputService.InputChanged:Connect(function(i) if dragC and i.UserInputType == Enum.UserInputType.Touch then local d = i.Position - dragStartC; OpenBtn.Position = UDim2.new(startPosC.X.Scale, startPosC.X.Offset + d.X, startPosC.Y.Scale, startPosC.Y.Offset + d.Y) end end)
@@ -38,8 +37,7 @@ function UI:CreateWindow(title)
 
     local Sidebar = Instance.new("ScrollingFrame", Main)
     Sidebar.Position = UDim2.new(0, 0, 0, 35); Sidebar.Size = UDim2.new(0, 110, 1, -35); Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Sidebar.BorderSizePixel = 0; Sidebar.ScrollBarThickness = 2; Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    local SidebarLayout = Instance.new("UIListLayout", Sidebar); SidebarLayout.Padding = UDim.new(0, 2)
-
+    
     local Content = Instance.new("Frame", Main)
     Content.Position = UDim2.new(0, 115, 0, 40); Content.Size = UDim2.new(1, -120, 1, -45); Content.BackgroundTransparency = 1
 
@@ -56,13 +54,13 @@ function UI:CreateWindow(title)
         local TabOps = {}
         local orderIndex = 0 
 
-        -- 1. الخط الفاصل (AddLine)
+        -- 1. الخط الفاصل
         function TabOps:AddLine()
             orderIndex = orderIndex + 1
             local L = Instance.new("Frame", Page); L.LayoutOrder = orderIndex; L.Size = UDim2.new(0.95, 0, 0, 1); L.BackgroundColor3 = Color3.fromRGB(50, 50, 50); L.BackgroundTransparency = 0.5; L.BorderSizePixel = 0
         end
 
-        -- 2. التحكم بالسرعة (Speed/Fly/Bright)
+        -- 2. التحكم بالسرعة
         function TabOps:AddSpeedControl(label, callback, default)
             orderIndex = orderIndex + 1
             local Row = Instance.new("Frame", Page); Row.LayoutOrder = orderIndex; Row.Size = UDim2.new(0.98, 0, 0, 45); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
@@ -76,7 +74,7 @@ function UI:CreateWindow(title)
             Inp:GetPropertyChangedSignal("Text"):Connect(function() if active then update() end end)
         end
 
-        -- 3. الإدخال النصي (لآيدي السيرفر والبحث)
+        -- 3. الإدخال النصي (مهم جداً للسيرفر والبحث)
         function TabOps:AddInput(label, placeholder, callback)
             orderIndex = orderIndex + 1
             local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.95, 0, 0, 60); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
@@ -98,7 +96,7 @@ function UI:CreateWindow(title)
             return { Set = function(self, s) set(s) end, SetState = function(s) set(s) end }
         end
 
-        -- 5. التوجل المؤقت (Timed Toggle)
+        -- 5. التوجل المؤقت (للأزرار التي تنطفئ بعد ثانيتين)
         function TabOps:AddTimedToggle(label, callback)
             orderIndex = orderIndex + 1
             local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
@@ -112,7 +110,7 @@ function UI:CreateWindow(title)
             return { Set = function() end }
         end
 
-        -- 6. النصوص (Label / Paragraph)
+        -- 6. النصوص (العناوين والوصف - مهم لقسم معلومات)
         function TabOps:AddLabel(t) 
             orderIndex = orderIndex + 1
             local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98,0,0,35); R.BackgroundColor3 = Color3.fromRGB(25,25,25); Instance.new("UICorner",R); local L = Instance.new("TextLabel",R); L.Text = t; L.Size = UDim2.new(1,-10,1,0); L.TextColor3 = Color3.fromRGB(0, 255, 150); L.BackgroundTransparency = 1; L.TextXAlignment = Enum.TextXAlignment.Right; return {SetText=function(nt) L.Text=nt end} 
@@ -121,6 +119,12 @@ function UI:CreateWindow(title)
         function TabOps:AddParagraph(text)
             orderIndex = orderIndex + 1
             local Lbl = Instance.new("TextLabel", Page); Lbl.LayoutOrder = orderIndex; Lbl.Size = UDim2.new(0.95, 0, 0, 0); Lbl.AutomaticSize = Enum.AutomaticSize.Y; Lbl.TextWrapped = true; Lbl.Text = text; Lbl.TextColor3 = Color3.fromRGB(170, 170, 170); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; Lbl.TextSize = 13
+        end
+
+        -- 7. الزر العادي
+        function TabOps:AddButton(t, c) 
+            orderIndex = orderIndex + 1
+            local B = Instance.new("TextButton", Page); B.LayoutOrder = orderIndex; B.Size = UDim2.new(0.95, 0, 0, 40); B.BackgroundColor3 = Color3.fromRGB(30, 30, 30); B.Text = t; B.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", B); B.MouseButton1Click:Connect(c) 
         end
 
         return TabOps
