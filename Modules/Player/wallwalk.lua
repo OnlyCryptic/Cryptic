@@ -60,7 +60,7 @@ return function(Tab, UI)
         end  
     end  
 
-    Tab:AddToggle("تمشي على جدران", function(active)  
+    Tab:AddToggle("تمشي على جدران / wall walk", function(active)  
         toggleSpider(active)  
         
         -- إظهار الإشعار في شاشة روبلوكس
