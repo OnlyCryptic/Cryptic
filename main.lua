@@ -19,7 +19,7 @@ local Cryptic = {
         ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },
         
         -- [[ التعديل هنا: تم توجيه السكربت لمجلد Server الجديد ]]
-        ["قسم السيرفر"] = { Folder = "Server", Files = {"server", "rejoin"} },
+        ["قسم السيرفر"] = { Folder = "Server", Files = {"rejoin", "server"} },
         
         ["خدع"] = { Folder = "Combat", Files = {"zero_gravity"} }
     },
