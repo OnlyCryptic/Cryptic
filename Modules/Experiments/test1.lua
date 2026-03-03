@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - التحكم بالبلوكات (Hoverboard FE) V3 ]]
--- المطور: يامي (Yami) | التحديث: تسطيح البلوكة تلقائياً، التمركز الدقيق، استقرار فيزيائي عالي
+-- [[ Cryptic Hub - التحكم بالبلوكات (Hoverboard FE) V4 ]]
+-- المطور: يامي (Yami) | التحديث: وقوف مستقيم 100% من أول ثانية بدون أي ميلان
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -26,7 +26,7 @@ return function(Tab, UI)
 
     -- [[ 1. تصميم أزرار الصعود والهبوط للجوال ]]
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "CrypticHoverUI_V3"
+    ScreenGui.Name = "CrypticHoverUI_V4"
     ScreenGui.ResetOnSpawn = false
     local success, _ = pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
     if not success then ScreenGui.Parent = lp:WaitForChild("PlayerGui") end
@@ -78,7 +78,6 @@ return function(Tab, UI)
             local hum = char:FindFirstChildOfClass("Humanoid")
             if hum then hum.PlatformStand = false end
             
-            -- تصفير سرعة اللاعب عند الإيقاف عشان ما يطير
             local root = char:FindFirstChild("HumanoidRootPart")
             if root then
                 root.Velocity = Vector3.new(0, 0, 0)
@@ -128,7 +127,11 @@ return function(Tab, UI)
                 isHovering = true
                 ScreenGui.Enabled = true
 
-                -- [[ الخوارزمية الهندسية: حساب أكثر منطقة مسطحة ]]
+                -- إيقاف أي حركة أو ميلان سابق فوراً
+                root.Velocity = Vector3.new(0, 0, 0)
+                root.RotVelocity = Vector3.new(0, 0, 0)
+
+                -- تسطيح البلوكة
                 local size = hoverPart.Size
                 local sx, sy, sz = size.X, size.Y, size.Z
                 local minAxis = math.min(sx, sy, sz)
@@ -136,7 +139,6 @@ return function(Tab, UI)
                 local partRotation = CFrame.Angles(0, 0, 0)
                 local blockThickness = sy
 
-                -- تدوير البلوكة تلقائياً لتكون مسطحة 100%
                 if minAxis == sx then
                     partRotation = CFrame.Angles(0, 0, math.rad(90))
                     blockThickness = sx
@@ -150,7 +152,14 @@ return function(Tab, UI)
 
                 hum.PlatformStand = true
 
-                -- لحام البلوكة بالمركز (السنتر) وتطبيق التدوير المسطح
+                -- إجبار اللاعب على الوقوف بشكل مستقيم 100% قبل اللحام
+                local camLook = Camera.CFrame.LookVector
+                local flatLook = Vector3.new(camLook.X, 0, camLook.Z)
+                if flatLook.Magnitude > 0.01 then
+                    root.CFrame = CFrame.new(root.Position, root.Position + flatLook.Unit)
+                end
+
+                -- لحام البلوكة
                 hoverWeld = Instance.new("Weld")
                 hoverWeld.Part0 = root
                 hoverWeld.Part1 = hoverPart
@@ -158,7 +167,7 @@ return function(Tab, UI)
                 hoverWeld.C1 = partRotation
                 hoverWeld.Parent = root
 
-                -- [[ نقل محركات الفيزياء للاعب (RootPart) لاستقرار مطلق! ]]
+                -- محركات الفيزياء
                 bv = Instance.new("BodyVelocity")
                 bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
                 bv.Velocity = Vector3.new(0, 0, 0)
@@ -166,10 +175,16 @@ return function(Tab, UI)
 
                 bg = Instance.new("BodyGyro")
                 bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-                bg.P = 9000
+                bg.P = 25000 -- قوة جبارة للتوازن الفوري والصلب
+                -- ضبط التوازن المبدئي فوراً عشان ما يميل ولا ملي
+                if flatLook.Magnitude > 0.01 then
+                    bg.CFrame = CFrame.new(root.Position, root.Position + flatLook.Unit)
+                else
+                    bg.CFrame = root.CFrame
+                end
                 bg.Parent = root
 
-                SendRobloxNotification("Cryptic Hub", "✅ البلوكة مسطحة ومسنتّرة! طيران ممتع 🛸")
+                SendRobloxNotification("Cryptic Hub", "✅ وقوف مستقيم! طيران ممتع 🛸")
 
                 -- [[ 4. حلقة التحكم ]]
                 connection = RunService.Heartbeat:Connect(function()
@@ -183,14 +198,12 @@ return function(Tab, UI)
                     if upActive then yVel = flySpeed end
                     if downActive then yVel = -flySpeed end
 
-                    -- تطبيق السرعة على اللاعب
                     bv.Velocity = (moveDir * flySpeed) + Vector3.new(0, yVel, 0)
 
-                    -- توجيه اللاعب (والبلوكة اللي لاصقة فيه) لاتجاه الكاميرا
-                    local camLook = Camera.CFrame.LookVector
-                    local flatLook = Vector3.new(camLook.X, 0, camLook.Z)
-                    if flatLook.Magnitude > 0.01 then
-                        bg.CFrame = CFrame.new(root.Position, root.Position + flatLook.Unit)
+                    local currentCamLook = Camera.CFrame.LookVector
+                    local currentFlatLook = Vector3.new(currentCamLook.X, 0, currentCamLook.Z)
+                    if currentFlatLook.Magnitude > 0.01 then
+                        bg.CFrame = CFrame.new(root.Position, root.Position + currentFlatLook.Unit)
                     end
                 end)
             else
