@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V5.2 ]]
--- المطور: Cryptic | الإصلاح: ثبات القائمة الجانبية ودعم كامل للنصوص والإدخال
+-- [[ Cryptic Hub - محرك الواجهة المطور V5.3 ]]
+-- المطور: Cryptic | الإصلاح: دمج AddTimedToggle رسمياً + ثبات القوائم
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -15,7 +15,7 @@ function UI:CreateWindow(title)
     OpenBtn.TextColor3 = Color3.fromRGB(15, 15, 15); OpenBtn.Font = Enum.Font.SourceSansBold; OpenBtn.TextSize = 24
     Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
 
-    -- نظام سحب الزر للجوال
+    -- نظام سحب الزر للجوال (Redmi Note 10s)
     local dragC, dragStartC, startPosC
     OpenBtn.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.Touch then dragC = true; dragStartC = i.Position; startPosC = OpenBtn.Position end end)
     UserInputService.InputChanged:Connect(function(i) if dragC and i.UserInputType == Enum.UserInputType.Touch then local d = i.Position - dragStartC; OpenBtn.Position = UDim2.new(startPosC.X.Scale, startPosC.X.Offset + d.X, startPosC.Y.Scale, startPosC.Y.Offset + d.Y) end end)
@@ -84,6 +84,36 @@ function UI:CreateWindow(title)
             return { SetText = function(t) I.Text = t end, TextBox = I }
         end
 
+        function TabOps:AddToggle(label, callback)
+            orderIndex = orderIndex + 1
+            local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
+            local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
+            local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
+            local a = false
+            local function set(s) 
+                a = s 
+                B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60) 
+            end
+            B.MouseButton1Click:Connect(function() set(not a); callback(a) end)
+            return { SetState = function(self, s) set(s) end, Set = function(self, s) set(s) end }
+        end
+
+        -- [[ إضافة الزر المؤقت كدالة رسمية ]]
+        function TabOps:AddTimedToggle(label, callback)
+            local ToggleObj
+            ToggleObj = TabOps:AddToggle(label, function(active)
+                if active then
+                    pcall(callback, true)
+                    task.spawn(function()
+                        task.wait(2)
+                        if ToggleObj then ToggleObj:SetState(false) end
+                        pcall(callback, false)
+                    end)
+                end
+            end)
+            return ToggleObj
+        end
+
         function TabOps:AddSpeedControl(label, callback, default)
             orderIndex = orderIndex + 1
             local Row = Instance.new("Frame", Page); Row.LayoutOrder = orderIndex; Row.Size = UDim2.new(0.98, 0, 0, 45); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
@@ -100,17 +130,6 @@ function UI:CreateWindow(title)
         function TabOps:AddButton(t, c) 
             orderIndex = orderIndex + 1
             local B = Instance.new("TextButton", Page); B.LayoutOrder = orderIndex; B.Size = UDim2.new(0.95, 0, 0, 40); B.BackgroundColor3 = Color3.fromRGB(30, 30, 30); B.Text = t; B.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", B); B.MouseButton1Click:Connect(c) 
-        end
-
-        function TabOps:AddToggle(label, callback)
-            orderIndex = orderIndex + 1
-            local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
-            local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
-            local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
-            local a = false
-            local function set(s) a = s; B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60) end
-            B.MouseButton1Click:Connect(function() set(not a); callback(a) end)
-            return { Set = function(self, s) set(s) end, SetState = function(s) set(s) end }
         end
 
         return TabOps
