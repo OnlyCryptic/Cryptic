@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V5.4 ]]
--- المطور: Cryptic | الإصلاح: فصل الزر المؤقت بالكامل لضمان الإغلاق التلقائي
+-- [[ Cryptic Hub - محرك الواجهة المطور V5.5 ]]
+-- المطور: Cryptic | التحديث: إضافة نظام "البطاقة التعريفية" (Profile Card) للاعبين
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -57,86 +57,86 @@ function UI:CreateWindow(title)
         local TabOps = {}
         local orderIndex = 0 
 
+        -- [[ إضافة نظام البطاقة التعريفية (Profile Card) ]]
+        function TabOps:AddProfileCard(player)
+            orderIndex = orderIndex + 1
+            local R = Instance.new("Frame", Page)
+            R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 90); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            Instance.new("UICorner", R).CornerRadius = UDim.new(0, 8)
+            
+            -- الصورة (يمين)
+            local Avatar = Instance.new("ImageLabel", R)
+            Avatar.Size = UDim2.new(0, 70, 0, 70); Avatar.Position = UDim2.new(1, -80, 0, 10)
+            Avatar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            Instance.new("UICorner", Avatar).CornerRadius = UDim.new(1, 0) -- لجعله دائرياً
+            
+            task.spawn(function()
+                local s, thumb = pcall(function() return game:GetService("Players"):GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
+                if s and thumb then Avatar.Image = thumb end
+            end)
+
+            -- النصوص (يسار، محاذاة لليمين)
+            local NameLbl = Instance.new("TextLabel", R)
+            NameLbl.Size = UDim2.new(1, -100, 0, 25); NameLbl.Position = UDim2.new(0, 10, 0, 10)
+            NameLbl.BackgroundTransparency = 1; NameLbl.Text = "أهلاً بك، " .. player.DisplayName
+            NameLbl.TextColor3 = Color3.fromRGB(0, 255, 150); NameLbl.TextXAlignment = Enum.TextXAlignment.Right
+            NameLbl.Font = Enum.Font.GothamBold; NameLbl.TextSize = 16
+            
+            local UserLbl = Instance.new("TextLabel", R)
+            UserLbl.Size = UDim2.new(1, -100, 0, 20); UserLbl.Position = UDim2.new(0, 10, 0, 35)
+            UserLbl.BackgroundTransparency = 1; UserLbl.Text = "@" .. player.Name
+            UserLbl.TextColor3 = Color3.fromRGB(170, 170, 170); UserLbl.TextXAlignment = Enum.TextXAlignment.Right
+            UserLbl.Font = Enum.Font.Gotham; UserLbl.TextSize = 13
+            
+            local RankLbl = Instance.new("TextLabel", R)
+            RankLbl.Size = UDim2.new(1, -100, 0, 20); RankLbl.Position = UDim2.new(0, 10, 0, 55)
+            RankLbl.BackgroundTransparency = 1
+            -- تمييز إذا كان اللاعب هو أحمد
+            if player.UserId == 3875086037 then
+                RankLbl.Text = "حالة الاشتراك: Owner 👑"
+                RankLbl.TextColor3 = Color3.fromRGB(255, 215, 0) -- ذهبي
+            else
+                RankLbl.Text = "حالة الاشتراك: Free User 🔹"
+                RankLbl.TextColor3 = Color3.fromRGB(0, 200, 255) -- أزرق فاتح
+            end
+            RankLbl.TextXAlignment = Enum.TextXAlignment.Right; RankLbl.Font = Enum.Font.GothamBold; RankLbl.TextSize = 13
+        end
+
         function TabOps:AddLine()
             orderIndex = orderIndex + 1
             local L = Instance.new("Frame", Page); L.LayoutOrder = orderIndex; L.Size = UDim2.new(0.95, 0, 0, 1); L.BackgroundColor3 = Color3.fromRGB(50, 50, 50); L.BackgroundTransparency = 0.5; L.BorderSizePixel = 0
         end
 
         function TabOps:AddLabel(t) 
-            orderIndex = orderIndex + 1
-            local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98,0,0,35); R.BackgroundColor3 = Color3.fromRGB(25,25,25); Instance.new("UICorner",R)
-            local L = Instance.new("TextLabel",R); L.Text = t; L.Size = UDim2.new(1,-10,1,0); L.TextColor3 = Color3.fromRGB(0, 255, 150); L.BackgroundTransparency = 1; L.TextXAlignment = Enum.TextXAlignment.Right
-            return {SetText=function(nt) L.Text=nt end} 
+            orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98,0,0,35); R.BackgroundColor3 = Color3.fromRGB(25,25,25); Instance.new("UICorner",R); local L = Instance.new("TextLabel",R); L.Text = t; L.Size = UDim2.new(1,-10,1,0); L.TextColor3 = Color3.fromRGB(0, 255, 150); L.BackgroundTransparency = 1; L.TextXAlignment = Enum.TextXAlignment.Right; return {SetText=function(nt) L.Text=nt end} 
         end
 
         function TabOps:AddParagraph(text)
-            orderIndex = orderIndex + 1
-            local Lbl = Instance.new("TextLabel", Page); Lbl.LayoutOrder = orderIndex; Lbl.Size = UDim2.new(0.95, 0, 0, 0); Lbl.AutomaticSize = Enum.AutomaticSize.Y; Lbl.TextWrapped = true; Lbl.Text = text; Lbl.TextColor3 = Color3.fromRGB(170, 170, 170); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; Lbl.TextSize = 13
+            orderIndex = orderIndex + 1; local Lbl = Instance.new("TextLabel", Page); Lbl.LayoutOrder = orderIndex; Lbl.Size = UDim2.new(0.95, 0, 0, 0); Lbl.AutomaticSize = Enum.AutomaticSize.Y; Lbl.TextWrapped = true; Lbl.Text = text; Lbl.TextColor3 = Color3.fromRGB(170, 170, 170); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; Lbl.TextSize = 13
         end
 
         function TabOps:AddInput(label, placeholder, callback)
-            orderIndex = orderIndex + 1
-            local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.95, 0, 0, 60); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
-            local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(1, -10, 0, 25); Lbl.TextColor3 = Color3.fromRGB(0, 255, 150); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
-            local I = Instance.new("TextBox", R); I.Size = UDim2.new(0.9, 0, 0, 25); I.Position = UDim2.new(0.05, 0, 0, 30); I.PlaceholderText = placeholder; I.BackgroundColor3 = Color3.fromRGB(40, 40, 40); I.TextColor3 = Color3.new(1, 1, 1); I.Text = ""; Instance.new("UICorner", I)
-            I:GetPropertyChangedSignal("Text"):Connect(function() callback(I.Text) end)
-            return { SetText = function(t) I.Text = t end, TextBox = I }
+            orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.95, 0, 0, 60); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R); local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(1, -10, 0, 25); Lbl.TextColor3 = Color3.fromRGB(0, 255, 150); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; local I = Instance.new("TextBox", R); I.Size = UDim2.new(0.9, 0, 0, 25); I.Position = UDim2.new(0.05, 0, 0, 30); I.PlaceholderText = placeholder; I.BackgroundColor3 = Color3.fromRGB(40, 40, 40); I.TextColor3 = Color3.new(1, 1, 1); I.Text = ""; Instance.new("UICorner", I); I:GetPropertyChangedSignal("Text"):Connect(function() callback(I.Text) end); return { SetText = function(t) I.Text = t end, TextBox = I }
         end
 
         function TabOps:AddSpeedControl(label, callback, default)
-            orderIndex = orderIndex + 1
-            local Row = Instance.new("Frame", Page); Row.LayoutOrder = orderIndex; Row.Size = UDim2.new(0.98, 0, 0, 45); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row)
-            local Lbl = Instance.new("TextLabel", Row); Lbl.Text = label; Lbl.Size = UDim2.new(0.6, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
-            local Tgl = Instance.new("TextButton", Row); Tgl.Size = UDim2.new(0, 45, 0, 22); Tgl.Position = UDim2.new(1, -55, 0.5, -11); Tgl.Text = ""; Tgl.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", Tgl).CornerRadius = UDim.new(1, 0)
-            local startVal = tostring(default or 50)
-            local Inp = Instance.new("TextBox", Row); Inp.Size = UDim2.new(0, 40, 0, 22); Inp.Position = UDim2.new(1, -105, 0.5, -11); Inp.Text = startVal; Inp.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Inp.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", Inp)
-            local active = false
-            local function update() Tgl.BackgroundColor3 = active and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60); callback(active, tonumber(Inp.Text) or tonumber(startVal)) end
-            Tgl.MouseButton1Click:Connect(function() active = not active; update() end)
-            Inp:GetPropertyChangedSignal("Text"):Connect(function() if active then update() end end)
+            orderIndex = orderIndex + 1; local Row = Instance.new("Frame", Page); Row.LayoutOrder = orderIndex; Row.Size = UDim2.new(0.98, 0, 0, 45); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row); local Lbl = Instance.new("TextLabel", Row); Lbl.Text = label; Lbl.Size = UDim2.new(0.6, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; local Tgl = Instance.new("TextButton", Row); Tgl.Size = UDim2.new(0, 45, 0, 22); Tgl.Position = UDim2.new(1, -55, 0.5, -11); Tgl.Text = ""; Tgl.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", Tgl).CornerRadius = UDim.new(1, 0); local startVal = tostring(default or 50); local Inp = Instance.new("TextBox", Row); Inp.Size = UDim2.new(0, 40, 0, 22); Inp.Position = UDim2.new(1, -105, 0.5, -11); Inp.Text = startVal; Inp.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Inp.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", Inp); local active = false; local function update() Tgl.BackgroundColor3 = active and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60); callback(active, tonumber(Inp.Text) or tonumber(startVal)) end; Tgl.MouseButton1Click:Connect(function() active = not active; update() end); Inp:GetPropertyChangedSignal("Text"):Connect(function() if active then update() end end)
         end
 
         function TabOps:AddButton(t, c) 
-            orderIndex = orderIndex + 1
-            local B = Instance.new("TextButton", Page); B.LayoutOrder = orderIndex; B.Size = UDim2.new(0.95, 0, 0, 40); B.BackgroundColor3 = Color3.fromRGB(30, 30, 30); B.Text = t; B.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", B); B.MouseButton1Click:Connect(c) 
+            orderIndex = orderIndex + 1; local B = Instance.new("TextButton", Page); B.LayoutOrder = orderIndex; B.Size = UDim2.new(0.95, 0, 0, 40); B.BackgroundColor3 = Color3.fromRGB(30, 30, 30); B.Text = t; B.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", B); B.MouseButton1Click:Connect(c) 
         end
 
         function TabOps:AddToggle(label, callback)
-            orderIndex = orderIndex + 1
-            local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
-            local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
-            local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
-            local a = false
-            local function set(s) 
-                a = s 
-                B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60) 
-            end
-            B.MouseButton1Click:Connect(function() set(not a); callback(a) end)
-            return { SetState = function(self, s) set(s) end, Set = function(self, s) set(s) end }
+            orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R); local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0); local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; local a = false; local function set(s) a = s; B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60) end; B.MouseButton1Click:Connect(function() set(not a); callback(a) end); return { SetState = function(self, s) set(s) end, Set = function(self, s) set(s) end }
         end
 
-        -- [[ الحل النهائي: دالة الزر المؤقت المستقلة تماماً وبدون أخطاء ]]
         function TabOps:AddTimedToggle(label, callback)
-            orderIndex = orderIndex + 1
-            local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
-            local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
-            local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right
-            
-            local isRunning = false
-            B.MouseButton1Click:Connect(function() 
-                if isRunning then return end -- يمنع الضغط المتكرر
-                isRunning = true
-                B.BackgroundColor3 = Color3.fromRGB(0, 150, 255) -- أزرق عند التفعيل
-                
-                task.spawn(function()
-                    pcall(callback, true)
-                    task.wait(2)
-                    if B then B.BackgroundColor3 = Color3.fromRGB(60, 60, 60) end -- يرجع رصاصي إجبارياً
-                    pcall(callback, false)
-                    isRunning = false
-                end)
+            local ToggleObj
+            ToggleObj = TabOps:AddToggle(label, function(active)
+                if active then pcall(callback, true); task.spawn(function() task.wait(2); if ToggleObj then ToggleObj:SetState(false) end; pcall(callback, false) end) end
             end)
-            return { Set = function() end, SetState = function() end }
+            return ToggleObj
         end
 
         return TabOps
