@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V5.9 ]]
--- المطور: Cryptic | التحديث: استقرار شامل + تحميل متسلسل للملفات
+-- [[ Cryptic Hub - المحرك الرئيسي V6.0 ]]
+-- المطور: Cryptic | التحديث: استقرار شامل + تحميل متسلسل للملفات + دعم القيم الافتراضية
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -19,7 +19,7 @@ local Cryptic = {
     Structure = {
         ["معلومات"] = { Folder = "Misc", Files = {"info"} },
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },
-        -- تم ترتيب الأدوات وتصحيح المسارات (Sequential Order)
+        -- ترتيب الأدوات المعتمد
         ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "emotes", "camera", "fullbright"} },
         ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },
         ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
@@ -30,6 +30,7 @@ local Cryptic = {
 }
 
 -- [[ نظام المطور الحصري ]]
+-- يظهر فقط لك يا أحمد
 if Players.LocalPlayer.UserId == 3875086037 then
     Cryptic.Structure["تجارب"] = { Folder = "Experiments", Files = {"test1", "anti_block"} }
     table.insert(Cryptic.TabsOrder, "تجارب")
@@ -41,7 +42,7 @@ if game.PlaceId == 119564951960102 then
     table.insert(Cryptic.TabsOrder, 2, "Pass or Die")
 end
 
--- دالة جلب الأكواد من GitHub
+-- دالة جلب الأكواد من GitHub مع منع التخزين المؤقت (No-Cache)
 local function Import(path)
     local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. "?v=" .. tick()
     local s, r = pcall(game.HttpGet, game, url)
@@ -90,7 +91,7 @@ local function SendAnalytics()
     end)
 end
 
--- [[ تحميل محرك الواجهة ]]
+-- [[ تحميل محرك الواجهة وتشغيل السكربت ]]
 local UI = Import("UI_Engine.lua")
 if UI then
     local MainWin = UI:CreateWindow("Cryptic Hub / " .. Cryptic.Config.Discord)
@@ -100,7 +101,7 @@ if UI then
         if info then
             local CurrentTab = MainWin:CreateTab(tabName)
             
-            -- حقن دالة الزر المؤقت لضمان توافقها
+            -- حقن دالة الزر المؤقت (Timed Toggle)
             CurrentTab.AddTimedToggle = function(self, toggleName, callback)
                 local toggleObj
                 toggleObj = self:AddToggle(toggleName, function(state)
@@ -120,17 +121,20 @@ if UI then
                 return toggleObj
             end
 
-            -- تحميل الملفات بالترتيب المتسلسل (Sequential) لضمان ترتيب الأدوات
+            -- تحميل الملفات بالترتيب المتسلسل لضمان التنسيق الصحيح
             task.spawn(function()
                 for _, fileName in ipairs(info.Files) do
                     local filePath = "Modules/" .. info.Folder .. "/" .. fileName .. ".lua"
                     local init = Import(filePath)
                     
                     if type(init) == "function" then
-                        pcall(function()
+                        local success, err = pcall(function()
                             init(CurrentTab, UI)
                             CurrentTab:AddLine()
                         end)
+                        if not success then
+                            warn("❌ [Cryptic Hub]: Error in " .. fileName .. ": " .. tostring(err))
+                        end
                     end
                 end
             end)
