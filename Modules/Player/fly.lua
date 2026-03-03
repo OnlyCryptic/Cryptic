@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - الطيران الثلاثي الأبعاد المصلح ]]
--- المطور: Arwa | إصلاح الطيران للأعلى والأسفل باستخدام الجويستيك 
+-- المطور: Arwa | التحديث: ضبط السرعة الافتراضية على 50 لتتوافق مع المحرك الجديد
 
 return function(Tab, UI)
     local player = game.Players.LocalPlayer
@@ -25,7 +25,7 @@ return function(Tab, UI)
             
             bodyGyro = Instance.new("BodyGyro", root)
             bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-            bodyGyro.P = 5000 -- ثبات عالي للكاميرا
+            bodyGyro.P = 5000 
             
             hum.PlatformStand = true
 
@@ -34,40 +34,33 @@ return function(Tab, UI)
                     local moveDir = hum.MoveDirection
                     
                     if moveDir.Magnitude > 0 then
-                        -- 1. استخراج اتجاه الكاميرا (العمق واليمين/اليسار)
                         local look = cam.CFrame.LookVector
                         local right = cam.CFrame.RightVector
                         
-                        -- 2. تسطيح اتجاه الكاميرا ليتوافق مع قراءة الجويستيك
                         local flatLook = Vector3.new(look.X, 0, look.Z)
                         if flatLook.Magnitude > 0 then flatLook = flatLook.Unit end
                         
                         local flatRight = Vector3.new(right.X, 0, right.Z)
                         if flatRight.Magnitude > 0 then flatRight = flatRight.Unit end
                         
-                        -- 3. حساب قوة الدفع من الجويستيك (للأمام/للخلف واليمين/اليسار)
                         local zInput = moveDir:Dot(flatLook)
                         local xInput = moveDir:Dot(flatRight)
                         
-                        -- 4. دمج قوة الجويستيك مع اتجاه الكاميرا الحقيقي (3D)
                         local flyDir = (look * zInput) + (right * xInput)
                         
-                        -- 5. تطبيق السرعة في الاتجاه الصحيح
                         if flyDir.Magnitude > 0 then
                             bodyVel.Velocity = flyDir.Unit * flySpeed
                         else
                             bodyVel.Velocity = Vector3.new(0, 0, 0)
                         end
                     else
-                        bodyVel.Velocity = Vector3.new(0, 0, 0) -- التوقف التام عند ترك الجويستيك
+                        bodyVel.Velocity = Vector3.new(0, 0, 0) 
                     end
                     
-                    -- تثبيت دوران اللاعب ليطابق الكاميرا
                     bodyGyro.CFrame = cam.CFrame
                 end
             end)
         else
-            -- تنظيف الخواص عند إيقاف الطيران
             if connection then connection:Disconnect() end
             if bodyVel then bodyVel:Destroy() end
             if bodyGyro then bodyGyro:Destroy() end
@@ -75,7 +68,9 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddSpeedControl("طيران", function(active, value)
+    -- [[ التعديل هنا ]]
+    -- أضفنا الرقم 50 في النهاية ليكون هو القيمة الافتراضية عند التحميل
+    Tab:AddSpeedControl("طيران / Fly", function(active, value)
         toggleFly(active, value)
-    end)
+    end, 50)
 end
