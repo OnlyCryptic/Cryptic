@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - التحكم بالبلوكات (Hoverboard FE) ]]
--- المطور: يامي (Yami) | التحديث: طيران على البلوكات غير المثبتة مع أزرار للجوال
+-- [[ Cryptic Hub - التحكم بالبلوكات (Hoverboard FE) V2 ]]
+-- المطور: يامي (Yami) | التحديث: فلترة البلوكات الملتصقة، وقوف دقيق جداً، وأزرار تحكم محسنة
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -16,7 +16,7 @@ return function(Tab, UI)
     local connection = nil
     
     local upActive, downActive = false, false
-    local flySpeed = 40 -- سرعة الطيران (تقدر تعدلها)
+    local flySpeed = 40 -- سرعة الطيران
 
     local function SendRobloxNotification(title, text)
         pcall(function()
@@ -26,7 +26,7 @@ return function(Tab, UI)
 
     -- [[ 1. تصميم أزرار الصعود والهبوط للجوال ]]
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "CrypticHoverUI"
+    ScreenGui.Name = "CrypticHoverUI_V2"
     ScreenGui.ResetOnSpawn = false
     local success, _ = pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
     if not success then ScreenGui.Parent = lp:WaitForChild("PlayerGui") end
@@ -34,8 +34,8 @@ return function(Tab, UI)
 
     local function createFlyButton(text, yPos)
         local btn = Instance.new("TextButton", ScreenGui)
-        btn.Size = UDim2.new(0, 50, 0, 50)
-        btn.Position = UDim2.new(1, -80, 0.5, yPos)
+        btn.Size = UDim2.new(0, 55, 0, 55)
+        btn.Position = UDim2.new(1, -85, 0.5, yPos)
         btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
         btn.BackgroundTransparency = 0.5
         btn.Text = text
@@ -44,12 +44,11 @@ return function(Tab, UI)
         btn.TextSize = 24
         Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
         Instance.new("UIStroke", btn).Color = Color3.fromRGB(255, 255, 255)
-        
         return btn
     end
 
-    local BtnUp = createFlyButton("⬆️", -40)
-    local BtnDown = createFlyButton("⬇️", 20)
+    local BtnUp = createFlyButton("⬆️", -60)
+    local BtnDown = createFlyButton("⬇️", 10)
 
     -- نظام اللمس للأزرار
     local function setupTouch(btn, isUp)
@@ -69,12 +68,11 @@ return function(Tab, UI)
     setupTouch(BtnUp, true)
     setupTouch(BtnDown, false)
 
-    -- [[ 2. دالة التنظيف (لإرجاع كل شيء لطبيعته) ]]
+    -- [[ 2. دوال التنظيف والفلترة الذكية ]]
     local function cleanupHover()
         isHovering = false
         ScreenGui.Enabled = false
-        upActive = false
-        downActive = false
+        upActive, downActive = false, false
 
         local char = lp.Character
         if char then
@@ -89,8 +87,17 @@ return function(Tab, UI)
         hoverPart = nil
     end
 
+    -- دالة فحص البلوكة (تتجاهل المثبتة والملحومة بأشياء مثبتة)
+    local function isFree(part)
+        if not part or not part:IsA("BasePart") then return false end
+        if part.Anchored then return false end
+        -- فحص إذا كانت البلوكة ملحومة بجدار أو مبنى مثبت!
+        if part.AssemblyRootPart and part.AssemblyRootPart.Anchored then return false end
+        return true
+    end
+
     -- [[ 3. زر تشغيل الخدعة ]]
-    Tab:AddToggle("🛹 التحكم ببلوكة (Hoverboard)", function(state)
+    Tab:AddToggle("🛹 لوح التزلج الفيزيائي (Hoverboard)", function(state)
         if state then
             local char = lp.Character
             local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -101,32 +108,43 @@ return function(Tab, UI)
                 return 
             end
 
-            -- إطلاق شعاع (Raycast) للأسفل للبحث عن بلوكة غير مثبتة
+            -- تجاهل كل اللاعبين عشان الشعاع ما يضرب في لاعب ثاني
+            local ignoreList = {char}
+            for _, p in pairs(Players:GetPlayers()) do
+                if p.Character then table.insert(ignoreList, p.Character) end
+            end
+
             local params = RaycastParams.new()
-            params.FilterDescendantsInstances = {char}
+            params.FilterDescendantsInstances = ignoreList
             params.FilterType = Enum.RaycastFilterType.Exclude
 
-            local ray = workspace:Raycast(root.Position, Vector3.new(0, -10, 0), params)
+            local ray = workspace:Raycast(root.Position, Vector3.new(0, -15, 0), params)
 
-            if ray and ray.Instance and not ray.Instance.Anchored then
+            -- فحص البلوكة هل هي حرة تماماً؟
+            if ray and isFree(ray.Instance) then
                 hoverPart = ray.Instance
                 isHovering = true
                 ScreenGui.Enabled = true
 
-                -- نقل البلوكة تحت رجل اللاعب فوراً
-                hoverPart.CFrame = root.CFrame * CFrame.new(0, -3, 0)
+                -- [[ الحساب الدقيق لوقوف اللاعب فوق البلوكة بالضبط ]]
+                -- نحسب المسافة من منتصف شخصيتك إلى أسفل قدمك (تدعم R6 و R15)
+                local legHeight = (hum.RigType == Enum.HumanoidRigType.R15) and (hum.HipHeight + (root.Size.Y / 2)) or 3
+                -- نحسب نصف سُمك البلوكة
+                local blockOffset = hoverPart.Size.Y / 2
+                -- المسافة الكلية اللي تفصل بين الشخصية والبلوكة
+                local totalOffset = legHeight + blockOffset
 
-                -- تجميد اللاعب (عشان ما يطيح)
+                -- تجميد اللاعب (عشان ما يطيح أو يتشقلب)
                 hum.PlatformStand = true
 
-                -- لحام البلوكة باللاعب
+                -- لحام البلوكة تحت قدمك بالملي
                 hoverWeld = Instance.new("Weld")
                 hoverWeld.Part0 = root
                 hoverWeld.Part1 = hoverPart
-                hoverWeld.C0 = CFrame.new(0, -3, 0) -- المسافة تحت الرجل
+                hoverWeld.C0 = CFrame.new(0, -totalOffset, 0)
                 hoverWeld.Parent = root
 
-                -- محركات الفيزياء للبلوكة
+                -- محركات الفيزياء (قوة جبارة تقدر تحمل لاعبين ثانيين معك!)
                 bv = Instance.new("BodyVelocity")
                 bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
                 bv.Velocity = Vector3.new(0, 0, 0)
@@ -137,32 +155,36 @@ return function(Tab, UI)
                 bg.P = 9000
                 bg.Parent = hoverPart
 
-                SendRobloxNotification("Cryptic Hub", "✅ تم سحب البلوكة! يمكنك الطيران الآن.")
+                SendRobloxNotification("Cryptic Hub", "✅ تم السحب بنجاح! طيران ممتع 🛸")
 
-                -- [[ 4. حلقة التحكم (المحرك) ]]
+                -- [[ 4. حلقة التحكم والمحرك ]]
                 connection = RunService.Heartbeat:Connect(function()
                     if not isHovering or not hoverPart or not hoverPart.Parent then 
                         cleanupHover() 
                         return 
                     end
 
-                    -- أخذ اتجاه دائرة التحكم (الجوستيك) العادية
+                    -- أخذ اتجاه المشي من الدائرة/الجوستيك
                     local moveDir = hum.MoveDirection
                     
-                    -- حساب سرعة الصعود والهبوط
+                    -- سرعة الصعود والهبوط من أزرار الشاشة
                     local yVel = 0
                     if upActive then yVel = flySpeed end
                     if downActive then yVel = -flySpeed end
 
-                    -- دمج الاتجاهات وتطبيقها على البلوكة
+                    -- دمج الاتجاهات وتطبيقها
                     local targetVel = (moveDir * flySpeed) + Vector3.new(0, yVel, 0)
                     bv.Velocity = targetVel
 
-                    -- توجيه البلوكة لتلائم اتجاه الكاميرا
-                    bg.CFrame = CFrame.new(hoverPart.Position, hoverPart.Position + Camera.CFrame.LookVector)
+                    -- توجيه البلوكة عشان تبقى مسطحة وتلف مع لفة الكاميرا
+                    local camLook = Camera.CFrame.LookVector
+                    local flatLook = Vector3.new(camLook.X, 0, camLook.Z)
+                    if flatLook.Magnitude > 0.01 then
+                        bg.CFrame = CFrame.new(hoverPart.Position, hoverPart.Position + flatLook.Unit)
+                    end
                 end)
             else
-                SendRobloxNotification("Cryptic Hub", "⚠️ لم يتم العثور على بلوكة غير مثبتة تحتك!")
+                SendRobloxNotification("Cryptic Hub", "⚠️ لم يتم العثور على بلوكة حرة تحتك!")
                 cleanupHover()
             end
         else
