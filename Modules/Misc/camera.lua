@@ -91,7 +91,7 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddSpeedControl("الكاميرا الحرة V8", function(active, value)
+    Tab:AddSpeedControl("كاميرا حرة / Free camera", function(active, value)
         toggleFreeCam(active, value)
     end)
 end
