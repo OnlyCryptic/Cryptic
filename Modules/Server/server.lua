@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - قسم السيرفر ]]
--- المطور: يامي (Yami) | التحديث: انتقال تلقائي بمجرد لصق الآيدي بدون أزرار
+-- المطور: يامي (Yami) | التحديث: انتقال فوري لحظة اللصق (دون الحاجة لإغلاق الكيبورد)
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -7,7 +7,7 @@ return function(Tab, UI)
     local TeleportService = game:GetService("TeleportService")
     local lp = Players.LocalPlayer
 
-    -- 1. حالة السيرفر (مدمجة في سطر واحد لتوفير المساحة)
+    -- 1. حالة السيرفر (مدمجة)
     local StatusLabel = Tab:AddLabel("📊 جاري جلب المعلومات...")
 
     task.spawn(function()
@@ -17,7 +17,6 @@ return function(Tab, UI)
         end)
         
         local function updateStatus()
-            -- دمج اسم الماب وعدد اللاعبين
             StatusLabel.SetText("🎮 " .. gameName .. " | 👥 " .. #Players:GetPlayers() .. "/" .. Players.MaxPlayers)
         end
         
@@ -28,7 +27,7 @@ return function(Tab, UI)
 
     Tab:AddLine()
 
-    -- 2. أدوات النسخ والدخول التلقائي
+    -- 2. نسخ رمز السيرفر
     Tab:AddTimedToggle("📋 نسخ رمز السيرفر (JobId)", function(active)
         if active then
             pcall(function()
@@ -38,14 +37,31 @@ return function(Tab, UI)
         end
     end)
 
-    -- دمج الانتقال التلقائي بمجرد إدخال الآيدي
-    Tab:AddInput("🔗 آيدي السيرفر المستهدف", "إلصق الرمز هنا للانتقال فوراً...", function(txt)
-        -- نتحقق إن النص المدخل طويل كفاية ليكون JobId (عادة الـ JobId يتكون من 36 حرف)
-        if txt and #txt > 20 then
-            UI:Notify("⏳ جاري محاولة الانتقال التلقائي...")
-            pcall(function()
-                TeleportService:TeleportToPlaceInstance(game.PlaceId, txt, lp)
-            end)
-        end
+    -- 3. الانتقال الفوري المباشر (التعديل هنا)
+    local InputField = Tab:AddInput("🔗 آيدي السيرفر المستهدف", "إلصق الرمز هنا للانتقال فوراً...", function() end)
+
+    task.spawn(function()
+        repeat task.wait() until InputField and InputField.TextBox
+        
+        local isTeleporting = false -- متغير لمنع التكرار (Spam)
+        
+        -- استخدمنا المراقبة اللحظية بدلاً من FocusLost
+        InputField.TextBox:GetPropertyChangedSignal("Text"):Connect(function()
+            local txt = InputField.TextBox.Text
+            
+            -- الـ JobId الحقيقي يتكون من 36 حرف، وضعنا > 30 كشرط أمان
+            if not isTeleporting and txt and #txt > 30 then
+                isTeleporting = true -- نقفل الباب لمنع تكرار الانتقال
+                UI:Notify("⏳ جاري الانتقال للسيرفر المحدد...")
+                
+                pcall(function()
+                    TeleportService:TeleportToPlaceInstance(game.PlaceId, txt, lp)
+                end)
+                
+                -- إعادة التعيين في حال فشل الانتقال
+                task.wait(5)
+                isTeleporting = false
+            end
+        end)
     end)
 end
