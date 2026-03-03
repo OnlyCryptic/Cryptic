@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة الشيفت لوك للجوال V2 ]]
--- المطور: يامي (Yami) | التحديث: زر دائري شفاف، قابل للسحب، متفاعل بالألوان، وإشعارات روبلوكس
+-- [[ Cryptic Hub - ميزة الشيفت لوك للجوال V3 ]]
+-- المطور: يامي (Yami) | التحديث: زر دائري "مُصغر جداً"، شفاف، قابل للسحب، وإشعارات روبلوكس
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -23,9 +23,9 @@ return function(Tab, UI)
         end)
     end
     
-    -- [[ 1. تصميم الواجهة (UI) - دائرة صغيرة وشفافة ]]
+    -- [[ 1. تصميم الواجهة (UI) - دائرة مُصغرة وشفافة ]]
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "CrypticShiftLock_V2"
+    ScreenGui.Name = "CrypticShiftLock_V3"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
@@ -38,14 +38,14 @@ return function(Tab, UI)
     end
     ScreenGui.Enabled = false
 
-    -- الدائرة الخارجية (الزر)
+    -- الدائرة الخارجية (الزر - تم تصغير الحجم هنا)
     local ShiftButton = Instance.new("ImageButton")
     ShiftButton.Name = "ToggleButton"
     ShiftButton.Parent = ScreenGui
-    ShiftButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- تبدأ باللون الأحمر (مغلق)
-    ShiftButton.BackgroundTransparency = 0.6 -- شفافية
+    ShiftButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- أحمر (مغلق)
+    ShiftButton.BackgroundTransparency = 0.6 
     ShiftButton.Position = UDim2.new(0.85, 0, 0.6, 0)
-    ShiftButton.Size = UDim2.new(0, 60, 0, 60)
+    ShiftButton.Size = UDim2.new(0, 45, 0, 45) -- الحجم الجديد المُصغر!
     ShiftButton.Image = "" 
     ShiftButton.ClipsDescendants = true
     
@@ -59,7 +59,7 @@ return function(Tab, UI)
     UIStroke.Thickness = 1
     UIStroke.Parent = ShiftButton
 
-    -- النص الداخلي
+    -- النص الداخلي (تم تصغير الخط ليتناسب مع الزر)
     local TextLabel = Instance.new("TextLabel")
     TextLabel.Parent = ShiftButton
     TextLabel.BackgroundTransparency = 1
@@ -67,7 +67,7 @@ return function(Tab, UI)
     TextLabel.Font = Enum.Font.GothamBold
     TextLabel.Text = "شيفت\nلوك"
     TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TextLabel.TextSize = 12
+    TextLabel.TextSize = 10 -- خط أصغر ليتناسق
     TextLabel.TextWrapped = true
     TextLabel.TextTransparency = 0.2
 
@@ -105,7 +105,7 @@ return function(Tab, UI)
         end
     end)
 
-    -- [[ 3. دالة التشغيل/الإيقاف (الفيزياء والكاميرا) ]]
+    -- [[ 3. دالة التشغيل/الإيقاف ]]
     local function ToggleShiftLock(state)
         ShiftLockActive = state
         local char = lp.Character
@@ -144,7 +144,7 @@ return function(Tab, UI)
         end
     end
 
-    -- عند الضغط على الدائرة العائمة
+    -- عند الضغط على الدائرة
     ShiftButton.MouseButton1Click:Connect(function()
         ToggleShiftLock(not ShiftLockActive)
     end)
@@ -154,10 +154,10 @@ return function(Tab, UI)
         ScreenGui.Enabled = state 
         
         if state then
-            ToggleShiftLock(false) -- يبدأ طافي (أحمر)
-            SendRobloxNotification("Cryptic Hub", "✅ تم إظهار زر الشيفت لوك! يمكنك سحبه وتفعيله.")
+            ToggleShiftLock(false)
+            SendRobloxNotification("Cryptic Hub", "✅ تم إظهار زر الشيفت لوك!")
         else
-            ToggleShiftLock(false) -- يفصل كل شيء ويختفي
+            ToggleShiftLock(false)
             SendRobloxNotification("Cryptic Hub", "❌ تم إخفاء الزر وإلغاء الخاصية.")
         end
     end)
