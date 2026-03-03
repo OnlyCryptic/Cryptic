@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - التحكم بالبلوكات (Hoverboard FE) V2 ]]
--- المطور: يامي (Yami) | التحديث: فلترة البلوكات الملتصقة، وقوف دقيق جداً، وأزرار تحكم محسنة
+-- [[ Cryptic Hub - التحكم بالبلوكات (Hoverboard FE) V3 ]]
+-- المطور: يامي (Yami) | التحديث: تسطيح البلوكة تلقائياً، التمركز الدقيق، استقرار فيزيائي عالي
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -26,7 +26,7 @@ return function(Tab, UI)
 
     -- [[ 1. تصميم أزرار الصعود والهبوط للجوال ]]
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "CrypticHoverUI_V2"
+    ScreenGui.Name = "CrypticHoverUI_V3"
     ScreenGui.ResetOnSpawn = false
     local success, _ = pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
     if not success then ScreenGui.Parent = lp:WaitForChild("PlayerGui") end
@@ -50,7 +50,6 @@ return function(Tab, UI)
     local BtnUp = createFlyButton("⬆️", -60)
     local BtnDown = createFlyButton("⬇️", 10)
 
-    -- نظام اللمس للأزرار
     local function setupTouch(btn, isUp)
         btn.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -78,6 +77,13 @@ return function(Tab, UI)
         if char then
             local hum = char:FindFirstChildOfClass("Humanoid")
             if hum then hum.PlatformStand = false end
+            
+            -- تصفير سرعة اللاعب عند الإيقاف عشان ما يطير
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.Velocity = Vector3.new(0, 0, 0)
+                root.RotVelocity = Vector3.new(0, 0, 0)
+            end
         end
 
         if hoverWeld then hoverWeld:Destroy() hoverWeld = nil end
@@ -87,11 +93,9 @@ return function(Tab, UI)
         hoverPart = nil
     end
 
-    -- دالة فحص البلوكة (تتجاهل المثبتة والملحومة بأشياء مثبتة)
     local function isFree(part)
         if not part or not part:IsA("BasePart") then return false end
         if part.Anchored then return false end
-        -- فحص إذا كانت البلوكة ملحومة بجدار أو مبنى مثبت!
         if part.AssemblyRootPart and part.AssemblyRootPart.Anchored then return false end
         return true
     end
@@ -108,7 +112,6 @@ return function(Tab, UI)
                 return 
             end
 
-            -- تجاهل كل اللاعبين عشان الشعاع ما يضرب في لاعب ثاني
             local ignoreList = {char}
             for _, p in pairs(Players:GetPlayers()) do
                 if p.Character then table.insert(ignoreList, p.Character) end
@@ -120,67 +123,74 @@ return function(Tab, UI)
 
             local ray = workspace:Raycast(root.Position, Vector3.new(0, -15, 0), params)
 
-            -- فحص البلوكة هل هي حرة تماماً؟
             if ray and isFree(ray.Instance) then
                 hoverPart = ray.Instance
                 isHovering = true
                 ScreenGui.Enabled = true
 
-                -- [[ الحساب الدقيق لوقوف اللاعب فوق البلوكة بالضبط ]]
-                -- نحسب المسافة من منتصف شخصيتك إلى أسفل قدمك (تدعم R6 و R15)
-                local legHeight = (hum.RigType == Enum.HumanoidRigType.R15) and (hum.HipHeight + (root.Size.Y / 2)) or 3
-                -- نحسب نصف سُمك البلوكة
-                local blockOffset = hoverPart.Size.Y / 2
-                -- المسافة الكلية اللي تفصل بين الشخصية والبلوكة
-                local totalOffset = legHeight + blockOffset
+                -- [[ الخوارزمية الهندسية: حساب أكثر منطقة مسطحة ]]
+                local size = hoverPart.Size
+                local sx, sy, sz = size.X, size.Y, size.Z
+                local minAxis = math.min(sx, sy, sz)
+                
+                local partRotation = CFrame.Angles(0, 0, 0)
+                local blockThickness = sy
 
-                -- تجميد اللاعب (عشان ما يطيح أو يتشقلب)
+                -- تدوير البلوكة تلقائياً لتكون مسطحة 100%
+                if minAxis == sx then
+                    partRotation = CFrame.Angles(0, 0, math.rad(90))
+                    blockThickness = sx
+                elseif minAxis == sz then
+                    partRotation = CFrame.Angles(math.rad(90), 0, 0)
+                    blockThickness = sz
+                end
+
+                local legHeight = (hum.RigType == Enum.HumanoidRigType.R15) and (hum.HipHeight + (root.Size.Y / 2)) or 3
+                local totalOffset = legHeight + (blockThickness / 2)
+
                 hum.PlatformStand = true
 
-                -- لحام البلوكة تحت قدمك بالملي
+                -- لحام البلوكة بالمركز (السنتر) وتطبيق التدوير المسطح
                 hoverWeld = Instance.new("Weld")
                 hoverWeld.Part0 = root
                 hoverWeld.Part1 = hoverPart
                 hoverWeld.C0 = CFrame.new(0, -totalOffset, 0)
+                hoverWeld.C1 = partRotation
                 hoverWeld.Parent = root
 
-                -- محركات الفيزياء (قوة جبارة تقدر تحمل لاعبين ثانيين معك!)
+                -- [[ نقل محركات الفيزياء للاعب (RootPart) لاستقرار مطلق! ]]
                 bv = Instance.new("BodyVelocity")
                 bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
                 bv.Velocity = Vector3.new(0, 0, 0)
-                bv.Parent = hoverPart
+                bv.Parent = root
 
                 bg = Instance.new("BodyGyro")
                 bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
                 bg.P = 9000
-                bg.Parent = hoverPart
+                bg.Parent = root
 
-                SendRobloxNotification("Cryptic Hub", "✅ تم السحب بنجاح! طيران ممتع 🛸")
+                SendRobloxNotification("Cryptic Hub", "✅ البلوكة مسطحة ومسنتّرة! طيران ممتع 🛸")
 
-                -- [[ 4. حلقة التحكم والمحرك ]]
+                -- [[ 4. حلقة التحكم ]]
                 connection = RunService.Heartbeat:Connect(function()
                     if not isHovering or not hoverPart or not hoverPart.Parent then 
                         cleanupHover() 
                         return 
                     end
 
-                    -- أخذ اتجاه المشي من الدائرة/الجوستيك
                     local moveDir = hum.MoveDirection
-                    
-                    -- سرعة الصعود والهبوط من أزرار الشاشة
                     local yVel = 0
                     if upActive then yVel = flySpeed end
                     if downActive then yVel = -flySpeed end
 
-                    -- دمج الاتجاهات وتطبيقها
-                    local targetVel = (moveDir * flySpeed) + Vector3.new(0, yVel, 0)
-                    bv.Velocity = targetVel
+                    -- تطبيق السرعة على اللاعب
+                    bv.Velocity = (moveDir * flySpeed) + Vector3.new(0, yVel, 0)
 
-                    -- توجيه البلوكة عشان تبقى مسطحة وتلف مع لفة الكاميرا
+                    -- توجيه اللاعب (والبلوكة اللي لاصقة فيه) لاتجاه الكاميرا
                     local camLook = Camera.CFrame.LookVector
                     local flatLook = Vector3.new(camLook.X, 0, camLook.Z)
                     if flatLook.Magnitude > 0.01 then
-                        bg.CFrame = CFrame.new(hoverPart.Position, hoverPart.Position + flatLook.Unit)
+                        bg.CFrame = CFrame.new(root.Position, root.Position + flatLook.Unit)
                     end
                 end)
             else
