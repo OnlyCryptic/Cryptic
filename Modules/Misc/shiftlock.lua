@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة الشيفت لوك للجوال V3 ]]
--- المطور: يامي (Yami) | التحديث: زر دائري "مُصغر جداً"، شفاف، قابل للسحب، وإشعارات روبلوكس
+-- [[ Cryptic Hub - ميزة الشيفت لوك للجوال V4 ]]
+-- المطور: يامي (Yami) | التحديث: زر دائري "ميني" بأصغر حجم ممكن، شفاف، وقابل للسحب
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -23,9 +23,9 @@ return function(Tab, UI)
         end)
     end
     
-    -- [[ 1. تصميم الواجهة (UI) - دائرة مُصغرة وشفافة ]]
+    -- [[ 1. تصميم الواجهة (UI) - دائرة ميني وشفافة ]]
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "CrypticShiftLock_V3"
+    ScreenGui.Name = "CrypticShiftLock_V4"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
@@ -38,14 +38,14 @@ return function(Tab, UI)
     end
     ScreenGui.Enabled = false
 
-    -- الدائرة الخارجية (الزر - تم تصغير الحجم هنا)
+    -- الدائرة الخارجية (تم التصغير لأقصى حد ممكن 35x35)
     local ShiftButton = Instance.new("ImageButton")
     ShiftButton.Name = "ToggleButton"
     ShiftButton.Parent = ScreenGui
     ShiftButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- أحمر (مغلق)
     ShiftButton.BackgroundTransparency = 0.6 
     ShiftButton.Position = UDim2.new(0.85, 0, 0.6, 0)
-    ShiftButton.Size = UDim2.new(0, 45, 0, 45) -- الحجم الجديد المُصغر!
+    ShiftButton.Size = UDim2.new(0, 35, 0, 35) -- الحجم الميني!
     ShiftButton.Image = "" 
     ShiftButton.ClipsDescendants = true
     
@@ -59,7 +59,7 @@ return function(Tab, UI)
     UIStroke.Thickness = 1
     UIStroke.Parent = ShiftButton
 
-    -- النص الداخلي (تم تصغير الخط ليتناسب مع الزر)
+    -- النص الداخلي (تم تصغير الخط جداً ليتناسب مع الحجم الميني)
     local TextLabel = Instance.new("TextLabel")
     TextLabel.Parent = ShiftButton
     TextLabel.BackgroundTransparency = 1
@@ -67,7 +67,7 @@ return function(Tab, UI)
     TextLabel.Font = Enum.Font.GothamBold
     TextLabel.Text = "شيفت\nلوك"
     TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TextLabel.TextSize = 10 -- خط أصغر ليتناسق
+    TextLabel.TextSize = 8 -- أصغر خط ممكن للقراءة
     TextLabel.TextWrapped = true
     TextLabel.TextTransparency = 0.2
 
@@ -150,12 +150,12 @@ return function(Tab, UI)
     end)
 
     -- [[ 4. زر التحكم في الواجهة الرئيسية ]]
-    Tab:AddToggle("قفل شاشه / shift lock", function(state)
+    Tab:AddToggle("قفل الشاشه / shift lock", function(state)
         ScreenGui.Enabled = state 
         
         if state then
             ToggleShiftLock(false)
-            SendRobloxNotification("Cryptic Hub", "✅ تم إظهار زر الشيفت لوك!")
+            SendRobloxNotification("Cryptic Hub", "✅ تم إظهار زر الشيفت لوك (حجم ميني)!")
         else
             ToggleShiftLock(false)
             SendRobloxNotification("Cryptic Hub", "❌ تم إخفاء الزر وإلغاء الخاصية.")
