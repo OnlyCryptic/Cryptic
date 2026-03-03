@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V6.9 ]]
--- المطور: Cryptic | التحديث: استعادة الزر المؤقت + استقرار كامل للأقسام
+-- [[ Cryptic Hub - المحرك الرئيسي V7.0 ]]
+-- المطور: Cryptic | التحديث: تنظيف السكربت واعتماد المحرك الجديد لحل الزر المؤقت
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -23,7 +23,7 @@ local Cryptic = {
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "خدع"}
 }
 
--- [[ نظام المطور الحصري لأحمد بناءً على صورته ]]
+-- نظام المطور الحصري
 if Players.LocalPlayer.UserId == 3875086037 then
     Cryptic.Structure["تجارب"] = { 
         Folder = "Experiments", 
@@ -51,7 +51,8 @@ if UI then
         if tabData then
             local CurrentTab = MainWin:CreateTab(tabName)
             
-            -- تحميل الملفات بشكل متسلسل داخل كل تاب
+            -- تمت إزالة الدالة التي كانت تسبب تعليق الزر
+            -- التحميل يعتمد الآن كلياً على UI_Engine
             task.spawn(function(data, tab)
                 for _, fileName in ipairs(data.Files) do
                     local filePath = "Modules/" .. data.Folder .. "/" .. fileName .. ".lua"
