@@ -17,7 +17,7 @@ return function(Tab, UI)
         end
     end)
 
-    Tab:AddToggle("قفز لانهائي", function(active)
+    Tab:AddToggle("قفز لانهائي / infinite jump", function(active)
         isInfiniteJump = active
         if active then
             UI:Notify("✅ تم تفعيل القفز اللانهائي في Cryptic Hub")
