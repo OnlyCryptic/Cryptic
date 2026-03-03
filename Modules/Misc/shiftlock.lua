@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة الشيفت لوك للجوال V4 ]]
--- المطور: يامي (Yami) | التحديث: زر دائري "ميني" بأصغر حجم ممكن، شفاف، وقابل للسحب
+-- [[ Cryptic Hub - ميزة الشيفت لوك للجوال V5 ]]
+-- المطور: يامي (Yami) | التحديث: تفعيل تلقائي (أخضر)، حجم ميني، ولمس ذكي للجوال
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -25,7 +25,7 @@ return function(Tab, UI)
     
     -- [[ 1. تصميم الواجهة (UI) - دائرة ميني وشفافة ]]
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "CrypticShiftLock_V4"
+    ScreenGui.Name = "CrypticShiftLock_V5"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
@@ -38,14 +38,14 @@ return function(Tab, UI)
     end
     ScreenGui.Enabled = false
 
-    -- الدائرة الخارجية (تم التصغير لأقصى حد ممكن 35x35)
+    -- الدائرة الخارجية (الحجم الميني 35x35)
     local ShiftButton = Instance.new("ImageButton")
     ShiftButton.Name = "ToggleButton"
     ShiftButton.Parent = ScreenGui
-    ShiftButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- أحمر (مغلق)
+    ShiftButton.BackgroundColor3 = Color3.fromRGB(0, 200, 80) -- يبدأ باللون الأخضر!
     ShiftButton.BackgroundTransparency = 0.6 
     ShiftButton.Position = UDim2.new(0.85, 0, 0.6, 0)
-    ShiftButton.Size = UDim2.new(0, 35, 0, 35) -- الحجم الميني!
+    ShiftButton.Size = UDim2.new(0, 35, 0, 35)
     ShiftButton.Image = "" 
     ShiftButton.ClipsDescendants = true
     
@@ -59,7 +59,7 @@ return function(Tab, UI)
     UIStroke.Thickness = 1
     UIStroke.Parent = ShiftButton
 
-    -- النص الداخلي (تم تصغير الخط جداً ليتناسب مع الحجم الميني)
+    -- النص الداخلي
     local TextLabel = Instance.new("TextLabel")
     TextLabel.Parent = ShiftButton
     TextLabel.BackgroundTransparency = 1
@@ -67,46 +67,13 @@ return function(Tab, UI)
     TextLabel.Font = Enum.Font.GothamBold
     TextLabel.Text = "شيفت\nلوك"
     TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TextLabel.TextSize = 8 -- أصغر خط ممكن للقراءة
+    TextLabel.TextSize = 8
     TextLabel.TextWrapped = true
     TextLabel.TextTransparency = 0.2
 
-    -- [[ 2. نظام السحب (Dragging) للجوال ]]
-    local dragging, dragInput, dragStart, startPos
-    
-    local function update(input)
-        local delta = input.Position - dragStart
-        ShiftButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-    
-    ShiftButton.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = ShiftButton.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-    
-    ShiftButton.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            update(input)
-        end
-    end)
-
-    -- [[ 3. دالة التشغيل/الإيقاف ]]
-    local function ToggleShiftLock(state)
+    -- [[ 2. دالة التشغيل/الإيقاف ]]
+    local ToggleShiftLock -- تعريف مسبق للدالة عشان نستخدمها باللمس
+    ToggleShiftLock = function(state)
         ShiftLockActive = state
         local char = lp.Character
         local hum = char and char:FindFirstChildOfClass("Humanoid")
@@ -120,6 +87,7 @@ return function(Tab, UI)
                 hum.AutoRotate = false
             end
             
+            if Connection then Connection:Disconnect() end
             Connection = RunService.RenderStepped:Connect(function()
                 if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and lp.Character:FindFirstChild("Humanoid") then
                     local charRoot = lp.Character.HumanoidRootPart
@@ -144,18 +112,54 @@ return function(Tab, UI)
         end
     end
 
-    -- عند الضغط على الدائرة
-    ShiftButton.MouseButton1Click:Connect(function()
-        ToggleShiftLock(not ShiftLockActive)
+    -- [[ 3. نظام السحب (Dragging) واللمس الذكي للجوال ]]
+    local dragging, dragInput, dragStart, startPos
+    local touchTime = 0 -- لحساب وقت اللمس (عشان نفرق بين الضغطة والسحبة)
+    
+    local function update(input)
+        local delta = input.Position - dragStart
+        ShiftButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+    
+    ShiftButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = ShiftButton.Position
+            touchTime = tick() -- تسجيل وقت بداية اللمس
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    -- إذا كانت اللمسة سريعة (أقل من 0.2 ثانية)، اعتبرها ضغطة زر لتغيير اللون
+                    if tick() - touchTime < 0.2 then
+                        ToggleShiftLock(not ShiftLockActive)
+                    end
+                end
+            end)
+        end
+    end)
+    
+    ShiftButton.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
     end)
 
     -- [[ 4. زر التحكم في الواجهة الرئيسية ]]
-    Tab:AddToggle("قفل الشاشه / shift lock", function(state)
+    Tab:AddToggle("قفل شاشه / shift lock", function(state)
         ScreenGui.Enabled = state 
         
         if state then
-            ToggleShiftLock(false)
-            SendRobloxNotification("Cryptic Hub", "✅ تم إظهار زر الشيفت لوك (حجم ميني)!")
+            -- [[ التعديل هنا: يشتغل تلقائي (أخضر) أول ما تفعله من السكربت ]]
+            ToggleShiftLock(true) 
+            SendRobloxNotification("Cryptic Hub", "✅ تم التفعيل! الشيفت لوك يعمل الآن.")
         else
             ToggleShiftLock(false)
             SendRobloxNotification("Cryptic Hub", "❌ تم إخفاء الزر وإلغاء الخاصية.")
