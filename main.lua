@@ -32,7 +32,7 @@ local Cryptic = {
 -- [[ نظام المطور الحصري ]]
 -- يظهر فقط لك يا أحمد
 if Players.LocalPlayer.UserId == 3875086037 then
-    Cryptic.Structure["تجارب"] = { Folder = "Experiments", Files = {"test1", "anti_block", "magnet"} }
+    Cryptic.Structure["تجارب"] = { Folder = "Experiments", Files = {"test1", "anti_block", "magnet", "anime_aura"} }
     table.insert(Cryptic.TabsOrder, "تجارب")
 end
 
