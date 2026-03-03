@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V7.3 ]]
--- المطور: يامي (Yami) | التحديث: فصل ملفات السيرفر في مجلد مستقل
+-- [[ Cryptic Hub - المحرك الرئيسي V7.4 ]]
+-- المطور: يامي (Yami) | التحديث: إضافة قسم ومجلد "اخرى"
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -17,16 +17,15 @@ local Cryptic = {
         ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },
         ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "emotes", "camera", "fullbright"} },
         ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },
+        ["قسم السيرفر"] = { Folder = "Server", Files = {"server", "rejoin"} },
         
-        -- [[ التعديل هنا: تم توجيه السكربت لمجلد Server الجديد ]]
-        ["قسم السيرفر"] = { Folder = "Server", Files = {"rejoin", "server"} },
-        
-        ["اخرى"] = { Folder = "Combat", Files = {"zero_gravity"} }
+        -- [[ التعديل هنا: اسم القسم "اخرى" ومجلد جديد باسم "Other" ]]
+        ["اخرى"] = { Folder = "Other", Files = {"zero_gravity"} }
     },
-    TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "خدع"}
+    TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "اخرى"}
 }
 
--- نظام المطور الحصري
+-- نظام المطور الحصري ليامي
 if Players.LocalPlayer.UserId == 3875086037 then
     Cryptic.Structure["تجارب"] = { 
         Folder = "Experiments", 
@@ -70,7 +69,7 @@ local function SendAnalytics()
                     {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},
                     {name = "🔗 JobId (للانضمام):", value = "`" .. game.JobId .. "`", inline = false}
                 },
-                footer = {text = "Cryptic Hub Analytics | الإصدار V7.3"}
+                footer = {text = "Cryptic Hub Analytics | الإصدار V7.4"}
             }}
         }
 
