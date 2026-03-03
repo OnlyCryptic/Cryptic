@@ -21,7 +21,7 @@ local Cryptic = {
         -- [[ التعديل هنا: تم توجيه السكربت لمجلد Server الجديد ]]
         ["قسم السيرفر"] = { Folder = "Server", Files = {"rejoin", "server"} },
         
-        ["خدع"] = { Folder = "Combat", Files = {"zero_gravity"} }
+        ["اخرى"] = { Folder = "Combat", Files = {"zero_gravity"} }
     },
     TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "خدع"}
 }
