@@ -150,7 +150,7 @@ return function(Tab, UI)
     end)
 
     -- [[ 4. زر التحكم في الواجهة الرئيسية ]]
-    Tab:AddToggle("🔘 زر الشيفت لوك الدائري (للجوال)", function(state)
+    Tab:AddToggle("قفل شاشه / shift lock", function(state)
         ScreenGui.Enabled = state 
         
         if state then
