@@ -5,7 +5,7 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 
--- [[ تشفير الويب هوك (نص معكوس) لتجنب خطأ الطول في تطبيق GitHub ]]
+ تطبيق GitHub ]]
 local _w = string.reverse("lk7nc5gtIGR8l8m3qGgepyT7bdMwF4Jtk7nCnC026BstDIfCbBWlpsgbFJ9e6B_l54l7J/1243830710629807741/skoohbew/ipa/eom.arukasiwel.koohbew//:sptth")
 
 local Cryptic = {
