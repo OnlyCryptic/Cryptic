@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - العوم في الفضاء المطور ]]
--- المطور: Cryptic | الإصلاح: حساب دقيق للجاذبية + حركة 3D مطابقة للكاميرا
+-- [[ Cryptic Hub - العوم في الفضاء (3D) ]]
+-- المطور: Cryptic | التحديث: تحكم كامل بالكاميرا والجويستيك + دوران الشخصية
 
 return function(Tab, UI)
     local Player = game.Players.LocalPlayer
@@ -8,7 +8,7 @@ return function(Tab, UI)
 
     local isZeroGravity = false
     local connection
-    local force, attachment
+    local force, attachment, gyro
 
     Tab:AddToggle("العوم في الفضاء 🚀", function(state)
         isZeroGravity = state
@@ -20,74 +20,85 @@ return function(Tab, UI)
         if not root or not hum then return end
 
         if isZeroGravity then
-            -- استخدام PlatformStand أفضل بكثير للجوال من تغيير الـ State
             hum.PlatformStand = true
 
-            -- تنظيف أي مرفقات قديمة لتجنب القلتشات
-            if root:FindFirstChild("ZeroGravAttachment") then
-                root.ZeroGravAttachment:Destroy()
-            end
+            -- تنظيف القديم لتجنب التكرار
+            if root:FindFirstChild("ZeroGravAttachment") then root.ZeroGravAttachment:Destroy() end
+            if root:FindFirstChild("ZeroGravGyro") then root.ZeroGravGyro:Destroy() end
 
             attachment = Instance.new("Attachment", root)
             attachment.Name = "ZeroGravAttachment"
 
+            -- 1. قوة انعدام الجاذبية
             force = Instance.new("VectorForce", root)
             force.Attachment0 = attachment
             force.RelativeTo = Enum.ActuatorRelativeTo.World
             force.ApplyAtCenterOfMass = true
 
-            -- الحساب الدقيق لكتلة الشخصية بالكامل لضمان إلغاء الجاذبية 100%
             local totalMass = 0
             for _, part in pairs(Character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    totalMass = totalMass + part.Mass
-                end
+                if part:IsA("BasePart") then totalMass = totalMass + part.Mass end
             end
-            
-            -- تطبيق القوة المعاكسة للجاذبية
             force.Force = Vector3.new(0, totalMass * workspace.Gravity, 0)
 
-            UI:Notify("🚀 أنت الآن تعوم في الفضاء بوزن منعدم!")
+            -- 2. مثبت الدوران (عشان شخصيتك تلف مع الكاميرا)
+            gyro = Instance.new("BodyGyro", root)
+            gyro.Name = "ZeroGravGyro"
+            gyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            gyro.P = 3000 -- نعومة الالتفاف
+
+            UI:Notify("🚀 عوم الفضاء مفعل: وجه الشاشة وتحرك!")
+
+            local floatSpeed = 40 -- السرعة القصوى للسباحة
 
             connection = RunService.RenderStepped:Connect(function()
                 if not isZeroGravity or not root then return end
 
                 local moveDir = hum.MoveDirection
+                
+                -- جعل الشخصية تنظر دائماً باتجاه الكاميرا
+                gyro.CFrame = cam.CFrame
+
                 if moveDir.Magnitude > 0 then
-                    -- استخراج اتجاه الكاميرا للحركة ثلاثية الأبعاد (3D)
+                    -- استخراج اتجاه الكاميرا الفعلي (للأعلى، للأسفل، لليمين، لليسار)
                     local look = cam.CFrame.LookVector
                     local right = cam.CFrame.RightVector
                     
-                    local flatLook = Vector3.new(look.X, 0, look.Z).Unit
-                    local flatRight = Vector3.new(right.X, 0, right.Z).Unit
+                    -- تسطيح المتجهات لقراءة حركة الجويستيك بدقة
+                    local flatLook = Vector3.new(look.X, 0, look.Z)
+                    if flatLook.Magnitude > 0 then flatLook = flatLook.Unit end
                     
-                    -- تحويل حركة الجويستيك لتتطابق مع اتجاه نظر الكاميرا
+                    local flatRight = Vector3.new(right.X, 0, right.Z)
+                    if flatRight.Magnitude > 0 then flatRight = flatRight.Unit end
+                    
+                    -- تحويل حركة الجويستيك الثنائية لاتجاه ثلاثي الأبعاد
                     local zInput = moveDir:Dot(flatLook)
                     local xInput = moveDir:Dot(flatRight)
                     
                     local floatDir = (look * zInput) + (right * xInput)
                     
                     if floatDir.Magnitude > 0 then
-                        -- الدفع ببطء ليعطي إحساس السباحة في الفضاء
-                        root.AssemblyLinearVelocity = root.AssemblyLinearVelocity + (floatDir.Unit * 1.2)
+                        -- التسارع الفيزيائي السلس (السباحة)
+                        root.AssemblyLinearVelocity = root.AssemblyLinearVelocity:Lerp(floatDir.Unit * floatSpeed, 0.04)
                     end
+                else
+                    -- الانزلاق الفضائي البطيء عند ترك الجويستيك (عكس التوقف المفاجئ)
+                    root.AssemblyLinearVelocity = root.AssemblyLinearVelocity:Lerp(Vector3.zero, 0.01)
                 end
-
-                -- تطبيق "مقاومة هواء" خفيفة جداً لكي لا تتسارع الشخصية للمالانهاية
-                root.AssemblyLinearVelocity = root.AssemblyLinearVelocity:Lerp(Vector3.zero, 0.015)
             end)
 
         else
-            -- إرجاع كل شيء لطبيعته
+            -- إيقاف السكربت وإرجاع الطبيعة
             if connection then connection:Disconnect() end
             if force then force:Destroy() end
             if attachment then attachment:Destroy() end
+            if gyro then gyro:Destroy() end
             
             if hum then 
                 hum.PlatformStand = false 
                 hum:ChangeState(Enum.HumanoidStateType.GettingUp)
             end
-            UI:Notify("🌍 عادت الجاذبية لك")
+            UI:Notify("🌍 تمت استعادة الجاذبية")
         end
     end)
 end
