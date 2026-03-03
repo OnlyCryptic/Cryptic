@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المصعد الفيزيائي (الرفع المرعب) ]]
--- المطور: يامي (Yami) | التحديث: Noclip + Anti-Fling + وضعية الاستلقاء والنظر للأعلى
+-- [[ Cryptic Hub - المصعد الفيزيائي ]]
+-- المطور: يامي (Yami) | التحديث: تيلبورت سفلي + رفع بطيء وسلس + Noclip & Anti-Fling
 
 return function(Tab, UI)
     local RunService = game:GetService("RunService")
@@ -7,12 +7,10 @@ return function(Tab, UI)
     local lp = Players.LocalPlayer
     
     local isCarrying = false
-    local liftHeight = -6 -- البداية من تحت الأرض بمسافة ممتازة
-    local liftSpeed = 0.03 -- سرعة بطيئة جداً (شوي بشوي)
     local currentTarget = nil
     local liftConnection = nil
 
-    -- 1. خانة البحث الذكية (تعمل عند إغلاق الكيبورد)
+    -- 1. خانة البحث الذكية
     local InputField = Tab:AddInput("البحث عن لاعب 🎯", "اكتب بداية اليوزر وأغلق الكيبورد...", function() end)
 
     task.spawn(function()
@@ -48,7 +46,7 @@ return function(Tab, UI)
 
     Tab:AddLine()
 
-    -- 2. زر تشغيل المصعد
+    -- 2. زر تشغيل المصعد المرعب
     Tab:AddToggle("تشغيل المصعد 🚀", function(state)
         isCarrying = state
         local char = lp.Character
@@ -56,18 +54,25 @@ return function(Tab, UI)
         local hum = char and char:FindFirstChildOfClass("Humanoid")
 
         if isCarrying then
-            if not currentTarget or not currentTarget.Character then
+            if not currentTarget or not currentTarget.Character or not currentTarget.Character:FindFirstChild("HumanoidRootPart") then
                 UI:Notify("⚠️ الرجاء تحديد لاعب موجود أولاً!")
                 isCarrying = false
                 return
             end
             
-            liftHeight = -6 -- تصفير المسافة للبداية من تحت الأرض
-            if hum then hum.PlatformStand = true end -- وضعية الإغماء/النوم
+            local targetRoot = currentTarget.Character.HumanoidRootPart
             
-            UI:Notify("🚀 جاري رفع: " .. currentTarget.DisplayName .. " (ببطء)")
+            -- تفعيل وضعية الإغماء
+            if hum then hum.PlatformStand = true end 
             
-            -- تشغيل حلقة الرفع الفيزيائية (المرعبة)
+            -- [[ التيلبورت المباشر: تحت الهدف بـ 4 خطوات ومستلقي على الظهر ]]
+            if root then
+                root.CFrame = CFrame.new(targetRoot.Position.X, targetRoot.Position.Y - 4, targetRoot.Position.Z) * CFrame.Angles(math.rad(-90), 0, 0)
+            end
+            
+            UI:Notify("🚀 جاري رفع الهدف ببطء...")
+            
+            -- حلقة الرفع الفيزيائية
             liftConnection = RunService.Heartbeat:Connect(function()
                 if not isCarrying or not currentTarget or not currentTarget.Character then return end
                 
@@ -75,29 +80,23 @@ return function(Tab, UI)
                 local tRoot = tChar:FindFirstChild("HumanoidRootPart")
 
                 if root and tRoot then
-                    -- [[ تفعيل Anti-Fling و Noclip ]]
+                    -- [[ تفعيل Noclip ]]
                     for _, part in pairs(char:GetDescendants()) do
                         if part:IsA("BasePart") then
-                            -- Noclip كامل باستثناء الجذع لضمان رفع الهدف وعدم التعليق في الأرض
+                            -- نخلي الجذع صلب بس عشان يقدر يرفع الهدف
                             part.CanCollide = (part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso")
-                            
-                            -- قوة رفع هادئة + حماية من الطيران العشوائي
-                            part.Velocity = Vector3.new(0, 10, 0)
-                            part.RotVelocity = Vector3.zero -- Anti-Fling أساسي
                         end
                     end
                     
-                    -- تأكيد الـ Anti-Fling على الـ Root (أهم قطعة)
-                    root.RotVelocity = Vector3.zero
-
-                    -- الرفع شوي بشوي (حد أقصى 5 خطوات فوق الهدف)
-                    if liftHeight < 5 then 
-                        liftHeight = liftHeight + liftSpeed 
-                    end
+                    -- [[ الرفع السلس والمغناطيس ]]
+                    -- 1. نعطي الشخصية سرعة رفع بطيئة جداً (شوي بشوي)
+                    root.Velocity = Vector3.new(0, 6, 0) 
                     
-                    -- [[ وضعية النوم وتشوف لفوق من تحت الأرض ]]
-                    -- CFrame.Angles(math.rad(-90), 0, 0) يجعلك مستلقياً على ظهرك ووجهك للسماء
-                    root.CFrame = CFrame.new(tRoot.Position.X, tRoot.Position.Y + liftHeight, tRoot.Position.Z) * CFrame.Angles(math.rad(-90), 0, 0)
+                    -- 2. تفعيل Anti-Fling لضمان عدم الطيران العشوائي
+                    root.RotVelocity = Vector3.zero 
+                    
+                    -- 3. مطابقة موقعك مع X و Z للهدف (عشان ما يطيح منك)، ونخلي Y يرتفع براحته مع الـ Velocity
+                    root.CFrame = CFrame.new(tRoot.Position.X, root.Position.Y, tRoot.Position.Z) * CFrame.Angles(math.rad(-90), 0, 0)
                 end
             end)
 
