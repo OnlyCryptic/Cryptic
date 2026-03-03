@@ -1,17 +1,29 @@
 -- [[ Cryptic Hub - ميزة الدخول عبر الآيدي ]]
--- المطور: يامي (Yami) | التحديث: ملف مستقل للدخول الفوري عبر JobId
+-- المطور: يامي (Yami) | التحديث: استخدام إشعارات روبلوكس الأصلية لتجنب القلتشات
 
 return function(Tab, UI)
     local TeleportService = game:GetService("TeleportService")
+    local StarterGui = game:GetService("StarterGui")
     local Players = game:GetService("Players")
     local lp = Players.LocalPlayer
+
+    -- دالة إشعارات روبلوكس الأصلية
+    local function SendRobloxNotification(title, text)
+        pcall(function()
+            StarterGui:SetCore("SendNotification", {
+                Title = title,
+                Text = text,
+                Duration = 4,
+            })
+        end)
+    end
 
     -- 1. زر نسخ رمز السيرفر الحالي
     Tab:AddTimedToggle("📋 نسخ رمز السيرفر (JobId)", function(active)
         if active then
             pcall(function()
                 setclipboard(tostring(game.JobId))
-                UI:Notify("✅ تم نسخ الرمز للحافظة!")
+                SendRobloxNotification("Cryptic Hub", "✅ تم نسخ الرمز للحافظة!")
             end)
         end
     end)
@@ -22,23 +34,23 @@ return function(Tab, UI)
     local InputField = Tab:AddInput("🔗 آيدي السيرفر المستهدف", "إلصق الرمز وأغلق الكيبورد...", function() end)
 
     task.spawn(function()
-        -- ننتظر حتى يتم تحميل الواجهة بالكامل
         repeat task.wait() until InputField and InputField.TextBox
         
         InputField.TextBox.FocusLost:Connect(function()
             local txt = InputField.TextBox.Text
             
-            -- التحقق من أن الآيدي طويل كفاية (الـ JobId دائماً يتجاوز 30 حرف)
             if txt and #txt > 20 then
-                UI:Notify("⏳ جاري الانتقال للسيرفر المحدد...")
+                SendRobloxNotification("Cryptic Hub", "⏳ جاري الانتقال للسيرفر المحدد...")
+                
+                -- انتظار خفيف جداً لضمان ظهور الإشعار قبل تجميد الانتقال
+                task.wait(0.5) 
                 
                 pcall(function()
                     TeleportService:TeleportToPlaceInstance(game.PlaceId, txt, lp)
                 end)
                 
-            -- تنبيه إذا كان النص المدخل قصير أو خاطئ
             elseif txt ~= "" then
-                UI:Notify("⚠️ الآيدي غير صحيح أو قصير جداً!")
+                SendRobloxNotification("Cryptic Hub", "⚠️ الآيدي غير صحيح أو قصير جداً!")
             end
         end)
     end)
