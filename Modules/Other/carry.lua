@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - المصعد الفيزيائي ]]
--- المطور: يامي (Yami) | التحديث: إصلاح الفيزياء، إزالة اللاق، وتسريع الاستجابة
+-- المطور: يامي (Yami) | التحديث: نظام تحديد الهدف الذكي (FocusLost) بدون أزرار إضافية
 
 return function(Tab, UI)
     local RunService = game:GetService("RunService")
@@ -12,27 +12,44 @@ return function(Tab, UI)
     local currentTarget = nil
     local liftConnection = nil
 
-    -- 1. خانة البحث الذكية (بدون حلقة انتظار تسبب لاق)
-    Tab:AddInput("حدد الهدف 🎯", "اكتب اسم اللاعب هنا...", function(txt)
-        if txt == "" then currentTarget = nil return end
+    -- 1. خانة البحث الذكية (تعمل عند إغلاق الكيبورد - FocusLost)
+    local InputField = Tab:AddInput("البحث عن لاعب 🎯", "اكتب بداية اليوزر وأغلق الكيبورد...", function() end)
+
+    task.spawn(function()
+        -- ننتظر حتى يتم بناء الواجهة وتوفر صندوق النص
+        repeat task.wait() until InputField and InputField.TextBox
         
-        local search = txt:lower()
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= lp and (p.Name:lower():sub(1, #search) == search or p.DisplayName:lower():sub(1, #search) == search) then
-                currentTarget = p
-                break 
+        InputField.TextBox.FocusLost:Connect(function()
+            local txt = InputField.TextBox.Text
+            if txt == "" then 
+                currentTarget = nil
+                return 
             end
-        end
+
+            local bestMatch = nil
+            local search = txt:lower()
+
+            for _, p in pairs(Players:GetPlayers()) do
+                -- استخدام string.sub للبحث الذكي بناءً على اليوزر
+                if p ~= lp and string.sub(p.Name:lower(), 1, #search) == search then
+                    bestMatch = p
+                    break 
+                end
+            end
+
+            if bestMatch then
+                currentTarget = bestMatch
+                -- تحديث نص الخانة ليظهر الاسم واليوزر بشكل احترافي
+                InputField.SetText(bestMatch.DisplayName .. " (@" .. bestMatch.Name .. ")")
+                UI:Notify("🎯 تم تحديد الهدف: " .. bestMatch.DisplayName)
+            else
+                currentTarget = nil
+                UI:Notify("❌ لم يتم العثور على لاعب")
+            end
+        end)
     end)
 
-    -- زر لتأكيد الهدف بعد كتابته
-    Tab:AddButton("تأكيد الهدف ✅", function()
-        if currentTarget then
-            UI:Notify("🎯 تم تحديد: " .. currentTarget.DisplayName)
-        else
-            UI:Notify("❌ لم يتم العثور على اللاعب!")
-        end
-    end)
+    Tab:AddLine()
 
     -- 2. زر تشغيل المصعد
     Tab:AddToggle("تشغيل المصعد 🚀", function(state)
@@ -53,7 +70,7 @@ return function(Tab, UI)
             
             UI:Notify("🚀 جاري رفع: " .. currentTarget.DisplayName)
             
-            -- تشغيل حلقة الرفع
+            -- تشغيل حلقة الرفع الفيزيائية
             liftConnection = RunService.Heartbeat:Connect(function()
                 if not isCarrying or not currentTarget or not currentTarget.Character then return end
                 
