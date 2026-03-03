@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V5.6 ]]
--- المطور: Cryptic | التحديث: بطاقة تعريفية مصغرة وأنيقة بدون حالة الاشتراك
+-- [[ Cryptic Hub - محرك الواجهة المطور V5.7 ]]
+-- المطور: يامي (Yami) | التحديث: زر فتح أنيق مع إطار + إصلاح السحب اللانهائي للقوائم
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -9,12 +9,19 @@ function UI:CreateWindow(title)
     local Screen = Instance.new("ScreenGui", CoreGui)
     Screen.Name = "CrypticHub_V5"; Screen.ResetOnSpawn = false
 
+    -- [[ تعديل زر الفتح: شكل بيضاوي أنيق، نص Cryptic، وإطار خارجي ]]
     local OpenBtn = Instance.new("TextButton", Screen)
-    OpenBtn.Size = UDim2.new(0, 45, 0, 45); OpenBtn.Position = UDim2.new(0, 10, 0.5, -22)
-    OpenBtn.Visible = false; OpenBtn.Text = "C"; OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
-    OpenBtn.TextColor3 = Color3.fromRGB(15, 15, 15); OpenBtn.Font = Enum.Font.SourceSansBold; OpenBtn.TextSize = 24
-    Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
+    OpenBtn.Size = UDim2.new(0, 85, 0, 35); OpenBtn.Position = UDim2.new(0, 10, 0.5, -17)
+    OpenBtn.Visible = false; OpenBtn.Text = "Cryptic"; OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
+    OpenBtn.TextColor3 = Color3.fromRGB(15, 15, 15); OpenBtn.Font = Enum.Font.GothamBold; OpenBtn.TextSize = 14
+    Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0) -- حواف دائرية كاملة
+    
+    local OpenStroke = Instance.new("UIStroke", OpenBtn)
+    OpenStroke.Color = Color3.fromRGB(255, 255, 255)
+    OpenStroke.Thickness = 2
+    OpenStroke.Transparency = 0.5
 
+    -- نظام سحب زر الفتح
     local dragC, dragStartC, startPosC
     OpenBtn.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.Touch then dragC = true; dragStartC = i.Position; startPosC = OpenBtn.Position end end)
     UserInputService.InputChanged:Connect(function(i) if dragC and i.UserInputType == Enum.UserInputType.Touch then local d = i.Position - dragStartC; OpenBtn.Position = UDim2.new(startPosC.X.Scale, startPosC.X.Offset + d.X, startPosC.Y.Scale, startPosC.Y.Offset + d.Y) end end)
@@ -34,9 +41,16 @@ function UI:CreateWindow(title)
     local Close = Instance.new("TextButton", TitleBar); Close.Text = "X"; Close.Position = UDim2.new(1, -35, 0, 5); Close.Size = UDim2.new(0, 25, 0, 25); Close.TextColor3 = Color3.new(1, 0, 0); Close.BackgroundTransparency = 1; Close.MouseButton1Click:Connect(function() Screen:Destroy() end)
     local Hide = Instance.new("TextButton", TitleBar); Hide.Text = "-"; Hide.Position = UDim2.new(1, -70, 0, 5); Hide.Size = UDim2.new(0, 25, 0, 25); Hide.TextColor3 = Color3.new(1, 1, 1); Hide.BackgroundTransparency = 1; Hide.MouseButton1Click:Connect(function() Main.Visible = false; OpenBtn.Visible = true end); OpenBtn.MouseButton1Click:Connect(function() Main.Visible = true; OpenBtn.Visible = false end)
 
+    -- [[ القائمة الجانبية (إصلاح السحب اللانهائي) ]]
     local Sidebar = Instance.new("ScrollingFrame", Main)
-    Sidebar.Position = UDim2.new(0, 0, 0, 35); Sidebar.Size = UDim2.new(0, 110, 1, -35); Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Sidebar.BorderSizePixel = 0; Sidebar.ScrollBarThickness = 2; Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    Sidebar.Position = UDim2.new(0, 0, 0, 35); Sidebar.Size = UDim2.new(0, 110, 1, -35); Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Sidebar.BorderSizePixel = 0; Sidebar.ScrollBarThickness = 2
+    Sidebar.CanvasSize = UDim2.new(0, 0, 0, 0) -- إيقاف الحجم التلقائي المقلتش
     local SidebarLayout = Instance.new("UIListLayout", Sidebar); SidebarLayout.Padding = UDim.new(0, 2)
+    
+    -- حساب حجم القائمة الجانبية بناءً على الأزرار فقط
+    SidebarLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Sidebar.CanvasSize = UDim2.new(0, 0, 0, SidebarLayout.AbsoluteContentSize.Y + 5)
+    end)
 
     local Content = Instance.new("Frame", Main)
     Content.Position = UDim2.new(0, 115, 0, 40); Content.Size = UDim2.new(1, -120, 1, -45); Content.BackgroundTransparency = 1
@@ -45,8 +59,16 @@ function UI:CreateWindow(title)
 
     function Window:CreateTab(name)
         local TabBtn = Instance.new("TextButton", Sidebar); TabBtn.Size = UDim2.new(1, 0, 0, 35); TabBtn.Text = name; TabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TabBtn.TextColor3 = Color3.new(1, 1, 1); TabBtn.BorderSizePixel = 0
-        local Page = Instance.new("ScrollingFrame", Content); Page.Size = UDim2.new(1, 0, 1, 0); Page.Visible = false; Page.BackgroundTransparency = 1; Page.ScrollBarThickness = 2; Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        
+        -- [[ قائمة المحتوى (إصلاح السحب اللانهائي) ]]
+        local Page = Instance.new("ScrollingFrame", Content); Page.Size = UDim2.new(1, 0, 1, 0); Page.Visible = false; Page.BackgroundTransparency = 1; Page.ScrollBarThickness = 2
+        Page.CanvasSize = UDim2.new(0, 0, 0, 0)
         local ListLayout = Instance.new("UIListLayout", Page); ListLayout.Padding = UDim.new(0, 8); ListLayout.SortOrder = Enum.SortOrder.LayoutOrder 
+        
+        -- حساب حجم المحتوى الداخلي بدقة
+        ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            Page.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 15)
+        end)
 
         if not Window.FirstTab then Window.FirstTab = Page; Page.Visible = true end
         TabBtn.MouseButton1Click:Connect(function() 
@@ -57,15 +79,12 @@ function UI:CreateWindow(title)
         local TabOps = {}
         local orderIndex = 0 
 
-        -- [[ البطاقة التعريفية المصغرة والأنيقة ]]
         function TabOps:AddProfileCard(player)
             orderIndex = orderIndex + 1
             local R = Instance.new("Frame", Page)
-            -- تصغير الحجم إلى 75 ليتناسب مع اختفاء سطر الاشتراك
             R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 75); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
             Instance.new("UICorner", R).CornerRadius = UDim.new(0, 8)
             
-            -- الصورة (يمين)
             local Avatar = Instance.new("ImageLabel", R)
             Avatar.Size = UDim2.new(0, 55, 0, 55); Avatar.Position = UDim2.new(1, -65, 0, 10)
             Avatar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -76,7 +95,6 @@ function UI:CreateWindow(title)
                 if s and thumb then Avatar.Image = thumb end
             end)
 
-            -- النصوص (يسار، محاذاة لليمين) مع توسيط أفضل
             local NameLbl = Instance.new("TextLabel", R)
             NameLbl.Size = UDim2.new(1, -80, 0, 25); NameLbl.Position = UDim2.new(0, 10, 0, 12)
             NameLbl.BackgroundTransparency = 1; NameLbl.Text = "أهلاً بك، " .. player.DisplayName
