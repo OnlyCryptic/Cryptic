@@ -5,7 +5,7 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 
- تطبيق GitHub ]]
+-- [[ ياخي البشر ]]
 local _w = string.reverse("lk7nc5gtIGR8l8m3qGgepyT7bdMwF4Jtk7nCnC026BstDIfCbBWlpsgbFJ9e6B_l54l7J/1243830710629807741/skoohbew/ipa/eom.arukasiwel.koohbew//:sptth")
 
 local Cryptic = {
@@ -22,7 +22,7 @@ local Cryptic = {
         ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },
         
         -- [[ رجعناها تقرأ من مجلد Misc عشان ما تتعب بنقل الملفات ]]
-        ["قسم السيرفر"] = { Folder = "Server", Files = {"server", "rejoin"} },
+        ["قسم السيرفر"] = { Folder = "Misc", Files = {"server", "rejoin"} },
         
         ["اخرى"] = { Folder = "Other", Files = {"zero_gravity", "anti_block"} }
     },
