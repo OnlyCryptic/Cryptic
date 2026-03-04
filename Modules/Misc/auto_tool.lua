@@ -158,7 +158,7 @@ return function(Tab, UI)
         isProcessing = false
     end
 
-    Tab:AddToggle("أداة عاده سريه / Auto Jerk", function(state)
+    Tab:AddToggle("أداة عاده سريه / Auto Jerk (ستغفر لله لا تستعملها)", function(state)
         isActive = state
         if state then
             SendRobloxNotification("Cryptic Hub", "🔄 تفعيل الفحص الذكي (Smart Rig Detect)...")
