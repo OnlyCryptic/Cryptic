@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - ميزة تطيير الهدف (Fling) المطور ]]
--- المطور: يامي (Yami) | الميزات: تطيير الأهداف المتحركة بثقل، عودة آمنة بالتجميد، إشعار 25 ثانية
+-- المطور: يامي (Yami) | الميزات: ضرب عشوائي، تتبع، عودة آمنة، إشعار 25 ثانية
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -29,7 +29,7 @@ return function(Tab, UI)
         local root = char and char:FindFirstChild("HumanoidRootPart")
 
         if active then
-            -- القراءة من متغير الاستهداف المرتبط بملف البحث
+            -- استخدام المتغير المرتبط بملف البحث الخاص بك
             if not _G.ArwaTarget or not _G.ArwaTarget.Character then
                 isFlinging = false
                 SendRobloxNotification("Cryptic Hub", "⚠️ حدد لاعباً أولاً من مربع البحث أعلى القائمة!")
@@ -53,11 +53,12 @@ return function(Tab, UI)
                 end
             end
 
-            -- حفظ مكانك الحالي للرجوع إليه
+            -- حفظ مكانك الحالي للرجوع إليه بسلام
             if root then
                 originalCFrame = root.CFrame
             end
 
+            -- تجميد شخصيتك للتحضير للدوران الحر
             if char then
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 if hum then hum.PlatformStand = true end
@@ -65,41 +66,36 @@ return function(Tab, UI)
 
             SendRobloxNotification("Cryptic Hub", "🔥 جاري تطيير وملاحقة: " .. _G.ArwaTarget.DisplayName)
         else
-            -- [[ الرجوع الآمن باستخدام التجميد (Anchoring) لمنع الموت ]]
-            if char and root then
+            -- [[ الإيقاف والعودة الآمنة لمكانك ]]
+            if char then
                 local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then hum.PlatformStand = false end
                 
-                -- تجميد اللاعب مؤقتاً لامتصاص الصدمة الفيزيائية
-                root.Anchored = true 
-                root.Velocity = Vector3.new(0, 0, 0)
-                root.RotVelocity = Vector3.new(0, 0, 0)
-                
-                -- إرجاع الأوزان والخصائص الطبيعية
-                for _, part in pairs(char:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
-                        part.CanCollide = true
-                        part.Massless = false
+                if root then
+                    -- تصفير الدوران والسرعة لمنع القلتشات
+                    root.Velocity = Vector3.new(0, 0, 0)
+                    root.RotVelocity = Vector3.new(0, 0, 0)
+                    
+                    -- العودة للمكان الأصلي بسلام
+                    if originalCFrame then
+                        root.CFrame = originalCFrame
+                        originalCFrame = nil
                     end
                 end
 
-                if originalCFrame then
-                    -- نرفعه 3 مسامير عن الأرض عشان ما يندمج مع الأرض ويموت
-                    root.CFrame = originalCFrame + Vector3.new(0, 3, 0)
-                    originalCFrame = nil
+                -- إرجاع الأوزان والخصائص الفيزيائية الطبيعية
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.Massless = false 
+                        part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
+                    end
                 end
-
-                -- انتظار لتستقر الفيزياء
-                task.wait(0.1) 
-                
-                if hum then hum.PlatformStand = false end
-                root.Anchored = false 
             end
             SendRobloxNotification("Cryptic Hub", "❌ توقف التطيير وعدت لمكانك بأمان.")
         end
     end)
 
-    -- [[ المحرك الفيزيائي للتطيير ]]
+    -- [[ المحرك الفيزيائي للتطيير والملاحقة العشوائية ]]
     runService.Heartbeat:Connect(function()
         if not isFlinging or not _G.ArwaTarget then return end
         
@@ -113,24 +109,35 @@ return function(Tab, UI)
                 if part:IsA("BasePart") then
                     if part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso" then
                         part.CanCollide = true
-                        -- رفع الكثافة بشكل ضخم لجعلك ثقيلاً مثل الجدار
-                        part.CustomPhysicalProperties = PhysicalProperties.new(100, 0.3, 0.5)
-                        part.Massless = false 
+                        -- رفع كثافة شخصيتك لتصبح مثل الجدار المتحرك وتقليل الاحتكاك
+                        part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 1)
                     else
                         part.CanCollide = false
                     end
+                    part.Massless = true
                 end
             end
 
+            -- تتبع الهدف مع حساب سرعته الحالية (Predictive Tracking)
             local targetVel = targetRoot.Velocity
-            local offset = Vector3.new(math.random(-1, 1), math.random(-1, 1), math.random(-1, 1))
-            
-            -- الالتصاق الدقيق والتنبؤ بالحركة مع إزاحة عشوائية للضرب من كل الجهات
-            root.CFrame = CFrame.new(targetRoot.Position + (targetVel * 0.1) + offset)
+            local predictedPos = targetRoot.Position + (targetVel * 0.1)
 
-            -- سرعة جنونية في كل المحاور لضمان تدمير فيزياء الهدف وتطييره
-            root.Velocity = Vector3.new(math.random(-50000, 50000), 50000, math.random(-50000, 50000))
-            root.RotVelocity = Vector3.new(50000, 50000, 50000)
+            -- ضرب عشوائي من جميع الأنحاء لتدمير فيزياء الهدف
+            local randX = math.random(-3, 3)
+            local randY = math.random(-2, 3)
+            local randZ = math.random(-3, 3)
+            local randomOffset = Vector3.new(randX, randY, randZ)
+            
+            root.CFrame = CFrame.new(predictedPos + randomOffset)
+
+            -- دوران عشوائي بسرعات جنونية في جميع المحاور
+            local rotX = math.random(-50000, 50000)
+            local rotY = math.random(-50000, 50000)
+            local rotZ = math.random(-50000, 50000)
+            
+            -- قوة دفع للأعلى ולلجوانب لضمان الطيران
+            root.Velocity = Vector3.new(math.random(-1000, 1000), 5000, math.random(-1000, 1000))
+            root.RotVelocity = Vector3.new(rotX, rotY, rotZ)
         end
     end)
 end
