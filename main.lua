@@ -14,15 +14,15 @@ WebhookURL = "https://webhook.lewisakura.moe/api/webhooks/1477089260170383421/J7
 
 Structure = {  
     ["معلومات / info"] = { Folder = "", Files = {"info"} },   
-    ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },  
-    ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "shiftlock", "emotes", "camera", "fullbright"} },  
-    ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "carry"} },  
-    ["قسم السيرفر"] = { Folder = "Server", Files = {"server", "rejoin", "join_id"} },  
+    ["قسم اللاعب / player"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },  
+    ["أدوات / tools"] = { Folder = "Misc", Files = {"tptool", "esp", "shiftlock", "emotes", "camera", "fullbright"} },  
+    ["استهداف لاعب / players"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "carry"} },  
+    ["قسم السيرفر / server"] = { Folder = "Server", Files = {"server", "rejoin", "join_id"} },  
       
     -- [[ التعديل هنا: اسم القسم "اخرى" ومجلد جديد باسم "Other" ]]  
-    ["اخرى"] = { Folder = "Other", Files = {"zero_gravity", "anti_block", "block_surfer"} }  
+    ["اخرى / Other"] = { Folder = "Other", Files = {"zero_gravity", "anti_block", "block_surfer"} }  
 },  
-TabsOrder = {"معلومات / info", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "اخرى"}
+TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / player s", "قسم السيرفر / server", "اخرى / Other"}
 
 }
 
