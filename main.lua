@@ -22,7 +22,7 @@ Structure = {
     -- [[ التعديل هنا: اسم القسم "اخرى" ومجلد جديد باسم "Other" ]]  
     ["اخرى / Other"] = { Folder = "Other", Files = {"zero_gravity", "anti_block", "block_surfer"} }  
 },  
-TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / player s", "قسم السيرفر / server", "اخرى / Other"}
+TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / players", "قسم السيرفر / server", "اخرى / Other"}
 
 }
 
