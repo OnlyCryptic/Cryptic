@@ -16,11 +16,11 @@ Structure = {
     ["معلومات"] = { Folder = "", Files = {"info"} },   
     ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },  
     ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "shiftlock", "emotes", "camera", "fullbright"} },  
-    ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling"} },  
+    ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "carry"} },  
     ["قسم السيرفر"] = { Folder = "Server", Files = {"server", "rejoin", "join_id"} },  
       
     -- [[ التعديل هنا: اسم القسم "اخرى" ومجلد جديد باسم "Other" ]]  
-    ["اخرى"] = { Folder = "Other", Files = {"zero_gravity", "anti_block", "carry", "block_surfer"} }  
+    ["اخرى"] = { Folder = "Other", Files = {"zero_gravity", "anti_block", "block_surfer"} }  
 },  
 TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "اخرى"}
 
