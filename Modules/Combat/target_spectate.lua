@@ -1,41 +1,62 @@
--- [[ Arwa Hub - ميزة مراقبة الهدف (Spectate) ]]
--- المطور: Arwa | الميزات: تتبع تلقائي، عودة سريعة للكاميرا
+-- [[ Cryptic Hub - ميزة مراقبة الهدف (Spectate) ]]
+-- المطور: يامي (Yami) | الميزات: تتبع تلقائي للكاميرا، عودة سريعة، إشعارات 25 ثانية
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
-    local lp = game.Players.LocalPlayer
+    local players = game:GetService("Players")
+    local StarterGui = game:GetService("StarterGui")
+    local lp = players.LocalPlayer
     local camera = workspace.CurrentCamera
     
     local isSpectating = false
 
-    Tab:AddToggle("👁️ مراقبة الهدف", function(active)
+    -- دالة إشعارات روبلوكس الرسمية (مدة 25 ثانية)
+    local function SendRobloxNotification(title, text)
+        pcall(function()
+            StarterGui:SetCore("SendNotification", {
+                Title = title,
+                Text = text,
+                Duration = 25, 
+            })
+        end)
+    end
+
+    -- [[ زر التشغيل بالاسم الموحد ]]
+    Tab:AddToggle("مراقبة الهدف / Spectate", function(active)
         isSpectating = active
+        
         if active then
-            if _G.ArwaTarget then
-                UI:Notify("👁️ جاري مراقبة: " .. _G.ArwaTarget.DisplayName)
+            -- التأكد من وجود هدف في خانة البحث (ArwaTarget)
+            if _G.ArwaTarget and _G.ArwaTarget.Character then
+                local hum = _G.ArwaTarget.Character:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    camera.CameraSubject = hum
+                    SendRobloxNotification("Cryptic Hub", "👁️ جاري مراقبة: " .. _G.ArwaTarget.DisplayName)
+                end
             else
-                UI:Notify("⚠️ حدد لاعباً أولاً!")
+                isSpectating = false
+                SendRobloxNotification("Cryptic Hub", "⚠️ حدد لاعباً أولاً لمراقبته!")
             end
         else
-            -- إرجاع الكاميرا لشخصيتكِ فوراً عند الإيقاف
-            if lp.Character and lp.Character:FindFirstChild("Humanoid") then
-                camera.CameraSubject = lp.Character.Humanoid
-                UI:Notify("❌ توقفت المراقبة")
+            -- إرجاع الكاميرا لشخصيتك فوراً عند الإيقاف
+            if lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
+                camera.CameraSubject = lp.Character:FindFirstChildOfClass("Humanoid")
             end
+            SendRobloxNotification("Cryptic Hub", "❌ تم إيقاف المراقبة والعودة لشخصيتك.")
         end
     end)
 
-    -- حلقة التتبع لضمان بقاء الكاميرا مع الهدف حتى لو مات أو تغير
+    -- [[ حلقة التحديث لضمان بقاء الكاميرا مع الهدف ]]
     runService.RenderStepped:Connect(function()
         if isSpectating then
             local target = _G.ArwaTarget
-            if target and target.Character and target.Character:FindFirstChild("Humanoid") then
-                -- قفل الكاميرا على الشخصية المستهدفة
-                camera.CameraSubject = target.Character.Humanoid
+            if target and target.Character and target.Character:FindFirstChildOfClass("Humanoid") then
+                -- قفل الكاميرا على الشخصية المستهدفة باستمرار
+                camera.CameraSubject = target.Character:FindFirstChildOfClass("Humanoid")
             else
-                -- إذا اختفى الهدف، تعود الكاميرا لكِ تلقائياً لتجنب تعليق الرؤية
-                if lp.Character and lp.Character:FindFirstChild("Humanoid") then
-                    camera.CameraSubject = lp.Character.Humanoid
+                -- إذا خرج اللاعب أو مات، ترجع الكاميرا لك تلقائياً عشان ما تعلق الرؤية
+                if lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
+                    camera.CameraSubject = lp.Character:FindFirstChildOfClass("Humanoid")
                 end
             end
         end
