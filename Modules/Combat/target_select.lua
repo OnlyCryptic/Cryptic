@@ -18,7 +18,7 @@ return function(Tab, UI)
     end
 
     -- خانة البحث
-    local InputField = Tab:AddInput("البحث عن لاعب", "اكتب بداية اليوزر وأغلق الكيبورد...", function(txt) end)
+    local InputField = Tab:AddInput("تحديد لاعب الهدف / target player", "اكتب بداية اليوزر وأغلق الكيبورد...", function(txt) end)
 
     InputField.TextBox.FocusLost:Connect(function()
         local txt = InputField.TextBox.Text
