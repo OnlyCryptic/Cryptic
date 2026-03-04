@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - التحكم بالبلوكات (Hoverboard FE) V5 ]]
--- المطور: يامي (Yami) | التحديث: حل مشكلة الانقلاب والانغراس في الأرض (Massless & Safety Lift)
+-- [[ Cryptic Hub - التحكم بالبلوكات (Hoverboard FE) V4 ]]
+-- المطور: يامي (Yami) | التحديث: وقوف مستقيم 100% من أول ثانية بدون أي ميلان
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -26,7 +26,7 @@ return function(Tab, UI)
 
     -- [[ 1. تصميم أزرار الصعود والهبوط للجوال ]]
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "CrypticHoverUI_V5"
+    ScreenGui.Name = "CrypticHoverUI_V4"
     ScreenGui.ResetOnSpawn = false
     local success, _ = pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
     if not success then ScreenGui.Parent = lp:WaitForChild("PlayerGui") end
@@ -85,11 +85,6 @@ return function(Tab, UI)
             end
         end
 
-        -- إرجاع وزن البلوكة الطبيعي عند الإيقاف
-        if hoverPart and hoverPart.Parent then
-            hoverPart.Massless = false
-        end
-
         if hoverWeld then hoverWeld:Destroy() hoverWeld = nil end
         if bv then bv:Destroy() bv = nil end
         if bg then bg:Destroy() bg = nil end
@@ -105,7 +100,7 @@ return function(Tab, UI)
     end
 
     -- [[ 3. زر تشغيل الخدعة ]]
-    Tab:AddToggle("🛹 لوح التزلج الفيزيائي (Hoverboard)", function(state)
+    Tab:AddToggle("ركوب البلوكات / Block Surfer", function(state)
         if state then
             local char = lp.Character
             local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -132,13 +127,11 @@ return function(Tab, UI)
                 isHovering = true
                 ScreenGui.Enabled = true
 
+                -- إيقاف أي حركة أو ميلان سابق فوراً
                 root.Velocity = Vector3.new(0, 0, 0)
                 root.RotVelocity = Vector3.new(0, 0, 0)
 
-                -- [[ إلغاء وزن البلوكة لمنع الانقلاب الجاذبي ]]
-                hoverPart.Massless = true
-
-                -- الخوارزمية الهندسية
+                -- تسطيح البلوكة
                 local size = hoverPart.Size
                 local sx, sy, sz = size.X, size.Y, size.Z
                 local minAxis = math.min(sx, sy, sz)
@@ -159,16 +152,14 @@ return function(Tab, UI)
 
                 hum.PlatformStand = true
 
-                -- [[ قفزة الأمان: رفع اللاعب للأعلى قبل اللحام لتجنب الانغراس في الأرض ]]
-                root.CFrame = root.CFrame + Vector3.new(0, blockThickness + 4, 0)
-
+                -- إجبار اللاعب على الوقوف بشكل مستقيم 100% قبل اللحام
                 local camLook = Camera.CFrame.LookVector
                 local flatLook = Vector3.new(camLook.X, 0, camLook.Z)
                 if flatLook.Magnitude > 0.01 then
                     root.CFrame = CFrame.new(root.Position, root.Position + flatLook.Unit)
                 end
 
-                -- اللحام
+                -- لحام البلوكة
                 hoverWeld = Instance.new("Weld")
                 hoverWeld.Part0 = root
                 hoverWeld.Part1 = hoverPart
@@ -184,7 +175,8 @@ return function(Tab, UI)
 
                 bg = Instance.new("BodyGyro")
                 bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-                bg.P = 25000 
+                bg.P = 25000 -- قوة جبارة للتوازن الفوري والصلب
+                -- ضبط التوازن المبدئي فوراً عشان ما يميل ولا ملي
                 if flatLook.Magnitude > 0.01 then
                     bg.CFrame = CFrame.new(root.Position, root.Position + flatLook.Unit)
                 else
@@ -192,7 +184,7 @@ return function(Tab, UI)
                 end
                 bg.Parent = root
 
-                SendRobloxNotification("Cryptic Hub", "✅ تم السحب بنجاح! طيران آمن ومستقر 🛸")
+                SendRobloxNotification("Cryptic Hub", "✅ وقوف مستقيم! طيران ممتع 🛸")
 
                 -- [[ 4. حلقة التحكم ]]
                 connection = RunService.Heartbeat:Connect(function()
