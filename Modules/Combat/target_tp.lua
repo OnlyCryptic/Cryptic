@@ -1,28 +1,42 @@
--- [[ Cryptic Hub - انتقال إلى هدف ]]
--- المطور: Cryptic | التحديث: استخدام نظام الزر المؤقت (ينطفئ بعد ثانيتين)
+-- [[ Cryptic Hub - انتقال للهدف / Target TP ]]
+-- المطور: يامي (Yami) | الميزات: انتقال آمن، إشعارات 25 ثانية، نظام TimedToggle
 
 return function(Tab, UI)
-    -- استخدام AddTimedToggle بدلاً من AddButton لتوحيد الشكل
-    Tab:AddTimedToggle("🚀 انتقال إلى لاعب", function(active)
+    local players = game:GetService("Players")
+    local StarterGui = game:GetService("StarterGui")
+    local lp = players.LocalPlayer
+
+    -- دالة إشعارات روبلوكس الرسمية (تم الضبط على 25 ثانية)
+    local function SendRobloxNotification(title, text)
+        pcall(function()
+            StarterGui:SetCore("SendNotification", {
+                Title = title,
+                Text = text,
+                Duration = 25, 
+            })
+        end)
+    end
+
+    -- استخدام AddTimedToggle لتوحيد شكل السكربت (ينطفئ الزر تلقائياً بعد ثانيتين)
+    Tab:AddTimedToggle("انتقال للهدف / Target TP", function(active)
         if active then
-            local target = _G.ArwaTarget -- قراءة الهدف المحدد من الذاكرة العامة
-            local lp = game.Players.LocalPlayer
+            local target = _G.ArwaTarget -- قراءة الهدف من المتغير المرتبط بملف البحث الخاص بك
+            local char = lp.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
             
-            -- التأكد من وجود الهدف وجودة شخصيته في الماب
-            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then 
-                if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                    -- عملية الانتقال فوق رأس الهدف بـ 3 بلاطات
-                    lp.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 3, 0) 
+            -- التأكد من وجود هدف محدد وجودة شخصيته في الماب
+            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                local targetRoot = target.Character.HumanoidRootPart
+                
+                if root and targetRoot then
+                    -- عملية الانتقال فوق موقع الهدف بمسافة آمنة (3 مسامير) لمنع القلتش
+                    root.CFrame = targetRoot.CFrame * CFrame.new(0, 3, 0)
+                    
+                    SendRobloxNotification("Cryptic Hub", "⚡ تم الانتقال بنجاح إلى: " .. target.DisplayName)
                 end
             else
-                -- تنبيه في حال لم يتم اختيار لاعب من القائمة
-                pcall(function()
-                    game:GetService("StarterGui"):SetCore("SendNotification", {
-                        Title = "Cryptic Hub",
-                        Text = "⚠️ حدد هدفاً أولاً من قائمة اللاعبين!",
-                        Duration = 3
-                    })
-                end)
+                -- إشعار في حال عدم تحديد لاعب أو اختفاء الهدف
+                SendRobloxNotification("Cryptic Hub", "⚠️ حدد هدفاً أولاً من خانة البحث أعلاه!")
             end
         end
     end)
