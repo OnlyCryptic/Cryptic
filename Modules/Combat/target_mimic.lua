@@ -1,15 +1,27 @@
--- [[ Arwa Hub - ميزة تقليد الكلام (Mimic) ]]
--- المطور: Arwa | الميزات: دعم نظام الشات الجديد والقديم، تحديث تلقائي للهدف
+-- [[ Cryptic Hub - ميزة تقليد الكلام (Chat Mimic) ]]
+-- المطور: يامي (Yami) | الميزات: دعم الأنظمة الجديدة والقديمة، إشعارات نظامية
 
 return function(Tab, UI)
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local TextChatService = game:GetService("TextChatService")
+    local StarterGui = game:GetService("StarterGui")
     local lp = game.Players.LocalPlayer
 
     local isMimicking = false
     local mimicConnection = nil
 
-    -- الوظيفة الأساسية لربط الشات (نفس الكود الكبير)
+    -- دالة إشعارات روبلوكس الرسمية
+    local function SendRobloxNotification(title, text)
+        pcall(function()
+            StarterGui:SetCore("SendNotification", {
+                Title = title,
+                Text = text,
+                Duration = 10, -- مدة كافية للرؤية
+            })
+        end)
+    end
+
+    -- الوظيفة الأساسية لربط الشات بالهدف
     local function setupMimicConnection()
         if mimicConnection then 
             mimicConnection:Disconnect() 
@@ -33,21 +45,33 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddToggle("💬 تقليد كلام الهدف", function(active)
+    -- زر التشغيل بالاسم الجديد المتناسق مع السكربت
+    Tab:AddToggle("تقليد الاعب / Chat Mimic", function(active)
         isMimicking = active
-        setupMimicConnection()
+        
         if active then
-            UI:Notify("✅ بدأ السكربت بتقليد كلام الهدف")
+            if _G.ArwaTarget then
+                setupMimicConnection()
+                SendRobloxNotification("Cryptic Hub", "✅ بدأ تقليد كلام: " .. _G.ArwaTarget.DisplayName)
+            else
+                isMimicking = false
+                -- إذا نسيت تحديد لاعب
+                SendRobloxNotification("Cryptic Hub", "⚠️ حدد لاعباً أولاً من خانة البحث!")
+            end
         else
-            UI:Notify("❌ تم إيقاف تقليد الكلام")
+            if mimicConnection then 
+                mimicConnection:Disconnect() 
+                mimicConnection = nil 
+            end
+            SendRobloxNotification("Cryptic Hub", "❌ تم إيقاف تقليد الكلام")
         end
     end)
 
-    -- حلقة ذكية للتأكد من تحديث التقليد إذا قمتِ بتغيير الهدف
+    -- حلقة ذكية لتحديث التقليد تلقائياً عند تغيير الهدف في خانة البحث
     task.spawn(function()
         local lastTarget = nil
         while true do
-            task.wait(1) -- فحص كل ثانية لضمان عدم حدوث تعليق (Lag)
+            task.wait(1) 
             if isMimicking and _G.ArwaTarget ~= lastTarget then
                 lastTarget = _G.ArwaTarget
                 setupMimicConnection()
