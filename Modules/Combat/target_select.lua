@@ -1,8 +1,23 @@
+-- [[ Cryptic Hub - نظام البحث عن لاعب ]]
+-- المطور: يامي (Yami) | الميزات: بحث ذكي، إشعارات رسمية 25 ثانية
+
 return function(Tab, UI)
     local players = game:GetService("Players")
+    local StarterGui = game:GetService("StarterGui")
     local lp = players.LocalPlayer
     
-    -- خانة البحث (نفس نظام الكود القديم)
+    -- دالة إشعارات روبلوكس الرسمية (مدة 25 ثانية)
+    local function SendRobloxNotification(title, text)
+        pcall(function()
+            StarterGui:SetCore("SendNotification", {
+                Title = title,
+                Text = text,
+                Duration = 10, 
+            })
+        end)
+    end
+
+    -- خانة البحث
     local InputField = Tab:AddInput("البحث عن لاعب", "اكتب بداية اليوزر وأغلق الكيبورد...", function(txt) end)
 
     InputField.TextBox.FocusLost:Connect(function()
@@ -16,7 +31,7 @@ return function(Tab, UI)
         local search = txt:lower()
 
         for _, p in pairs(players:GetPlayers()) do
-            -- استخدام string.sub للبحث الذكي كما في الكود السابق
+            -- نظام البحث الذكي عن طريق بداية الاسم
             if p ~= lp and string.sub(p.Name:lower(), 1, #search) == search then
                 bestMatch = p
                 break 
@@ -25,12 +40,12 @@ return function(Tab, UI)
 
         if bestMatch then
             _G.ArwaTarget = bestMatch
-            -- تحديث نص الخانة ليظهر الاسم كاملاً كما طلبتِ
+            -- تحديث نص الخانة ليظهر الاسم الكامل واليوزر
             InputField.SetText(bestMatch.DisplayName .. " (@" .. bestMatch.Name .. ")")
-            UI:Notify("🎯 تم تحديد الهدف: " .. bestMatch.DisplayName)
+            SendRobloxNotification("Cryptic Hub", "🎯 تم تحديد الهدف بنجاح: " .. bestMatch.DisplayName)
         else
             _G.ArwaTarget = nil
-            UI:Notify("❌ لم يتم العثور على لاعب")
+            SendRobloxNotification("Cryptic Hub", "❌ لم يتم العثور على لاعب بهذا الاسم!")
         end
     end)
 end
