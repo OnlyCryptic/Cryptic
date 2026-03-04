@@ -46,7 +46,7 @@ return function(Tab, UI)
     end
 
     -- زر التشغيل بالاسم الجديد المتناسق مع السكربت
-    Tab:AddToggle("تقليد الاعب / Chat Mimic", function(active)
+    Tab:AddToggle("تقليد كلام / Chat Mimic", function(active)
         isMimicking = active
         
         if active then
