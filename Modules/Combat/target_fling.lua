@@ -1,44 +1,130 @@
--- [[ Arwa Hub - ميزة تطيير الهدف (Fling) ]]
--- المطور: Arwa | الميزات: تطيير موجه، إيقاف التصادم تلقائياً
+-- [[ Arwa Hub - ميزة تطيير الهدف (Fling) المطور ]]
+-- المطور: يامي (Yami) | الميزات: ملاحقة مستمرة، فحص تصادم، عودة آمنة، إشعار 25 ثانية
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
-    local lp = game.Players.LocalPlayer
+    local players = game:GetService("Players")
+    local PhysicsService = game:GetService("PhysicsService")
+    local StarterGui = game:GetService("StarterGui")
+    local lp = players.LocalPlayer
+    
     local isFlinging = false
+    local originalCFrame = nil -- متغير لحفظ مكانك قبل التطيير
 
-    Tab:AddToggle("🌪️ تطيير الهدف", function(active)
+    -- دالة إشعارات روبلوكس بمدة 25 ثانية
+    local function SendRobloxNotification(title, text)
+        pcall(function()
+            StarterGui:SetCore("SendNotification", {
+                Title = title,
+                Text = text,
+                Duration = 25, -- تم ضبط المدة لتكون 25 ثانية
+            })
+        end)
+    end
+
+    -- [[ زر التفعيل مع فحص التصادم والحفظ ]]
+    Tab:AddToggle("تطيير الهدف / fling", function(active)
         isFlinging = active
+        local char = lp.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+
         if active then
-            if _G.ArwaTarget then
-                UI:Notify("🔥 جاري تطيير: " .. _G.ArwaTarget.DisplayName)
-            else
-                UI:Notify("⚠️ حدد لاعباً أولاً!")
+            -- التأكد من وجود هدف
+            if not _G.ArwaTarget or not _G.ArwaTarget.Character then
+                isFlinging = false
+                SendRobloxNotification("Arwa Hub", "⚠️ حدد لاعباً أولاً من مربع البحث أعلى القائمة!")
+                return
             end
+
+            -- فحص نظام التصادم في الماب (Collision Check)
+            local targetChar = _G.ArwaTarget.Character
+            local myTorso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or root
+            local targetTorso = targetChar:FindFirstChild("Torso") or targetChar:FindFirstChild("UpperTorso") or targetChar:FindFirstChild("HumanoidRootPart")
+            
+            if myTorso and targetTorso then
+                local success, canCollide = pcall(function()
+                    return PhysicsService:CollisionGroupsAreCollidable(myTorso.CollisionGroup, targetTorso.CollisionGroup)
+                end)
+                
+                if success and not canCollide then
+                    isFlinging = false
+                    SendRobloxNotification("Arwa Hub", "🚫 الماب يلغي تلامس اللاعبين (No-Collide)، الخدعة لن تعمل هنا!")
+                    return 
+                end
+            end
+
+            -- حفظ مكانك الحالي للرجوع إليه بسلام
+            if root then
+                originalCFrame = root.CFrame
+            end
+
+            -- تجميد شخصيتك للتحضير للدوران (يمنع مقاومة اللعبة للدوران)
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then hum.PlatformStand = true end
+            end
+
+            SendRobloxNotification("Arwa Hub", "🔥 جاري تطيير وملاحقة: " .. _G.ArwaTarget.DisplayName)
         else
-            UI:Notify("❌ توقف وضع التطيير")
+            -- [[ الإيقاف والعودة الآمنة ]]
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then hum.PlatformStand = false end
+                
+                if root then
+                    -- تصفير الدوران والسرعة لمنع القلتشات
+                    root.Velocity = Vector3.new(0, 0, 0)
+                    root.RotVelocity = Vector3.new(0, 0, 0)
+                    
+                    -- العودة للمكان الأصلي بسلام
+                    if originalCFrame then
+                        root.CFrame = originalCFrame
+                        originalCFrame = nil
+                    end
+                end
+
+                -- إرجاع الأوزان الطبيعية
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.Massless = false 
+                    end
+                end
+            end
+            SendRobloxNotification("Arwa Hub", "❌ توقف التطيير وعدت لمكانك بأمان.")
         end
     end)
 
+    -- [[ المحرك الفيزيائي للتطيير والملاحقة ]]
     runService.Heartbeat:Connect(function()
-        local target = _G.ArwaTarget
-        if isFlinging and target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-            local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-            local targetRoot = target.Character.HumanoidRootPart
-            local hum = lp.Character and lp.Character:FindFirstChild("Humanoid")
+        if not isFlinging or not _G.ArwaTarget then return end
+        
+        local char = lp.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        local targetChar = _G.ArwaTarget.Character
+        local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
 
-            if root and hum then
-                -- 1. إلغاء التصادم لكي لا تتطيري أنتِ مع الخصم
-                for _, part in pairs(lp.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then part.CanCollide = false end
+        if root and targetRoot then
+            -- إعداد التصادم للدوران القاتل
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    -- الجزء الأساسي يجب أن يصطدم ليطير الخصم
+                    if part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso" then
+                        part.CanCollide = true
+                    else
+                        part.CanCollide = false
+                    end
+                    part.Massless = true
                 end
-
-                -- 2. الانتقال السريع لموقع الخصم مع تطبيق قوة دوران هائلة
-                root.Velocity = Vector3.new(0, 50, 0) -- رفعة بسيطة
-                root.RotVelocity = Vector3.new(0, 15000, 0) -- دوران مغزلي خارق
-                
-                -- الالتصاق بالخصم لتأكيد التطيير
-                root.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 0)
             end
+
+            -- الملاحقة المستمرة مع التنبؤ بحركة الخصم 
+            -- (إذا الخصم يركض، شخصيتك راح تسبقه بخطوة وتلتصق فيه)
+            local predictedPos = targetRoot.CFrame + (targetRoot.Velocity * 0.1)
+            root.CFrame = predictedPos
+
+            -- قوة دوران مغزلية خارقة في جميع الاتجاهات (Fling)
+            root.Velocity = Vector3.new(0, 0, 0) -- البقاء في نفس مستوى الخصم
+            root.RotVelocity = Vector3.new(50000, 50000, 50000) 
         end
     end)
 end
