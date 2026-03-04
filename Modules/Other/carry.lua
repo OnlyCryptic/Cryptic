@@ -1,9 +1,10 @@
 -- [[ Cryptic Hub - المصعد الفيزيائي المطور (Sleeping Elevator) ]]  
--- المطور: يامي (Yami) | الميزات: وضعية النوم، خروج من تحت الأرض، Anti-Fling، Noclip، تنظيف فيزيائي  
+-- المطور: يامي (Yami) | الميزات: وضعية النوم، خروج من تحت الأرض، Anti-Fling، Noclip، تنظيف، فحص تصادم  
   
 return function(Tab, UI)  
     local runService = game:GetService("RunService")  
     local players = game:GetService("Players")  
+    local PhysicsService = game:GetService("PhysicsService")
     local StarterGui = game:GetService("StarterGui")
     local lp = players.LocalPlayer  
       
@@ -48,7 +49,7 @@ return function(Tab, UI)
         end  
     end)  
   
-    -- [[ 2. زر التفعيل للرفع الفيزيائي ]]  
+    -- [[ 2. زر التفعيل للرفع الفيزيائي مع فحص التصادم ]]  
     Tab:AddToggle("حمل اللاعب / Carry Player", function(active)  
         isCarrying = active  
         local char = lp.Character  
@@ -60,6 +61,24 @@ return function(Tab, UI)
                 SendRobloxNotification("Cryptic Hub", "⚠️ حدد لاعباً أولاً من مربع البحث!")  
                 return  
             end  
+            
+            -- [[ فحص نظام التصادم في الماب (Collision Check) ]]
+            local targetChar = _G.CrypticTarget.Character
+            local myTorso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or root
+            local targetTorso = targetChar:FindFirstChild("Torso") or targetChar:FindFirstChild("UpperTorso") or targetChar:FindFirstChild("HumanoidRootPart")
+            
+            if myTorso and targetTorso then
+                -- فحص ما إذا كانت مجموعات التصادم الخاصة باللاعبين تمنع التلامس
+                local success, canCollide = pcall(function()
+                    return PhysicsService:CollisionGroupsAreCollidable(myTorso.CollisionGroup, targetTorso.CollisionGroup)
+                end)
+                
+                if success and not canCollide then
+                    isCarrying = false
+                    SendRobloxNotification("Cryptic Hub", "🚫 هذا الماب يلغي تلامس اللاعبين (No-Collide)، الخدعة لن تعمل هنا!")
+                    return -- إيقاف العملية فوراً
+                end
+            end
               
             if char then  
                 local hum = char:FindFirstChildOfClass("Humanoid")  
@@ -69,7 +88,7 @@ return function(Tab, UI)
             liftHeight = -7 
             SendRobloxNotification("Cryptic Hub", "🚀 شخصيتك تخرج الآن من تحت الأرض...")  
         else  
-            -- [[ التعديل الجذري هنا: التنظيف الفيزيائي عند الإيقاف ]]
+            -- [[ التنظيف الفيزيائي عند الإيقاف ]]
             if char then  
                 local hum = char:FindFirstChildOfClass("Humanoid")  
                 if hum then hum.PlatformStand = false end  
