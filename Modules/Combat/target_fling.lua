@@ -1,5 +1,5 @@
--- [[ Arwa Hub - ميزة تطيير الهدف (Fling) المطور ]]
--- المطور: يامي (Yami) | الميزات: ملاحقة مستمرة، فحص تصادم، عودة آمنة، إشعار 25 ثانية
+-- [[ Cryptic Hub - ميزة تطيير الهدف (Fling) المطور ]]
+-- المطور: يامي (Yami) | الميزات: ضرب عشوائي من كل الاتجاهات، تتبع أثناء الحركة، عودة آمنة، إشعار 25 ثانية
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -17,27 +17,27 @@ return function(Tab, UI)
             StarterGui:SetCore("SendNotification", {
                 Title = title,
                 Text = text,
-                Duration = 25, -- تم ضبط المدة لتكون 25 ثانية
+                Duration = 25, -- تم الضبط على 25 ثانية
             })
         end)
     end
 
-    -- [[ زر التفعيل مع فحص التصادم والحفظ ]]
-    Tab:AddToggle("تطيير الهدف / fling", function(active)
+    -- [[ زر التفعيل بالاسم الجديد ]]
+    Tab:AddToggle("تطيير الهدف / Fling", function(active)
         isFlinging = active
         local char = lp.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
 
         if active then
-            -- التأكد من وجود هدف
-            if not _G.ArwaTarget or not _G.ArwaTarget.Character then
+            -- التأكد من وجود هدف عبر متغير CrypticTarget الجديد
+            if not _G.CrypticTarget or not _G.CrypticTarget.Character then
                 isFlinging = false
-                SendRobloxNotification("Arwa Hub", "⚠️ حدد لاعباً أولاً من مربع البحث أعلى القائمة!")
+                SendRobloxNotification("Cryptic Hub", "⚠️ حدد لاعباً أولاً من مربع البحث أعلى القائمة!")
                 return
             end
 
-            -- فحص نظام التصادم في الماب (Collision Check)
-            local targetChar = _G.ArwaTarget.Character
+            -- فحص نظام التصادم في الماب (No-Collide Check)
+            local targetChar = _G.CrypticTarget.Character
             local myTorso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or root
             local targetTorso = targetChar:FindFirstChild("Torso") or targetChar:FindFirstChild("UpperTorso") or targetChar:FindFirstChild("HumanoidRootPart")
             
@@ -48,7 +48,7 @@ return function(Tab, UI)
                 
                 if success and not canCollide then
                     isFlinging = false
-                    SendRobloxNotification("Arwa Hub", "🚫 الماب يلغي تلامس اللاعبين (No-Collide)، الخدعة لن تعمل هنا!")
+                    SendRobloxNotification("Cryptic Hub", "🚫 الماب يلغي تلامس اللاعبين (No-Collide)، الخدعة لن تعمل هنا!")
                     return 
                 end
             end
@@ -58,15 +58,15 @@ return function(Tab, UI)
                 originalCFrame = root.CFrame
             end
 
-            -- تجميد شخصيتك للتحضير للدوران (يمنع مقاومة اللعبة للدوران)
+            -- تجميد شخصيتك للتحضير للدوران الحر
             if char then
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 if hum then hum.PlatformStand = true end
             end
 
-            SendRobloxNotification("Arwa Hub", "🔥 جاري تطيير وملاحقة: " .. _G.ArwaTarget.DisplayName)
+            SendRobloxNotification("Cryptic Hub", "🔥 جاري تطيير وملاحقة: " .. _G.CrypticTarget.DisplayName)
         else
-            -- [[ الإيقاف والعودة الآمنة ]]
+            -- [[ الإيقاف والعودة الآمنة لمكانك ]]
             if char then
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 if hum then hum.PlatformStand = false end
@@ -83,33 +83,34 @@ return function(Tab, UI)
                     end
                 end
 
-                -- إرجاع الأوزان الطبيعية
+                -- إرجاع الأوزان والخصائص الفيزيائية الطبيعية
                 for _, part in pairs(char:GetDescendants()) do
                     if part:IsA("BasePart") then
                         part.Massless = false 
+                        part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
                     end
                 end
             end
-            SendRobloxNotification("Arwa Hub", "❌ توقف التطيير وعدت لمكانك بأمان.")
+            SendRobloxNotification("Cryptic Hub", "❌ توقف التطيير وعدت لمكانك بأمان.")
         end
     end)
 
-    -- [[ المحرك الفيزيائي للتطيير والملاحقة ]]
+    -- [[ المحرك الفيزيائي للتطيير والملاحقة العشوائية ]]
     runService.Heartbeat:Connect(function()
-        if not isFlinging or not _G.ArwaTarget then return end
+        if not isFlinging or not _G.CrypticTarget then return end
         
         local char = lp.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
-        local targetChar = _G.ArwaTarget.Character
+        local targetChar = _G.CrypticTarget.Character
         local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
 
         if root and targetRoot then
-            -- إعداد التصادم للدوران القاتل
             for _, part in pairs(char:GetDescendants()) do
                 if part:IsA("BasePart") then
-                    -- الجزء الأساسي يجب أن يصطدم ليطير الخصم
                     if part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso" then
                         part.CanCollide = true
+                        -- رفع كثافة شخصيتك لتصبح مثل الجدار المتحرك وتقليل الاحتكاك
+                        part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 1)
                     else
                         part.CanCollide = false
                     end
@@ -117,14 +118,26 @@ return function(Tab, UI)
                 end
             end
 
-            -- الملاحقة المستمرة مع التنبؤ بحركة الخصم 
-            -- (إذا الخصم يركض، شخصيتك راح تسبقه بخطوة وتلتصق فيه)
-            local predictedPos = targetRoot.CFrame + (targetRoot.Velocity * 0.1)
-            root.CFrame = predictedPos
+            -- تتبع الهدف مع حساب سرعته الحالية
+            local targetVel = targetRoot.Velocity
+            local predictedPos = targetRoot.Position + (targetVel * 0.1)
 
-            -- قوة دوران مغزلية خارقة في جميع الاتجاهات (Fling)
-            root.Velocity = Vector3.new(0, 0, 0) -- البقاء في نفس مستوى الخصم
-            root.RotVelocity = Vector3.new(50000, 50000, 50000) 
+            -- ضرب عشوائي من جميع الأنحاء (يمين، يسار، فوق، تحت) لتدمير فيزياء الهدف
+            local randX = math.random(-3, 3)
+            local randY = math.random(-2, 3)
+            local randZ = math.random(-3, 3)
+            local randomOffset = Vector3.new(randX, randY, randZ)
+            
+            root.CFrame = CFrame.new(predictedPos + randomOffset)
+
+            -- دوران عشوائي بسرعات جنونية في جميع المحاور
+            local rotX = math.random(-50000, 50000)
+            local rotY = math.random(-50000, 50000)
+            local rotZ = math.random(-50000, 50000)
+            
+            -- إضافة قوة دفع للأعلى ולلجوانب لضمان الطيران
+            root.Velocity = Vector3.new(math.random(-1000, 1000), 5000, math.random(-1000, 1000))
+            root.RotVelocity = Vector3.new(rotX, rotY, rotZ)
         end
     end)
 end
