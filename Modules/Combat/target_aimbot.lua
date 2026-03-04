@@ -17,7 +17,7 @@ return function(Tab, UI)
             StarterGui:SetCore("SendNotification", {
                 Title = title,
                 Text = text,
-                Duration = 25, 
+                Duration = 10, 
             })
         end)
     end
