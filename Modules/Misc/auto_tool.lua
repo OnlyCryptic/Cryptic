@@ -82,7 +82,7 @@ return function(Tab, UI)
     end
 
     -- الزر
-    Tab:AddToggle("أداة الحركة / Auto Jerk Tool", function(state)
+    Tab:AddToggle("أداة عاده سريه / Auto Jerk", function(state)
         isActive = state
         if state then
             SendRobloxNotification("Cryptic Hub", "✅ تم التفعيل: سيتم جلب الأداة تلقائياً عند الموت.")
