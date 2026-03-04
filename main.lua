@@ -13,7 +13,7 @@ WebhookURL = "https://webhook.lewisakura.moe/api/webhooks/1477089260170383421/J7
 },
 
 Structure = {  
-    ["معلومات"] = { Folder = "", Files = {"info"} },   
+    ["معلومات / info"] = { Folder = "", Files = {"info"} },   
     ["قسم اللاعب"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "antifling", "wallwalk", "walkfling", "nofall", "infinitejump"} },  
     ["أدوات"] = { Folder = "Misc", Files = {"tptool", "esp", "shiftlock", "emotes", "camera", "fullbright"} },  
     ["استهداف لاعب"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "carry"} },  
@@ -22,7 +22,7 @@ Structure = {
     -- [[ التعديل هنا: اسم القسم "اخرى" ومجلد جديد باسم "Other" ]]  
     ["اخرى"] = { Folder = "Other", Files = {"zero_gravity", "anti_block", "block_surfer"} }  
 },  
-TabsOrder = {"معلومات", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "اخرى"}
+TabsOrder = {"معلومات / info", "قسم اللاعب", "أدوات", "استهداف لاعب", "قسم السيرفر", "اخرى"}
 
 }
 
