@@ -25,7 +25,7 @@ return function(Tab, UI)
     Tab:AddLine()
 
     -- 2. زر الديسكورد
-    Tab:AddButton("🔗 نسخ رابط الديسكورد", function()
+    Tab:AddButton("🔗 نسخ رابط الديسكورد discord link", function()
         pcall(function()
             setclipboard("https://discord.gg/QSvQJs7BdP")
             SendRobloxNotification("Cryptic Hub", "✅ تم نسخ رابط الديسكورد بنجاح!")
