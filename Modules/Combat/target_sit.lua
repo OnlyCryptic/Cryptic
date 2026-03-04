@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - ميزة ركوب الرأس (Head Sit) المطور ]]
--- المطور: يامي (Yami) | الميزات: Anti-Fling، ملاحقة دقيقة، عودة آمنة، استقرار فيزيائي
+-- المطور: يامي (Yami) | الميزات: مسافة مقربة، Anti-Fling، ملاحقة دقيقة، عودة آمنة
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -42,7 +42,7 @@ return function(Tab, UI)
                 hum.Sit = true 
             end
 
-            SendRobloxNotification("Cryptic Hub", "🪑 أنت الآن في أعلى نقطة فوق رأس: " .. _G.ArwaTarget.DisplayName)
+            SendRobloxNotification("Cryptic Hub", "🪑 تم الركوب! أنت الآن قبعة لـ: " .. _G.ArwaTarget.DisplayName)
         else
             if char and root then
                 if hum then hum.Sit = false end
@@ -79,24 +79,23 @@ return function(Tab, UI)
         if root and targetHead and hum then
             hum.Sit = true
             
-            -- [[ نظام Anti-Fling ومنع الضرر ]]
-            -- جعل الشخصية عديمة الوزن وعديمة التصادم لمنع القلتش
+            -- [[ نظام Anti-Fling المحسن ]]
             for _, part in pairs(char:GetDescendants()) do
                 if part:IsA("BasePart") then
                     part.CanCollide = false
                     part.Massless = true
-                    -- تصفير السرعة اللحظي لمنع الطيران المفاجئ
+                    -- تصفير مستمر للسرعة لمنع القلتشات أثناء الحركة السريعة للهدف
                     part.Velocity = Vector3.new(0, 0, 0)
                     part.RotVelocity = Vector3.new(0, 0, 0)
                 end
             end
 
-            -- الملاحقة في أعلى نقطة (تم رفع المسافة لـ 2.8 لضمان عدم التداخل)
+            -- الملاحقة في نقطة مقربة (المسافة الآن 2.4 بدلاً من 2.8)
             local targetVel = targetHead.Velocity
             root.Velocity = Vector3.new(0, 0, 0)
             
-            -- الالتصاق بالملي فوق الرأس مع مراعاة سرعة الهدف
-            root.CFrame = (targetHead.CFrame * CFrame.new(0, 2.8, 0)) + (targetVel * 0.05)
+            -- الالتصاق بالملي فوق الرأس مع تعويض سرعة الهدف لثبات عالي
+            root.CFrame = (targetHead.CFrame * CFrame.new(0, 2.4, 0)) + (targetVel * 0.05)
         end
     end)
 end
