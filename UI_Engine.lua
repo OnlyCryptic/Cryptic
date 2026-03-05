@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V6.1 ]]
--- المطور: يامي (Yami) | التحديث: حل مشكلة عدم استجابة الحفظ + إصلاح مسارات الملفات
+-- [[ Cryptic Hub - محرك الواجهة المطور V6.2 ]]
+-- المطور: يامي (Yami) | التحديث: إصلاح نظام Rejoin في إشعار البداية وجعله 100% مستقر
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -9,7 +9,6 @@ local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 
 -- [[ إعدادات نظام الحفظ (Save System) ]]
--- تم إزالة المجلد واستخدام ملف مباشر لتجنب أخطاء المشغلات (Executors)
 local ConfigFile = "CrypticHub_Settings.json"
 UI.ConfigData = {}
 local hasSavedData = false
@@ -32,7 +31,6 @@ function UI:SaveConfig()
         writefile(ConfigFile, HttpService:JSONEncode(UI.ConfigData))
     end)
     
-    -- إشعار للتأكد من نجاح الحفظ من داخل المحرك
     local StarterGui = game:GetService("StarterGui")
     if success then
         StarterGui:SetCore("SendNotification", {Title = "Cryptic Hub", Text = "💾 تم حفظ الإعدادات بنجاح!", Duration = 5})
@@ -43,9 +41,19 @@ end
 
 function UI:ResetConfig()
     pcall(function()
+        -- 1. مسح الملف من الجهاز
         if isfile and isfile(ConfigFile) then delfile(ConfigFile) end
-        -- إعادة الدخول لنفس السيرفر (Rejoin) لتنظيف السكربت بالكامل
-        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, Players.LocalPlayer)
+        
+        -- 2. تفريغ الذاكرة عشان ما يشتغل أي شيء بالخلفية
+        UI.ConfigData = {}
+        
+        -- 3. نظام Rejoin الذكي والمضاد للأخطاء
+        local player = Players.LocalPlayer
+        if #game.JobId > 0 then
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
+        else
+            TeleportService:Teleport(game.PlaceId, player)
+        end
     end)
 end
 
@@ -58,11 +66,17 @@ function UI:CreateWindow(title)
         local Bindable = Instance.new("BindableEvent")
         Bindable.Event:Connect(function(buttonName)
             if buttonName == "مسح اعدادات محفوضه" then
+                -- إشعار للمستخدم وتفريغ الذاكرة فوراً
+                UI.ConfigData = {} 
                 game:GetService("StarterGui"):SetCore("SendNotification", {
-                    Title = "Cryptic Hub", Text = "جاري مسح الإعدادات وإعادة الدخول للسيرفر...", Duration = 5
+                    Title = "Cryptic Hub", Text = "🔄 جاري مسح الإعدادات وإعادة الدخول...", Duration = 5
                 })
-                task.wait(1)
-                UI:ResetConfig() 
+                
+                -- استخدام task.spawn لمنع تعليق الإشعار
+                task.spawn(function()
+                    task.wait(0.5)
+                    UI:ResetConfig() 
+                end)
             end
         end)
         
@@ -208,7 +222,6 @@ function UI:CreateWindow(title)
 
             B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
             
-            -- [[ إضافة الانتظار هنا لضمان وجود شخصية اللاعب ]]
             if a then 
                 task.spawn(function() 
                     task.wait(1.5) 
