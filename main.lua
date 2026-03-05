@@ -18,7 +18,7 @@ local Cryptic = {
         ["أدوات / tools"] = { Folder = "Misc", Files = {"tptool", "auto_tool", "esp", "shiftlock", "emotes", "camera", "fullbright"} },  
         ["استهداف لاعب / players"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "carry"} },  
         ["قسم السيرفر / server"] = { Folder = "Server", Files = {"server", "rejoin", "join_id"} },  
-        ["اخرى / Other"] = { Folder = "Other", Files = {"zero_gravity", "anti_block", "block_surfer"} }  
+        ["اخرى / Other"] = { Folder = "Other", Files = {"zero_gravity", "anti_block", "block_surfer", "hm"} }  
     },  
     TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / players", "قسم السيرفر / server", "اخرى / Other"}
 }
@@ -27,7 +27,7 @@ local Cryptic = {
 if Players.LocalPlayer.UserId == 3875086037 then
     Cryptic.Structure["تجارب"] = {
         Folder = "Experiments",
-        Files = {"owner_only", "hm"}
+        Files = {"owner_only"}
     }
     table.insert(Cryptic.TabsOrder, "تجارب")
 end
