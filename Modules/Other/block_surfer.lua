@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - التحكم بالبلوكات والسيارات (Hoverboard FE) V7 Stable Competitive ]]
--- المطور: يامي (Yami) | التحديثات: فيزياء تنافسية، ثبات مطلق، دعم السيارات الثقيلة، إصلاح مركز الثقل
+-- [[ Cryptic Hub - التحكم بالبلوكات (Hoverboard FE+) V8 ]]
+-- المطور: يامي (Yami) | التحديثات: دعم كامل للسيرفر (FE)، مركزية البلوكة، تحكم من اللاعب
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -24,7 +24,7 @@ return function(Tab, UI)
 
     -- [[ تصميم واجهة الجوال ]]
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "CrypticHoverUI_V7"
+    ScreenGui.Name = "CrypticHoverUI_V8"
     ScreenGui.ResetOnSpawn = false
     pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
     if not ScreenGui.Parent then ScreenGui.Parent = lp:WaitForChild("PlayerGui") end
@@ -86,7 +86,12 @@ return function(Tab, UI)
         if lv then lv:Destroy() lv = nil end
         if ao then ao:Destroy() ao = nil end
         if connection then connection:Disconnect() connection = nil end
-        hoverPart = nil
+        
+        -- إرجاع وزن البلوكة لحالته الطبيعية
+        if hoverPart then
+            pcall(function() hoverPart.Massless = false end)
+            hoverPart = nil
+        end
     end
 
     if deathConnection then deathConnection:Disconnect() end
@@ -94,37 +99,34 @@ return function(Tab, UI)
         cleanupHover()
     end)
 
+    -- [[ دالة الفحص (تم تعديلها لتلتقط بلوكات أكثر) ]]
     local function isFree(part)
         if not part or not part:IsA("BasePart") then return false end
-        if part.Anchored then return false end
-        if part.AssemblyRootPart and part.AssemblyRootPart.Anchored then return false end
+        -- ملاحظة: البلوكات المثبتة (Anchored) لا يمكن التحكم بها وجعل الآخرين يرونها بسبب قيود روبلوكس.
+        -- يجب أن تكون البلوكة غير مثبتة لكي يعمل السكربت كـ FE (عام للسيرفر).
+        if part.Anchored then return false end 
         
         local model = part:FindFirstAncestorOfClass("Model")
         if model then
-            for _, v in pairs(model:GetDescendants()) do
-                if v:IsA("VehicleSeat") or v:IsA("Seat") then
-                    if v.Occupant and v.Occupant ~= lp.Character:FindFirstChildOfClass("Humanoid") then
-                        return false 
-                    end
-                end
-            end
+            -- التأكد أن البلوكة ليست جزء من لاعب آخر
+            if model:FindFirstChildOfClass("Humanoid") then return false end
         end
         return true
     end
 
     -- [[ تشغيل السكربت ]]
-    Tab:AddToggle("ركوب البلوكات والسيارات / Object Surfer", function(state)
+    Tab:AddToggle("ركوب البلوكات (FE) / Object Surfer", function(state)
         if state then
             local char = lp.Character
             local root = char and char:FindFirstChild("HumanoidRootPart")
             local hum = char and char:FindFirstChildOfClass("Humanoid")
+            
             if not root or not hum then 
                 cleanupHover() 
                 SendRobloxNotification("Cryptic Hub", "❌ شخصيتك غير مكتملة!")
                 return 
             end
 
-            -- 🔴 4. الخروج من المقعد قبل الطيران لمنع الانغراس
             if hum.SeatPart then
                 hum.Sit = false
                 task.wait(0.15)
@@ -139,58 +141,53 @@ return function(Tab, UI)
             params.FilterDescendantsInstances = ignoreList
             params.FilterType = Enum.RaycastFilterType.Exclude
 
-            -- 🔴 5. زيادة مسافة الفحص لدعم السيارات العالية
-            local ray = workspace:Raycast(root.Position, Vector3.new(0, -25, 0), params)
+            local ray = workspace:Raycast(root.Position, Vector3.new(0, -30, 0), params)
 
             if ray and isFree(ray.Instance) then
                 hoverPart = ray.Instance.AssemblyRootPart or ray.Instance
-                local hitPoint = ray.Position 
 
                 isHovering = true
                 ScreenGui.Enabled = true
                 hum.PlatformStand = true
 
-                hoverPart.Velocity = Vector3.new(0, 0, 0)
-                hoverPart.RotVelocity = Vector3.new(0, 0, 0)
-
-                for _, v in pairs(hoverPart:GetChildren()) do
+                -- 🔴 1. مسح المحركات القديمة إن وجدت
+                for _, v in pairs(root:GetChildren()) do
                     if v.Name == "HoverWeldFE" or v.Name == "Cryptic_Attach" or v.Name == "Cryptic_LV" or v.Name == "Cryptic_AO" then 
                         v:Destroy() 
                     end
                 end
 
-                local legHeight = (hum.RigType == Enum.HumanoidRigType.R15) and (hum.HipHeight + (root.Size.Y / 2)) or 3.2
+                -- 🔴 2. تمركز البلوكة تحتك بالضبط
+                local legHeight = (hum.RigType == Enum.HumanoidRigType.R15) and (hum.HipHeight + (root.Size.Y / 2)) or 3
+                local partOffset = (hoverPart.Size.Y / 2)
                 
-                local camLook = Camera.CFrame.LookVector
-                local flatLook = Vector3.new(camLook.X, 0, camLook.Z)
-                if flatLook.Magnitude < 0.01 then flatLook = Vector3.new(0, 0, -1) end
+                -- سحب البلوكة وجعلها في المنتصف تحت قدميك
+                hoverPart.CFrame = root.CFrame * CFrame.new(0, -(legHeight + partOffset), 0)
+                
+                -- إزالة وزن البلوكة لكي لا تسحبك للأسفل
+                hoverPart.Massless = true
+                hoverPart.CanCollide = true -- تفعيل التصادم لكي يركب معك الآخرون
 
-                local localHit = hoverPart.CFrame:PointToObjectSpace(hitPoint)
-                
-                hoverWeld = Instance.new("Weld")
+                -- 🔴 3. استخدام WeldConstraint لدمج البلوكة باللاعب دون إفساد الفيزياء
+                hoverWeld = Instance.new("WeldConstraint")
                 hoverWeld.Name = "HoverWeldFE"
-                hoverWeld.Part0 = hoverPart
-                hoverWeld.Part1 = root
-                hoverWeld.C0 = CFrame.new(localHit + Vector3.new(0, legHeight, 0))
-                hoverWeld.C1 = CFrame.new()
-                hoverWeld.Parent = hoverPart
+                hoverWeld.Part0 = root
+                hoverWeld.Part1 = hoverPart
+                hoverWeld.Parent = root
 
-                -- 🔴 2. ضبط موقع Attachment في نقطة الاصطدام الدقيقة لضمان التوازن
+                -- 🔴 4. وضع محركات الطيران على "اللاعب" وليس البلوكة (هذا هو سر الـ FE)
                 crypticAttach = Instance.new("Attachment")
                 crypticAttach.Name = "Cryptic_Attach"
-                crypticAttach.Position = localHit 
-                crypticAttach.Parent = hoverPart
+                crypticAttach.Parent = root
 
-                -- 🔴 1. تصحيح MaxForce ليعمل على جميع المحاور بكفاءة
                 lv = Instance.new("LinearVelocity")
                 lv.Name = "Cryptic_LV"
                 lv.Attachment0 = crypticAttach
                 lv.ForceLimitMode = Enum.ForceLimitMode.PerAxis
                 lv.MaxAxesForce = Vector3.new(math.huge, math.huge, math.huge)
                 lv.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
-                lv.Parent = hoverPart
+                lv.Parent = root
 
-                -- 🔴 3. إضافة MaxTorque جبار لدعم الثبات
                 ao = Instance.new("AlignOrientation")
                 ao.Name = "Cryptic_AO"
                 ao.Mode = Enum.OrientationAlignmentMode.OneAttachment
@@ -198,13 +195,12 @@ return function(Tab, UI)
                 ao.RigidityEnabled = true 
                 ao.MaxTorque = math.huge
                 ao.MaxAngularVelocity = math.huge
-                ao.CFrame = CFrame.new(hoverPart.Position, hoverPart.Position + flatLook.Unit)
-                ao.Parent = hoverPart
+                ao.Parent = root
 
-                SendRobloxNotification("Cryptic Hub", "✅ تم التفعيل بنجاح! فيزياء V7 التنافسية تعمل 🚀")
+                SendRobloxNotification("Cryptic Hub", "✅ تم التفعيل! السيرفر يرى البلوكة الآن 🌐")
 
                 connection = RunService.Heartbeat:Connect(function()
-                    if not isHovering or not hoverPart or not hoverPart.Parent then 
+                    if not isHovering or not root or not root.Parent then 
                         cleanupHover() 
                         return 
                     end
@@ -214,16 +210,17 @@ return function(Tab, UI)
                     if upActive then yVel = flySpeed end
                     if downActive then yVel = -flySpeed end
 
+                    -- تحريك اللاعب (والبلوكة ستتبعه تلقائياً)
                     lv.VectorVelocity = (moveDir * flySpeed) + Vector3.new(0, yVel, 0)
 
                     local currentCamLook = Camera.CFrame.LookVector
                     local currentFlatLook = Vector3.new(currentCamLook.X, 0, currentCamLook.Z)
                     if currentFlatLook.Magnitude > 0.01 then
-                        ao.CFrame = CFrame.new(hoverPart.Position, hoverPart.Position + currentFlatLook.Unit)
+                        ao.CFrame = CFrame.new(root.Position, root.Position + currentFlatLook.Unit)
                     end
                 end)
             else
-                SendRobloxNotification("Cryptic Hub", "⚠️ المجسم غير صالح أو السيرفر يرفض الملكية!")
+                SendRobloxNotification("Cryptic Hub", "⚠️ يجب أن تقف على بلوكة غير مثبتة (Unanchored)!")
                 cleanupHover()
             end
         else
@@ -231,6 +228,4 @@ return function(Tab, UI)
             SendRobloxNotification("Cryptic Hub", "❌ تم إيقاف التحكم.")
         end
     end)
-    
-    Tab:AddLine()
 end
