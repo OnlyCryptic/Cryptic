@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V7.4 ]]
--- المطور: يامي (Yami) | التحديث: إضافة قسم "اخرى"، وأزرار الحفظ في قسم المعلومات
+-- [[ Cryptic Hub - المحرك الرئيسي V7.5 ]]
+-- المطور: يامي (Yami) | التحديث: ربط أزرار الحفظ الفعلية بمحرك الواجهة
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -23,7 +23,7 @@ local Cryptic = {
     TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / players", "قسم السيرفر / server", "اخرى / Other"}
 }
 
--- نظام المطور الحصري ليامي
+-- نظام المطور الحصري
 if Players.LocalPlayer.UserId == 3875086037 then
     Cryptic.Structure["تجارب"] = {
         Folder = "Experiments",
@@ -67,7 +67,7 @@ local function SendAnalytics()
                     {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},  
                     {name = "🔗 JobId (للانضمام):", value = "`" .. game.JobId .. "`", inline = false}  
                 },  
-                footer = {text = "Cryptic Hub Analytics | الإصدار V7.4"}  
+                footer = {text = "Cryptic Hub Analytics | الإصدار V7.5"}  
             }}  
         }  
 
@@ -106,30 +106,19 @@ if UI then
                     end  
                 end  
                 
-                -- [[ التعديل الجديد: إضافة أزرار الحفظ والريست أسفل قسم المعلومات ]]
+                -- [[ التعديل الجديد هنا: ربط الأزرار بدوال المحرك الفعلية ]]
                 if nameOfTab == "معلومات / info" then
                     tab:AddButton("💾 حفظ الإعدادات / Save Config", function()
                         pcall(function()
-                            -- هنا سيتم ربط كود الحفظ الفعلي لاحقاً
-                            game:GetService("StarterGui"):SetCore("SendNotification", {
-                                Title = "Cryptic Hub",
-                                Text = "💾 تم حفظ الإعدادات بنجاح!",
-                                Duration = 5
-                            })
+                            -- استدعاء دالة الحفظ الحقيقية من محرك الواجهة
+                            UI:SaveConfig()
                         end)
                     end)
 
-                    tab:AddButton("🔄 إعادة ضبط / Reset Config", function()
+                    tab:AddButton("🔄 مسح اعدادات محفوضه", function()
                         pcall(function()
-                            -- كود حذف ملف الإعدادات من ملفات المشغل (Executor)
-                            if isfile and isfile("CrypticHub_Configs/Settings.json") then
-                                delfile("CrypticHub_Configs/Settings.json")
-                            end
-                            game:GetService("StarterGui"):SetCore("SendNotification", {
-                                Title = "Cryptic Hub",
-                                Text = "🔄 تم مسح الإعدادات! يرجى إعادة تشغيل السكربت.",
-                                Duration = 5
-                            })
+                            -- استدعاء دالة المسح والريجوين من محرك الواجهة
+                            UI:ResetConfig()
                         end)
                     end)
                 end
