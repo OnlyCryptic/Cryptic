@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V6.0 ]]
--- المطور: يامي (Yami) | التحديث: حفظ يدوي، إشعار ذكي، نظام Rejoin عند مسح الإعدادات
+-- [[ Cryptic Hub - محرك الواجهة المطور V6.1 ]]
+-- المطور: يامي (Yami) | التحديث: حل مشكلة عدم استجابة الحفظ + إصلاح مسارات الملفات
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -9,8 +9,8 @@ local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 
 -- [[ إعدادات نظام الحفظ (Save System) ]]
-local ConfigFolder = "CrypticHub_Configs"
-local ConfigFile = ConfigFolder .. "/Settings.json"
+-- تم إزالة المجلد واستخدام ملف مباشر لتجنب أخطاء المشغلات (Executors)
+local ConfigFile = "CrypticHub_Settings.json"
 UI.ConfigData = {}
 local hasSavedData = false
 
@@ -19,7 +19,6 @@ pcall(function()
     if isfile and isfile(ConfigFile) then
         local content = readfile(ConfigFile)
         local data = HttpService:JSONDecode(content)
-        -- التأكد أن الملف فيه إعدادات فعلاً وليس فارغاً
         if type(data) == "table" and next(data) ~= nil then
             UI.ConfigData = data
             hasSavedData = true
@@ -27,18 +26,25 @@ pcall(function()
     end
 end)
 
--- [[ دوال متاحة لـ main.lua لاستخدامها في الأزرار ]]
+-- [[ دوال الحفظ والريست ]]
 function UI:SaveConfig()
-    pcall(function()
-        if not isfolder(ConfigFolder) then makefolder(ConfigFolder) end
+    local success, err = pcall(function()
         writefile(ConfigFile, HttpService:JSONEncode(UI.ConfigData))
     end)
+    
+    -- إشعار للتأكد من نجاح الحفظ من داخل المحرك
+    local StarterGui = game:GetService("StarterGui")
+    if success then
+        StarterGui:SetCore("SendNotification", {Title = "Cryptic Hub", Text = "💾 تم حفظ الإعدادات بنجاح!", Duration = 5})
+    else
+        StarterGui:SetCore("SendNotification", {Title = "⚠️ خطأ", Text = "فشل الحفظ: المشغل لا يدعم هذه الميزة.", Duration = 5})
+    end
 end
 
 function UI:ResetConfig()
     pcall(function()
         if isfile and isfile(ConfigFile) then delfile(ConfigFile) end
-        -- إعادة الدخول لنفس السيرفر (Rejoin)
+        -- إعادة الدخول لنفس السيرفر (Rejoin) لتنظيف السكربت بالكامل
         TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, Players.LocalPlayer)
     end)
 end
@@ -56,7 +62,7 @@ function UI:CreateWindow(title)
                     Title = "Cryptic Hub", Text = "جاري مسح الإعدادات وإعادة الدخول للسيرفر...", Duration = 5
                 })
                 task.wait(1)
-                UI:ResetConfig() -- استدعاء دالة الريست والريجوين
+                UI:ResetConfig() 
             end
         end)
         
@@ -78,11 +84,8 @@ function UI:CreateWindow(title)
     OpenBtn.Visible = false; OpenBtn.Text = "Cryptic"; OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
     OpenBtn.TextColor3 = Color3.fromRGB(15, 15, 15); OpenBtn.Font = Enum.Font.GothamBold; OpenBtn.TextSize = 14
     Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
-    
-    local OpenStroke = Instance.new("UIStroke", OpenBtn)
-    OpenStroke.Color = Color3.fromRGB(255, 255, 255); OpenStroke.Thickness = 2; OpenStroke.Transparency = 0.5
+    local OpenStroke = Instance.new("UIStroke", OpenBtn); OpenStroke.Color = Color3.fromRGB(255, 255, 255); OpenStroke.Thickness = 2; OpenStroke.Transparency = 0.5
 
-    -- نظام السحب السلس لزر الفتح
     local dragToggle, dragInputT, dragStartT, startPosT
     OpenBtn.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -90,9 +93,7 @@ function UI:CreateWindow(title)
             input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragToggle = false end end)
         end
     end)
-    OpenBtn.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInputT = input end
-    end)
+    OpenBtn.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInputT = input end end)
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInputT and dragToggle then
             local delta = input.Position - dragStartT
@@ -106,13 +107,11 @@ function UI:CreateWindow(title)
     Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Main.Active = true
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12); Main.ClipsDescendants = true 
 
-    -- الشريط العلوي
     local TitleBar = Instance.new("Frame", Main)
     TitleBar.Size = UDim2.new(1, 0, 0, 35); TitleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", TitleBar)
     local TitleLabel = Instance.new("TextLabel", TitleBar)
     TitleLabel.Text = title; TitleLabel.Size = UDim2.new(1, -120, 1, 0); TitleLabel.Position = UDim2.new(0, 10, 0, 0); TitleLabel.BackgroundTransparency = 1; TitleLabel.TextColor3 = Color3.new(1, 1, 1); TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- نظام السحب السلس للنافذة الرئيسية
     local draggingMain, dragInputMain, dragStartMain, startPosMain
     TitleBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -120,9 +119,7 @@ function UI:CreateWindow(title)
             input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then draggingMain = false end end)
         end
     end)
-    TitleBar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInputMain = input end
-    end)
+    TitleBar.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInputMain = input end end)
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInputMain and draggingMain then
             local delta = input.Position - dragStartMain
@@ -137,10 +134,7 @@ function UI:CreateWindow(title)
     local Sidebar = Instance.new("ScrollingFrame", Main)
     Sidebar.Position = UDim2.new(0, 0, 0, 35); Sidebar.Size = UDim2.new(0, 110, 1, -35); Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Sidebar.BorderSizePixel = 0; Sidebar.ScrollBarThickness = 2; Sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
     local SidebarLayout = Instance.new("UIListLayout", Sidebar); SidebarLayout.Padding = UDim.new(0, 2)
-    
-    SidebarLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        Sidebar.CanvasSize = UDim2.new(0, 0, 0, SidebarLayout.AbsoluteContentSize.Y + 5)
-    end)
+    SidebarLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() Sidebar.CanvasSize = UDim2.new(0, 0, 0, SidebarLayout.AbsoluteContentSize.Y + 5) end)
 
     local Content = Instance.new("Frame", Main)
     Content.Position = UDim2.new(0, 115, 0, 40); Content.Size = UDim2.new(1, -120, 1, -45); Content.BackgroundTransparency = 1
@@ -149,19 +143,12 @@ function UI:CreateWindow(title)
 
     function Window:CreateTab(name)
         local TabBtn = Instance.new("TextButton", Sidebar); TabBtn.Size = UDim2.new(1, 0, 0, 35); TabBtn.Text = name; TabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TabBtn.TextColor3 = Color3.new(1, 1, 1); TabBtn.BorderSizePixel = 0
-        
         local Page = Instance.new("ScrollingFrame", Content); Page.Size = UDim2.new(1, 0, 1, 0); Page.Visible = false; Page.BackgroundTransparency = 1; Page.ScrollBarThickness = 2; Page.CanvasSize = UDim2.new(0, 0, 0, 0)
         local ListLayout = Instance.new("UIListLayout", Page); ListLayout.Padding = UDim.new(0, 8); ListLayout.SortOrder = Enum.SortOrder.LayoutOrder 
-        
-        ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            Page.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 15)
-        end)
+        ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() Page.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 15) end)
 
         if not Window.FirstTab then Window.FirstTab = Page; Page.Visible = true end
-        TabBtn.MouseButton1Click:Connect(function() 
-            for _, v in pairs(Content:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end
-            Page.Visible = true 
-        end)
+        TabBtn.MouseButton1Click:Connect(function() for _, v in pairs(Content:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end; Page.Visible = true end)
 
         local TabOps = {}
         local orderIndex = 0 
@@ -172,33 +159,25 @@ function UI:CreateWindow(title)
         function TabOps:AddParagraph(text) orderIndex = orderIndex + 1; local Lbl = Instance.new("TextLabel", Page); Lbl.LayoutOrder = orderIndex; Lbl.Size = UDim2.new(0.95, 0, 0, 0); Lbl.AutomaticSize = Enum.AutomaticSize.Y; Lbl.TextWrapped = true; Lbl.Text = text; Lbl.TextColor3 = Color3.fromRGB(170, 170, 170); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; Lbl.TextSize = 13 end
         function TabOps:AddButton(t, c) orderIndex = orderIndex + 1; local B = Instance.new("TextButton", Page); B.LayoutOrder = orderIndex; B.Size = UDim2.new(0.95, 0, 0, 40); B.BackgroundColor3 = Color3.fromRGB(30, 30, 30); B.Text = t; B.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", B); B.MouseButton1Click:Connect(c) end
 
-        -- تعديل AddInput لتسجيل البيانات في الذاكرة دون حفظ تلقائي
         function TabOps:AddInput(label, placeholder, callback)
             orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.95, 0, 0, 60); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R); local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(1, -10, 0, 25); Lbl.TextColor3 = Color3.fromRGB(0, 255, 150); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; local I = Instance.new("TextBox", R); I.Size = UDim2.new(0.9, 0, 0, 25); I.Position = UDim2.new(0.05, 0, 0, 30); I.PlaceholderText = placeholder; I.BackgroundColor3 = Color3.fromRGB(40, 40, 40); I.TextColor3 = Color3.new(1, 1, 1); I.Text = ""; Instance.new("UICorner", I); 
             
             local configKey = name .. "_" .. label .. "_Input"
             if UI.ConfigData[configKey] ~= nil then
                 I.Text = UI.ConfigData[configKey]
-                task.spawn(function() callback(I.Text) end)
+                task.spawn(function() task.wait(1.5) callback(I.Text) end)
             end
-
-            I:GetPropertyChangedSignal("Text"):Connect(function() 
-                UI.ConfigData[configKey] = I.Text
-                callback(I.Text) 
-            end)
+            I:GetPropertyChangedSignal("Text"):Connect(function() UI.ConfigData[configKey] = I.Text; callback(I.Text) end)
             return { SetText = function(t) I.Text = t end, TextBox = I }
         end
 
-        -- تعديل AddSpeedControl لتسجيل البيانات في الذاكرة دون حفظ تلقائي
         function TabOps:AddSpeedControl(label, callback, default)
             orderIndex = orderIndex + 1; local Row = Instance.new("Frame", Page); Row.LayoutOrder = orderIndex; Row.Size = UDim2.new(0.98, 0, 0, 45); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row); local Lbl = Instance.new("TextLabel", Row); Lbl.Text = label; Lbl.Size = UDim2.new(0.6, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; local Tgl = Instance.new("TextButton", Row); Tgl.Size = UDim2.new(0, 45, 0, 22); Tgl.Position = UDim2.new(1, -55, 0.5, -11); Tgl.Text = ""; Tgl.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", Tgl).CornerRadius = UDim.new(1, 0); local startVal = tostring(default or 50); local Inp = Instance.new("TextBox", Row); Inp.Size = UDim2.new(0, 40, 0, 22); Inp.Position = UDim2.new(1, -105, 0.5, -11); Inp.Text = startVal; Inp.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Inp.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", Inp); 
             
             local active = false
             local configKey = name .. "_" .. label .. "_Speed"
-            
             if UI.ConfigData[configKey] ~= nil then
-                active = UI.ConfigData[configKey].active
-                Inp.Text = tostring(UI.ConfigData[configKey].val)
+                active = UI.ConfigData[configKey].active; Inp.Text = tostring(UI.ConfigData[configKey].val)
             end
 
             local function update() 
@@ -208,33 +187,34 @@ function UI:CreateWindow(title)
                 callback(active, val) 
             end
 
-            if active then task.spawn(update) end
+            if active then task.spawn(function() task.wait(1.5) update() end) end
             Tgl.MouseButton1Click:Connect(function() active = not active; update() end)
             Inp:GetPropertyChangedSignal("Text"):Connect(function() if active then update() end end)
         end
 
-        -- التعديل الجوهري: AddToggle يسجل البيانات فقط، ولا يحفظها في الملف
         function TabOps:AddToggle(label, callback)
             orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R); local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0); local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; 
             
             local a = false
             local configKey = name .. "_" .. label
 
-            -- قراءة حالة الزر من الذاكرة
-            if UI.ConfigData[configKey] ~= nil then
-                a = UI.ConfigData[configKey]
-            end
+            if UI.ConfigData[configKey] ~= nil then a = UI.ConfigData[configKey] end
 
-            -- دالة التفعيل وتحديث الذاكرة فقط (بدون SaveConfig)
             local function set(s) 
-                a = s; 
-                B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
+                a = s; B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
                 UI.ConfigData[configKey] = a
                 pcall(callback, a)
             end
 
             B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
-            if a then task.spawn(function() pcall(callback, a) end) end
+            
+            -- [[ إضافة الانتظار هنا لضمان وجود شخصية اللاعب ]]
+            if a then 
+                task.spawn(function() 
+                    task.wait(1.5) 
+                    pcall(callback, a) 
+                end) 
+            end
 
             B.MouseButton1Click:Connect(function() set(not a) end)
             return { SetState = function(self, s) set(s) end, Set = function(self, s) set(s) end }
