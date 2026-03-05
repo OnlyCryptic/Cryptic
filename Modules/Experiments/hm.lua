@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - التحكم التخاطري بالبلوكات (Telekinesis Aura FE) ]]
--- المطور: أروى (Arwa) | الوصف: رفع أي بلوكة قريبة فوق رأسك بـ 16 متر وجعلها مرئية للجميع
+-- المطور: أروى (Arwa) | الوصف: رفع أي بلوكة (حتى العملاقة) بأمان تام بدون ما تطيرك!
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -19,18 +19,21 @@ return function(Tab, UI)
         pcall(function() StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 4 }) end)
     end
 
-    -- دالة التنظيف (لإسقاط البلوكات عند الإيقاف)
+    -- دالة التنظيف (لإسقاط البلوكات واسترجاع وزنها وتصادمها)
     local function releaseAllParts()
         for part, data in pairs(capturedParts) do
             if part and part.Parent then
                 if data.bp then data.bp:Destroy() end
                 if data.bg then data.bg:Destroy() end
+                if data.nccFolder then data.nccFolder:Destroy() end
+                -- استرجاع الوزن الطبيعي
+                pcall(function() part.Massless = false end)
             end
         end
         capturedParts = {}
     end
 
-    -- دالة فحص البلوكات (تتجاهل أجزاء اللاعبين والبلوكات المثبتة)
+    -- دالة فحص البلوكات
     local function isValidPart(part)
         if not part or not part:IsA("BasePart") then return false end
         if part.Anchored then return false end 
@@ -46,7 +49,7 @@ return function(Tab, UI)
         isActive = state
         
         if isActive then
-            SendRobloxNotification("Cryptic Hub", "🌌 تم تفعيل الهالة! أي بلوكة قريبة سترتفع فوق رأسك.")
+            SendRobloxNotification("Cryptic Hub", "🌌 الهالة مفعلة! (تمنع تصادم البلوكات بك وترفع الأحجام العملاقة)")
             
             connection = RunService.Heartbeat:Connect(function()
                 local char = lp.Character
@@ -59,12 +62,30 @@ return function(Tab, UI)
                         local distance = (obj.Position - root.Position).Magnitude
                         if distance <= SCAN_RADIUS then
                             if not capturedParts[obj] then
-                                -- زرع محركات الرفع
+                                
+                                -- 🔴 1. إلغاء الوزن بالكامل لرفع الأشياء العملاقة بسهولة
+                                obj.Massless = true
+                                
+                                -- 🔴 2. منع التصادم بين البلوكة وشخصيتك (NoCollisionConstraint)
+                                local nccFolder = Instance.new("Folder")
+                                nccFolder.Name = "Cryptic_NCC"
+                                nccFolder.Parent = obj
+                                
+                                for _, charPart in pairs(char:GetChildren()) do
+                                    if charPart:IsA("BasePart") then
+                                        local ncc = Instance.new("NoCollisionConstraint")
+                                        ncc.Part0 = charPart
+                                        ncc.Part1 = obj
+                                        ncc.Parent = nccFolder
+                                    end
+                                end
+
+                                -- محرك الرفع (مضاعفة القوة 20 مرة!)
                                 local bp = Instance.new("BodyPosition")
                                 bp.Name = "Cryptic_Telekinesis_BP"
                                 bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                                bp.P = 5000 
-                                bp.D = 400 
+                                bp.P = 100000 
+                                bp.D = 1000 
                                 bp.Parent = obj
 
                                 local bg = Instance.new("BodyGyro")
@@ -72,14 +93,13 @@ return function(Tab, UI)
                                 bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
                                 bg.Parent = obj
 
-                                -- إزاحة عشوائية عشان ما يتداخلون
                                 local randomOffset = Vector3.new(
-                                    math.random(-12, 12), 
-                                    math.random(-3, 5),   
-                                    math.random(-12, 12)  
+                                    math.random(-15, 15), 
+                                    math.random(-3, 8),   
+                                    math.random(-15, 15)  
                                 )
 
-                                capturedParts[obj] = {bp = bp, bg = bg, offset = randomOffset}
+                                capturedParts[obj] = {bp = bp, bg = bg, nccFolder = nccFolder, offset = randomOffset}
                             end
                         end
                     end
@@ -94,9 +114,10 @@ return function(Tab, UI)
                         if dist > SCAN_RADIUS * 2 then
                             if data.bp then data.bp:Destroy() end
                             if data.bg then data.bg:Destroy() end
+                            if data.nccFolder then data.nccFolder:Destroy() end
+                            pcall(function() part.Massless = false end)
                             capturedParts[part] = nil
                         else
-                            -- تم إصلاح الخطأ الإملائي هنا! ✅
                             data.bp.Position = root.Position + Vector3.new(0, LEVITATION_HEIGHT, 0) + data.offset
                             data.bg.CFrame = root.CFrame * CFrame.Angles(math.rad(math.random(-15, 15)), tick() % 360, math.rad(math.random(-15, 15)))
                         end
@@ -113,5 +134,5 @@ return function(Tab, UI)
     end)
     
     Tab:AddLine()
-    Tab:AddParagraph("ملاحظة: هذه الميزة تعمل بشكل أفضل في المابات التي تحتوي على الكثير من العناصر غير المثبتة (Unanchored) مثل الصناديق، السيارات، والأسلحة المرمية.")
+    Tab:AddParagraph("ملاحظة: البلوكات العملاقة ترتفع الآن، ولن تتصادم معك بفضل نظام NoCollision الذكي (لكنها ستصدم الآخرين!).")
 end
