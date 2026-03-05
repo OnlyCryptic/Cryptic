@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V6.2 ]]
--- المطور: يامي (Yami) | التحديث: إصلاح نظام Rejoin في إشعار البداية وجعله 100% مستقر
+-- [[ Cryptic Hub - محرك الواجهة المطور V6.3 ]]
+-- المطور: يامي (Yami) | التحديث: إصلاح زر الإشعار + ريجوين مع تشغيل تلقائي للسكربت
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -44,10 +44,20 @@ function UI:ResetConfig()
         -- 1. مسح الملف من الجهاز
         if isfile and isfile(ConfigFile) then delfile(ConfigFile) end
         
-        -- 2. تفريغ الذاكرة عشان ما يشتغل أي شيء بالخلفية
+        -- 2. تفريغ الذاكرة
         UI.ConfigData = {}
         
-        -- 3. نظام Rejoin الذكي والمضاد للأخطاء
+        -- 3. ميزة التشغيل التلقائي بعد الريجوين (Auto-Execute)
+        -- نستخدم دالة queue_on_teleport المدعومة في أغلب المشغلات
+        local queue_tp = queue_on_teleport or (syn and syn.queue_on_teleport) or (getgenv and getgenv().queue_on_teleport)
+        if queue_tp then
+            queue_tp([[
+                task.wait(3)
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/OnlyCryptic/Cryptic/main/main.lua"))()
+            ]])
+        end
+
+        -- 4. نظام Rejoin
         local player = Players.LocalPlayer
         if #game.JobId > 0 then
             TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
@@ -61,24 +71,22 @@ function UI:CreateWindow(title)
     local Screen = Instance.new("ScreenGui", CoreGui)
     Screen.Name = "CrypticHub_V5"; Screen.ResetOnSpawn = false
 
-    -- [[ إشعار البداية (يظهر فقط إذا كان هناك إعدادات محفوظة) ]]
+    -- [[ إشعار البداية (تم إصلاح استجابة الأزرار) ]]
     if hasSavedData then
-        local Bindable = Instance.new("BindableEvent")
-        Bindable.Event:Connect(function(buttonName)
+        -- استخدام BindableFunction هو الطريقة الصحيحة لأزرار روبلوكس
+        local Callback = Instance.new("BindableFunction")
+        Callback.OnInvoke = function(buttonName)
             if buttonName == "مسح اعدادات محفوضه" then
-                -- إشعار للمستخدم وتفريغ الذاكرة فوراً
                 UI.ConfigData = {} 
                 game:GetService("StarterGui"):SetCore("SendNotification", {
-                    Title = "Cryptic Hub", Text = "🔄 جاري مسح الإعدادات وإعادة الدخول...", Duration = 5
+                    Title = "Cryptic Hub", Text = "🔄 جاري مسح الإعدادات وإعادة الدخول وتفعيل السكربت...", Duration = 5
                 })
-                
-                -- استخدام task.spawn لمنع تعليق الإشعار
                 task.spawn(function()
                     task.wait(0.5)
                     UI:ResetConfig() 
                 end)
             end
-        end)
+        end
         
         pcall(function()
             game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -87,7 +95,7 @@ function UI:CreateWindow(title)
                 Duration = 10,
                 Button1 = "حسناً",
                 Button2 = "مسح اعدادات محفوضه",
-                Callback = Bindable
+                Callback = Callback
             })
         end)
     end
