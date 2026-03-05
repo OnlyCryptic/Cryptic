@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - التحكم التخاطري بالبلوكات (Telekinesis Aura FE) ]]
--- المطور: أروى (Arwa) | الوصف: رفع أي بلوكة (حتى العملاقة) بأمان تام بدون ما تطيرك!
+-- المطور: أروى (Arwa) | الوصف: رفع البلوكات للأبد وتتبع اللاعب في كل مكان بدون أخطاء تصادم
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -19,15 +19,16 @@ return function(Tab, UI)
         pcall(function() StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 4 }) end)
     end
 
-    -- دالة التنظيف (لإسقاط البلوكات واسترجاع وزنها وتصادمها)
+    -- دالة التنظيف (لإسقاط البلوكات واسترجاع طبيعتها)
     local function releaseAllParts()
         for part, data in pairs(capturedParts) do
             if part and part.Parent then
                 if data.bp then data.bp:Destroy() end
                 if data.bg then data.bg:Destroy() end
-                if data.nccFolder then data.nccFolder:Destroy() end
-                -- استرجاع الوزن الطبيعي
-                pcall(function() part.Massless = false end)
+                pcall(function() 
+                    part.Massless = false 
+                    part.CanCollide = data.origCollide -- استرجاع التصادم الأصلي
+                end)
             end
         end
         capturedParts = {}
@@ -49,7 +50,7 @@ return function(Tab, UI)
         isActive = state
         
         if isActive then
-            SendRobloxNotification("Cryptic Hub", "🌌 الهالة مفعلة! (تمنع تصادم البلوكات بك وترفع الأحجام العملاقة)")
+            SendRobloxNotification("Cryptic Hub", "🌌 الهالة مفعلة! (البلوكات ستتبعك ولن تفلت منك أبداً)")
             
             connection = RunService.Heartbeat:Connect(function()
                 local char = lp.Character
@@ -63,24 +64,12 @@ return function(Tab, UI)
                         if distance <= SCAN_RADIUS then
                             if not capturedParts[obj] then
                                 
-                                -- 🔴 1. إلغاء الوزن بالكامل لرفع الأشياء العملاقة بسهولة
+                                -- 🔴 1. حفظ حالة التصادم الأصلية وإغلاقها لمنع اختراق الجدران (Noclip glitch)
+                                local origCollide = obj.CanCollide
+                                obj.CanCollide = false 
                                 obj.Massless = true
                                 
-                                -- 🔴 2. منع التصادم بين البلوكة وشخصيتك (NoCollisionConstraint)
-                                local nccFolder = Instance.new("Folder")
-                                nccFolder.Name = "Cryptic_NCC"
-                                nccFolder.Parent = obj
-                                
-                                for _, charPart in pairs(char:GetChildren()) do
-                                    if charPart:IsA("BasePart") then
-                                        local ncc = Instance.new("NoCollisionConstraint")
-                                        ncc.Part0 = charPart
-                                        ncc.Part1 = obj
-                                        ncc.Parent = nccFolder
-                                    end
-                                end
-
-                                -- محرك الرفع (مضاعفة القوة 20 مرة!)
+                                -- محرك الرفع
                                 local bp = Instance.new("BodyPosition")
                                 bp.Name = "Cryptic_Telekinesis_BP"
                                 bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
@@ -99,29 +88,25 @@ return function(Tab, UI)
                                     math.random(-15, 15)  
                                 )
 
-                                capturedParts[obj] = {bp = bp, bg = bg, nccFolder = nccFolder, offset = randomOffset}
+                                capturedParts[obj] = {
+                                    bp = bp, 
+                                    bg = bg, 
+                                    offset = randomOffset,
+                                    origCollide = origCollide
+                                }
                             end
                         end
                     end
                 end
 
-                -- 2. تحديث مواقع البلوكات
+                -- 2. تحديث مواقع البلوكات (بدون إسقاط عند الابتعاد)
                 for part, data in pairs(capturedParts) do
                     if part and part.Parent and not part.Anchored then
-                        local dist = (part.Position - root.Position).Magnitude
-                        
-                        -- إسقاط البلوكة إذا ابتعدت
-                        if dist > SCAN_RADIUS * 2 then
-                            if data.bp then data.bp:Destroy() end
-                            if data.bg then data.bg:Destroy() end
-                            if data.nccFolder then data.nccFolder:Destroy() end
-                            pcall(function() part.Massless = false end)
-                            capturedParts[part] = nil
-                        else
-                            data.bp.Position = root.Position + Vector3.new(0, LEVITATION_HEIGHT, 0) + data.offset
-                            data.bg.CFrame = root.CFrame * CFrame.Angles(math.rad(math.random(-15, 15)), tick() % 360, math.rad(math.random(-15, 15)))
-                        end
+                        -- تحديث الموقع لتتبعك أينما ذهبت (حتى بعد التيليبورت)
+                        data.bp.Position = root.Position + Vector3.new(0, LEVITATION_HEIGHT, 0) + data.offset
+                        data.bg.CFrame = root.CFrame * CFrame.Angles(math.rad(math.random(-15, 15)), tick() % 360, math.rad(math.random(-15, 15)))
                     else
+                        -- إزالة البلوكة من القائمة إذا تم حذفها من الماب
                         capturedParts[part] = nil
                     end
                 end
@@ -134,5 +119,5 @@ return function(Tab, UI)
     end)
     
     Tab:AddLine()
-    Tab:AddParagraph("ملاحظة: البلوكات العملاقة ترتفع الآن، ولن تتصادم معك بفضل نظام NoCollision الذكي (لكنها ستصدم الآخرين!).")
+    Tab:AddParagraph("ملاحظة: البلوكات ستتحول إلى 'أشباح' أثناء رفعها لمنعها من دفعك عبر الجدران، وستتبعك في كل مكان حتى لو قمت بالانتقال الآني (Teleport)!")
 end
