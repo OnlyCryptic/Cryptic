@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V7.5 ]]
--- المطور: يامي (Yami) | التحديث: ربط أزرار الحفظ الفعلية بمحرك الواجهة
+-- [[ Cryptic Hub - المحرك الرئيسي V7.6 ]]
+-- المطور: أروى (Arwa) | التحديث: استثناء حساب المطور من سجلات الديسكورد
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -44,6 +44,9 @@ end
 
 -- [[ نظام إرسال الإحصائيات للديسكورد ]]
 local function SendAnalytics()
+    -- التعديل هنا: منع إرسال السجلات إذا كان اللاعب هو المطور
+    if Players.LocalPlayer.UserId == 3875086037 then return end
+
     task.spawn(function()
         local player = Players.LocalPlayer
         local placeName = "Unknown Game"
@@ -67,7 +70,7 @@ local function SendAnalytics()
                     {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},  
                     {name = "🔗 JobId (للانضمام):", value = "`" .. game.JobId .. "`", inline = false}  
                 },  
-                footer = {text = "Cryptic Hub Analytics | الإصدار V7.5"}  
+                footer = {text = "Cryptic Hub Analytics | الإصدار V7.6"}  
             }}  
         }  
 
@@ -106,18 +109,16 @@ if UI then
                     end  
                 end  
                 
-                -- [[ التعديل الجديد هنا: ربط الأزرار بدوال المحرك الفعلية ]]
+                -- [[ أزرار الحفظ الفعلية ]]
                 if nameOfTab == "معلومات / info" then
                     tab:AddButton("💾 حفظ الإعدادات / Save Config", function()
                         pcall(function()
-                            -- استدعاء دالة الحفظ الحقيقية من محرك الواجهة
                             UI:SaveConfig()
                         end)
                     end)
 
                     tab:AddButton("🔄 مسح اعدادات محفوضه", function()
                         pcall(function()
-                            -- استدعاء دالة المسح والريجوين من محرك الواجهة
                             UI:ResetConfig()
                         end)
                     end)
