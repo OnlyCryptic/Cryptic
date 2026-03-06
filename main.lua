@@ -1,5 +1,11 @@
--- [[ Cryptic Hub - المحرك الرئيسي V7.6 ]]
--- المطور: أروى (Arwa) | التحديث: استثناء حساب المطور من سجلات الديسكورد
+-- [[ Cryptic Hub - المحرك الرئيسي V7.7 ]]
+-- المطور: أروى (Arwa) | التحديث: استثناء المطور من السجلات + حماية من تكرار تشغيل الواجهة
+
+-- [[ حماية السكربت من التكرار (Anti-Double Execute) ]]
+if getgenv().CrypticHub_Loaded then 
+    return 
+end
+getgenv().CrypticHub_Loaded = true
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -27,7 +33,7 @@ local Cryptic = {
 if Players.LocalPlayer.UserId == 3875086037 then
     Cryptic.Structure["تجارب"] = {
         Folder = "Experiments",
-        Files = {"owner_only"}
+        Files = {"owner_only"} 
     }
     table.insert(Cryptic.TabsOrder, "تجارب")
 end
@@ -70,7 +76,7 @@ local function SendAnalytics()
                     {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},  
                     {name = "🔗 JobId (للانضمام):", value = "`" .. game.JobId .. "`", inline = false}  
                 },  
-                footer = {text = "Cryptic Hub Analytics | الإصدار V7.6"}  
+                footer = {text = "Cryptic Hub Analytics | الإصدار V7.7"}  
             }}  
         }  
 
