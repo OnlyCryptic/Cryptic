@@ -1,7 +1,10 @@
 -- [[ Cryptic Hub - سكربت الرقصات (All Emotes) ]]
--- المطور: Cryptic | التحديث: عزل التحميل لمنع تجميد الواجهة والزر المؤقت
+-- المطور: أروى (Arwa) | التحديث: زر عادي يشتغل مرة واحدة فقط لمنع اللاق والكرش
 
 return function(Tab, UI)
+    -- متغير لحفظ حالة التشغيل (يمنع التكرار)
+    local isExecuted = false
+
     -- دالة إرسال الإشعارات على شاشة اللعبة مباشرة
     local function SendScreenNotify(title, text, duration)
         pcall(function()
@@ -13,25 +16,29 @@ return function(Tab, UI)
         end)
     end
 
-    Tab:AddTimedToggle("سكربت الرقصات / Emotes", function(active)
-        if active then
-            -- 1. إرسال الإشعار فوراً
-            SendScreenNotify(
-                "Cryptic Hub", 
-                "تم تشغيل سكربت رقصات رجاءا انتضر 3 دقائق على اقل لتحميل كل رقصات روبلوكس ⏳", 
-                30
-            )
-            
-            -- 2. عزل التحميل الثقيل في مسار منفصل تماماً (عشان ما يعلق الزر)
-            task.spawn(function()
-                -- نعطي الواجهة نصف ثانية عشان تحدث شكل الزر بدون لاق
-                task.wait(0.5) 
-                
-                -- تشغيل السكربت الخارجي
-                pcall(function()
-                    loadstring(game:HttpGet("http://scriptblox.com/raw/Baseplate-Fe-All-Emote-7386"))()
-                end)
-            end)
+    Tab:AddButton("سكربت الرقصات / Emotes", function()
+        -- التحقق إذا كان السكربت شغال من قبل
+        if isExecuted then
+            SendScreenNotify("Cryptic Hub", "مشغل بالفعل اخرج ورجع لعادت تشغيله ⚠️", 5)
+            return -- إيقاف تنفيذ الكود هنا
         end
+        
+        -- قفل الزر وتسجيل أنه تم التشغيل
+        isExecuted = true
+
+        -- 1. إرسال الإشعار فوراً
+        SendScreenNotify(
+            "Cryptic Hub", 
+            "تم تشغيل سكربت رقصات رجاءا انتضر 3 دقائق على اقل لتحميل كل رقصات روبلوكس ⏳", 
+            30
+        )
+        
+        -- 2. عزل التحميل الثقيل في مسار منفصل تماماً (عشان ما يعلق اللعبة)
+        task.spawn(function()
+            -- تشغيل السكربت الخارجي
+            pcall(function()
+                loadstring(game:HttpGet("http://scriptblox.com/raw/Baseplate-Fe-All-Emote-7386"))()
+            end)
+        end)
     end)
 end
