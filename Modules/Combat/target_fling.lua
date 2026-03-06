@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - ميزة تطيير الهدف (Fling) المطور ]]
--- المطور: أروى (Arwa) | الميزات: ضرب عشوائي، تتبع، عودة آمنة، فحص ذكي للتلامس
+-- المطور: يامي (Yami) | الميزات: ضرب عشوائي، تتبع، عودة آمنة، إشعار 25 ثانية
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -11,7 +11,7 @@ return function(Tab, UI)
     local isFlinging = false
     local originalCFrame = nil -- لحفظ مكانك للرجوع الآمن
 
-    -- دالة إشعارات روبلوكس بمدة 10 ثواني
+    -- دالة إشعارات روبلوكس بمدة 25 ثانية
     local function SendRobloxNotification(title, text)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
@@ -29,41 +29,36 @@ return function(Tab, UI)
         local root = char and char:FindFirstChild("HumanoidRootPart")
 
         if active then
-            -- 1. التأكد من وجود هدف
+            -- استخدام المتغير المرتبط بملف البحث الخاص بك
             if not _G.ArwaTarget or not _G.ArwaTarget.Character then
                 isFlinging = false
                 SendRobloxNotification("Cryptic Hub", "⚠️ حدد لاعباً أولاً من مربع البحث أعلى القائمة!")
                 return
             end
 
-            -- [[ 2. الفحص الذكي والمزدوج لنظام التصادم (No-Collide Check) ]]
+            -- فحص نظام التصادم في الماب (No-Collide Check)
             local targetChar = _G.ArwaTarget.Character
             local myTorso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or root
             local targetTorso = targetChar:FindFirstChild("Torso") or targetChar:FindFirstChild("UpperTorso") or targetChar:FindFirstChild("HumanoidRootPart")
             
             if myTorso and targetTorso then
-                -- الفحص الأول: هل الماب يستخدم مجموعات تصادم تمنع التلامس؟
-                local success, canCollideGroup = pcall(function()
+                local success, canCollide = pcall(function()
                     return PhysicsService:CollisionGroupsAreCollidable(myTorso.CollisionGroup, targetTorso.CollisionGroup)
                 end)
                 
-                -- الفحص الثاني: هل الماب يحول اللاعبين لأشباح (CanCollide = false)؟
-                local isTargetGhost = (targetTorso.CanCollide == false) and (targetChar:FindFirstChild("HumanoidRootPart") and targetChar.HumanoidRootPart.CanCollide == false)
-                
-                -- إذا تحقق أي من الشروط، يتم إيقاف التطيير فوراً!
-                if (success and not canCollideGroup) or isTargetGhost then
+                if success and not canCollide then
                     isFlinging = false
-                    SendRobloxNotification("Cryptic Hub", "🚫 هذا الماب يمنع تلامس اللاعبين (No-Collide)! الخدعة لن تعمل هنا.")
+                    SendRobloxNotification("Cryptic Hub", "🚫 هذا الماب يلغي تلامس اللاعبين (No-Collide)، الخدعة لن تعمل هنا!")
                     return 
                 end
             end
 
-            -- 3. حفظ مكانك الحالي للرجوع إليه بسلام
+            -- حفظ مكانك الحالي للرجوع إليه بسلام
             if root then
                 originalCFrame = root.CFrame
             end
 
-            -- 4. تجميد شخصيتك للتحضير للدوران الحر
+            -- تجميد شخصيتك للتحضير للدوران الحر
             if char then
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 if hum then hum.PlatformStand = true end
@@ -140,7 +135,7 @@ return function(Tab, UI)
             local rotY = math.random(-50000, 50000)
             local rotZ = math.random(-50000, 50000)
             
-            -- قوة دفع للأعلى وللجوانب لضمان الطيران
+            -- قوة دفع للأعلى ולلجوانب لضمان الطيران
             root.Velocity = Vector3.new(math.random(-1000, 1000), 5000, math.random(-1000, 1000))
             root.RotVelocity = Vector3.new(rotX, rotY, rotZ)
         end
