@@ -4,6 +4,7 @@
 return function(Tab, UI)
     local StarterGui = game:GetService("StarterGui")
 
+    -- دالة الإشعارات
     local function SendRobloxNotification(title, text)
         pcall(function() StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 5 }) end)
     end
@@ -12,12 +13,12 @@ return function(Tab, UI)
         local scriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/OnlyCryptic/Cryptic/main/main.lua'))()"
         
         if state then
-            -- 1. محاولة زرع السكربت في مجلد الـ AutoExecute
+            -- 1. محاولة زرع السكربت في مجلد الـ AutoExecute الخاص بالمشغل
             local success, err = pcall(function()
                 writefile("autoexec/CrypticHub_Auto.lua", scriptLink)
             end)
             
-            -- 2. تفعيل التشغيل التلقائي عند الانتقال (Teleport)
+            -- 2. تفعيل التشغيل التلقائي عند الانتقال لسيرفر آخر (Teleport)
             pcall(function()
                 local queue_tp = queue_on_teleport or (syn and syn.queue_on_teleport) or (getgenv and getgenv().queue_on_teleport)
                 if queue_tp then
@@ -28,10 +29,11 @@ return function(Tab, UI)
             if success then
                 SendRobloxNotification("Cryptic Hub", "✅ تم تفعيل التشغيل التلقائي! سيعمل السكربت بوجهك كل مرة.")
             else
+                -- خطة بديلة إذا كان المشغل يحظر الكتابة
                 SendRobloxNotification("Cryptic Hub", "⚠️ حماية المشغل تمنع الزرع التلقائي.\nيرجى وضع السكربت يدوياً في قسم AutoExecute بالمشغل.")
             end
         else
-            -- إزالة السكربت عند الإيقاف
+            -- إزالة السكربت من مجلد التشغيل التلقائي عند الإيقاف
             pcall(function()
                 if isfile and isfile("autoexec/CrypticHub_Auto.lua") then
                     delfile("autoexec/CrypticHub_Auto.lua")
