@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - ميزة تطيير الهدف (Fling) المطور ]]
--- المطور: أروى (Arwa) | الميزات: متوافق مع Anti-Fling، فحص ذكي للهدف فقط، عودة آمنة
+-- المطور: أروى (Arwa) | الميزات: تشغيل إجباري دائماً (بدون فحص مزعج)، تتبع، عودة آمنة
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -32,19 +32,7 @@ return function(Tab, UI)
                 return
             end
 
-            -- [[ الفحص الذكي: فحص الهدف فقط لتجاهل تأثير الـ Anti-Fling الخاص بك ]]
-            local targetChar = _G.ArwaTarget.Character
-            local targetTorso = targetChar:FindFirstChild("Torso") or targetChar:FindFirstChild("UpperTorso")
-            local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
-            
-            if targetTorso and targetRoot then
-                -- إذا كان الماب جاعل الهدف "شبحاً" بشكل إجباري
-                if targetTorso.CanCollide == false and targetRoot.CanCollide == false then
-                    isFlinging = false
-                    SendRobloxNotification("Cryptic Hub", "🚫 هذا الماب يمنع تلامس اللاعبين (الهدف شبح)! الخدعة لن تعمل.")
-                    return 
-                end
-            end
+            -- 🗑️ تم إزالة الفحص المزعج! السكربت الآن سيشتغل ويهاجم دائماً بقوة.
 
             if root then originalCFrame = root.CFrame end
 
@@ -72,7 +60,7 @@ return function(Tab, UI)
                 for _, part in pairs(char:GetDescendants()) do
                     if part:IsA("BasePart") then
                         part.Massless = false 
-                        part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
+                        part.CustomPhysicalProperties = nil -- إعادة الفيزياء لطبيعتها
                     end
                 end
             end
@@ -92,7 +80,7 @@ return function(Tab, UI)
             for _, part in pairs(char:GetDescendants()) do
                 if part:IsA("BasePart") then
                     if part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso" then
-                        -- إجبار شخصيتك على الصلابة حتى لو كان الـ Anti-Fling شغال
+                        -- إجبار شخصيتك على الصلابة لتدمير الهدف
                         part.CanCollide = true
                         part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 1)
                     else
