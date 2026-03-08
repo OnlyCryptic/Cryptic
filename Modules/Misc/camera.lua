@@ -15,13 +15,13 @@ return function(Tab, UI)
     local sensitivity = 0.40
     local smoothness = 0.18
 
-    -- دالة الإشعارات المزدوجة / Dual notification function
-    local function Notify(arText, enText)
+    -- دالة الإشعارات المزدوجة (عربي/انجليزي)
+    local function SendScreenNotify(arText, enText)
         pcall(function()
             game:GetService("StarterGui"):SetCore("SendNotification", {
                 Title = "Cryptic Hub",
                 Text = arText .. "\n" .. enText,
-                Duration = 4
+                Duration = 3
             })
         end)
     end
@@ -35,7 +35,6 @@ return function(Tab, UI)
         local hum = char and char:FindFirstChild("Humanoid")
 
         if isFreeCam and root and hum then
-            -- إعدادات التفعيل / Activation settings
             root.Anchored = true
             hum.PlatformStand = true
             hum.AutoRotate = false
@@ -43,10 +42,9 @@ return function(Tab, UI)
             cam.CameraType = Enum.CameraType.Scriptable
             camPos = cam.CFrame.Position
 
-            -- إشعار التفعيل المزدوج فقط / Activation notify only
-            Notify("🎥 تم تفعيل الكاميرا الحرة V8", "🎥 FreeCam V8 activated!")
+            -- إشعار التفعيل المزدوج
+            SendScreenNotify("🎥 تم تفعيل الكاميرا الحرة V8", "🎥 FreeCam V8 Activated")
 
-            -- نظام التحكم باللمس للجوال / Mobile touch control system
             UIS.InputChanged:Connect(function(input)
                 if not isFreeCam then return end
                 if input.UserInputType == Enum.UserInputType.Touch then
@@ -56,7 +54,6 @@ return function(Tab, UI)
                 end
             end)
 
-            -- محرك الحركة السلسة / Smooth movement engine
             RunService:BindToRenderStep("FreeCamV8", Enum.RenderPriority.Camera.Value + 1, function(dt)
                 yaw = yaw + (targetYaw - yaw) * smoothness
                 pitch = pitch + (targetPitch - pitch) * smoothness
@@ -68,11 +65,14 @@ return function(Tab, UI)
                 if moveDir.Magnitude > 0 then
                     local forward = rotation.LookVector
                     local right = rotation.RightVector
-                    
-                    local zInput = moveDir.Z -- استخدام اتجاه الجويستيك مباشرة
-                    local xInput = moveDir.X
-                    
-                    moveVector = (forward * -zInput) + (right * xInput)
+                    local flatForward = Vector3.new(forward.X, 0, forward.Z)
+                    if flatForward.Magnitude > 0 then flatForward = flatForward.Unit end
+                    local flatRight = Vector3.new(right.X, 0, right.Z)
+                    if flatRight.Magnitude > 0 then flatRight = flatRight.Unit end
+
+                    local zInput = moveDir:Dot(flatForward)
+                    local xInput = moveDir:Dot(flatRight)
+                    moveVector = (forward * zInput) + (right * xInput)
                 end
 
                 if moveVector.Magnitude > 0 then
@@ -81,7 +81,7 @@ return function(Tab, UI)
                 cam.CFrame = CFrame.new(camPos) * rotation
             end)
         else
-            -- إيقاف الميزة بصمت / Silent deactivation
+            -- إيقاف الميزة بصمت (بدون إشعار)
             RunService:UnbindFromRenderStep("FreeCamV8")
             if root then root.Anchored = false end
             if hum then
@@ -92,7 +92,6 @@ return function(Tab, UI)
         end
     end
 
-    -- إضافة التحكم للواجهة / Add control to UI
     Tab:AddSpeedControl("كاميرا حرة / FreeCam", function(active, value)
         toggleFreeCam(active, value)
     end, 80)
