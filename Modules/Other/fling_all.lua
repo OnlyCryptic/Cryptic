@@ -1,10 +1,9 @@
 -- [[ Cryptic Hub - تطيير الجميع (Auto Fling All) ]]
--- المطور: يامي (Yami) | الوصف: الانتقال لجميع اللاعبين بالترتيب وتطييرهم
+-- المطور: يامي (Yami) | الوصف: متوافق مع Anti-Fling، فحص الأهداف فقط والانتقال السريع
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
-    local PhysicsService = game:GetService("PhysicsService")
     local StarterGui = game:GetService("StarterGui")
     local LocalPlayer = Players.LocalPlayer
 
@@ -32,19 +31,16 @@ return function(Tab, UI)
                 return
             end
 
-            -- [[ 1. فحص التلامس (Collision Check) ]]
-            -- نفحص أول لاعب موجود لنتأكد من دعم الماب للتلامس
+            -- [[ 1. فحص التلامس (Collision Check) - بدون فحص شخصيتك! ]]
             local canCollideMap = true
             for _, p in ipairs(Players:GetPlayers()) do
                 if p ~= LocalPlayer and p.Character then
                     local targetTorso = p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("UpperTorso")
-                    local myTorso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+                    local targetRoot = p.Character:FindFirstChild("HumanoidRootPart")
                     
-                    if myTorso and targetTorso then
-                        local success, collidable = pcall(function()
-                            return PhysicsService:CollisionGroupsAreCollidable(myTorso.CollisionGroup, targetTorso.CollisionGroup)
-                        end)
-                        if (success and not collidable) or targetTorso.CanCollide == false then
+                    if targetTorso and targetRoot then
+                        -- إذا كان الماب يجبر اللاعبين الآخرين على أن يكونوا أشباح
+                        if targetTorso.CanCollide == false and targetRoot.CanCollide == false then
                             canCollideMap = false
                             break
                         end
@@ -63,42 +59,42 @@ return function(Tab, UI)
             -- حفظ المكان للرجوع إليه
             local originalCFrame = root.CFrame
             local hum = char:FindFirstChildOfClass("Humanoid")
-            if hum then hum.PlatformStand = true end -- تجميد المشي لتجنب القلتشات
+            if hum then hum.PlatformStand = true end
 
             -- [[ 2. حلقة التطيير المتسلسلة ]]
             task.spawn(function()
                 while isFlingAllActive do
                     for _, targetPlayer in ipairs(Players:GetPlayers()) do
                         if not isFlingAllActive then break end
+                        
                         if targetPlayer ~= LocalPlayer and targetPlayer.Character then
                             local targetChar = targetPlayer.Character
                             local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
                             local targetHum = targetChar:FindFirstChildOfClass("Humanoid")
 
-                            -- التأكد أن الهدف حي
                             if targetRoot and targetHum and targetHum.Health > 0 then
                                 local startTime = tick()
                                 
-                                -- الهجوم على هذا اللاعب لمدة 2.5 ثانية أو حتى يموت/يطير
+                                -- الهجوم على اللاعب لمدة 2.5 ثانية
                                 while isFlingAllActive and targetChar and targetChar.Parent and targetHum.Health > 0 and (tick() - startTime < 2.5) do
                                     local myChar = LocalPlayer.Character
                                     local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
                                     
                                     if myRoot then
-                                        -- تفعيل Noclip و Anti-Fling لشخصيتك
+                                        -- إجبار شخصيتك على الصلابة والوزن الثقيل لتدمير الهدف
                                         for _, part in pairs(myChar:GetChildren()) do
                                             if part:IsA("BasePart") then
                                                 if part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso" then
                                                     part.CanCollide = true
-                                                    part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 1) -- وزن ثقيل
+                                                    part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 1)
                                                 else
-                                                    part.CanCollide = false -- Noclip لباقي الجسم
+                                                    part.CanCollide = false
                                                 end
                                                 part.Massless = true
                                             end
                                         end
 
-                                        -- التتبع الذكي والدوران المدمر
+                                        -- التتبع والدوران
                                         local targetVel = targetRoot.Velocity
                                         local predictedPos = targetRoot.Position + (targetVel * 0.1)
                                         
@@ -114,7 +110,7 @@ return function(Tab, UI)
                     task.wait(0.1)
                 end
 
-                -- [[ 3. إيقاف التطيير والعودة للحالة الطبيعية ]]
+                -- [[ 3. إيقاف التطيير والعودة ]]
                 local finalChar = LocalPlayer.Character
                 local finalRoot = finalChar and finalChar:FindFirstChild("HumanoidRootPart")
                 local finalHum = finalChar and finalChar:FindFirstChildOfClass("Humanoid")
@@ -132,7 +128,12 @@ return function(Tab, UI)
                         if part:IsA("BasePart") then
                             part.Massless = false
                             part.CustomPhysicalProperties = nil
-                            part.CanCollide = true
+                            -- إرجاع حالة الاصطدام للطبيعي
+                            if part.Name == "HumanoidRootPart" then
+                                part.CanCollide = false
+                            else
+                                part.CanCollide = true
+                            end
                         end
                     end
                 end
@@ -140,7 +141,6 @@ return function(Tab, UI)
                 Notify("✅ تم إيقاف التطيير ورجعت لمكانك", "Fling All stopped, returned to position")
             end)
         else
-            -- إيقاف الحلقة (سيتم التعامل معها داخل task.spawn)
             isFlingAllActive = false
         end
     end)
