@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - ميزة مراقبة الهدف (Spectate) ]]
--- المطور: يامي (Yami) | الميزات: تتبع تلقائي للكاميرا، عودة سريعة، إشعارات 25 ثانية
+-- المطور: يامي (Yami) | الميزات: تتبع تلقائي للكاميرا، عودة سريعة، إشعارات مزدوجة (عربي/إنجليزي)
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -10,12 +10,12 @@ return function(Tab, UI)
     
     local isSpectating = false
 
-    -- دالة إشعارات روبلوكس الرسمية (مدة 25 ثانية)
-    local function SendRobloxNotification(title, text)
+    -- دالة الإشعارات المزدوجة (عربي/إنجليزي)
+    local function Notify(arText, enText)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
-                Title = title,
-                Text = text,
+                Title = "Cryptic Hub",
+                Text = arText .. "\n" .. enText,
                 Duration = 10, 
             })
         end)
@@ -31,18 +31,27 @@ return function(Tab, UI)
                 local hum = _G.ArwaTarget.Character:FindFirstChildOfClass("Humanoid")
                 if hum then
                     camera.CameraSubject = hum
-                    SendRobloxNotification("Cryptic Hub", "👁️ جاري مراقبة: " .. _G.ArwaTarget.DisplayName)
+                    Notify(
+                        "👁️ جاري مراقبة: " .. _G.ArwaTarget.DisplayName,
+                        "👁️ Spectating: " .. _G.ArwaTarget.DisplayName
+                    )
                 end
             else
                 isSpectating = false
-                SendRobloxNotification("Cryptic Hub", "⚠️ حدد لاعباً أولاً لمراقبته!")
+                Notify(
+                    "⚠️ حدد لاعباً أولاً لمراقبته!",
+                    "⚠️ Select a player first to spectate!"
+                )
             end
         else
             -- إرجاع الكاميرا لشخصيتك فوراً عند الإيقاف
             if lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
                 camera.CameraSubject = lp.Character:FindFirstChildOfClass("Humanoid")
             end
-            SendRobloxNotification("Cryptic Hub", "❌ تم إيقاف المراقبة والعودة لشخصيتك.")
+            Notify(
+                "❌ تم إيقاف المراقبة والعودة لشخصيتك.",
+                "❌ Spectating stopped, returned to character."
+            )
         end
     end)
 
