@@ -18,7 +18,7 @@ return function(Tab, UI)
     end)
 
     -- دمج اللغتين في اسم الزر مع تعديل الاسم 
-    Tab:AddToggle("قفز لانهائي / Infinite Jump (أروى روجر ⚔️)", function(active)
+    Tab:AddToggle("قفز لانهائي / Infinite Jump ( روجر ⚔️)", function(active)
         isInfiniteJump = active
         if active then
             -- إشعار التفعيل المزدوج
