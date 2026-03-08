@@ -26,6 +26,7 @@ return function(Tab, UI)
                 end
             end)
             
+            -- إشعار التفعيل المزدوج يظهر فقط عند التشغيل / Dual Notification on activation only
             pcall(function()
                 game:GetService("StarterGui"):SetCore("SendNotification", {
                     Title = "Cryptic Hub",
@@ -34,19 +35,13 @@ return function(Tab, UI)
                 })
             end)
         else
-            -- إيقاف الحماية / Disable protection
+            -- إيقاف الحماية بصمت / Disable protection silently
             if NoFallConnection then
                 NoFallConnection:Disconnect()
                 NoFallConnection = nil
             end
             
-            pcall(function()
-                game:GetService("StarterGui"):SetCore("SendNotification", {
-                    Title = "Cryptic Hub",
-                    Text = "تم إيقاف حماية السقوط.\nNoFall protection disabled.",
-                    Duration = 3
-                })
-            end)
+            -- لم نضع إشعاراً هنا بناءً على طلبك ليكون الإطفاء هادئاً
         end
     end)
 end
