@@ -19,7 +19,7 @@ return function(Tab, UI)
     end)
 
     -- زر التبديل مع إشعارات روبلوكس الرسمية
-    Tab:AddToggle("قفز لانهائي / Infinite Jump (أروى روجر ⚔️)", function(active)
+    Tab:AddToggle("قفز لانهائي / Infinite Jump", function(active)
         isInfiniteJump = active
         
         -- إشعار التفعيل المزدوج فقط (إطفاء صامت)
