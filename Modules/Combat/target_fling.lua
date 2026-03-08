@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - ميزة تطيير الهدف (Fling) المطور ]]
--- المطور: يامي (Yami) | الميزات: ضرب عشوائي، تتبع، عودة آمنة، إشعار 25 ثانية
+-- المطور: يامي (Yami) | الميزات: ضرب عشوائي، تتبع، عودة آمنة، إشعار مزدوج 25 ثانية
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -11,12 +11,12 @@ return function(Tab, UI)
     local isFlinging = false
     local originalCFrame = nil -- لحفظ مكانك للرجوع الآمن
 
-    -- دالة إشعارات روبلوكس بمدة 25 ثانية
-    local function SendRobloxNotification(title, text)
+    -- دالة إشعارات روبلوكس (مزدوجة اللغة)
+    local function Notify(arText, enText)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
-                Title = title,
-                Text = text,
+                Title = "Cryptic Hub",
+                Text = arText .. "\n" .. enText,
                 Duration = 10, 
             })
         end)
@@ -32,7 +32,10 @@ return function(Tab, UI)
             -- استخدام المتغير المرتبط بملف البحث الخاص بك
             if not _G.ArwaTarget or not _G.ArwaTarget.Character then
                 isFlinging = false
-                SendRobloxNotification("Cryptic Hub", "⚠️ حدد لاعباً أولاً من مربع البحث أعلى القائمة!")
+                Notify(
+                    "⚠️ حدد لاعباً أولاً من مربع البحث أعلى القائمة!",
+                    "Select a player first from the search box!"
+                )
                 return
             end
 
@@ -48,7 +51,10 @@ return function(Tab, UI)
                 
                 if success and not canCollide then
                     isFlinging = false
-                    SendRobloxNotification("Cryptic Hub", "🚫 هذا الماب يلغي تلامس اللاعبين (No-Collide)، الخدعة لن تعمل هنا!")
+                    Notify(
+                        "🚫 هذا الماب يلغي تلامس اللاعبين (No-Collide)، الخدعة لن تعمل هنا!",
+                        "This map disables player collision, trick won't work here!"
+                    )
                     return 
                 end
             end
@@ -64,7 +70,10 @@ return function(Tab, UI)
                 if hum then hum.PlatformStand = true end
             end
 
-            SendRobloxNotification("Cryptic Hub", "🔥 جاري تطيير وملاحقة: " .. _G.ArwaTarget.DisplayName)
+            Notify(
+                "🔥 جاري تطيير وملاحقة: " .. _G.ArwaTarget.DisplayName,
+                "Flinging and tracking: " .. _G.ArwaTarget.DisplayName
+            )
         else
             -- [[ الإيقاف والعودة الآمنة لمكانك ]]
             if char then
@@ -91,7 +100,10 @@ return function(Tab, UI)
                     end
                 end
             end
-            SendRobloxNotification("Cryptic Hub", "❌ توقف التطيير وعدت لمكانك بأمان.")
+            Notify(
+                "❌ توقف التطيير وعدت لمكانك بأمان.",
+                "Fling stopped, returned safely."
+            )
         end
     end)
 
