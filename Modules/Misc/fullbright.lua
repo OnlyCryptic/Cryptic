@@ -1,10 +1,11 @@
--- [[ Cryptic Hub - سكربت الإضاءة المطور ]]
--- المطور: Cryptic | التحديث: ضبط القيمة الافتراضية على 3 لمنع السطوع الزائد
+-- [[ Cryptic Hub - سكربت الإضاءة المطور / Advanced Lighting Script ]]
+-- المطور: يامي (Yami) | التحديث: إشعار تفعيل فقط + ترجمة مزدوجة / Update: Activation notify only + Dual language
 
 return function(Tab, UI)
     local Lighting = game:GetService("Lighting")
+    local StarterGui = game:GetService("StarterGui")
     
-    -- حفظ الإعدادات الأصلية للماب عشان نقدر نرجع لها عند الإيقاف
+    -- حفظ الإعدادات الأصلية للماب / Save original map settings
     local orig = {
         Ambient = Lighting.Ambient,
         Outdoor = Lighting.OutdoorAmbient,
@@ -14,17 +15,28 @@ return function(Tab, UI)
         Shadows = Lighting.GlobalShadows
     }
 
+    -- دالة إرسال الإشعارات المزدوجة / Dual notification function
+    local function Notify(arText, enText)
+        pcall(function()
+            StarterGui:SetCore("SendNotification", {
+                Title = "Cryptic Hub",
+                Text = arText .. "\n" .. enText,
+                Duration = 4
+            })
+        end)
+    end
+
     local function updateLighting(active, intensity)
         if active then
-            -- تفعيل الإضاءة الكاملة بالشدة التي يختارها المستخدم
+            -- تفعيل الإضاءة الكاملة / Enable Full Bright
             Lighting.Ambient = Color3.fromRGB(255, 255, 255)
             Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
             Lighting.Brightness = intensity
-            Lighting.ClockTime = 14 -- جعل الوقت ظهراً لضمان أقصى سطوع
-            Lighting.FogEnd = 100000 -- إزالة الضباب
-            Lighting.GlobalShadows = false -- إزالة الظلال المزعجة
+            Lighting.ClockTime = 14 
+            Lighting.FogEnd = 100000 
+            Lighting.GlobalShadows = false 
         else
-            -- إرجاع الإعدادات الأصلية للماب بدقة
+            -- إرجاع الإعدادات الأصلية بصمت / Restore original settings silently
             Lighting.Ambient = orig.Ambient
             Lighting.OutdoorAmbient = orig.Outdoor
             Lighting.Brightness = orig.Brightness
@@ -34,9 +46,13 @@ return function(Tab, UI)
         end
     end
 
-    -- [[ التعديل الأهم ]]
-    -- أضفنا الرقم 3 في نهاية الدالة ليقرأه محرك الواجهة V4.6 كقيمة بداية تلقائية
-    Tab:AddSpeedControl("إضاءة / lighting", function(active, value)
+    -- إضافة التحكم للواجهة بقيمة افتراضية (3) / Add control to UI with default value (3)
+    Tab:AddSpeedControl("إضاءة / Lighting", function(active, value)
         updateLighting(active, value)
+        
+        -- إشعار التفعيل المزدوج فقط / Activation notify only
+        if active then
+            Notify("✨ تم تفعيل الإضاءة الكاملة!", "✨ Full Bright Activated!")
+        end
     end, 3) 
 end
