@@ -1,19 +1,20 @@
 -- [[ Cryptic Hub - كشف اللاعبين (ESP) مع الأسماء والمسافة ]]
--- المطور: Cryptic | التحديث: إضافة المسافة [Distance] + وضوح لا نهائي للاسم من بعيد
+-- المطور: يامي (Yami) | التحديث: إشعار تفعيل فقط + ترجمة مزدوجة / Update: Activation notify only + Dual language
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
     
-    -- الجدول صار يحفظ كل شيء بأسماء مرتبة عشان نقدر نحدث النص
     local espObjects = {} 
     local connections = {}
 
-    -- دالة إرسال الإشعارات
-    local function SendScreenNotify(title, text)
+    -- دالة إرسال الإشعارات المزدوجة / Dual notification function
+    local function Notify(arText, enText)
         pcall(function()
             game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = title, Text = text, Duration = 3 
+                Title = "Cryptic Hub",
+                Text = arText .. "\n" .. enText,
+                Duration = 4
             })
         end)
     end
@@ -22,7 +23,7 @@ return function(Tab, UI)
         if plr == Players.LocalPlayer then return end
         
         pcall(function()
-            -- تنظيف أي عناصر قديمة مسجلة لهذا اللاعب
+            -- تنظيف أي عناصر قديمة / Cleanup old objects
             if espObjects[plr] then
                 if espObjects[plr].Highlight then espObjects[plr].Highlight:Destroy() end
                 if espObjects[plr].Billboard then espObjects[plr].Billboard:Destroy() end
@@ -34,42 +35,37 @@ return function(Tab, UI)
                 local h = Instance.new("Highlight", char)
                 h.Name = "CrypticESP_Highlight"
                 h.FillColor = Color3.fromRGB(0, 255, 150)
+                h.OutlineColor = Color3.new(1, 1, 1)
                 espObjects[plr].Highlight = h
             end
             
-            -- 2. إضافة الاسم والمسافة (بدون ما يختفي من بعيد)
+            -- 2. إضافة الاسم والمسافة (BillboardGui)
             local head = char:WaitForChild("Head", 2) or char:WaitForChild("HumanoidRootPart", 2)
             if head and not head:FindFirstChild("CrypticESP_Name") then
                 local bgui = Instance.new("BillboardGui", head)
                 bgui.Name = "CrypticESP_Name"
                 bgui.AlwaysOnTop = true
-                bgui.MaxDistance = math.huge -- لا يختفي أبداً مهما ابتعد
+                bgui.MaxDistance = math.huge -- وضوح لا نهائي / Infinite visibility
                 bgui.ExtentsOffset = Vector3.new(0, 3, 0) 
-                
-                -- استخدام (Offset) بدل (Scale) عشان يظل الحجم ثابت على الشاشة دائماً
                 bgui.Size = UDim2.new(0, 200, 0, 50) 
                 
                 local textLabel = Instance.new("TextLabel", bgui)
                 textLabel.Size = UDim2.new(1, 0, 1, 0)
                 textLabel.BackgroundTransparency = 1
-                textLabel.Text = plr.DisplayName .. " [0]" -- النص المبدئي
+                textLabel.Text = plr.DisplayName .. " [0]"
                 textLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-                textLabel.TextScaled = false -- إيقاف التصغير التلقائي
-                textLabel.TextSize = 14 -- حجم خط ثابت وواضح جداً
+                textLabel.TextSize = 14
                 textLabel.Font = Enum.Font.GothamBold
-                textLabel.TextStrokeTransparency = 0 -- حدود سوداء للوضوح
+                textLabel.TextStrokeTransparency = 0
                 
                 espObjects[plr].Billboard = bgui
-                espObjects[plr].TextLabel = textLabel -- حفظ النص عشان نحدث المسافة
+                espObjects[plr].TextLabel = textLabel
             end
         end)
     end
 
     local function trackPlayer(plr)
-        if plr.Character then
-            applyESP(plr.Character, plr)
-        end
-        
+        if plr.Character then applyESP(plr.Character, plr) end
         local charAddedConn = plr.CharacterAdded:Connect(function(char)
             task.wait(0.5)
             applyESP(char, plr)
@@ -79,18 +75,12 @@ return function(Tab, UI)
 
     Tab:AddToggle("كشف اللاعبين / ESP", function(active)
         if active then
-            -- تطبيق الكشف على الجميع
-            for _, p in pairs(Players:GetPlayers()) do 
-                trackPlayer(p) 
-            end
+            -- تفعيل الكشف / Enable ESP
+            for _, p in pairs(Players:GetPlayers()) do trackPlayer(p) end
             
-            -- مراقبة دخول اللاعبين الجدد
-            local playerAddedConn = Players.PlayerAdded:Connect(function(p)
-                trackPlayer(p)
-            end)
+            local playerAddedConn = Players.PlayerAdded:Connect(function(p) trackPlayer(p) end)
             table.insert(connections, playerAddedConn)
 
-            -- تنظيف عند الخروج
             local playerRemovingConn = Players.PlayerRemoving:Connect(function(plr)
                 if espObjects[plr] then
                     if espObjects[plr].Highlight then espObjects[plr].Highlight:Destroy() end
@@ -100,7 +90,7 @@ return function(Tab, UI)
             end)
             table.insert(connections, playerRemovingConn)
             
-            -- [[ المحرك الجديد: تحديث المسافة بشكل حي ] ]
+            -- تحديث المسافة حياً / Live distance update
             local renderConn = RunService.RenderStepped:Connect(function()
                 local lpChar = Players.LocalPlayer.Character
                 local lpRoot = lpChar and lpChar:FindFirstChild("HumanoidRootPart")
@@ -109,9 +99,7 @@ return function(Tab, UI)
                     if plr.Character and data.TextLabel then
                         local targetRoot = plr.Character:FindFirstChild("HumanoidRootPart")
                         if lpRoot and targetRoot then
-                            -- حساب المسافة بينك وبين اللاعب
                             local dist = math.floor((lpRoot.Position - targetRoot.Position).Magnitude)
-                            -- تحديث النص ليصبح: الاسم [المسافة]
                             data.TextLabel.Text = string.format("%s [%d]", plr.DisplayName, dist)
                         end
                     end
@@ -119,9 +107,10 @@ return function(Tab, UI)
             end)
             table.insert(connections, renderConn)
 
-            SendScreenNotify("Cryptic Hub", "👁️ تم تفعيل الكشف مع المسافات!")
+            -- إشعار التفعيل المزدوج فقط / Activation notify only
+            Notify("👁️ تم تفعيل كشف اللاعبين والمسافة!", "👁️ ESP & Distance activated!")
         else
-            -- تنظيف كل شيء عند الإيقاف
+            -- إيقاف صامت وتنظيف شامل / Silent stop & cleanup
             for plr, data in pairs(espObjects) do 
                 if data.Highlight then data.Highlight:Destroy() end
                 if data.Billboard then data.Billboard:Destroy() end
@@ -132,8 +121,6 @@ return function(Tab, UI)
                 if conn then conn:Disconnect() end
             end
             connections = {}
-            
-            SendScreenNotify("Cryptic Hub", "🛑 تم إيقاف كشف اللاعبين.")
         end
     end)
 end
