@@ -18,7 +18,7 @@ local Cryptic = {
         ["أدوات / tools"] = { Folder = "Misc", Files = {"tptool", "auto_tool", "esp", "shiftlock", "emotes", "camera", "fullbright"} },  
         ["استهداف لاعب / players"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "carry"} },  
         ["قسم السيرفر / server"] = { Folder = "Server", Files = {"server", "rejoin", "join_id"} },  
-        ["اخرى / Other"] = { Folder = "Other", Files = {"zero_gravity", "anti_block"} }  
+        ["اخرى / Other"] = { Folder = "Other", Files = {"zero_gravity", "anti_block", "fling_all"} }  
     },  
     TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / players", "قسم السيرفر / server", "اخرى / Other"}
 }
