@@ -55,17 +55,13 @@ return function(Tab, UI)
     Tab:AddToggle("مضاد التطيير / Anti-Fling", function(active)
         toggleAntiFling(active)
         
-        -- إظهار الإشعار المزدوج على الشاشة بناءً على حالة الزر
+        -- إظهار الإشعار المزدوج على الشاشة عند التفعيل فقط
         if active then
             Notify(
                 "🛡️ تم تفعيل حماية الشبح (Anti-Fling)",
                 "🛡️ Anti-Fling activated"
             )
-        else
-            Notify(
-                "🛑 تم إيقاف الحماية",
-                "🛑 Protection disabled"
-            )
         end
+        -- إذا تم إيقاف الميزة (active = false) لن يظهر أي إشعار وتنطفئ بصمت
     end)
 end
