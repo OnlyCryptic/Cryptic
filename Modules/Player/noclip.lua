@@ -3,6 +3,7 @@
 
 return function(Tab, UI)
     local RunService = game:GetService("RunService")
+    local StarterGui = game:GetService("StarterGui")
     local player = game.Players.LocalPlayer
     local noclipActive = false
     local connection
@@ -31,16 +32,21 @@ return function(Tab, UI)
     Tab:AddToggle("اختراق الجدران / NoClip", function(active)
         toggleNoclip(active)
         
-        -- نظام التسجيل (اللوق) المزدوج يبقى شغالاً للتوثيق
+        -- نظام التسجيل (اللوق) المزدوج
         if UI.Logger then
             local actionLog = active and "تفعيل / Enabled" or "إيقاف / Disabled"
             UI.Logger("حالة الميزة / Feature State", "قام المستخدم بـ / User performed: " .. actionLog .. " (NoClip)")
         end
         
-        -- إشعارات الواجهة تظهر عند التفعيل فقط (إطفاء صامت)
+        -- إشعار نظام روبلوكس الرسمي عند التفعيل فقط
         if active then
-            UI:Notify("✅ تم تفعيل اختراق الجدران\n✅ NoClip Enabled")
+            pcall(function()
+                StarterGui:SetCore("SendNotification", {
+                    Title = "Cryptic Hub",
+                    Text = "✅ تم تفعيل اختراق الجدران\n✅ NoClip Enabled",
+                    Duration = 4
+                })
+            end)
         end
-        -- إذا تم إيقاف الميزة (active = false) لن يظهر أي إشعار وتنطفئ بصمت
     end)
 end
