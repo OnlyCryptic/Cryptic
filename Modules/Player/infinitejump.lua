@@ -3,6 +3,7 @@
 
 return function(Tab, UI)
     local userInputService = game:GetService("UserInputService")
+    local StarterGui = game:GetService("StarterGui")
     local lp = game.Players.LocalPlayer
     local isInfiniteJump = false
 
@@ -17,14 +18,19 @@ return function(Tab, UI)
         end
     end)
 
-    -- دمج اللغتين في اسم الزر
-    Tab:AddToggle("قفز لانهائي / Infinite Jump", function(active)
+    -- زر التبديل مع إشعارات روبلوكس الرسمية
+    Tab:AddToggle("قفز لانهائي / Infinite Jump (أروى روجر ⚔️)", function(active)
         isInfiniteJump = active
         
         -- إشعار التفعيل المزدوج فقط (إطفاء صامت)
         if active then
-            UI:Notify("✅ تم تفعيل القفز اللانهائي في Cryptic Hub\n✅ Infinite Jump activated in Cryptic Hub")
+            pcall(function()
+                StarterGui:SetCore("SendNotification", {
+                    Title = "Cryptic Hub",
+                    Text = "✅ تم تفعيل القفز اللانهائي\n✅ Infinite Jump activated",
+                    Duration = 4
+                })
+            end)
         end
-        -- إذا تم إيقاف الميزة (active = false) لن يظهر أي إشعار وتنطفئ بصمت
     end)
 end
