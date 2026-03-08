@@ -1,87 +1,116 @@
--- [[ Cryptic Hub - الايم بوت (Aimbot) لأقرب لاعب مع شيفت لوك ]]
--- المطور: يامي (Yami) | الوصف: توجيه الكاميرا والشخصية تلقائياً لأقرب لاعب حي
+-- [[ Cryptic Hub - أيم بوت الجسم المطور / Advanced Body Aimbot ]]
+-- المطور: يامي (Yami) | التحديث: تثبيت فوري على الجسم + دعم الجوال والبي سي
+-- Features: Instant Body Lock, Mobile & PC Support, Dual Language, Silent Off
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
-    local StarterGui = game:GetService("StarterGui")
+    local UserInputService = game:GetService("UserInputService")
     local LocalPlayer = Players.LocalPlayer
     local Camera = workspace.CurrentCamera
 
-    local isAimbotActive = false
-    local aimbotConnection = nil
-    
-    local targetPartName = "HumanoidRootPart" 
+    -- [[ الإعدادات / Config ]]
+    local Config = {
+        Enabled = false,
+        TeamCheck = true,
+        WallCheck = true,
+        -- سرعة التتبع (1 تعني فوري، 0.1 تعني ناعم جداً)
+        Smoothness = 0.4, 
+        FOV = 120,
+        TargetPart = "HumanoidRootPart" -- التثبيت على الجسم
+    }
 
-    local function SendRobloxNotification(title, text)
-        pcall(function() StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 3 }) end)
+    -- [[ دائرة المدى / FOV Circle ]]
+    local FOVCircle = Drawing.new("Circle")
+    FOVCircle.Thickness = 1
+    FOVCircle.NumSides = 60
+    FOVCircle.Radius = Config.FOV
+    FOVCircle.Filled = false
+    FOVCircle.Visible = false
+    FOVCircle.Color = Color3.fromRGB(0, 255, 150)
+    FOVCircle.Transparency = 0.7
+
+    -- دالة الإشعارات المزدوجة / Dual Notification
+    local function Notify(ar, en)
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Cryptic Hub",
+                Text = ar .. "\n" .. en,
+                Duration = 4
+            })
+        end)
     end
 
-    -- دالة البحث عن أقرب لاعب
-    local function getClosestPlayer()
-        local closestPlayer = nil
-        local shortestDistance = math.huge 
+    -- فحص الرؤية (الجدران) / Wall Check
+    local function isVisible(targetPart)
+        if not Config.WallCheck then return true end
+        local castPoints = {Camera.CFrame.Position, targetPart.Position}
+        local ignoreList = {LocalPlayer.Character, targetPart.Parent}
+        local params = RaycastParams.new()
+        params.FilterDescendantsInstances = ignoreList
+        params.FilterType = Enum.RaycastFilterType.Exclude
+
+        local raycastResult = workspace:Raycast(Camera.CFrame.Position, (targetPart.Position - Camera.CFrame.Position).Unit * 1000, params)
+        return raycastResult == nil
+    end
+
+    -- البحث عن أقرب هدف لمنتصف الشاشة (مناسب للجوال والبي سي)
+    local function getClosestTarget()
+        local closest = nil
+        local shortestDist = Config.FOV
+        local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
         for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                local character = player.Character
-                local targetPart = character:FindFirstChild(targetPartName)
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-
-                if targetPart and humanoid and humanoid.Health > 0 then
-                    local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                    
-                    if myRoot then
-                        local distance = (targetPart.Position - myRoot.Position).Magnitude
-                        
-                        if distance < shortestDistance then
-                            closestPlayer = player
-                            shortestDistance = distance
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(Config.TargetPart) then
+                -- فحص الفريق
+                if Config.TeamCheck and player.Team == LocalPlayer.Team then continue end
+                
+                local targetPart = player.Character[Config.TargetPart]
+                local pos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                
+                if onScreen then
+                    local dist = (Vector2.new(pos.X, pos.Y) - screenCenter).Magnitude
+                    if dist < shortestDist then
+                        if isVisible(targetPart) then
+                            closest = targetPart
+                            shortestDist = dist
                         end
                     end
                 end
             end
         end
-        return closestPlayer
+        return closest
     end
 
-    Tab:AddToggle("ايم بوت (أقرب لاعب) / Auto Aimbot", function(state)
-        isAimbotActive = state
+    -- [[ الزر الرئيسي / Toggle Button ]]
+    Tab:AddToggle("أيم بوت الجسم / Body Aimbot", function(state)
+        Config.Enabled = state
+        FOVCircle.Visible = state
 
-        if isAimbotActive then
-            SendRobloxNotification("Cryptic Hub", "🎯 تم تفعيل الايم بوت والشيفت لوك! سيتم تتبع أقرب هدف.")
-            
-            aimbotConnection = RunService.RenderStepped:Connect(function()
-                if not isAimbotActive then return end
-                
-                local myChar = LocalPlayer.Character
-                local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-                local myHumanoid = myChar and myChar:FindFirstChildOfClass("Humanoid")
-                
-                if not myChar or not myRoot or not myHumanoid or myHumanoid.Health <= 0 then return end
-                
-                local target = getClosestPlayer()
-                
-                if target and target.Character then
-                    local targetPart = target.Character:FindFirstChild(targetPartName)
-                    if targetPart then
-                        -- 1. إصلاح الكاميرا: توجيه الكاميرا نحو الهدف باستخدام مكانها الحالي عشان ما تنفصل عنك
-                        local camCFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
-                        Camera.CFrame = Camera.CFrame:Lerp(camCFrame, 0.6)
-                        
-                        -- 2. ميزة الشيفت لوك: توجيه جسم شخصيتك نحو الهدف تلقائياً
-                        -- نأخذ إحداثيات (X و Z) من الهدف، ونثبت (Y) عشان شخصيتك ما تميل فوق وتحت
-                        local lookAtPos = Vector3.new(targetPart.Position.X, myRoot.Position.Y, targetPart.Position.Z)
-                        myRoot.CFrame = CFrame.new(myRoot.Position, lookAtPos)
-                    end
-                end
-            end)
+        if state then
+            Notify("🎯 تم تفعيل أيم بوت الجسم (تثبيت فوري)", "🎯 Body Aimbot Activated (Instant Lock)")
         else
-            if aimbotConnection then
-                aimbotConnection:Disconnect()
-                aimbotConnection = nil
+            -- إيقاف صامت / Silent Off
+        end
+    end)
+
+    -- [[ محرك التشغيل / Main Engine ]]
+    RunService.RenderStepped:Connect(function()
+        if Config.Enabled then
+            -- تحديث الدائرة في منتصف الشاشة دائماً
+            FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+            
+            local target = getClosestTarget()
+            if target and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                -- توجيه الكاميرا فورياً وبدقة نحو الجسم
+                local targetCFrame = CFrame.new(Camera.CFrame.Position, target.Position)
+                Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, Config.Smoothness)
+                
+                -- دعم الشيفت لوك التلقائي للجسم
+                local root = LocalPlayer.Character.HumanoidRootPart
+                local lookAt = Vector3.new(target.Position.X, root.Position.Y, target.Position.Z)
+                root.CFrame = root.CFrame:Lerp(CFrame.new(root.Position, lookAt), 0.3)
             end
-            SendRobloxNotification("Cryptic Hub", "❌ تم إيقاف الايم بوت والشيفت لوك.")
         end
     end)
 end
