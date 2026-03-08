@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة الشيفت لوك للجوال V5 ]]
--- المطور: يامي (Yami) | التحديث: تفعيل تلقائي (أخضر)، حجم ميني، ولمس ذكي للجوال
+-- [[ Cryptic Hub - ميزة الشيفت لوك للجوال V5 / Mobile Shift Lock ]]
+-- المطور: يامي (Yami) | التحديث: إشعار تفعيل فقط + ترجمة مزدوجة / Update: Activation notify only + Dual language
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -12,12 +12,12 @@ return function(Tab, UI)
     local ShiftLockActive = false
     local Connection = nil
 
-    -- دالة إشعارات روبلوكس الأصلية
-    local function SendRobloxNotification(title, text)
+    -- دالة الإشعارات المزدوجة / Dual notification function
+    local function Notify(arText, enText)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
-                Title = title,
-                Text = text,
+                Title = "Cryptic Hub",
+                Text = arText .. "\n" .. enText,
                 Duration = 4,
             })
         end)
@@ -29,7 +29,6 @@ return function(Tab, UI)
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
-    -- حماية الواجهة
     local success, _ = pcall(function()
         ScreenGui.Parent = game:GetService("CoreGui")
     end)
@@ -38,11 +37,10 @@ return function(Tab, UI)
     end
     ScreenGui.Enabled = false
 
-    -- الدائرة الخارجية (الحجم الميني 35x35)
     local ShiftButton = Instance.new("ImageButton")
     ShiftButton.Name = "ToggleButton"
     ShiftButton.Parent = ScreenGui
-    ShiftButton.BackgroundColor3 = Color3.fromRGB(0, 200, 80) -- يبدأ باللون الأخضر!
+    ShiftButton.BackgroundColor3 = Color3.fromRGB(0, 200, 80) -- أخضر البداية
     ShiftButton.BackgroundTransparency = 0.6 
     ShiftButton.Position = UDim2.new(0.85, 0, 0.6, 0)
     ShiftButton.Size = UDim2.new(0, 35, 0, 35)
@@ -59,79 +57,63 @@ return function(Tab, UI)
     UIStroke.Thickness = 1
     UIStroke.Parent = ShiftButton
 
-    -- النص الداخلي
+    -- النص الداخلي (عربي وانجليزي)
     local TextLabel = Instance.new("TextLabel")
     TextLabel.Parent = ShiftButton
     TextLabel.BackgroundTransparency = 1
     TextLabel.Size = UDim2.new(1, 0, 1, 0)
     TextLabel.Font = Enum.Font.GothamBold
-    TextLabel.Text = "شيفت\nلوك"
+    TextLabel.Text = "شيفت لوك\nShift Lock"
     TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TextLabel.TextSize = 8
+    TextLabel.TextSize = 7
     TextLabel.TextWrapped = true
     TextLabel.TextTransparency = 0.2
 
     -- [[ 2. دالة التشغيل/الإيقاف ]]
-    local ToggleShiftLock -- تعريف مسبق للدالة عشان نستخدمها باللمس
+    local ToggleShiftLock
     ToggleShiftLock = function(state)
         ShiftLockActive = state
         local char = lp.Character
         local hum = char and char:FindFirstChildOfClass("Humanoid")
         
         if ShiftLockActive then
-            -- تفعيل (أخضر شفاف)
             ShiftButton.BackgroundColor3 = Color3.fromRGB(0, 200, 80)
-            
             if hum then 
                 hum.CameraOffset = Vector3.new(1.75, 0, 0)
                 hum.AutoRotate = false
             end
-            
             if Connection then Connection:Disconnect() end
             Connection = RunService.RenderStepped:Connect(function()
-                if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and lp.Character:FindFirstChild("Humanoid") then
+                if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
                     local charRoot = lp.Character.HumanoidRootPart
                     local camLook = Camera.CFrame.LookVector
                     charRoot.CFrame = CFrame.new(charRoot.Position, charRoot.Position + Vector3.new(camLook.X, 0, camLook.Z))
-                else
-                    if Connection then Connection:Disconnect() Connection = nil end
                 end
             end)
         else
-            -- إيقاف (أحمر شفاف)
             ShiftButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-            
             if hum then 
                 hum.CameraOffset = Vector3.new(0, 0, 0)
                 hum.AutoRotate = true
             end
-            if Connection then
-                Connection:Disconnect()
-                Connection = nil
-            end
+            if Connection then Connection:Disconnect(); Connection = nil end
         end
     end
 
-    -- [[ 3. نظام السحب (Dragging) واللمس الذكي للجوال ]]
+    -- [[ 3. نظام السحب واللمس الذكي ]]
     local dragging, dragInput, dragStart, startPos
-    local touchTime = 0 -- لحساب وقت اللمس (عشان نفرق بين الضغطة والسحبة)
-    
-    local function update(input)
-        local delta = input.Position - dragStart
-        ShiftButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
+    local touchTime = 0 
     
     ShiftButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPos = ShiftButton.Position
-            touchTime = tick() -- تسجيل وقت بداية اللمس
+            touchTime = tick()
             
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
-                    -- إذا كانت اللمسة سريعة (أقل من 0.2 ثانية)، اعتبرها ضغطة زر لتغيير اللون
                     if tick() - touchTime < 0.2 then
                         ToggleShiftLock(not ShiftLockActive)
                     end
@@ -140,31 +122,23 @@ return function(Tab, UI)
         end
     end)
     
-    ShiftButton.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-    
     UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            update(input)
+        if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) and dragging then
+            local delta = input.Position - dragStart
+            ShiftButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 
     -- [[ 4. زر التحكم في الواجهة الرئيسية ]]
-    Tab:AddToggle("قفل شاشه / shift lock", function(state)
+    Tab:AddToggle("قفل شاشة / Shift Lock", function(state)
         ScreenGui.Enabled = state 
-        
         if state then
-            -- [[ التعديل هنا: يشتغل تلقائي (أخضر) أول ما تفعله من السكربت ]]
             ToggleShiftLock(true) 
-            SendRobloxNotification("Cryptic Hub", "✅ تم التفعيل! الشيفت لوك يعمل الآن.")
+            -- إشعار التفعيل المزدوج فقط / Activation notify only
+            Notify("✅ تم التفعيل! الزر متاح الآن على الشاشة.", "✅ Activated! Button is now available on screen.")
         else
             ToggleShiftLock(false)
-            SendRobloxNotification("Cryptic Hub", "❌ تم إخفاء الزر وإلغاء الخاصية.")
+            -- إيقاف صامت: لا توجد إشعارات هنا
         end
     end)
-    
-    Tab:AddLine()
 end
