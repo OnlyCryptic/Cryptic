@@ -117,7 +117,7 @@ if UI then
                         end)
                     end)
 
-                    tab:AddButton("🔄 مسح اعدادات محفوضه", function()
+                    tab:AddButton("🔄 مسح اعدادات محفوضه / restart settings", function()
                         pcall(function()
                             UI:ResetConfig()
                         end)
