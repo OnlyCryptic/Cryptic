@@ -1,23 +1,23 @@
 -- [[ Cryptic Hub - انتقال للهدف / Target TP ]]
--- المطور: يامي (Yami) | الميزات: انتقال آمن، إشعارات 25 ثانية، نظام TimedToggle
+-- المطور: يامي (Yami) | الميزات: انتقال آمن، إشعارات مزدوجة (عربي/إنجليزي)، نظام TimedToggle
 
 return function(Tab, UI)
     local players = game:GetService("Players")
     local StarterGui = game:GetService("StarterGui")
     local lp = players.LocalPlayer
 
-    -- دالة إشعارات روبلوكس الرسمية (تم الضبط على 25 ثانية)
-    local function SendRobloxNotification(title, text)
+    -- دالة الإشعارات المزدوجة (عربي/إنجليزي)
+    local function Notify(arText, enText)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
-                Title = title,
-                Text = text,
+                Title = "Cryptic Hub",
+                Text = arText .. "\n" .. enText,
                 Duration = 10, 
             })
         end)
     end
 
-    -- استخدام AddTimedToggle لتوحيد شكل السكربت (ينطفئ الزر تلقائياً بعد ثانيتين)
+    -- استخدام AddTimedToggle لتوحيد شكل السكربت (ينطفئ الزر تلقائياً بعد ثانية/ثانيتين)
     Tab:AddTimedToggle("انتقال للهدف / Target TP", function(active)
         if active then
             local target = _G.ArwaTarget -- قراءة الهدف من المتغير المرتبط بملف البحث الخاص بك
@@ -32,11 +32,17 @@ return function(Tab, UI)
                     -- عملية الانتقال فوق موقع الهدف بمسافة آمنة (3 مسامير) لمنع القلتش
                     root.CFrame = targetRoot.CFrame * CFrame.new(0, 3, 0)
                     
-                    SendRobloxNotification("Cryptic Hub", "⚡ تم الانتقال بنجاح إلى: " .. target.DisplayName)
+                    Notify(
+                        "⚡ تم الانتقال بنجاح إلى: " .. target.DisplayName,
+                        "⚡ Successfully teleported to: " .. target.DisplayName
+                    )
                 end
             else
                 -- إشعار في حال عدم تحديد لاعب أو اختفاء الهدف
-                SendRobloxNotification("Cryptic Hub", "⚠️ حدد هدفاً أولاً من خانة البحث أعلاه!")
+                Notify(
+                    "⚠️ حدد هدفاً أولاً من خانة البحث أعلاه!",
+                    "⚠️ Select a target first from the search box above!"
+                )
             end
         end
     end)
