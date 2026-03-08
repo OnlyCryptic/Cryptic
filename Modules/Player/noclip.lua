@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة NoClip المطورة ]]
--- الملف: noclip.lua
+-- [[ Cryptic Hub - ميزة NoClip المطورة / Advanced NoClip Feature ]]
+-- الملف / File: noclip.lua
 
 return function(Tab, UI)
     local RunService = game:GetService("RunService")
@@ -28,13 +28,20 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddToggle("اختراق الجدران / noclip", function(active)
+    Tab:AddToggle("اختراق الجدران / NoClip", function(active)
         toggleNoclip(active)
         
+        -- نظام التسجيل (اللوق) المزدوج
         if UI.Logger then
-            UI.Logger("تغيير حالة ميزة", "قام المستخدم بـ " .. (active and "تفعيل" or "إيقاف") .. " اختراق الجدران")
+            local actionLog = active and "تفعيل / Enabled" or "إيقاف / Disabled"
+            UI.Logger("حالة الميزة / Feature State", "قام المستخدم بـ / User performed: " .. actionLog .. " (NoClip)")
         end
         
-        UI:Notify(active and "تم تفعيل اختراق الجدران" or "تم إيقاف اختراق الجدران")
+        -- إشعارات الواجهة المزدوجة
+        if active then
+            UI:Notify("✅ تم تفعيل اختراق الجدران\n✅ NoClip Enabled")
+        else
+            UI:Notify("❌ تم إيقاف اختراق الجدران\n❌ NoClip Disabled")
+        end
     end)
 end
