@@ -111,13 +111,13 @@ if UI then
                 
                 -- [[ أزرار الحفظ الفعلية ]]
                 if nameOfTab == "معلومات / info" then
-                    tab:AddButton("💾 حفظ الإعدادات / Save Config", function()
+                    tab:AddButton("💾 حفظ الإعدادات / save config", function()
                         pcall(function()
                             UI:SaveConfig()
                         end)
                     end)
 
-                    tab:AddButton("🔄 مسح اعدادات محفوضه / restart settings", function()
+                    tab:AddButton("🔄 مسح اعدادات محفوضه / restart config", function()
                         pcall(function()
                             UI:ResetConfig()
                         end)
