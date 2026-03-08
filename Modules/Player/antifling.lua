@@ -1,17 +1,17 @@
 -- [[ Cryptic Hub - ميزة مضاد الطيران (Anti-Fling) ]]
--- المطور: Cryptic | تجعلك تخترق اللاعبين لمنع التخريب
+-- المطور: يامي (Yami) | تجعلك تخترق اللاعبين لمنع التخريب
 
 return function(Tab, UI)
     local RunService = game:GetService("RunService")
     local Players = game:GetService("Players")
     local lp = Players.LocalPlayer
     
-    -- [[ دالة إرسال الإشعارات على شاشة اللعبة مباشرة ]]
-    local function SendScreenNotify(title, text)
+    -- [[ دالة إرسال الإشعارات المزدوجة (عربي/إنجليزي) ]]
+    local function Notify(arText, enText)
         pcall(function()
             game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = title,
-                Text = text,
+                Title = "Cryptic Hub",
+                Text = arText .. "\n" .. enText,
                 Duration = 3 -- مدة بقاء الإشعار على الشاشة (3 ثواني)
             })
         end)
@@ -52,14 +52,20 @@ return function(Tab, UI)
     end
 
     -- إضافة زر التبديل للواجهة
-    Tab:AddToggle("مضاد التطيير / antifling", function(active)
+    Tab:AddToggle("مضاد التطيير / Anti-Fling", function(active)
         toggleAntiFling(active)
         
-        -- إظهار الإشعار على الشاشة بناءً على حالة الزر
+        -- إظهار الإشعار المزدوج على الشاشة بناءً على حالة الزر
         if active then
-            SendScreenNotify("Cryptic Hub", "تم تفعيل حماية الشبح (Anti-Fling) 🛡️")
+            Notify(
+                "🛡️ تم تفعيل حماية الشبح (Anti-Fling)",
+                "🛡️ Anti-Fling activated"
+            )
         else
-            SendScreenNotify("Cryptic Hub", "تم إيقاف الحماية 🛑")
+            Notify(
+                "🛑 تم إيقاف الحماية",
+                "🛑 Protection disabled"
+            )
         end
     end)
 end
