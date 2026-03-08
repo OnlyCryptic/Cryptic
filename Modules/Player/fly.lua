@@ -1,13 +1,25 @@
 -- [[ Cryptic Hub - الطيران الثلاثي الأبعاد المصلح / Fixed 3D Fly ]]
--- المطور: أروى (Arwa) | التحديث: ضبط السرعة الافتراضية على 50 لتتوافق مع المحرك الجديد / Update: Default speed set to 50 to match the new engine
+-- المطور: أروى (Arwa) | التحديث: إضافة إشعار عند التفعيل فقط / Update: Added notification on activation only
 
 return function(Tab, UI)
     local player = game.Players.LocalPlayer
     local RunService = game:GetService("RunService")
+    local StarterGui = game:GetService("StarterGui") -- إضافة خدمة الإشعارات
     local cam = workspace.CurrentCamera
     local isFlying = false
     local flySpeed = 50
     local bodyVel, bodyGyro, connection
+
+    -- دالة إرسال الإشعارات المزدوجة / Dual notification function
+    local function Notify(title, text)
+        pcall(function()
+            StarterGui:SetCore("SendNotification", {
+                Title = title,
+                Text = text,
+                Duration = 3
+            })
+        end)
+    end
 
     local function toggleFly(active, speedValue)
         isFlying = active
@@ -69,8 +81,14 @@ return function(Tab, UI)
     end
 
     -- [[ التعديل هنا / Modification Here ]]
-    -- أضفنا الرقم 50 في النهاية ليكون هو القيمة الافتراضية عند التحميل / Added 50 at the end to be the default value on load
     Tab:AddSpeedControl("طيران / Fly", function(active, value)
         toggleFly(active, value)
+        
+        -- إظهار الإشعار عند التفعيل فقط / Show notification on activation only
+        if active then
+            Notify("Cryptic Hub", "✈️ تم تفعيل الطيران!\n✈️ Fly activated!")
+        end
+        -- إذا تم إيقاف الميزة (active = false) لن يظهر أي إشعار وينطفئ بصمت
+        
     end, 50)
 end
