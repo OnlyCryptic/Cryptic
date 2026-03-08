@@ -1,6 +1,6 @@
--- [[ Cryptic Hub - نظام الاستهداف التجريبي (Aimbot Body) ]]
--- المطور: أروى (Arwa) | التحديث: تثبيت فوري على الجسم + دعم جميع المنصات
--- Note: This is an internal experiment module (Developer Only)
+-- [[ Cryptic Hub - نظام الاستهداف المطور (Super Lock) ]]
+-- المطور: أروى (Arwa) | التحديث: تثبيت تلقائي على أقرب مسافة + دعم كامل للجوال
+-- Note: Simplified logic to ensure it works on all executors.
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -12,23 +12,13 @@ return function(Tab, UI)
     local Config = {
         Enabled = false,
         TeamCheck = true,
-        WallCheck = true,
-        Smoothness = 0.45, -- سرعة التثبيت (كلما زاد الرقم زادت السرعة)
-        FOV = 150,
-        TargetPart = "HumanoidRootPart" -- استهداف الجسم مباشرة
+        -- سرعة التثبيت (1 يعني فوري جداً، 0.5 يعني نص سريع)
+        Smoothness = 0.8, 
+        -- خليت المدى كبير جداً عشان يصيد أي واحد قريب منك
+        MaxDistance = 1000, 
+        TargetPart = "HumanoidRootPart"
     }
 
-    -- [[ دائرة المدى / FOV Visual ]]
-    local FOVCircle = Drawing.new("Circle")
-    FOVCircle.Thickness = 1.5
-    FOVCircle.NumSides = 60
-    FOVCircle.Radius = Config.FOV
-    FOVCircle.Filled = false
-    FOVCircle.Visible = false
-    FOVCircle.Color = Color3.fromRGB(0, 255, 150)
-    FOVCircle.Transparency = 0.6
-
-    -- دالة الإشعارات المزدوجة (تظهر عند التفعيل فقط)
     local function Notify(ar, en)
         pcall(function()
             game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -39,36 +29,29 @@ return function(Tab, UI)
         end)
     end
 
-    -- فحص الرؤية (الجدران)
-    local function isVisible(targetPart)
-        if not Config.WallCheck then return true end
-        local params = RaycastParams.new()
-        params.FilterDescendantsInstances = {LocalPlayer.Character, targetPart.Parent}
-        params.FilterType = Enum.RaycastFilterType.Exclude
-        local result = workspace:Raycast(Camera.CFrame.Position, (targetPart.Position - Camera.CFrame.Position).Unit * 1000, params)
-        return result == nil
-    end
-
-    -- البحث عن أقرب هدف لمركز الشاشة (مثالي للجوال والبي سي)
-    local function getClosestTarget()
+    -- دالة البحث عن أقرب لاعب لجسمك (أضمن طريقة للأيم بوت)
+    local function getClosestPlayer()
         local closest = nil
-        local shortestDist = Config.FOV
-        local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        local shortestDist = Config.MaxDistance
+        local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+        if not myRoot then return nil end
 
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(Config.TargetPart) then
+                -- فحص الفريق
                 if Config.TeamCheck and player.Team == LocalPlayer.Team then continue end
                 
-                local targetPart = player.Character[Config.TargetPart]
-                local pos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
-                
-                if onScreen then
-                    local dist = (Vector2.new(pos.X, pos.Y) - screenCenter).Magnitude
+                local targetRoot = player.Character[Config.TargetPart]
+                local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+
+                -- التأكد أن اللاعب حي
+                if humanoid and humanoid.Health > 0 then
+                    local dist = (targetRoot.Position - myRoot.Position).Magnitude
+                    
                     if dist < shortestDist then
-                        if isVisible(targetPart) then
-                            closest = targetPart
-                            shortestDist = dist
-                        end
+                        closest = targetRoot
+                        shortestDist = dist
                     end
                 end
             end
@@ -76,34 +59,31 @@ return function(Tab, UI)
         return closest
     end
 
-    -- إضافة الزر للواجهة
+    -- إضافة الزر
     Tab:AddToggle("أيم بوت تجريبي / Exp Aimbot", function(state)
         Config.Enabled = state
-        FOVCircle.Visible = state
-        
         if state then
-            Notify("🎯 تم تفعيل أيم بوت الجسم التجريبي", "🎯 Experimental Body Aimbot Activated")
+            Notify("🎯 تم تفعيل التثبيت التلقائي (الأقرب للجسم)", "🎯 Auto-Lock Activated (Closest to Body)")
         end
-        -- إيقاف صامت: لا يوجد إشعار عند الـ else
     end)
 
-    -- محرك التشغيل الرئيسي
+    -- محرك التتبع
     RunService.RenderStepped:Connect(function()
-        if Config.Enabled then
-            -- تحديث موقع الدائرة في منتصف الشاشة دائماً
-            FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        if not Config.Enabled then return end
+        
+        local target = getClosestPlayer()
+        local myChar = LocalPlayer.Character
+        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+
+        if target and myRoot then
+            -- 1. توجيه الكاميرا فورياً للهدف
+            local targetPos = target.Position
+            local camCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+            Camera.CFrame = Camera.CFrame:Lerp(camCFrame, Config.Smoothness)
             
-            local target = getClosestTarget()
-            if target and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                -- توجيه الكاميرا
-                local targetCFrame = CFrame.new(Camera.CFrame.Position, target.Position)
-                Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, Config.Smoothness)
-                
-                -- توجيه الشخصية (Shift Lock تلقائي للهدف)
-                local root = LocalPlayer.Character.HumanoidRootPart
-                local lookAt = Vector3.new(target.Position.X, root.Position.Y, target.Position.Z)
-                root.CFrame = root.CFrame:Lerp(CFrame.new(root.Position, lookAt), 0.3)
-            end
+            -- 2. توجيه جسمك للهدف (Shift Lock)
+            local lookAt = Vector3.new(targetPos.X, myRoot.Position.Y, targetPos.Z)
+            myRoot.CFrame = myRoot.CFrame:Lerp(CFrame.new(myRoot.Position, lookAt), 0.5)
         end
     end)
 end
