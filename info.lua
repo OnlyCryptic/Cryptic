@@ -24,7 +24,13 @@ return function(Tab, UI)
 
     Tab:AddLine()
 
-    -- 2. زر الديسكورد
+    -- 2. الحقوق
+    Tab:AddLabel("© جميع الحقوق محفوظة للمطور: يامي")
+    Tab:AddLabel("ديسكورد التواصل: @d8u_")
+
+    Tab:AddLine()
+
+    -- 3. زر الديسكورد
     Tab:AddButton("🔗 نسخ رابط الديسكورد / discord link", function()
         pcall(function()
             setclipboard("https://discord.gg/QSvQJs7BdP")
@@ -32,7 +38,7 @@ return function(Tab, UI)
         end)
     end)
 
-    -- 3. زر نسخ السكربت
+    -- 4. زر نسخ السكربت
     Tab:AddButton("📜 نسخ السكربت / copy script", function()
         pcall(function()
             local scriptLink = "loadstring(game:HttpGet('https://raw.githubusercontent.com/OnlyCryptic/Cryptic/main/main.lua'))()"
@@ -40,10 +46,4 @@ return function(Tab, UI)
             SendRobloxNotification("Cryptic Hub", "✅ تم نسخ السكربت بنجاح! شاركه مع أصدقائك.")
         end)
     end)
-
-    Tab:AddLine()
-
-    -- 4. الحقوق
-    Tab:AddLabel("© جميع الحقوق محفوظة للمطور: يامي (Yami)")
-    Tab:AddLabel("ديسكورد التواصل: @d8u_")
 end
