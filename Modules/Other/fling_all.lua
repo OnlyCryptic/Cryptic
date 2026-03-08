@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - تطيير الجميع (Auto Fling All) ]]
--- المطور: يامي (Yami) | الوصف: متوافق مع Anti-Fling، فحص الأهداف فقط والانتقال السريع
+-- المطور: يامي (Yami) | الوصف: انتقال متسلسل وتطيير إجباري بدون فحص مزعج للتلامس
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -31,37 +31,16 @@ return function(Tab, UI)
                 return
             end
 
-            -- [[ 1. فحص التلامس (Collision Check) - بدون فحص شخصيتك! ]]
-            local canCollideMap = true
-            for _, p in ipairs(Players:GetPlayers()) do
-                if p ~= LocalPlayer and p.Character then
-                    local targetTorso = p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("UpperTorso")
-                    local targetRoot = p.Character:FindFirstChild("HumanoidRootPart")
-                    
-                    if targetTorso and targetRoot then
-                        -- إذا كان الماب يجبر اللاعبين الآخرين على أن يكونوا أشباح
-                        if targetTorso.CanCollide == false and targetRoot.CanCollide == false then
-                            canCollideMap = false
-                            break
-                        end
-                    end
-                end
-            end
-
-            if not canCollideMap then
-                isFlingAllActive = false
-                Notify("🚫 الماب لا يدعم تلامس اللاعبين!", "Map does not support player collision!")
-                return
-            end
+            -- 🗑️ تم إزالة فحص التلامس بالكامل! السكربت سيهجم فوراً.
 
             Notify("🌪️ جاري تطيير الجميع بالترتيب...", "Starting to fling everyone...")
 
             -- حفظ المكان للرجوع إليه
             local originalCFrame = root.CFrame
             local hum = char:FindFirstChildOfClass("Humanoid")
-            if hum then hum.PlatformStand = true end
+            if hum then hum.PlatformStand = true end -- تجميد المشي لتجنب القلتشات
 
-            -- [[ 2. حلقة التطيير المتسلسلة ]]
+            -- [[ حلقة التطيير المتسلسلة ]]
             task.spawn(function()
                 while isFlingAllActive do
                     for _, targetPlayer in ipairs(Players:GetPlayers()) do
@@ -75,13 +54,13 @@ return function(Tab, UI)
                             if targetRoot and targetHum and targetHum.Health > 0 then
                                 local startTime = tick()
                                 
-                                -- الهجوم على اللاعب لمدة 2.5 ثانية
+                                -- الهجوم على هذا اللاعب لمدة 2.5 ثانية
                                 while isFlingAllActive and targetChar and targetChar.Parent and targetHum.Health > 0 and (tick() - startTime < 2.5) do
                                     local myChar = LocalPlayer.Character
                                     local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
                                     
                                     if myRoot then
-                                        -- إجبار شخصيتك على الصلابة والوزن الثقيل لتدمير الهدف
+                                        -- إجبار شخصيتك على الصلابة والوزن الثقيل لتدمير الهدف (Noclip + Anti-Fling مدمج)
                                         for _, part in pairs(myChar:GetChildren()) do
                                             if part:IsA("BasePart") then
                                                 if part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso" then
@@ -94,7 +73,7 @@ return function(Tab, UI)
                                             end
                                         end
 
-                                        -- التتبع والدوران
+                                        -- التتبع الذكي والدوران المدمر
                                         local targetVel = targetRoot.Velocity
                                         local predictedPos = targetRoot.Position + (targetVel * 0.1)
                                         
@@ -107,10 +86,11 @@ return function(Tab, UI)
                             end
                         end
                     end
+                    -- استراحة بسيطة قبل إعادة الدورة على السيرفر
                     task.wait(0.1)
                 end
 
-                -- [[ 3. إيقاف التطيير والعودة ]]
+                -- [[ إيقاف التطيير والعودة للحالة الطبيعية ]]
                 local finalChar = LocalPlayer.Character
                 local finalRoot = finalChar and finalChar:FindFirstChild("HumanoidRootPart")
                 local finalHum = finalChar and finalChar:FindFirstChildOfClass("Humanoid")
