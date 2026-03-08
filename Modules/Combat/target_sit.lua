@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - ميزة ركوب الرأس (Head Sit) المطور ]]
--- المطور: يامي (Yami) | الميزات: نزول مباشر في نفس المكان، Anti-Fling، ثبات عالي
+-- المطور: يامي (Yami) | الميزات: نزول مباشر، إشعارات مزدوجة، جلوس دقيق وملاصق
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -9,13 +9,13 @@ return function(Tab, UI)
     
     local isSitting = false
 
-    -- دالة إشعارات روبلوكس الرسمية
-    local function SendRobloxNotification(title, text)
+    -- دالة الإشعارات المزدوجة (عربي/إنجليزي)
+    local function Notify(arText, enText)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
-                Title = title,
-                Text = text,
-                Duration = 15, 
+                Title = "Cryptic Hub",
+                Text = arText .. "\n" .. enText,
+                Duration = 10, 
             })
         end)
     end
@@ -32,7 +32,10 @@ return function(Tab, UI)
             if not _G.ArwaTarget or not _G.ArwaTarget.Character then
                 isSitting = false
                 if hum then hum.Sit = false end
-                SendRobloxNotification("Cryptic Hub", "⚠️ حدد لاعباً أولاً من خانة البحث!")
+                Notify(
+                    "⚠️ حدد لاعباً أولاً من خانة البحث!",
+                    "⚠️ Select a player first from the search box!"
+                )
                 return
             end
 
@@ -40,7 +43,10 @@ return function(Tab, UI)
                 hum.Sit = true 
             end
 
-            SendRobloxNotification("Cryptic Hub", "🪑 تم الركوب! أنت الآن فوق رأس: " .. _G.ArwaTarget.DisplayName)
+            Notify(
+                "🪑 تم الركوب! أنت الآن فوق رأس: " .. _G.ArwaTarget.DisplayName,
+                "🪑 Sitting on: " .. _G.ArwaTarget.DisplayName
+            )
         else
             -- [[ النزول في نفس المكان مع تنظيف الفيزياء ]]
             if char and root then
@@ -58,7 +64,11 @@ return function(Tab, UI)
                     end
                 end
             end
-            SendRobloxNotification("Cryptic Hub", "❌ تم النزول في موقعك الحالي.")
+            
+            Notify(
+                "❌ تم النزول في موقعك الحالي.",
+                "❌ Got off at your current location."
+            )
         end
     end)
 
@@ -85,12 +95,9 @@ return function(Tab, UI)
                 end
             end
 
-            -- الملاحقة على مسافة مقربة (2.4)
-            local targetVel = targetHead.Velocity
+            -- الملاحقة على مسافة مقربة جداً ومضبوطة (1.6) ليكون الجلوس واقعياً على الأكتاف والرأس
             root.Velocity = Vector3.new(0, 0, 0)
-            
-            -- الالتصاق فوق الرأس
-            root.CFrame = (targetHead.CFrame * CFrame.new(0, 2.4, 0)) + (targetVel * 0.05)
+            root.CFrame = targetHead.CFrame * CFrame.new(0, 1.6, 0)
         end
     end)
 end
