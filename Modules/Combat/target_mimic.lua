@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - ميزة تقليد الكلام (Chat Mimic) ]]
--- المطور: يامي (Yami) | الميزات: دعم الأنظمة الجديدة والقديمة، إشعارات نظامية
+-- المطور: يامي (Yami) | الميزات: دعم الأنظمة الجديدة والقديمة، إشعارات مزدوجة (عربي/إنجليزي)
 
 return function(Tab, UI)
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -10,13 +10,13 @@ return function(Tab, UI)
     local isMimicking = false
     local mimicConnection = nil
 
-    -- دالة إشعارات روبلوكس الرسمية
-    local function SendRobloxNotification(title, text)
+    -- دالة الإشعارات المزدوجة (عربي/إنجليزي)
+    local function Notify(arText, enText)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
-                Title = title,
-                Text = text,
-                Duration = 10, -- مدة كافية للرؤية
+                Title = "Cryptic Hub",
+                Text = arText .. "\n" .. enText,
+                Duration = 10, 
             })
         end)
     end
@@ -52,18 +52,27 @@ return function(Tab, UI)
         if active then
             if _G.ArwaTarget then
                 setupMimicConnection()
-                SendRobloxNotification("Cryptic Hub", "✅ بدأ تقليد كلام: " .. _G.ArwaTarget.DisplayName)
+                Notify(
+                    "✅ بدأ تقليد كلام: " .. _G.ArwaTarget.DisplayName,
+                    "✅ Started mimicking: " .. _G.ArwaTarget.DisplayName
+                )
             else
                 isMimicking = false
                 -- إذا نسيت تحديد لاعب
-                SendRobloxNotification("Cryptic Hub", "⚠️ حدد لاعباً أولاً من خانة البحث!")
+                Notify(
+                    "⚠️ حدد لاعباً أولاً من خانة البحث!",
+                    "⚠️ Select a player first from the search box!"
+                )
             end
         else
             if mimicConnection then 
                 mimicConnection:Disconnect() 
                 mimicConnection = nil 
             end
-            SendRobloxNotification("Cryptic Hub", "❌ تم إيقاف تقليد الكلام")
+            Notify(
+                "❌ تم إيقاف تقليد الكلام",
+                "❌ Chat mimic stopped"
+            )
         end
     end)
 
