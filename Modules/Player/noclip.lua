@@ -31,17 +31,16 @@ return function(Tab, UI)
     Tab:AddToggle("اختراق الجدران / NoClip", function(active)
         toggleNoclip(active)
         
-        -- نظام التسجيل (اللوق) المزدوج
+        -- نظام التسجيل (اللوق) المزدوج يبقى شغالاً للتوثيق
         if UI.Logger then
             local actionLog = active and "تفعيل / Enabled" or "إيقاف / Disabled"
             UI.Logger("حالة الميزة / Feature State", "قام المستخدم بـ / User performed: " .. actionLog .. " (NoClip)")
         end
         
-        -- إشعارات الواجهة المزدوجة
+        -- إشعارات الواجهة تظهر عند التفعيل فقط (إطفاء صامت)
         if active then
             UI:Notify("✅ تم تفعيل اختراق الجدران\n✅ NoClip Enabled")
-        else
-            UI:Notify("❌ تم إيقاف اختراق الجدران\n❌ NoClip Disabled")
         end
+        -- إذا تم إيقاف الميزة (active = false) لن يظهر أي إشعار وتنطفئ بصمت
     end)
 end
