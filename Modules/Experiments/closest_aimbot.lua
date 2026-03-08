@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - الايم بوت (Aimbot) لأقرب لاعب ]]
--- المطور: يامي (Yami) | الوصف: توجيه الكاميرا تلقائياً لأقرب لاعب حي
+-- [[ Cryptic Hub - الايم بوت (Aimbot) لأقرب لاعب مع شيفت لوك ]]
+-- المطور: يامي (Yami) | الوصف: توجيه الكاميرا والشخصية تلقائياً لأقرب لاعب حي
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -17,6 +17,7 @@ return function(Tab, UI)
         pcall(function() StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 3 }) end)
     end
 
+    -- دالة البحث عن أقرب لاعب
     local function getClosestPlayer()
         local closestPlayer = nil
         local shortestDistance = math.huge 
@@ -48,23 +49,30 @@ return function(Tab, UI)
         isAimbotActive = state
 
         if isAimbotActive then
-            SendRobloxNotification("Cryptic Hub", "🎯 تم تفعيل الايم بوت! الكاميرا ستلاحق أقرب هدف.")
+            SendRobloxNotification("Cryptic Hub", "🎯 تم تفعيل الايم بوت والشيفت لوك! سيتم تتبع أقرب هدف.")
             
             aimbotConnection = RunService.RenderStepped:Connect(function()
                 if not isAimbotActive then return end
                 
                 local myChar = LocalPlayer.Character
+                local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
                 local myHumanoid = myChar and myChar:FindFirstChildOfClass("Humanoid")
                 
-                if not myChar or not myHumanoid or myHumanoid.Health <= 0 then return end
+                if not myChar or not myRoot or not myHumanoid or myHumanoid.Health <= 0 then return end
                 
                 local target = getClosestPlayer()
                 
                 if target and target.Character then
                     local targetPart = target.Character:FindFirstChild(targetPartName)
                     if targetPart then
-                        local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
-                        Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, 0.5)
+                        -- 1. إصلاح الكاميرا: توجيه الكاميرا نحو الهدف باستخدام مكانها الحالي عشان ما تنفصل عنك
+                        local camCFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
+                        Camera.CFrame = Camera.CFrame:Lerp(camCFrame, 0.6)
+                        
+                        -- 2. ميزة الشيفت لوك: توجيه جسم شخصيتك نحو الهدف تلقائياً
+                        -- نأخذ إحداثيات (X و Z) من الهدف، ونثبت (Y) عشان شخصيتك ما تميل فوق وتحت
+                        local lookAtPos = Vector3.new(targetPart.Position.X, myRoot.Position.Y, targetPart.Position.Z)
+                        myRoot.CFrame = CFrame.new(myRoot.Position, lookAtPos)
                     end
                 end
             end)
@@ -73,7 +81,7 @@ return function(Tab, UI)
                 aimbotConnection:Disconnect()
                 aimbotConnection = nil
             end
-            SendRobloxNotification("Cryptic Hub", "❌ تم إيقاف الايم بوت.")
+            SendRobloxNotification("Cryptic Hub", "❌ تم إيقاف الايم بوت والشيفت لوك.")
         end
     end)
 end
