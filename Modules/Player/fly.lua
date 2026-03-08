@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - الطيران الثلاثي الأبعاد المصلح ]]
--- المطور: Arwa | التحديث: ضبط السرعة الافتراضية على 50 لتتوافق مع المحرك الجديد
+-- [[ Cryptic Hub - الطيران الثلاثي الأبعاد المصلح / Fixed 3D Fly ]]
+-- المطور: أروى (Arwa) | التحديث: ضبط السرعة الافتراضية على 50 لتتوافق مع المحرك الجديد / Update: Default speed set to 50 to match the new engine
 
 return function(Tab, UI)
     local player = game.Players.LocalPlayer
@@ -68,8 +68,8 @@ return function(Tab, UI)
         end
     end
 
-    -- [[ التعديل هنا ]]
-    -- أضفنا الرقم 50 في النهاية ليكون هو القيمة الافتراضية عند التحميل
+    -- [[ التعديل هنا / Modification Here ]]
+    -- أضفنا الرقم 50 في النهاية ليكون هو القيمة الافتراضية عند التحميل / Added 50 at the end to be the default value on load
     Tab:AddSpeedControl("طيران / Fly", function(active, value)
         toggleFly(active, value)
     end, 50)
