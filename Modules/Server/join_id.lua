@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة الدخول عبر الآيدي ]]
--- المطور: يامي (Yami) | التحديث: استخدام إشعارات روبلوكس الأصلية لتجنب القلتشات
+-- [[ Cryptic Hub - ميزة الدخول عبر الآيدي / Server ID Access ]]
+-- المطور: يامي (Yami) | التحديث: إشعار تفعيل فقط + ترجمة مزدوجة / Update: Activation notify only + Dual language
 
 return function(Tab, UI)
     local TeleportService = game:GetService("TeleportService")
@@ -7,31 +7,33 @@ return function(Tab, UI)
     local Players = game:GetService("Players")
     local lp = Players.LocalPlayer
 
-    -- دالة إشعارات روبلوكس الأصلية
-    local function SendRobloxNotification(title, text)
+    -- دالة الإشعارات المزدوجة / Dual notification function
+    local function Notify(arText, enText)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
-                Title = title,
-                Text = text,
+                Title = "Cryptic Hub",
+                Text = arText .. "\n" .. enText,
                 Duration = 4,
             })
         end)
     end
 
-    -- 1. زر نسخ رمز السيرفر الحالي
-    Tab:AddTimedToggle("📋 نسخ رمز السيرفر (JobId)", function(active)
+    -- 1. زر نسخ رمز السيرفر الحالي / Copy Current JobId
+    Tab:AddTimedToggle("📋 نسخ رمز السيرفر / Copy JobId", function(active)
         if active then
             pcall(function()
                 setclipboard(tostring(game.JobId))
-                SendRobloxNotification("Cryptic Hub", "✅ تم نسخ الرمز للحافظة!")
+                -- إشعار التفعيل المزدوج / Activation notify
+                Notify("✅ تم نسخ الرمز للحافظة!", "✅ Server ID copied to clipboard!")
             end)
         end
+        -- الإيقاف صامت تلقائياً لأنه TimedToggle
     end)
 
     Tab:AddLine()
 
-    -- 2. خانة الانتقال الفوري (بمجرد اللصق وإغلاق الكيبورد)
-    local InputField = Tab:AddInput("🔗 آيدي السيرفر المستهدف / jobId", "إلصق الرمز وأغلق الكيبورد...", function() end)
+    -- 2. خانة الانتقال الفوري / Target Server Input
+    local InputField = Tab:AddInput("🔗 آيدي السيرفر / Target JobId", "إلصق الرمز هنا... / Paste ID here...", function() end)
 
     task.spawn(function()
         repeat task.wait() until InputField and InputField.TextBox
@@ -40,9 +42,9 @@ return function(Tab, UI)
             local txt = InputField.TextBox.Text
             
             if txt and #txt > 20 then
-                SendRobloxNotification("Cryptic Hub", "⏳ جاري الانتقال للسيرفر المحدد...")
+                -- إشعار بدء الانتقال المزدوج / Teleport start notify
+                Notify("⏳ جاري الانتقال للسيرفر المحدد...", "⏳ Teleporting to target server...")
                 
-                -- انتظار خفيف جداً لضمان ظهور الإشعار قبل تجميد الانتقال
                 task.wait(0.5) 
                 
                 pcall(function()
@@ -50,7 +52,8 @@ return function(Tab, UI)
                 end)
                 
             elseif txt ~= "" then
-                SendRobloxNotification("Cryptic Hub", "⚠️ الآيدي غير صحيح أو قصير جداً!")
+                -- إشعار الخطأ المزدوج / Error notify
+                Notify("⚠️ الآيدي غير صحيح أو قصير جداً!", "⚠️ ID is invalid or too short!")
             end
         end)
     end)
