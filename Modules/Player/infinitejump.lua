@@ -17,15 +17,14 @@ return function(Tab, UI)
         end
     end)
 
-    -- دمج اللغتين في اسم الزر مع تعديل الاسم 
-    Tab:AddToggle("قفز لانهائي / Infinite Jump ( روجر ⚔️)", function(active)
+    -- دمج اللغتين في اسم الزر
+    Tab:AddToggle("قفز لانهائي / Infinite Jump", function(active)
         isInfiniteJump = active
+        
+        -- إشعار التفعيل المزدوج فقط (إطفاء صامت)
         if active then
-            -- إشعار التفعيل المزدوج
             UI:Notify("✅ تم تفعيل القفز اللانهائي في Cryptic Hub\n✅ Infinite Jump activated in Cryptic Hub")
-        else
-            -- إشعار الإيقاف المزدوج
-            UI:Notify("❌ تم إيقاف الميزة\n❌ Feature disabled")
         end
+        -- إذا تم إيقاف الميزة (active = false) لن يظهر أي إشعار وتنطفئ بصمت
     end)
 end
