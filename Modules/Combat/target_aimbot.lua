@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - ميزة قفل التصويب (Aim Bot) ]]
--- المطور: يامي (Yami) | الميزات: تثبيت الكاميرا والجسم، نظام شيفت لوك، إشعارات 25 ثانية
+-- المطور: يامي (Yami) | الميزات: تثبيت الكاميرا والجسم، نظام شيفت لوك، إشعارات مزدوجة (عربي/إنجليزي)
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -11,12 +11,12 @@ return function(Tab, UI)
     local isAimbotting = false
     local shiftLockOffset = Vector3.new(1.7, 0.5, 0)
 
-    -- دالة إشعارات روبلوكس الرسمية (مدة 25 ثانية)
-    local function SendRobloxNotification(title, text)
+    -- دالة الإشعارات المزدوجة (عربي/إنجليزي)
+    local function Notify(arText, enText)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
-                Title = title,
-                Text = text,
+                Title = "Cryptic Hub",
+                Text = arText .. "\n" .. enText,
                 Duration = 10, 
             })
         end)
@@ -33,13 +33,20 @@ return function(Tab, UI)
             -- التأكد من وجود هدف في خانة البحث
             if not _G.ArwaTarget or not _G.ArwaTarget.Character then
                 isAimbotting = false
-                SendRobloxNotification("Cryptic Hub", "⚠️ حدد لاعباً أولاً من مربع البحث!")
+                Notify(
+                    "⚠️ حدد لاعباً أولاً من مربع البحث!",
+                    "Select a player first from the search box!"
+                )
                 return
             end
 
             -- تفعيل إزاحة الكاميرا (نظام شيفت لوك)
             if hum then hum.CameraOffset = shiftLockOffset end
-            SendRobloxNotification("Cryptic Hub", "🎯 تم تفعيل القفل القتالي على: " .. _G.ArwaTarget.DisplayName)
+            
+            Notify(
+                "🎯 تم تفعيل القفل القتالي على: " .. _G.ArwaTarget.DisplayName,
+                "Aimbot activated on: " .. _G.ArwaTarget.DisplayName
+            )
         else
             -- إرجاع الحالة الطبيعية وتنظيف المحركات
             if hum then hum.CameraOffset = Vector3.new(0, 0, 0) end
@@ -49,7 +56,10 @@ return function(Tab, UI)
                 if gyro then gyro:Destroy() end
             end
             
-            SendRobloxNotification("Cryptic Hub", "❌ تم إيقاف قفل التصويب.")
+            Notify(
+                "❌ تم إيقاف قفل التصويب.",
+                "Aimbot deactivated."
+            )
         end
     end)
 
