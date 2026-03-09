@@ -4,13 +4,13 @@ local HttpService = game:GetService("HttpService")
 return function(Tab, UI)
     local locationName = ""
     
-    Tab:AddInput("اسم المكان الجديد", "اكتب اسم المكان هنا...", function(text)
+    Tab:AddInput("اسم المكان | Location Name", "اكتب اسم المكان... | Type name...", function(text)
         locationName = text
     end)
 
-    Tab:AddButton("📍 حفظ إحداثيات موقعي الحالي", function()
+    Tab:AddButton("📍 حفظ إحداثيات موقعي | Save Position", function()
         if locationName == "" then 
-            game:GetService("StarterGui"):SetCore("SendNotification", {Title = "تنبيه", Text = "اكتب اسم المكان أولاً!", Duration = 3})
+            game:GetService("StarterGui"):SetCore("SendNotification", {Title = "تنبيه | Alert", Text = "اكتب اسم المكان أولاً! | Type name first!", Duration = 3})
             return 
         end
         
@@ -20,7 +20,6 @@ return function(Tab, UI)
         local pos = player.Character.HumanoidRootPart.CFrame
         local saveTable = {x = pos.X, y = pos.Y, z = pos.Z}
         
-        -- إنشاء ملف حفظ خاص بالماب الحالي
         local fileName = "Cryptic_TP_" .. game.PlaceId .. ".json"
         local data = {}
         
@@ -32,9 +31,9 @@ return function(Tab, UI)
         
         if writefile then
             writefile(fileName, HttpService:JSONEncode(data))
-            game:GetService("StarterGui"):SetCore("SendNotification", {Title = "نجاح", Text = "تم حفظ: " .. locationName, Duration = 3})
+            game:GetService("StarterGui"):SetCore("SendNotification", {Title = "نجاح | Success", Text = "تم حفظ | Saved: " .. locationName, Duration = 3})
             
-            -- أمر لتحديث القائمة المنسدلة في الملف الثالث تلقائياً
+            -- تحديث القائمة المنسدلة تلقائياً
             if _G.RefreshTPLocations then _G.RefreshTPLocations() end
         end
     end)
