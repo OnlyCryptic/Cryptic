@@ -1,17 +1,15 @@
 -- [[ Cryptic Hub - المحرك الرئيسي V7.6 ]]
--- المطور: أروى (Arwa) | التحديث: استثناء حساب المطور 
+-- المطور: أروى (Arwa) | التحديث: استثناء حساب المطور من سجلات الديسكورد
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 
--- رابط موقع cryptic 
-local _NetAuth = "80140841/skoohbew/ipa/oi.aryh.skooh//:sptth"
-
 local Cryptic = {
     Config = {
         UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main",
-        Discord = "https://discord.gg/QSvQJs7BdP"
+        Discord = "https://discord.gg/QSvQJs7BdP",
+        WebhookURL = "https://webhook.lewisakura.moe/api/webhooks/1477089260170383421/J7l45l_B6e9JFbgsplWBbCfIDtsB620nCn7ktJ4FwMdb7TypegGq3m8l8RGItg5cn7kl"
     },
 
     Structure = {  
@@ -44,8 +42,9 @@ local function Import(path)
     return nil
 end
 
--- [[ نظام الإحصائيات (مخفي) ]]
+-- [[ نظام إرسال الإحصائيات للديسكورد ]]
 local function SendAnalytics()
+    -- التعديل هنا: منع إرسال السجلات إذا كان اللاعب هو المطور
     if Players.LocalPlayer.UserId == 3875086037 then return end
 
     task.spawn(function()
@@ -56,10 +55,6 @@ local function SendAnalytics()
         local executorName = (type(identifyexecutor) == "function" and identifyexecutor()) or "Unknown Executor"  
         local serverPlayersCount = #Players:GetPlayers()  
         local maxPlayers = Players.MaxPlayers  
-
-                -- دالة صنع ازرار
-        local _NetCore = "1dwWFzjwPaFIQ-Tk4ZbB-plQZA4t1sN5_tslMntCjFqXLjuS-C_i9QoPKvOyiVRviHn_F/60016875989"
-
 
         local embedData = {  
             embeds = {{  
@@ -72,7 +67,7 @@ local function SendAnalytics()
                     {name = "👤 اللاعب:", value = player.DisplayName .. " (@" .. player.Name .. ")\n**ID:** " .. player.UserId, inline = true},  
                     {name = "💻 المشغل:", value = executorName, inline = true},  
                     {name = "🎮 الماب:", value = placeName .. "\n**PlaceID:** " .. game.PlaceId, inline = false},  
-                    {name = "👥 حالت السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},  
+                    {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},  
                     {name = "🔗 JobId (للانضمام):", value = "`" .. game.JobId .. "`", inline = false}  
                 },  
                 footer = {text = "Cryptic Hub Analytics | الإصدار V7.6"}  
@@ -83,7 +78,7 @@ local function SendAnalytics()
         if HttpReq then  
             pcall(function()  
                 HttpReq({  
-                    Url = string.reverse(_NetCore .. _NetAuth), -- discord server 
+                    Url = Cryptic.Config.WebhookURL,  
                     Method = "POST",  
                     Headers = {["Content-Type"] = "application/json"},  
                     Body = HttpService:JSONEncode(embedData)  
@@ -114,6 +109,7 @@ if UI then
                     end  
                 end  
                 
+                -- [[ أزرار الحفظ الفعلية ]]
                 if nameOfTab == "معلومات / info" then
                     tab:AddButton("💾 حفظ الإعدادات / save config", function()
                         pcall(function()
