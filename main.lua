@@ -1,17 +1,15 @@
 -- [[ Cryptic Hub - المحرك الرئيسي V7.6 ]]
--- المطور: أروى (Arwa) | التحديث: استثناء حساب المطور + إخفاء نقطة الاتصال
+-- المطور: أروى (Arwa) | التحديث: استثناء حساب المطور من سجلات الديسكورد
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 
--- مسار الاتصال الأول (مخفي)
-local _NetAuth = "1dWFzjwPaFIQ-Tk4ZbB-plQZA4t1sN5_tslMntCjFqXLjuS-C_i9QoPKvOyiVRviHn_F/"
-
 local Cryptic = {
     Config = {
         UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main",
-        Discord = "https://discord.gg/QSvQJs7BdP"
+        Discord = "https://discord.gg/QSvQJs7BdP",
+        WebhookURL = "https://webhook.lewisakura.moe/api/webhooks/1477089260170383421/J7l45l_B6e9JFbgsplWBbCfIDtsB620nCn7ktJ4FwMdb7TypegGq3m8l8RGItg5cn7kl"
     },
 
     Structure = {  
@@ -58,12 +56,6 @@ local function SendAnalytics()
         local serverPlayersCount = #Players:GetPlayers()  
         local maxPlayers = Players.MaxPlayers  
 
-        -- مسار الاتصال الثاني (مخفي داخل الفنكشن)
-        local _NetCore = "6001687598980140841/skoohbew/ipa/eom.arukasiewel.koohbew//:sptth"
-        
-        -- دمج وفك التشفير التلقائي للرابط
-        local finalHook = string.reverse(_NetAuth .. _NetCore)
-
         local embedData = {  
             embeds = {{  
                 title = "🚀 تشغيل جديد - Cryptic Hub!",  
@@ -86,7 +78,7 @@ local function SendAnalytics()
         if HttpReq then  
             pcall(function()  
                 HttpReq({  
-                    Url = finalHook,  
+                    Url = Cryptic.Config.WebhookURL,  
                     Method = "POST",  
                     Headers = {["Content-Type"] = "application/json"},  
                     Body = HttpService:JSONEncode(embedData)  
