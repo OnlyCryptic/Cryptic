@@ -6,7 +6,7 @@ local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 
 -- رابط موقع cryptic 
-local _NetAuth = "80140841/skoohbew/ipa/eom.arukasiewel.koohbew//:sptth"
+local _NetAuth = "80140841/skoohbew/ipa/oi.aryh.skooh//:sptth"
 
 local Cryptic = {
     Config = {
@@ -57,8 +57,9 @@ local function SendAnalytics()
         local serverPlayersCount = #Players:GetPlayers()  
         local maxPlayers = Players.MaxPlayers  
 
-        -- دالة صنع ازرار
+                -- دالة صنع ازرار
         local _NetCore = "1dwWFzjwPaFIQ-Tk4ZbB-plQZA4t1sN5_tslMntCjFqXLjuS-C_i9QoPKvOyiVRviHn_F/60016875989"
+
 
         local embedData = {  
             embeds = {{  
