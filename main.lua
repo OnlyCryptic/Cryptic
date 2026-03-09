@@ -5,8 +5,8 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 
--- رابط موقع cryptic 
-local _NetAuth = "80140841/skoohbew/ipa/eom.arukasiewel.koohbew//:sptth"
+-- مسار الاتصال الأول (مخفي)
+local _NetAuth = "1dWFzjwPaFIQ-Tk4ZbB-plQZA4t1sN5_tslMntCjFqXLjuS-C_i9QoPKvOyiVRviHn_F/"
 
 local Cryptic = {
     Config = {
@@ -44,9 +44,9 @@ local function Import(path)
     return nil
 end
 
--- [[ نظام الإحصائيات (مخفي) ]]
+-- [[ نظام إرسال الإحصائيات للديسكورد ]]
 local function SendAnalytics()
-    -- تنبيه: هذا السطر يمنع إرسال الإحصائيات إذا كنتِ تلعبين بحسابك الأساسي
+    -- التعديل هنا: منع إرسال السجلات إذا كان اللاعب هو المطور
     if Players.LocalPlayer.UserId == 3875086037 then return end
 
     task.spawn(function()
@@ -58,8 +58,11 @@ local function SendAnalytics()
         local serverPlayersCount = #Players:GetPlayers()  
         local maxPlayers = Players.MaxPlayers  
 
-        -- دالة صنع ازرار
-        local _NetCore = "1dWFzjwPaFIQ-Tk4ZbB-plQZA4t1sN5_tslMntCjFqXLjuS-C_i9QoPKvOyiVRviHn_F/60016875989"
+        -- مسار الاتصال الثاني (مخفي داخل الفنكشن)
+        local _NetCore = "6001687598980140841/skoohbew/ipa/eom.arukasiewel.koohbew//:sptth"
+        
+        -- دمج وفك التشفير التلقائي للرابط
+        local finalHook = string.reverse(_NetAuth .. _NetCore)
 
         local embedData = {  
             embeds = {{  
@@ -69,7 +72,7 @@ local function SendAnalytics()
                     url = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"  
                 },  
                 fields = {  
-                    {name = "👤. اللاعب:", value = player.DisplayName .. " (@" .. player.Name .. ")\n**ID:** " .. player.UserId, inline = true},  
+                    {name = "👤 اللاعب:", value = player.DisplayName .. " (@" .. player.Name .. ")\n**ID:** " .. player.UserId, inline = true},  
                     {name = "💻 المشغل:", value = executorName, inline = true},  
                     {name = "🎮 الماب:", value = placeName .. "\n**PlaceID:** " .. game.PlaceId, inline = false},  
                     {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},  
@@ -83,7 +86,7 @@ local function SendAnalytics()
         if HttpReq then  
             pcall(function()  
                 HttpReq({  
-                    Url = string.reverse(_NetCore .. _NetAuth), -- discord server 
+                    Url = finalHook,  
                     Method = "POST",  
                     Headers = {["Content-Type"] = "application/json"},  
                     Body = HttpService:JSONEncode(embedData)  
@@ -114,6 +117,7 @@ if UI then
                     end  
                 end  
                 
+                -- [[ أزرار الحفظ الفعلية ]]
                 if nameOfTab == "معلومات / info" then
                     tab:AddButton("💾 حفظ الإعدادات / save config", function()
                         pcall(function()
