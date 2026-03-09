@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - Universal Vehicle Fly / طيران المركبات الشامل ]]
--- المطور: يامي (Yami) | الميزة: طيران حر مع كاميرا تخترق الجدران (No Camera Clip)
+-- المطور: يامي (Yami) | الميزة: طيران حر + كاميرا تخترق الجدران (تعمل فقط داخل المركبة)
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -11,7 +11,9 @@ return function(Tab, UI)
     local bodyGyro = nil
     local vflyConnection = nil
     local currentSpeed = 50 
-    local originalOcclusion = lp.DevCameraOcclusionMode -- لحفظ إعدادات الكاميرا الأصلية
+    
+    local originalOcclusion = lp.DevCameraOcclusionMode
+    local isCameraModified = false -- متغير لتتبع حالة الكاميرا
 
     local function Notify(title, text)
         pcall(function()
@@ -28,10 +30,13 @@ return function(Tab, UI)
         if bodyGyro then bodyGyro:Destroy(); bodyGyro = nil end
         if vflyConnection then vflyConnection:Disconnect(); vflyConnection = nil end
         
-        -- إرجاع الكاميرا لوضعها الطبيعي عند الإيقاف
-        pcall(function()
-            lp.DevCameraOcclusionMode = originalOcclusion or Enum.DevCameraOcclusionMode.Zoom
-        end)
+        -- إرجاع الكاميرا لوضعها الطبيعي عند الإيقاف أو النزول
+        if isCameraModified then
+            pcall(function()
+                lp.DevCameraOcclusionMode = originalOcclusion or Enum.DevCameraOcclusionMode.Zoom
+                isCameraModified = false
+            end)
+        end
     end
 
     local PlayerModule = require(lp.PlayerScripts:WaitForChild("PlayerModule"))
@@ -44,12 +49,6 @@ return function(Tab, UI)
             if not vflyConnection then
                 Notify("Cryptic Hub", "🚗 تم تفعيل طيران المركبات!\n🚗 Vehicle Fly activated!")
                 
-                -- تفعيل الكاميرا اللي تخترق الجدران (Invisicam)
-                pcall(function()
-                    originalOcclusion = lp.DevCameraOcclusionMode
-                    lp.DevCameraOcclusionMode = Enum.DevCameraOcclusionMode.Invisicam
-                end)
-                
                 vflyConnection = RunService.RenderStepped:Connect(function()
                     local char = lp.Character
                     local hum = char and char:FindFirstChildOfClass("Humanoid")
@@ -57,6 +56,13 @@ return function(Tab, UI)
                     
                     if hum and hum.SeatPart then
                         local seat = hum.SeatPart
+                        
+                        -- تفعيل اختراق الكاميرا للجدران فقط إذا ركب المركبة
+                        if not isCameraModified then
+                            originalOcclusion = lp.DevCameraOcclusionMode
+                            lp.DevCameraOcclusionMode = Enum.DevCameraOcclusionMode.Invisicam
+                            isCameraModified = true
+                        end
                         
                         if not bodyVelocity or not bodyVelocity.Parent then
                             bodyVelocity = Instance.new("BodyVelocity")
@@ -90,8 +96,13 @@ return function(Tab, UI)
                             bodyVelocity.Velocity = Vector3.new(0, 0, 0)
                         end
                     else
+                        -- تنظيف المحركات وإرجاع الكاميرا للطبيعي إذا نزل من المركبة
                         if bodyVelocity then bodyVelocity:Destroy(); bodyVelocity = nil end
                         if bodyGyro then bodyGyro:Destroy(); bodyGyro = nil end
+                        if isCameraModified then
+                            lp.DevCameraOcclusionMode = originalOcclusion or Enum.DevCameraOcclusionMode.Zoom
+                            isCameraModified = false
+                        end
                     end
                 end)
             end
