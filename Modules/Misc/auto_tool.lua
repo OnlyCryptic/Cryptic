@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - أداة الحركة الذكية (Smart Rig Tool V3.1) ]]
--- المطور: يامي (Yami) | الميزات: فحص العظام (R15/R6)، إجبار الخانة 2، استرجاع وترتيب بعد الموت، نظام احتياطي
+-- [[ Cryptic Hub - أداة الحركة سريه (Smart Rig Tool V3.1) ]]
+-- المطور: يامي (Yami) | الميزات: فحص العظام (R15/R6)، إجبار الخانة 2، استرجاع وترتيب بعد الموت، نظام احتياطي، واجهة تجهيز مخصصة
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -14,13 +14,65 @@ return function(Tab, UI)
     local lastCharacter = nil
     local hasSortedThisLife = false
 
-    -- دالة الإشعارات
+    -- دالة الإشعارات (تم تقليلها وجعلها عربي/إنجليزي)
     local function SendRobloxNotification(title, text)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
-                Title = title, Text = text, Duration = 5
+                Title = title, Text = text, Duration = 3
             })
         end)
+    end
+
+    -- واجهة مخصصة لتجهيز الأداة في المابات اللي تخفي الحقيبة (Inventory)
+    local function EnsureCustomInventory()
+        if lp.PlayerGui:FindFirstChild("CrypticToolUI") then return end
+        
+        local sg = Instance.new("ScreenGui")
+        sg.Name = "CrypticToolUI"
+        sg.ResetOnSpawn = false
+        sg.Parent = lp.PlayerGui
+        
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0, 140, 0, 40)
+        btn.Position = UDim2.new(1, -150, 0.5, 0) -- يمين الشاشة
+        btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Text = "تجهيز | Equip Tool"
+        btn.Font = Enum.Font.SourceSansBold
+        btn.TextSize = 16
+        btn.Parent = sg
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 8)
+        corner.Parent = btn
+
+        btn.MouseButton1Click:Connect(function()
+            local char = lp.Character
+            local hum = char and char:FindFirstChild("Humanoid")
+            if not hum then return end
+            
+            -- إذا كانت مجهزة، نلغي تجهيزها
+            for _, t in pairs(char:GetChildren()) do
+                if toolNames[t.Name] then
+                    hum:UnequipTools()
+                    return
+                end
+            end
+            
+            -- إذا لم تكن مجهزة، نبحث عنها في الحقيبة ونجهزها
+            for _, t in pairs(lp.Backpack:GetChildren()) do
+                if toolNames[t.Name] then
+                    hum:EquipTool(t)
+                    return
+                end
+            end
+        end)
+    end
+
+    -- دالة إخفاء الواجهة المخصصة عند الإيقاف
+    local function RemoveCustomInventory()
+        local ui = lp.PlayerGui:FindFirstChild("CrypticToolUI")
+        if ui then ui:Destroy() end
     end
 
     -- [[ دالة كشف النوع المتقدمة ]]
@@ -64,7 +116,6 @@ return function(Tab, UI)
         if #otherTools > 0 then
             local firstTool = otherTools[1]
             
-            -- نستخدم مجلد وهمي مؤقت لتفريغ الحقيبة بدون تجهيز (Equip) عشوائي يسبب مشاكل
             local tempFolder = Instance.new("Folder")
             firstTool.Parent = tempFolder
             targetTool.Parent = tempFolder
@@ -72,15 +123,14 @@ return function(Tab, UI)
 
             task.wait(0.05)
 
-            -- إعادة التعبئة بالترتيب المطلوب: 1- أداة عشوائية، 2- أداتنا، ثم الباقي
             firstTool.Parent = backpack
             targetTool.Parent = backpack
             for i = 2, #otherTools do otherTools[i].Parent = backpack end
             
             tempFolder:Destroy()
-            return true -- نجح الترتيب
+            return true
         else
-            return false -- فشل الترتيب (لا توجد أداة أخرى لتكون رقم 1)
+            return false
         end
     end
 
@@ -92,11 +142,10 @@ return function(Tab, UI)
         local char = lp.Character
         if not char then isProcessing = false return end
 
-        -- فحص إذا اللاعب مات ورجع بشخصية جديدة (Respawn)
         if lastCharacter ~= char then
             lastCharacter = char
-            hasSortedThisLife = false -- تصفير حالة الترتيب للحياة الجديدة
-            task.wait(1) -- انتظار بسيط حتى تُحمل الأدوات الافتراضية
+            hasSortedThisLife = false
+            task.wait(1)
         end
         
         local foundTool = nil
@@ -107,22 +156,17 @@ return function(Tab, UI)
 
         local rigType = DetectRigType(char)
 
-        -- إذا الأداة غير موجودة بتاتاً (تم جلبها لأول مرة أو بعد الموت)
         if not foundTool then
             if rigType == "R15" then
-                SendRobloxNotification("Cryptic Hub", "🦴 تم الكشف: R15 - جاري الجلب...")
                 pcall(function() loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))() end)
             elseif rigType == "R6" then
-                SendRobloxNotification("Cryptic Hub", "🦴 تم الكشف: R6 - جاري الجلب...")
                 pcall(function() loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))() end)
             else
-                -- فشل كشف النوع (الخطة الاحتياطية)
                 LoadBothScripts()
-                SendRobloxNotification("Cryptic Hub", "⚠️ لم نتمكن من كشف النوع! تم تفعيل الاثنين، شيك انفتوري حقك.")
-                hasSortedThisLife = true -- تم التنبيه، لا داعي للتكرار
+                SendRobloxNotification("Cryptic Hub", "⚠️ لم نتمكن من كشف النوع! تم تفعيل الاثنين | Unknown rig, both loaded")
+                hasSortedThisLife = true
             end
 
-            -- انتظار وصول الأداة
             local tries = 0
             repeat 
                 task.wait(0.5)
@@ -131,26 +175,18 @@ return function(Tab, UI)
             until foundTool or tries > 10
         end
 
-        -- إذا تم العثور على الأداة ولكن لم يتم ترتيبها في هذه الحياة (بعد الموت أو التفعيل الأول)
         if foundTool and not hasSortedThisLife then
-            -- التأكد أن الأداة في الحقيبة وليس في يد اللاعب قبل الترتيب
             if foundTool.Parent == char then
                 foundTool.Parent = lp.Backpack
             end
 
             local success = EnforceSlot2(foundTool)
             
-            if success then
-                SendRobloxNotification("Cryptic Hub", "✅ تم وضع الأداة في الخانة [2]")
-            else
-                -- الخطة الاحتياطية 2: إذا فشل الترتيب ولم ننفذ الاحتياط مسبقاً
-                if rigType ~= "Unknown" then
-                    LoadBothScripts()
-                    SendRobloxNotification("Cryptic Hub", "⚠️ ما قدرنا نحطها بخانة 2! تم تفعيل الاثنين، شيك انفتوري حقك.")
-                end
+            if not success and rigType ~= "Unknown" then
+                LoadBothScripts()
             end
             
-            -- تم إنجاز المهمة لهذه الحياة، نوقف الفحص العشوائي لعدم إزعاج اللاعب
+            EnsureCustomInventory() -- إنشاء الزر إذا كان الماب يخفي الحقيبة
             hasSortedThisLife = true 
         end
         
@@ -161,9 +197,8 @@ return function(Tab, UI)
     Tab:AddToggle("أداة عاده سريه / Jerk tool ", function(state)
         isActive = state
         if state then
-            SendRobloxNotification("Cryptic Hub", "🔄 تفعيل الفحص الذكي (Smart Rig Detect)...")
+            SendRobloxNotification("Cryptic Hub", "🔄 تفعيل | Activated")
             
-            -- تهيئة المتغيرات لضمان الترتيب عند التشغيل
             lastCharacter = nil
             hasSortedThisLife = false
 
@@ -172,11 +207,12 @@ return function(Tab, UI)
                     if lp.Character and lp.Character:FindFirstChild("Humanoid") and lp.Character.Humanoid.Health > 0 then
                         ExecuteToolProcess()
                     end
-                    task.wait(2) -- فحص دوري
+                    task.wait(2)
                 end
             end)
         else
-            SendRobloxNotification("Cryptic Hub", "❌ تم الإيقاف")
+            SendRobloxNotification("Cryptic Hub", "❌ تم الإيقاف | Deactivated")
+            RemoveCustomInventory() -- إزالة الزر عند الإيقاف
         end
     end)
 end
