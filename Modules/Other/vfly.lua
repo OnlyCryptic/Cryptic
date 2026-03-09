@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - Universal Vehicle Fly / طيران المركبات الشامل ]]
--- المطور: يامي (Yami) | الميزة: طيران حر للمركبات مع زر مدمج للسرعة بدون نصوص مزعجة
+-- المطور: يامي (Yami) | الميزة: طيران حر مع كاميرا تخترق الجدران (No Camera Clip)
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -11,6 +11,7 @@ return function(Tab, UI)
     local bodyGyro = nil
     local vflyConnection = nil
     local currentSpeed = 50 
+    local originalOcclusion = lp.DevCameraOcclusionMode -- لحفظ إعدادات الكاميرا الأصلية
 
     local function Notify(title, text)
         pcall(function()
@@ -26,6 +27,11 @@ return function(Tab, UI)
         if bodyVelocity then bodyVelocity:Destroy(); bodyVelocity = nil end
         if bodyGyro then bodyGyro:Destroy(); bodyGyro = nil end
         if vflyConnection then vflyConnection:Disconnect(); vflyConnection = nil end
+        
+        -- إرجاع الكاميرا لوضعها الطبيعي عند الإيقاف
+        pcall(function()
+            lp.DevCameraOcclusionMode = originalOcclusion or Enum.DevCameraOcclusionMode.Zoom
+        end)
     end
 
     local PlayerModule = require(lp.PlayerScripts:WaitForChild("PlayerModule"))
@@ -37,6 +43,12 @@ return function(Tab, UI)
         if active then
             if not vflyConnection then
                 Notify("Cryptic Hub", "🚗 تم تفعيل طيران المركبات!\n🚗 Vehicle Fly activated!")
+                
+                -- تفعيل الكاميرا اللي تخترق الجدران (Invisicam)
+                pcall(function()
+                    originalOcclusion = lp.DevCameraOcclusionMode
+                    lp.DevCameraOcclusionMode = Enum.DevCameraOcclusionMode.Invisicam
+                end)
                 
                 vflyConnection = RunService.RenderStepped:Connect(function()
                     local char = lp.Character
