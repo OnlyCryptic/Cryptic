@@ -1,9 +1,10 @@
 -- [[ Cryptic Hub - أداة الحركة سريه (Smart Rig Tool V3.1) ]]
--- المطور: يامي (Yami) | الميزات: فحص العظام (R15/R6)، إجبار الخانة 2، استرجاع وترتيب بعد الموت، نظام احتياطي، واجهة تجهيز مخصصة
+-- المطور: يامي (Yami) | الميزات: فحص العظام (R15/R6)، إجبار الخانة 2، استرجاع وترتيب بعد الموت، نظام احتياطي، واجهة تجهيز قابلة للتحريك
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
     local StarterGui = game:GetService("StarterGui")
+    local UserInputService = game:GetService("UserInputService")
     local lp = Players.LocalPlayer
     
     local isActive = false
@@ -23,7 +24,7 @@ return function(Tab, UI)
         end)
     end
 
-    -- واجهة مخصصة لتجهيز الأداة في المابات اللي تخفي الحقيبة (Inventory)
+    -- واجهة مخصصة لتجهيز الأداة صغيرة، شفافة، وقابلة للتحريك
     local function EnsureCustomInventory()
         if lp.PlayerGui:FindFirstChild("CrypticToolUI") then return end
         
@@ -33,25 +34,65 @@ return function(Tab, UI)
         sg.Parent = lp.PlayerGui
         
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(0, 140, 0, 40)
-        btn.Position = UDim2.new(1, -150, 0.5, 0) -- يمين الشاشة
-        btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        btn.Size = UDim2.new(0, 100, 0, 25) -- أصغر حجم ممكن
+        btn.Position = UDim2.new(1, -110, 0.5, 0)
+        btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        btn.BackgroundTransparency = 0.5 -- شفافية 50%
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.Text = "تجهيز | Equip Tool"
+        btn.Text = "تجهيز | Equip"
         btn.Font = Enum.Font.SourceSansBold
-        btn.TextSize = 16
+        btn.TextSize = 12
+        btn.Active = true
         btn.Parent = sg
         
         local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 8)
+        corner.CornerRadius = UDim.new(0, 6)
         corner.Parent = btn
 
+        -- كود السحب والتحريك (Draggable)
+        local dragging = false
+        local dragInput, dragStart, startPos
+
+        local function update(input)
+            local delta = input.Position - dragStart
+            btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+
+        btn.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                dragStart = input.Position
+                startPos = btn.Position
+
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                    end
+                end)
+            end
+        end)
+
+        btn.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                dragInput = input
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if input == dragInput and dragging then
+                update(input)
+            end
+        end)
+
+        -- وظيفة الزر (التجهيز والإخفاء)
         btn.MouseButton1Click:Connect(function()
+            -- نمنع التجهيز إذا كان اللاعب يسحب الزر فقط
+            if dragging then return end 
+            
             local char = lp.Character
             local hum = char and char:FindFirstChild("Humanoid")
             if not hum then return end
             
-            -- إذا كانت مجهزة، نلغي تجهيزها
             for _, t in pairs(char:GetChildren()) do
                 if toolNames[t.Name] then
                     hum:UnequipTools()
@@ -59,7 +100,6 @@ return function(Tab, UI)
                 end
             end
             
-            -- إذا لم تكن مجهزة، نبحث عنها في الحقيبة ونجهزها
             for _, t in pairs(lp.Backpack:GetChildren()) do
                 if toolNames[t.Name] then
                     hum:EquipTool(t)
@@ -186,7 +226,7 @@ return function(Tab, UI)
                 LoadBothScripts()
             end
             
-            EnsureCustomInventory() -- إنشاء الزر إذا كان الماب يخفي الحقيبة
+            EnsureCustomInventory()
             hasSortedThisLife = true 
         end
         
@@ -212,7 +252,7 @@ return function(Tab, UI)
             end)
         else
             SendRobloxNotification("Cryptic Hub", "❌ تم الإيقاف | Deactivated")
-            RemoveCustomInventory() -- إزالة الزر عند الإيقاف
+            RemoveCustomInventory()
         end
     end)
 end
