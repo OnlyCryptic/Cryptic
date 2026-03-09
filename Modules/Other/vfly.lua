@@ -42,7 +42,7 @@ return function(Tab, UI)
     local PlayerModule = require(lp.PlayerScripts:WaitForChild("PlayerModule"))
     local controls = PlayerModule:GetControls()
 
-    Tab:AddSpeedControl("طيران المركبات / Vehicle Fly", function(active, value)
+    Tab:AddSpeedControl("طيران المركبات / Vehicle Fly [vfly]", function(active, value)
         currentSpeed = value 
         
         if active then
