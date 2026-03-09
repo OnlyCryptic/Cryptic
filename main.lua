@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - المحرك الرئيسي V7.6 ]]
--- المطور: أروى (Arwa) | التحديث: استثناء حساب المطور من سجلات الديسكورد
+-- المطور: أروى (Arwa) | التحديث: استثناء حساب المطور من سجلات الديسكورد + إضافة ملفات التنقل للتجارب
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -27,7 +27,8 @@ local Cryptic = {
 if Players.LocalPlayer.UserId == 3875086037 then
     Cryptic.Structure["تجارب"] = {
         Folder = "Experiments",
-        Files = {"owner_only", "block_surfer", "hm", "closest_aimbot", "auto_apple"}
+        -- تم إضافة ملفات التنقل الثلاثة هنا
+        Files = {"owner_only", "block_surfer", "hm", "closest_aimbot", "auto_apple", "tp_method", "tp_save", "tp_locations"}
     }
     table.insert(Cryptic.TabsOrder, "تجارب")
 end
@@ -44,7 +45,6 @@ end
 
 -- [[ نظام إرسال الإحصائيات للديسكورد ]]
 local function SendAnalytics()
-    -- التعديل هنا: منع إرسال السجلات إذا كان اللاعب هو المطور
     if Players.LocalPlayer.UserId == 3875086037 then return end
 
     task.spawn(function()
