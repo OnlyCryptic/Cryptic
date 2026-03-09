@@ -73,7 +73,7 @@ local function SendAnalytics()
                     {name = "💻 المشغل:", value = executorName, inline = true},  
                     {name = "🎮 الماب:", value = placeName .. "\n**PlaceID:** " .. game.PlaceId, inline = false},  
                     {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},  
-                    {name = "🔗 JobId (للانضمام):", value = "`" .. game.JobId .. "`", inline = false}  
+                    {name = "🔗 JobId (للانضمام):", value = "``" .. game.JobId .. "``", inline = false}  
                 },  
                 footer = {text = "Cryptic Hub Analytics | الإصدار V7.7"}  
             }}  
