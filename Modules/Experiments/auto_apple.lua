@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - Auto Heal Apple / أكل التفاح الذكي + حاسبة الكول داون ]]
--- المطور: يامي (Yami) | الميزة: احترام الكول داون، وواجهة مخصصة لحساب الوقت بين العضات
+-- المطور: يامي (Yami) | الميزة: احترام الكول داون، حاسبة وقت، وتعديل السرعة من الواجهة
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -8,7 +8,7 @@ return function(Tab, UI)
     
     local isActive = false
     local isHealing = false
-    local EAT_COOLDOWN = 1.5 -- تقدر تغير هذا الرقم بعد ما تحسبه بالواجهة
+    local EAT_COOLDOWN = 1.5 -- السرعة الافتراضية
 
     -- [[ 1. دالة العلاج الذكي ]]
     local function SmartConsumeApple()
@@ -60,18 +60,24 @@ return function(Tab, UI)
         isHealing = false
     end
 
-    -- [[ 2. واجهة حاسبة الكول داون ]]
+    -- [[ 2. واجهة حاسبة الكول داون (محدثة لتدعم كل المشغلات) ]]
     local function OpenCooldownCalculator()
         local guiName = "CrypticCooldownUI"
-        local targetParent = game:GetService("CoreGui")
-        -- كخطة بديلة لو المشغل ما يدعم CoreGui
-        local success = pcall(function() local test = targetParent.Name end)
-        if not success then targetParent = lp:WaitForChild("PlayerGui") end
+        
+        -- التخطي الذكي لحماية المشغلات (لتجنب عدم ظهور الواجهة)
+        local targetParent
+        if gethui then
+            targetParent = gethui()
+        else
+            local s, r = pcall(function() return game:GetService("CoreGui") end)
+            if s and r then targetParent = r else targetParent = lp:WaitForChild("PlayerGui") end
+        end
 
         if targetParent:FindFirstChild(guiName) then targetParent[guiName]:Destroy() end
 
         local sg = Instance.new("ScreenGui")
         sg.Name = guiName
+        sg.ResetOnSpawn = false
         sg.Parent = targetParent
 
         local frame = Instance.new("Frame", sg)
@@ -108,7 +114,6 @@ return function(Tab, UI)
         closeBtn.Font = Enum.Font.GothamBold
         Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
 
-        -- جعل الواجهة قابلة للتحريك
         local dragging, dragInput, dragStart, startPos
         frame.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -126,7 +131,6 @@ return function(Tab, UI)
             end
         end)
 
-        -- منطق حساب الوقت
         local connection
         local lastTime = 0
         local lastHealth = lp.Character and lp.Character:FindFirstChild("Humanoid") and lp.Character.Humanoid.Health or 100
@@ -137,15 +141,15 @@ return function(Tab, UI)
             if connection then connection:Disconnect() end
             
             connection = hum:GetPropertyChangedSignal("Health"):Connect(function()
-                if hum.Health > lastHealth then -- إذا زاد الدم
+                if hum.Health > lastHealth then
                     local currentTime = tick()
                     if lastTime == 0 then
                         lastTime = currentTime
-                        status.Text = "✅ سُجلت الزيادة الأولى! كل مرة ثانية..."
+                        status.Text = "✅ سُجلت الزيادة! كُل مرة ثانية للقياس..."
                         status.TextColor3 = Color3.fromRGB(255, 200, 0)
                     else
                         local diff = currentTime - lastTime
-                        local formatted = math.floor(diff * 100) / 100 -- تقريب لرقمنين بعد الفاصلة
+                        local formatted = math.floor(diff * 10) / 10 -- تقريب دقيق
                         status.Text = "الكول داون: " .. tostring(formatted) .. " ثانية"
                         status.TextColor3 = Color3.fromRGB(0, 255, 150)
                         lastTime = currentTime 
@@ -164,8 +168,9 @@ return function(Tab, UI)
         end)
     end
 
-    -- [[ 3. أزرار الواجهة الرئيسية ]]
-    Tab:AddToggle("علاج تلقائي تفاح (ذكي) | Auto Heal Apple", function(state)
+    -- [[ 3. أزرار الواجهة الرئيسية (التفعيل، التعديل، والحاسبة) ]]
+    
+    Tab:AddToggle("علاج تلقائي (ذكي) | Auto Heal", function(state)
         isActive = state
         if state then
             task.spawn(function()
@@ -181,8 +186,19 @@ return function(Tab, UI)
         end
     end)
 
+    -- ميزة جديدة: خانة لكتابة سرعة الأكل مباشرة (الافتراضي 1.5)
+    Tab:AddInput("وقت الكول داون | Cooldown Time", "اكتب الرقم (مثال: 1.5)", function(text)
+        local newNumber = tonumber(text)
+        if newNumber then
+            EAT_COOLDOWN = newNumber
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "نجاح", Text = "تم تغيير السرعة إلى: " .. tostring(newNumber) .. " ثانية", Duration = 3
+            })
+        end
+    end)
+
     Tab:AddButton("⏱️ فتح حاسبة الكول داون | Open Calc UI", function()
-        OpenCooldownCalculator()
+        pcall(function() OpenCooldownCalculator() end)
     end)
     
     Tab:AddLine()
