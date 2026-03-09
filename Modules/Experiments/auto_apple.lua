@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - Auto Heal Apple / أكل التفاح التلقائي ]]
--- المطور: يامي (Yami) | الميزة: تبديل سريع مع كول داون دقيق (8.1 ثواني)
+-- المطور: يامي (Yami) | الميزة: مسك، أكل (بانتظار مناسب)، إخفاء، وكول داون 8.1 ثواني
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -16,7 +16,7 @@ return function(Tab, UI)
         local hum = char and char:FindFirstChild("Humanoid")
 
         if hum and hum.Health > 0 and hum.Health < hum.MaxHealth then
-            -- 1. البحث عن التفاحة (باليد أو الحقيبة)
+            -- 1. البحث عن التفاحة
             local apple = nil
             for _, tool in pairs(char:GetChildren()) do
                 if tool:IsA("Tool") and (string.find(string.lower(tool.Name), "apple") or tool:FindFirstChild("Event")) then
@@ -32,7 +32,7 @@ return function(Tab, UI)
             end
 
             if apple then
-                -- 2. حفظ السلاح اللي بيدك عشان نرجعه لك بعدين
+                -- 2. حفظ سلاحك الحالي
                 local currentEquipped = nil
                 for _, tool in pairs(char:GetChildren()) do
                     if tool:IsA("Tool") and tool ~= apple then 
@@ -43,26 +43,27 @@ return function(Tab, UI)
                 -- 3. مسك التفاحة
                 if apple.Parent ~= char then
                     hum:EquipTool(apple)
-                    task.wait(0.2) -- وقت عشان السيرفر يستوعب المسكة
+                    task.wait(0.5) -- زدت الوقت شوي عشان السيرفر يؤكد المسكة
                 end
 
-                -- 4. الضغط (الأكل)
+                -- 4. الضغط للأكل
                 apple:Activate()
-                task.wait(0.3) -- وقت عشان الأنيميشن حق الأكل يتسجل
+                
+                -- السر هنا: لازم ننتظر التفاحة بيدك شوي عشان يكتمل الأكل وما ينلغي
+                task.wait(1.5) 
 
-                -- 5. إزالة التفاحة وإرجاع وضعك الطبيعي
+                -- 5. إخفاء التفاحة وإرجاع سلاحك
                 if currentEquipped and currentEquipped.Parent == lp.Backpack then
                     hum:EquipTool(currentEquipped)
                 else
                     hum:UnequipTools()
                 end
 
-                -- 6. الانتظار الدقيق (الكول داون اللي طلبته)
+                -- 6. الكول داون الدقيق بعد ما خلصنا (8.1 ثواني)
                 task.wait(8.1)
             end
         end
         
-        -- السماح بدورة علاج جديدة لو الدم لسه ناقص
         isHealing = false
     end
 
@@ -71,7 +72,7 @@ return function(Tab, UI)
         
         if state then
             game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "Cryptic Hub", Text = "🍎 تم تفعيل العلاج (كول داون 8.1 ثواني)", Duration = 3
+                Title = "Cryptic Hub", Text = "🍎 تم تفعيل العلاج", Duration = 3
             })
             
             task.spawn(function()
@@ -79,7 +80,6 @@ return function(Tab, UI)
                     local char = lp.Character
                     local hum = char and char:FindFirstChild("Humanoid")
                     
-                    -- يفحص الدم طول الوقت، وإذا ناقص يبدأ دورة العلاج
                     if hum and hum.Health > 0 and hum.Health < hum.MaxHealth and not isHealing then
                         HealCycle()
                     end
