@@ -1,70 +1,87 @@
--- [[ Cryptic Hub - التفاحة التلقائية / Auto Apple ]]
--- المطور: أروى (Arwa) | التحديث: أكل سريع بدون إظهار الأداة (تعبئة دم تلقائية)
--- Note: Smart tool manipulation for Natural Disaster Survival
+-- [[ Cryptic Hub - Auto Apple / أكل التفاح التلقائي ]]
+-- المطور: يامي (Yami) | الميزة: تجهيز التفاحة تلقائياً وأكلها باستخدام Activate والـ RemoteEvent
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
-    local LocalPlayer = Players.LocalPlayer
+    local lp = Players.LocalPlayer
+    local isActive = false
 
-    -- [[ الإعدادات / Config ]]
-    local Config = {
-        Enabled = false,
-        HealThreshold = 95 -- السكربت بياكل التفاحة إذا صار دمك أقل من هذا الرقم
-    }
+    -- دالة البحث عن التفاحة وأكلها
+    local function ConsumeApple()
+        local char = lp.Character
+        local hum = char and char:FindFirstChild("Humanoid")
+        if not char or not hum then return end
 
-    -- دالة الإشعارات المزدوجة (للتفعيل فقط)
-    local function Notify(ar, en)
-        pcall(function()
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "Cryptic Hub [Exp]",
-                Text = ar .. "\n" .. en,
-                Duration = 4
-            })
-        end)
-    end
-
-    -- زر التشغيل
-    Tab:AddToggle("أكل التفاحة تلقائياً / Auto Apple", function(state)
-        Config.Enabled = state
+        -- 1. البحث عن التفاحة (في اليد أو الحقيبة)
+        -- ملاحظة: يبحث عن أي أداة في اسمها كلمة Apple أو أداة داخلها RemoteEvent اسمه Event
+        local targetTool = nil
         
-        if state then
-            Notify("🍏 تم تفعيل الأكل التلقائي", "🍏 Auto Apple Activated")
+        -- فحص اليد أولاً
+        for _, tool in pairs(char:GetChildren()) do
+            if tool:IsA("Tool") and (string.find(string.lower(tool.Name), "apple") or tool:FindFirstChild("Event")) then
+                targetTool = tool
+                break
+            end
         end
-        -- إيقاف صامت بدون إزعاج
-    end)
 
-    -- [[ محرك الأكل الذكي ]]
-    task.spawn(function()
-        while task.wait(0.2) do -- فحص كل 0.2 ثانية
-            if not Config.Enabled then continue end
-
-            local char = LocalPlayer.Character
-            local hum = char and char:FindFirstChildOfClass("Humanoid")
-            local backpack = LocalPlayer:FindFirstChild("Backpack")
-
-            -- التأكد أن اللاعب حي ودمه ناقص عن القيمة المحددة
-            if hum and hum.Health > 0 and hum.Health < Config.HealThreshold and backpack then
-                
-                -- البحث عن التفاحة في الحقيبة أو في يد اللاعب
-                local apple = backpack:FindFirstChild("Green Apple") or backpack:FindFirstChild("Apple") 
-                           or char:FindFirstChild("Green Apple") or char:FindFirstChild("Apple")
-
-                if apple then
-                    -- الخدعة: تجهيز الأداة، تفعيلها، ثم إخفاؤها فوراً
-                    if apple.Parent == backpack then
-                        hum:EquipTool(apple) -- سحب التفاحة
-                    end
-                    
-                    apple:Activate() -- محاكاة ضغطة الشاشة للأكل
-                    
-                    -- إرجاعها فوراً للحقيبة عشان ما تبين بيدك
-                    task.delay(0.05, function()
-                        if apple.Parent == char then
-                            apple.Parent = backpack
-                        end
-                    end)
+        -- فحص الحقيبة إذا مو باليد
+        if not targetTool then
+            for _, tool in pairs(lp.Backpack:GetChildren()) do
+                if tool:IsA("Tool") and (string.find(string.lower(tool.Name), "apple") or tool:FindFirstChild("Event")) then
+                    targetTool = tool
+                    break
                 end
             end
         end
+
+        -- 2. إذا لقينا التفاحة، نجهزها وناكلها
+        if targetTool then
+            -- تجهيزها باليد إذا كانت بالحقيبة
+            if targetTool.Parent == lp.Backpack then
+                hum:EquipTool(targetTool)
+                task.wait(0.2) -- انتظار بسيط عشان السيرفر يستوعب المسكة
+            end
+
+            -- طريقة 1: محاكاة ضغطة الماوس (الطريقة الرسمية)
+            targetTool:Activate()
+
+            -- طريقة 2: ضرب الـ RemoteEvent اللي اكتشفناه في الكود حقك (كخطة بديلة قوية)
+            local remoteEvent = targetTool:FindFirstChild("Event")
+            if remoteEvent and remoteEvent:IsA("RemoteEvent") then
+                pcall(function()
+                    -- نرسل الإشارة للسيرفر (بعض المابات تطلب نص معين مثل "Eat" أو بدون نص)
+                    remoteEvent:FireServer() 
+                    remoteEvent:FireServer("Eat")
+                end)
+            end
+        end
+    end
+
+    -- زر التفعيل في الواجهة
+    Tab:AddToggle("أكل التفاح التلقائي | Auto Apple", function(state)
+        isActive = state
+        
+        if state then
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Cryptic Hub", Text = "🍎 تم تفعيل الأكل التلقائي | Auto Apple Enabled", Duration = 3
+            })
+            
+            -- حلقة التكرار (Loop) طول ما الزر شغال
+            task.spawn(function()
+                while isActive do
+                    -- التأكد إن اللاعب عايش قبل ما ياكل
+                    if lp.Character and lp.Character:FindFirstChild("Humanoid") and lp.Character.Humanoid.Health > 0 then
+                        ConsumeApple()
+                    end
+                    task.wait(1) -- السرعة (ياكل كل ثانية، تقدر تقللها لو تبي أسرع)
+                end
+            end)
+        else
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Cryptic Hub", Text = "❌ تم الإيقاف | Auto Apple Disabled", Duration = 3
+            })
+        end
     end)
+    
+    Tab:AddLine()
 end
