@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V6.3 ]]
--- المطور: يامي (Yami) | التحديث: إصلاح زر الإشعار + ريجوين مع تشغيل تلقائي للسكربت
+-- [[ Cryptic Hub - محرك الواجهة المطور V6.4 ]]
+-- المطور: يامي (Yami) | التحديث: إضافة القوائم المنسدلة (Dropdown) لملفات التنقل
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -13,7 +13,6 @@ local ConfigFile = "CrypticHub_Settings.json"
 UI.ConfigData = {}
 local hasSavedData = false
 
--- محاولة تحميل الإعدادات القديمة عند بدء التشغيل
 pcall(function()
     if isfile and isfile(ConfigFile) then
         local content = readfile(ConfigFile)
@@ -25,7 +24,6 @@ pcall(function()
     end
 end)
 
--- [[ دوال الحفظ والريست ]]
 function UI:SaveConfig()
     local success, err = pcall(function()
         writefile(ConfigFile, HttpService:JSONEncode(UI.ConfigData))
@@ -41,14 +39,9 @@ end
 
 function UI:ResetConfig()
     pcall(function()
-        -- 1. مسح الملف من الجهاز
         if isfile and isfile(ConfigFile) then delfile(ConfigFile) end
-        
-        -- 2. تفريغ الذاكرة
         UI.ConfigData = {}
         
-        -- 3. ميزة التشغيل التلقائي بعد الريجوين (Auto-Execute)
-        -- نستخدم دالة queue_on_teleport المدعومة في أغلب المشغلات
         local queue_tp = queue_on_teleport or (syn and syn.queue_on_teleport) or (getgenv and getgenv().queue_on_teleport)
         if queue_tp then
             queue_tp([[
@@ -57,7 +50,6 @@ function UI:ResetConfig()
             ]])
         end
 
-        -- 4. نظام Rejoin
         local player = Players.LocalPlayer
         if #game.JobId > 0 then
             TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
@@ -71,9 +63,7 @@ function UI:CreateWindow(title)
     local Screen = Instance.new("ScreenGui", CoreGui)
     Screen.Name = "CrypticHub_V5"; Screen.ResetOnSpawn = false
 
-    -- [[ إشعار البداية (تم إصلاح استجابة الأزرار) ]]
     if hasSavedData then
-        -- استخدام BindableFunction هو الطريقة الصحيحة لأزرار روبلوكس
         local Callback = Instance.new("BindableFunction")
         Callback.OnInvoke = function(buttonName)
             if buttonName == "مسح اعدادات محفوضه" then
@@ -100,7 +90,6 @@ function UI:CreateWindow(title)
         end)
     end
 
-    -- [[ 1. زر الفتح الأنيق ]]
     local OpenBtn = Instance.new("TextButton", Screen)
     OpenBtn.Size = UDim2.new(0, 85, 0, 35); OpenBtn.Position = UDim2.new(0, 10, 0.5, -17)
     OpenBtn.Visible = false; OpenBtn.Text = "Cryptic"; OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
@@ -123,7 +112,6 @@ function UI:CreateWindow(title)
         end
     end)
 
-    -- [[ 2. النافذة الرئيسية ]]
     local Main = Instance.new("Frame", Screen)
     Main.Size = UDim2.new(0, 440, 0, 280); Main.Position = UDim2.new(0.5, 0, 0.5, 0); Main.AnchorPoint = Vector2.new(0.5, 0.5)
     Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Main.Active = true
@@ -152,7 +140,6 @@ function UI:CreateWindow(title)
     local Close = Instance.new("TextButton", TitleBar); Close.Text = "X"; Close.Position = UDim2.new(1, -35, 0, 5); Close.Size = UDim2.new(0, 25, 0, 25); Close.TextColor3 = Color3.new(1, 0, 0); Close.BackgroundTransparency = 1; Close.MouseButton1Click:Connect(function() Screen:Destroy() end)
     local Hide = Instance.new("TextButton", TitleBar); Hide.Text = "-"; Hide.Position = UDim2.new(1, -70, 0, 5); Hide.Size = UDim2.new(0, 25, 0, 25); Hide.TextColor3 = Color3.new(1, 1, 1); Hide.BackgroundTransparency = 1; Hide.MouseButton1Click:Connect(function() Main.Visible = false; OpenBtn.Visible = true end); OpenBtn.MouseButton1Click:Connect(function() Main.Visible = true; OpenBtn.Visible = false end)
 
-    -- [[ 3. القائمة الجانبية ]]
     local Sidebar = Instance.new("ScrollingFrame", Main)
     Sidebar.Position = UDim2.new(0, 0, 0, 35); Sidebar.Size = UDim2.new(0, 110, 1, -35); Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Sidebar.BorderSizePixel = 0; Sidebar.ScrollBarThickness = 2; Sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
     local SidebarLayout = Instance.new("UIListLayout", Sidebar); SidebarLayout.Padding = UDim.new(0, 2)
@@ -231,10 +218,7 @@ function UI:CreateWindow(title)
             B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
             
             if a then 
-                task.spawn(function() 
-                    task.wait(1.5) 
-                    pcall(callback, a) 
-                end) 
+                task.spawn(function() task.wait(1.5); pcall(callback, a) end) 
             end
 
             B.MouseButton1Click:Connect(function() set(not a) end)
@@ -248,6 +232,88 @@ function UI:CreateWindow(title)
                 task.spawn(function() pcall(callback, true); task.wait(2); if B then B.BackgroundColor3 = Color3.fromRGB(60, 60, 60) end; pcall(callback, false); isRunning = false end)
             end)
             return { Set = function() end, SetState = function() end }
+        end
+
+        -- [[ الإضافة الجديدة: دالة القائمة المنسدلة (Dropdown) ]]
+        function TabOps:AddDropdown(label, options, callback)
+            orderIndex = orderIndex + 1
+            local DropdownFrame = Instance.new("Frame", Page)
+            DropdownFrame.LayoutOrder = orderIndex
+            DropdownFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            DropdownFrame.ClipsDescendants = true
+            DropdownFrame.Size = UDim2.new(0.95, 0, 0, 40)
+            Instance.new("UICorner", DropdownFrame)
+
+            local MainBtn = Instance.new("TextButton", DropdownFrame)
+            MainBtn.Size = UDim2.new(1, 0, 0, 40)
+            MainBtn.BackgroundTransparency = 1
+            MainBtn.Text = ""
+
+            local TitleLbl = Instance.new("TextLabel", MainBtn)
+            TitleLbl.Size = UDim2.new(1, -15, 1, 0)
+            TitleLbl.Position = UDim2.new(0, -10, 0, 0)
+            TitleLbl.BackgroundTransparency = 1
+            TitleLbl.Text = label .. " : [اختر]"
+            TitleLbl.TextColor3 = Color3.fromRGB(0, 255, 150)
+            TitleLbl.TextXAlignment = Enum.TextXAlignment.Right
+
+            local ArrowLbl = Instance.new("TextLabel", MainBtn)
+            ArrowLbl.Size = UDim2.new(0, 30, 1, 0)
+            ArrowLbl.Position = UDim2.new(0, 5, 0, 0)
+            ArrowLbl.BackgroundTransparency = 1
+            ArrowLbl.Text = "▼"
+            ArrowLbl.TextColor3 = Color3.new(1, 1, 1)
+
+            local OptionsContainer = Instance.new("Frame", DropdownFrame)
+            OptionsContainer.Size = UDim2.new(1, 0, 1, -40)
+            OptionsContainer.Position = UDim2.new(0, 0, 0, 40)
+            OptionsContainer.BackgroundTransparency = 1
+
+            local ListLayout = Instance.new("UIListLayout", OptionsContainer)
+            ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+            local isOpen = false
+
+            local function UpdateDropdown(newOptions)
+                for _, child in pairs(OptionsContainer:GetChildren()) do
+                    if child:IsA("TextButton") then child:Destroy() end
+                end
+
+                for i, opt in ipairs(newOptions) do
+                    local OptBtn = Instance.new("TextButton", OptionsContainer)
+                    OptBtn.Size = UDim2.new(1, 0, 0, 30)
+                    OptBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                    OptBtn.Text = tostring(opt)
+                    OptBtn.TextColor3 = Color3.new(1, 1, 1)
+                    OptBtn.LayoutOrder = i
+
+                    OptBtn.MouseButton1Click:Connect(function()
+                        TitleLbl.Text = label .. " : " .. tostring(opt)
+                        isOpen = false
+                        ArrowLbl.Text = "▼"
+                        DropdownFrame.Size = UDim2.new(0.95, 0, 0, 40)
+                        pcall(callback, opt)
+                    end)
+                end
+                if isOpen then
+                    DropdownFrame.Size = UDim2.new(0.95, 0, 0, 40 + (#newOptions * 30))
+                end
+            end
+
+            MainBtn.MouseButton1Click:Connect(function()
+                isOpen = not isOpen
+                ArrowLbl.Text = isOpen and "▲" or "▼"
+                local itemCounts = #OptionsContainer:GetChildren() - 1 
+                DropdownFrame.Size = isOpen and UDim2.new(0.95, 0, 0, 40 + (itemCounts * 30)) or UDim2.new(0.95, 0, 0, 40)
+            end)
+
+            UpdateDropdown(options)
+
+            return {
+                Refresh = function(self, newOptions)
+                    UpdateDropdown(newOptions)
+                end
+            }
         end
 
         return TabOps
