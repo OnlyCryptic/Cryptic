@@ -22,7 +22,7 @@ local Cryptic = {
         -- [[ القسم الجديد: الانتقال ]]
         ["الانتقال / Teleport"] = { Folder = "Teleport", Files = {"tp_method", "tp_save", "tp_locations"} },
         
-        ["اخرى / Other"] = { Folder = "Other", Files = {"zero_gravity", "anti_block", "fling_all"} }  
+        ["اخرى / Other"] = { Folder = "Other", Files = {"vfly", "zero_gravity", "anti_block", "fling_all"} }  
     },  
     -- ترتيب الأقسام هنا يحدد مكانها في الواجهة
     TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / players", "قسم السيرفر / server", "الانتقال / Teleport", "اخرى / Other"}
@@ -32,7 +32,7 @@ local Cryptic = {
 if Players.LocalPlayer.UserId == 3875086037 then
     Cryptic.Structure["تجارب"] = {
         Folder = "Experiments",
-        Files = {"owner_only", "block_surfer", "hm", "closest_aimbot", "auto_apple", "vfly"}
+        Files = {"owner_only", "block_surfer", "hm", "closest_aimbot", "auto_apple"}
     }
     table.insert(Cryptic.TabsOrder, "تجارب")
 end
