@@ -39,7 +39,7 @@ return function(Tab, UI)
         btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
         btn.BackgroundTransparency = 0.5 -- شفافية 50%
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.Text = "تجهيز | Equip"
+        btn.Text = "مسك اداة/Jerk"
         btn.Font = Enum.Font.SourceSansBold
         btn.TextSize = 12
         btn.Active = true
