@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V7.6 ]]
--- المطور: أروى (Arwa) | التحديث: استثناء حساب المطور من سجلات الديسكورد + إضافة ملفات التنقل للتجارب
+-- [[ Cryptic Hub - المحرك الرئيسي V7.7 ]]
+-- المطور: أروى (Arwa) | التحديث: إضافة قسم الانتقال الرسمي
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -18,17 +18,21 @@ local Cryptic = {
         ["أدوات / tools"] = { Folder = "Misc", Files = {"tptool", "auto_tool", "esp", "shiftlock", "emotes", "camera", "fullbright"} },  
         ["استهداف لاعب / players"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "carry"} },  
         ["قسم السيرفر / server"] = { Folder = "Server", Files = {"server", "rejoin", "join_id"} },  
+        
+        -- [[ القسم الجديد: الانتقال ]]
+        ["الانتقال / Teleport"] = { Folder = "Teleport", Files = {"tp_method", "tp_save", "tp_locations"} },
+        
         ["اخرى / Other"] = { Folder = "Other", Files = {"zero_gravity", "anti_block", "fling_all"} }  
     },  
-    TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / players", "قسم السيرفر / server", "اخرى / Other"}
+    -- ترتيب الأقسام هنا يحدد مكانها في الواجهة
+    TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / players", "قسم السيرفر / server", "الانتقال / Teleport", "اخرى / Other"}
 }
 
 -- نظام المطور الحصري
 if Players.LocalPlayer.UserId == 3875086037 then
     Cryptic.Structure["تجارب"] = {
         Folder = "Experiments",
-        -- تم إضافة ملفات التنقل الثلاثة هنا
-        Files = {"owner_only", "block_surfer", "hm", "closest_aimbot", "auto_apple", "tp_method", "tp_save", "tp_locations"}
+        Files = {"owner_only", "block_surfer", "hm", "closest_aimbot", "auto_apple"}
     }
     table.insert(Cryptic.TabsOrder, "تجارب")
 end
@@ -45,6 +49,7 @@ end
 
 -- [[ نظام إرسال الإحصائيات للديسكورد ]]
 local function SendAnalytics()
+    -- التعديل هنا: منع إرسال السجلات إذا كان اللاعب هو المطور
     if Players.LocalPlayer.UserId == 3875086037 then return end
 
     task.spawn(function()
@@ -70,7 +75,7 @@ local function SendAnalytics()
                     {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},  
                     {name = "🔗 JobId (للانضمام):", value = "`" .. game.JobId .. "`", inline = false}  
                 },  
-                footer = {text = "Cryptic Hub Analytics | الإصدار V7.6"}  
+                footer = {text = "Cryptic Hub Analytics | الإصدار V7.7"}  
             }}  
         }  
 
