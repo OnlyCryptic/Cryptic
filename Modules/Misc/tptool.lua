@@ -33,7 +33,7 @@ return function(Tab, UI)
         btn.BackgroundColor3 = Color3.fromRGB(200, 0, 0) -- أحمر (غير مجهز) افتراضياً
         btn.BackgroundTransparency = 0.5 -- شفافية 50%
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.Text = "تجهيز | Equip TP"
+        btn.Text = "أداة انتقال/Equip TP"
         btn.Font = Enum.Font.SourceSansBold
         btn.TextSize = 12
         btn.Active = true
