@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - المحرك الرئيسي V7.7 ]]
--- المطور: أروى (Arwa) | التحديث: إضافة قسم الانتقال الرسمي
+-- المطور: أروى (Arwa) | التحديث: إضافة قسم الانتقال + ربط السكربت بخادم API آمن (Cloudflare)
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -9,7 +9,8 @@ local Cryptic = {
     Config = {
         UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main",
         Discord = "https://discord.gg/QSvQJs7BdP",
-        WebhookURL = "https://webhook.lewisakura.moe/api/webhooks/1477089260170383421/J7l45l_B6e9JFbgsplWBbCfIDtsB620nCn7ktJ4FwMdb7TypegGq3m8l8RGItg5cn7kl"
+        -- رابط سيرفرك الآمن (حتى لو الهكر شافه، ما يقدر يوصل للويب هوك الحقيقي)
+        WebhookURL = "https://cryptic-analytics.bossekasiri2.workers.dev"
     },
 
     Structure = {  
@@ -24,7 +25,6 @@ local Cryptic = {
         
         ["اخرى / Other"] = { Folder = "Other", Files = {"vfly", "zero_gravity", "anti_block", "fling_all"} }  
     },  
-    -- ترتيب الأقسام هنا يحدد مكانها في الواجهة
     TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / players", "قسم السيرفر / server", "الانتقال / Teleport", "اخرى / Other"}
 }
 
@@ -47,9 +47,9 @@ local function Import(path)
     return nil
 end
 
--- [[ نظام إرسال الإحصائيات للديسكورد ]]
+-- [[ نظام إرسال الإحصائيات (عبر السيرفر الوسيط) ]]
 local function SendAnalytics()
-    -- التعديل هنا: منع إرسال السجلات إذا كان اللاعب هو المطور
+    -- منع إرسال السجلات إذا كان اللاعب هو المطور
     if Players.LocalPlayer.UserId == 3875086037 then return end
 
     task.spawn(function()
@@ -73,7 +73,7 @@ local function SendAnalytics()
                     {name = "💻 المشغل:", value = executorName, inline = true},  
                     {name = "🎮 الماب:", value = placeName .. "\n**PlaceID:** " .. game.PlaceId, inline = false},  
                     {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},  
-                    {name = "🔗 JobId (للانضمام):", value = "" .. game.JobId .. "", inline = false}  
+                    {name = "🔗 JobId (للانضمام):", value = "`" .. game.JobId .. "`", inline = false}  
                 },  
                 footer = {text = "Cryptic Hub Analytics | الإصدار V7.7"}  
             }}  
@@ -117,15 +117,11 @@ if UI then
                 -- [[ أزرار الحفظ الفعلية ]]
                 if nameOfTab == "معلومات / info" then
                     tab:AddButton("💾 حفظ الإعدادات / save config", function()
-                        pcall(function()
-                            UI:SaveConfig()
-                        end)
+                        pcall(function() UI:SaveConfig() end)
                     end)
 
                     tab:AddButton("🔄 مسح اعدادات محفوضه / restart config", function()
-                        pcall(function()
-                            UI:ResetConfig()
-                        end)
+                        pcall(function() UI:ResetConfig() end)
                     end)
                 end
                 
