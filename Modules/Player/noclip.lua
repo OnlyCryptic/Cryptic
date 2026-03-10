@@ -45,7 +45,7 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddToggle("اختراق الجدران / NoClip", function(active)
+    Tab:AddToggle("اختراق الجدران / NoClip.", function(active)
         toggleNoclip(active)
         
         -- نظام التسجيل (اللوق) المزدوج
