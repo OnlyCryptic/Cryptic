@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - محرك الواجهة المطور V6.4 ]]
--- المطور: يامي (Yami) | التحديث: إضافة القوائم المنسدلة (Dropdown) لملفات التنقل
+-- المطور: يامي (Yami) | التحديث: إضافة Dropdown + دمج نظام الويب هوك التلقائي للميزات
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -150,6 +150,15 @@ function UI:CreateWindow(title)
 
     local Window = { FirstTab = nil }
 
+    -- [[ دالة مساعدة لإرسال الإشعارات بدون أخطاء ]]
+    local function LogAction(title, fieldName, fieldValue, color)
+        if getgenv().CrypticLog then
+            pcall(function()
+                getgenv().CrypticLog("OnFeature", title, color or 16776960, {{name = fieldName, value = tostring(fieldValue), inline = false}})
+            end)
+        end
+    end
+
     function Window:CreateTab(name)
         local TabBtn = Instance.new("TextButton", Sidebar); TabBtn.Size = UDim2.new(1, 0, 0, 35); TabBtn.Text = name; TabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TabBtn.TextColor3 = Color3.new(1, 1, 1); TabBtn.BorderSizePixel = 0
         local Page = Instance.new("ScrollingFrame", Content); Page.Size = UDim2.new(1, 0, 1, 0); Page.Visible = false; Page.BackgroundTransparency = 1; Page.ScrollBarThickness = 2; Page.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -166,17 +175,35 @@ function UI:CreateWindow(title)
         function TabOps:AddLine() orderIndex = orderIndex + 1; local L = Instance.new("Frame", Page); L.LayoutOrder = orderIndex; L.Size = UDim2.new(0.95, 0, 0, 1); L.BackgroundColor3 = Color3.fromRGB(50, 50, 50); L.BackgroundTransparency = 0.5; L.BorderSizePixel = 0 end
         function TabOps:AddLabel(t) orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98,0,0,35); R.BackgroundColor3 = Color3.fromRGB(25,25,25); Instance.new("UICorner",R); local L = Instance.new("TextLabel",R); L.Text = t; L.Size = UDim2.new(1,-10,1,0); L.TextColor3 = Color3.fromRGB(0, 255, 150); L.BackgroundTransparency = 1; L.TextXAlignment = Enum.TextXAlignment.Right; return {SetText=function(nt) L.Text=nt end} end
         function TabOps:AddParagraph(text) orderIndex = orderIndex + 1; local Lbl = Instance.new("TextLabel", Page); Lbl.LayoutOrder = orderIndex; Lbl.Size = UDim2.new(0.95, 0, 0, 0); Lbl.AutomaticSize = Enum.AutomaticSize.Y; Lbl.TextWrapped = true; Lbl.Text = text; Lbl.TextColor3 = Color3.fromRGB(170, 170, 170); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; Lbl.TextSize = 13 end
-        function TabOps:AddButton(t, c) orderIndex = orderIndex + 1; local B = Instance.new("TextButton", Page); B.LayoutOrder = orderIndex; B.Size = UDim2.new(0.95, 0, 0, 40); B.BackgroundColor3 = Color3.fromRGB(30, 30, 30); B.Text = t; B.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", B); B.MouseButton1Click:Connect(c) end
+        
+        -- [[ تحديث زر Button للإرسال التلقائي ]]
+        function TabOps:AddButton(t, c) 
+            orderIndex = orderIndex + 1; local B = Instance.new("TextButton", Page); B.LayoutOrder = orderIndex; B.Size = UDim2.new(0.95, 0, 0, 40); B.BackgroundColor3 = Color3.fromRGB(30, 30, 30); B.Text = t; B.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", B); 
+            B.MouseButton1Click:Connect(function()
+                LogAction("🔘 ضغطة زر", "تم الضغط على:", t, 3447003) -- لون أزرق
+                pcall(c)
+            end) 
+        end
 
+        -- [[ تحديث Input للإرسال عند الانتهاء من الكتابة فقط ]]
         function TabOps:AddInput(label, placeholder, callback)
             orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.95, 0, 0, 60); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R); local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(1, -10, 0, 25); Lbl.TextColor3 = Color3.fromRGB(0, 255, 150); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; local I = Instance.new("TextBox", R); I.Size = UDim2.new(0.9, 0, 0, 25); I.Position = UDim2.new(0.05, 0, 0, 30); I.PlaceholderText = placeholder; I.BackgroundColor3 = Color3.fromRGB(40, 40, 40); I.TextColor3 = Color3.new(1, 1, 1); I.Text = ""; Instance.new("UICorner", I); 
             
             local configKey = name .. "_" .. label .. "_Input"
             if UI.ConfigData[configKey] ~= nil then
                 I.Text = UI.ConfigData[configKey]
-                task.spawn(function() task.wait(1.5) callback(I.Text) end)
+                task.spawn(function() task.wait(1.5) pcall(callback, I.Text) end)
             end
-            I:GetPropertyChangedSignal("Text"):Connect(function() UI.ConfigData[configKey] = I.Text; callback(I.Text) end)
+            
+            I:GetPropertyChangedSignal("Text"):Connect(function() UI.ConfigData[configKey] = I.Text; pcall(callback, I.Text) end)
+            
+            -- إرسال الإشعار للويب هوك عند الانتهاء من الكتابة
+            I.FocusLost:Connect(function()
+                if I.Text ~= "" then
+                    LogAction("⌨️ إدخال نص", label .. ":", I.Text, 10181046) -- لون بنفسجي
+                end
+            end)
+
             return { SetText = function(t) I.Text = t end, TextBox = I }
         end
 
@@ -193,14 +220,20 @@ function UI:CreateWindow(title)
                 Tgl.BackgroundColor3 = active and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60); 
                 local val = tonumber(Inp.Text) or tonumber(startVal)
                 UI.ConfigData[configKey] = {active = active, val = val}
-                callback(active, val) 
+                pcall(callback, active, val) 
             end
 
             if active then task.spawn(function() task.wait(1.5) update() end) end
-            Tgl.MouseButton1Click:Connect(function() active = not active; update() end)
+            
+            Tgl.MouseButton1Click:Connect(function() 
+                active = not active; 
+                update()
+                LogAction("⚡ تحكم بالسرعة", label, active and ("مفعل - القيمة: " .. Inp.Text) or "معطل", active and 5763719 or 15548997)
+            end)
             Inp:GetPropertyChangedSignal("Text"):Connect(function() if active then update() end end)
         end
 
+        -- [[ تحديث Toggle للإرسال التلقائي ]]
         function TabOps:AddToggle(label, callback)
             orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R); local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0); local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; 
             
@@ -209,10 +242,15 @@ function UI:CreateWindow(title)
 
             if UI.ConfigData[configKey] ~= nil then a = UI.ConfigData[configKey] end
 
-            local function set(s) 
+            local function set(s, isClick) 
                 a = s; B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
                 UI.ConfigData[configKey] = a
                 pcall(callback, a)
+                
+                -- إرسال الإشعار فقط إذا كان التغيير بسبب ضغطة اللاعب (ليس عند التحميل التلقائي)
+                if isClick then
+                    LogAction("⚙️ تفعيل/إيقاف ميزة", label, a and "مفعل ✅" or "معطل ❌", a and 5763719 or 15548997)
+                end
             end
 
             B.BackgroundColor3 = a and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
@@ -221,22 +259,25 @@ function UI:CreateWindow(title)
                 task.spawn(function() task.wait(1.5); pcall(callback, a) end) 
             end
 
-            B.MouseButton1Click:Connect(function() set(not a) end)
-            return { SetState = function(self, s) set(s) end, Set = function(self, s) set(s) end }
+            B.MouseButton1Click:Connect(function() set(not a, true) end)
+            return { SetState = function(self, s) set(s, false) end, Set = function(self, s) set(s, false) end }
         end
 
         function TabOps:AddTimedToggle(label, callback)
             orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R); local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0); local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; local isRunning = false
             B.MouseButton1Click:Connect(function() 
                 if isRunning then return end; isRunning = true; B.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+                LogAction("⏱️ تفعيل مؤقت", label, "تم التفعيل", 15844367)
                 task.spawn(function() pcall(callback, true); task.wait(2); if B then B.BackgroundColor3 = Color3.fromRGB(60, 60, 60) end; pcall(callback, false); isRunning = false end)
             end)
             return { Set = function() end, SetState = function() end }
         end
 
-        -- [[ الإضافة الجديدة: دالة القائمة المنسدلة (Dropdown) ]]
+        -- [[ دالة القائمة المنسدلة (Dropdown) كاملة مع الويب هوك ]]
         function TabOps:AddDropdown(label, options, callback)
             orderIndex = orderIndex + 1
+            local isOpen = false
+            
             local DropdownFrame = Instance.new("Frame", Page)
             DropdownFrame.LayoutOrder = orderIndex
             DropdownFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -264,54 +305,74 @@ function UI:CreateWindow(title)
             ArrowLbl.Text = "▼"
             ArrowLbl.TextColor3 = Color3.new(1, 1, 1)
 
-            local OptionsContainer = Instance.new("Frame", DropdownFrame)
+            local OptionsContainer = Instance.new("ScrollingFrame", DropdownFrame)
             OptionsContainer.Size = UDim2.new(1, 0, 1, -40)
             OptionsContainer.Position = UDim2.new(0, 0, 0, 40)
             OptionsContainer.BackgroundTransparency = 1
+            OptionsContainer.ScrollBarThickness = 2
+            
+            local OptLayout = Instance.new("UIListLayout", OptionsContainer)
+            OptLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            OptLayout.Padding = UDim.new(0, 2)
 
-            local ListLayout = Instance.new("UIListLayout", OptionsContainer)
-            ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-            local isOpen = false
-
-            local function UpdateDropdown(newOptions)
-                for _, child in pairs(OptionsContainer:GetChildren()) do
-                    if child:IsA("TextButton") then child:Destroy() end
-                end
-
-                for i, opt in ipairs(newOptions) do
-                    local OptBtn = Instance.new("TextButton", OptionsContainer)
-                    OptBtn.Size = UDim2.new(1, 0, 0, 30)
-                    OptBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-                    OptBtn.Text = tostring(opt)
-                    OptBtn.TextColor3 = Color3.new(1, 1, 1)
-                    OptBtn.LayoutOrder = i
-
-                    OptBtn.MouseButton1Click:Connect(function()
-                        TitleLbl.Text = label .. " : " .. tostring(opt)
-                        isOpen = false
-                        ArrowLbl.Text = "▼"
-                        DropdownFrame.Size = UDim2.new(0.95, 0, 0, 40)
-                        pcall(callback, opt)
-                    end)
-                end
+            local function RefreshSize()
                 if isOpen then
-                    DropdownFrame.Size = UDim2.new(0.95, 0, 0, 40 + (#newOptions * 30))
+                    local h = math.clamp(OptLayout.AbsoluteContentSize.Y + 40, 40, 150)
+                    DropdownFrame.Size = UDim2.new(0.95, 0, 0, h)
+                    OptionsContainer.CanvasSize = UDim2.new(0, 0, 0, OptLayout.AbsoluteContentSize.Y)
+                else
+                    DropdownFrame.Size = UDim2.new(0.95, 0, 0, 40)
                 end
             end
 
             MainBtn.MouseButton1Click:Connect(function()
                 isOpen = not isOpen
                 ArrowLbl.Text = isOpen and "▲" or "▼"
-                local itemCounts = #OptionsContainer:GetChildren() - 1 
-                DropdownFrame.Size = isOpen and UDim2.new(0.95, 0, 0, 40 + (itemCounts * 30)) or UDim2.new(0.95, 0, 0, 40)
+                RefreshSize()
             end)
 
-            UpdateDropdown(options)
+            for i, opt in ipairs(options) do
+                local OptBtn = Instance.new("TextButton", OptionsContainer)
+                OptBtn.Size = UDim2.new(1, 0, 0, 30)
+                OptBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                OptBtn.Text = tostring(opt)
+                OptBtn.TextColor3 = Color3.new(1, 1, 1)
+                OptBtn.BorderSizePixel = 0
+
+                OptBtn.MouseButton1Click:Connect(function()
+                    TitleLbl.Text = label .. " : " .. tostring(opt)
+                    isOpen = false
+                    ArrowLbl.Text = "▼"
+                    RefreshSize()
+                    
+                    -- إرسال الإشعار
+                    LogAction("🔽 اختيار من القائمة", label, tostring(opt), 15105570) -- لون برتقالي
+                    
+                    pcall(callback, opt)
+                end)
+            end
 
             return {
-                Refresh = function(self, newOptions)
-                    UpdateDropdown(newOptions)
+                Refresh = function(newOptions)
+                    for _, v in pairs(OptionsContainer:GetChildren()) do
+                        if v:IsA("TextButton") then v:Destroy() end
+                    end
+                    for i, opt in ipairs(newOptions) do
+                        local OptBtn = Instance.new("TextButton", OptionsContainer)
+                        OptBtn.Size = UDim2.new(1, 0, 0, 30)
+                        OptBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                        OptBtn.Text = tostring(opt)
+                        OptBtn.TextColor3 = Color3.new(1, 1, 1)
+                        OptBtn.BorderSizePixel = 0
+
+                        OptBtn.MouseButton1Click:Connect(function()
+                            TitleLbl.Text = label .. " : " .. tostring(opt)
+                            isOpen = false; ArrowLbl.Text = "▼"; RefreshSize()
+                            LogAction("🔽 اختيار من القائمة", label, tostring(opt), 15105570)
+                            pcall(callback, opt)
+                        end)
+                    end
+                    if isOpen then RefreshSize() end
                 end
             }
         end
@@ -320,4 +381,5 @@ function UI:CreateWindow(title)
     end
     return Window
 end
+
 return UI
