@@ -25,14 +25,13 @@ return function(Tab, UI)
         return nil
     end
 
-    -- [[ تحديث قائمة الأشياء غير المثبتة بذكاء (لمنع اللاق) ]]
+    -- [[ تحديث قائمة الأشياء غير المثبتة بذكاء ]]
     task.spawn(function()
         while task.wait(3) do
             if isActive then
                 local tempParts = {}
                 for _, v in pairs(workspace:GetDescendants()) do
                     if v:IsA("BasePart") and not v.Anchored then
-                        -- استثناء شخصيات اللاعبين (عشان ما نسحب أجزاء اللاعبين نفسهم)
                         local model = v:FindFirstAncestorOfClass("Model")
                         if not (model and model:FindFirstChildOfClass("Humanoid")) then
                             table.insert(tempParts, v)
@@ -44,8 +43,8 @@ return function(Tab, UI)
         end
     end)
 
-    -- [[ خانة كتابة اسم الهدف ]]
-    Tab:AddTextbox("اسم اللاعب / Target Name", function(text)
+    -- [[ خانة كتابة اسم الهدف (تم تعديلها لتطابق مكتبتك AddInput) ]]
+    Tab:AddInput("اسم اللاعب / Target Name", "اكتب اسم اللاعب هنا...", function(text)
         targetName = text
         if text ~= "" then
             pcall(function()
@@ -76,7 +75,6 @@ return function(Tab, UI)
                 })
             end)
 
-            -- حلقة التكرار السريعة اللي تلصق الأشياء في الهدف
             connection = RunService.Heartbeat:Connect(function()
                 if not isActive then return end
                 
@@ -86,14 +84,9 @@ return function(Tab, UI)
                     
                     for _, part in ipairs(unanchoredParts) do
                         if part and part.Parent then
-                            -- 1. نقل الشيء للهدف مع مسافة عشوائية صغيرة (يصير كأنه سرب نحل يهاجمه)
                             part.CFrame = targetHRP.CFrame * CFrame.new(math.random(-1, 1), math.random(-1, 1), math.random(-1, 1))
-                            
-                            -- 2. إعطاء الأشياء سرعة دوران خيالية عشان تفجر فيزياء الهدف ويطير
                             part.AssemblyLinearVelocity = Vector3.new(0, 500, 0)
                             part.AssemblyAngularVelocity = Vector3.new(math.random(-500, 500), math.random(-500, 500), math.random(-500, 500))
-                            
-                            -- 3. منع الأشياء من التداخل مع الكاميرا حقتك أنتِ
                             part.CanCollide = false 
                         end
                     end
