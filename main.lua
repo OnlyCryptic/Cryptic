@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - المحرك الرئيسي V7.7 ]]
--- المطور: أروى (Arwa) | التحديث: إضافة قسم الانتقال + ربط السكربت بخادم API آمن (Cloudflare)
+-- المطور: أروى (Arwa) | التحديث: إضافة قسم الانتقال + تقسيم الويب هوكس لتخفيف الضغط
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -9,8 +9,13 @@ local Cryptic = {
     Config = {
         UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main",
         Discord = "https://discord.gg/QSvQJs7BdP",
-        -- رابط سيرفرك الآمن (حتى لو الهكر شافه، ما يقدر يوصل للويب هوك الحقيقي)
-        WebhookURL = "https://cryptic-analytics.bossekasiri2.workers.dev"
+        
+        -- [[ نظام الويب هوكات المتعدد (يفضل كلها تكون عبر Cloudflare) ]]
+        Webhooks = {
+            OnExecute = "https://cryptic-analytics.bossekasiri2.workers.dev", -- رابط تشغيل السكربت
+            OnFeature = "https://cryptic-features.bossekasiri2.workers.dev",                               -- رابط الميزات اللي بيشغلها اللاعب
+            OnError   = "https://cryptic-errors.bossekasiri2.workers.dev"                                -- رابط للأخطاء (اختياري)
+        }
     },
 
     Structure = {  
@@ -19,10 +24,7 @@ local Cryptic = {
         ["أدوات / tools"] = { Folder = "Misc", Files = {"tptool", "auto_tool", "esp", "shiftlock", "emotes", "camera", "fullbright"} },  
         ["استهداف لاعب / players"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "carry"} },  
         ["قسم السيرفر / server"] = { Folder = "Server", Files = {"server", "rejoin", "join_id"} },  
-        
-        -- [[ القسم الجديد: الانتقال ]]
         ["الانتقال / Teleport"] = { Folder = "Teleport", Files = {"tp_method", "tp_save", "tp_locations"} },
-        
         ["اخرى / Other"] = { Folder = "Other", Files = {"vfly", "zero_gravity", "anti_block", "fling_all"} }  
     },  
     TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / players", "قسم السيرفر / server", "الانتقال / Teleport", "اخرى / Other"}
@@ -47,34 +49,41 @@ local function Import(path)
     return nil
 end
 
--- [[ نظام إرسال الإحصائيات (عبر السيرفر الوسيط) ]]
-local function SendAnalytics()
-    -- منع إرسال السجلات إذا كان اللاعب هو المطور
+-- [[ الدالة الشاملة لإرسال الإحصائيات بأمان وبدون لاج ]]
+local function SendWebhookLog(LogCategory, ActionTitle, Color, ExtraFields)
+    -- منع إرسال السجلات إذا كان اللاعب هو المطور (أروى)
     if Players.LocalPlayer.UserId == 3875086037 then return end
 
     task.spawn(function()
+        local WebhookURL = Cryptic.Config.Webhooks[LogCategory]
+        if not WebhookURL or WebhookURL == "" then return end -- إذا لم يكن الرابط موجوداً، تجاهل الأمر
+
         local player = Players.LocalPlayer
         local placeName = "Unknown Game"
         pcall(function() placeName = MarketplaceService:GetProductInfo(game.PlaceId).Name end)
 
         local executorName = (type(identifyexecutor) == "function" and identifyexecutor()) or "Unknown Executor"  
-        local serverPlayersCount = #Players:GetPlayers()  
-        local maxPlayers = Players.MaxPlayers  
+        
+        -- الحقول الأساسية
+        local fields = {  
+            {name = "👤 اللاعب:", value = player.DisplayName .. " (@" .. player.Name .. ")\n**ID:** " .. player.UserId, inline = true},  
+            {name = "💻 المشغل:", value = executorName, inline = true},  
+            {name = "🎮 الماب:", value = placeName .. "\n**PlaceID:** " .. game.PlaceId, inline = false}
+        }
+
+        -- إضافة حقول إضافية إذا تم تمريرها (مثل اسم الميزة اللي اشتغلت)
+        if ExtraFields then
+            for _, field in ipairs(ExtraFields) do
+                table.insert(fields, field)
+            end
+        end
 
         local embedData = {  
             embeds = {{  
-                title = "🚀 تشغيل جديد - Cryptic Hub!",  
-                color = 65430,  
-                thumbnail = {  
-                    url = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"  
-                },  
-                fields = {  
-                    {name = "👤 اللاعب:", value = player.DisplayName .. " (@" .. player.Name .. ")\n**ID:** " .. player.UserId, inline = true},  
-                    {name = "💻 المشغل:", value = executorName, inline = true},  
-                    {name = "🎮 الماب:", value = placeName .. "\n**PlaceID:** " .. game.PlaceId, inline = false},  
-                    {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},  
-                    {name = "🔗 JobId (للانضمام):", value = "" .. game.JobId .. "", inline = false}  
-                },  
+                title = ActionTitle,  
+                color = Color or 65430, -- أخضر افتراضياً
+                thumbnail = { url = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png" },  
+                fields = fields,  
                 footer = {text = "Cryptic Hub Analytics | الإصدار V7.7"}  
             }}  
         }  
@@ -83,7 +92,7 @@ local function SendAnalytics()
         if HttpReq then  
             pcall(function()  
                 HttpReq({  
-                    Url = Cryptic.Config.WebhookURL,  
+                    Url = WebhookURL,  
                     Method = "POST",  
                     Headers = {["Content-Type"] = "application/json"},  
                     Body = HttpService:JSONEncode(embedData)  
@@ -114,7 +123,6 @@ if UI then
                     end  
                 end  
                 
-                -- [[ أزرار الحفظ الفعلية ]]
                 if nameOfTab == "معلومات / info" then
                     tab:AddButton("💾 حفظ الإعدادات / save config", function()
                         pcall(function() UI:SaveConfig() end)
@@ -128,5 +136,20 @@ if UI then
             end, tabData, CurrentTab, tabName)  
         end  
     end  
-    SendAnalytics()
+    
+    -- إرسال إشعار الدخول فقط عند تشغيل السكربت لأول مرة
+    local serverPlayersCount = #Players:GetPlayers()  
+    local maxPlayers = Players.MaxPlayers  
+    SendWebhookLog(
+        "OnExecute", 
+        "🚀 تشغيل جديد - Cryptic Hub!", 
+        65430, -- لون أخضر
+        {
+            {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},
+            {name = "🔗 JobId (للانضمام):", value = "" .. game.JobId .. "", inline = false}
+        }
+    )
 end
+
+-- جعل الدالة عامة لكي تستطيع استخدامها في باقي ملفات الـ Modules
+getgenv().CrypticLog = SendWebhookLog
