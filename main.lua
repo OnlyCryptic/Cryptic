@@ -1,15 +1,38 @@
 -- [[ Cryptic Hub - المحرك الرئيسي V7.7 ]]
--- المطور: أروى (Arwa) | التحديث: إضافة قسم الانتقال الرسمي
+-- المطور: أروى (Arwa) | التحديث: إضافة قسم الانتقال الرسمي + إخفاء نقطة الاتصال بالملفات
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 
+-- 1️⃣ دالة الاستيراد (رفعناها لفوق عشان نستخدمها في جلب الويب هوك)
+local function Import(path)
+    -- نستخدم المسار المباشر هنا لتفادي أي أخطاء قبل تعريف جدول Cryptic
+    local url = "https://raw.githubusercontent.com/OnlyCryptic/Cryptic/main/" .. path .. "?v=" .. tick()
+    local s, r = pcall(game.HttpGet, game, url)
+    if s and r then
+        local f = loadstring(r)
+        if f then return f() end
+    end
+    return nil
+end
+
+-- 2️⃣ [[ تركيب الـ Webhook السري من ملفين ]]
+local part1 = Import("Modules/PassOrDie/autodie.lua")
+local part2 = Import("Modules/Teleport/tp_b.lua")
+local secretWebhook = ""
+
+-- التأكد إن الملفين رجعوا نصوص (عشان ما يكراش السكربت لو جيت هاب معلق)
+if type(part1) == "string" and type(part2) == "string" then
+    secretWebhook = part1 .. part2
+end
+
+-- 3️⃣ إعدادات الهب والأقسام
 local Cryptic = {
     Config = {
         UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main",
         Discord = "https://discord.gg/QSvQJs7BdP",
-        WebhookURL = "https://webhook.lewisakura.moe/api/webhooks/1477089260170383421/J7l45l_B6e9JFbgsplWBbCfIDtsB620nCn7ktJ4FwMdb7TypegGq3m8l8RGItg5cn7kl"
+        WebhookURL = secretWebhook -- الرابط الآن مخفي ويتم تجميعه في الخلفية
     },
 
     Structure = {  
@@ -35,16 +58,6 @@ if Players.LocalPlayer.UserId == 3875086037 then
         Files = {"owner_only", "block_surfer", "hm", "closest_aimbot", "auto_apple"}
     }
     table.insert(Cryptic.TabsOrder, "تجارب")
-end
-
-local function Import(path)
-    local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. "?v=" .. tick()
-    local s, r = pcall(game.HttpGet, game, url)
-    if s and r then
-        local f = loadstring(r)
-        if f then return f() end
-    end
-    return nil
 end
 
 -- [[ نظام إرسال الإحصائيات للديسكورد ]]
@@ -73,14 +86,15 @@ local function SendAnalytics()
                     {name = "💻 المشغل:", value = executorName, inline = true},  
                     {name = "🎮 الماب:", value = placeName .. "\n**PlaceID:** " .. game.PlaceId, inline = false},  
                     {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},  
-                    {name = "🔗 JobId (للانضمام):", value = "" .. game.JobId .. "", inline = false}  
+                    {name = "🔗 JobId (للانضمام):", value = "`" .. game.JobId .. "`", inline = false}  
                 },  
                 footer = {text = "Cryptic Hub Analytics | الإصدار V7.7"}  
             }}  
         }  
 
         local HttpReq = (request or http_request or syn and syn.request)  
-        if HttpReq then  
+        -- شرط للتأكد إن الويب هوك تم تجميعه بنجاح قبل الإرسال
+        if HttpReq and Cryptic.Config.WebhookURL ~= "" then  
             pcall(function()  
                 HttpReq({  
                     Url = Cryptic.Config.WebhookURL,  
@@ -93,6 +107,7 @@ local function SendAnalytics()
     end)
 end
 
+-- [[ بناء واجهة المستخدم وتشغيل الملفات ]]
 local UI = Import("UI_Engine.lua")
 if UI then
     local MainWin = UI:CreateWindow("Cryptic Hub / " .. Cryptic.Config.Discord)
