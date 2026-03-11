@@ -11,7 +11,7 @@ return function(Tab, UI)
             StarterGui:SetCore("SendNotification", {
                 Title = "Cryptic Hub",
                 Text = arText .. "\n" .. enText,
-                Duration = 5, 
+                Duration = 2, 
             })
         end)
     end
