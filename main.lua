@@ -7,7 +7,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 
 local Cryptic = {
     Config = {
-        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main",
+        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "test",
         Discord = "https://discord.gg/QSvQJs7BdP",
         
         -- [[ نظام الويب هوكات المتعدد (يفضل كلها تكون عبر Cloudflare) ]]
