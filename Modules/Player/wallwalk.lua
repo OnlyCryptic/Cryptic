@@ -1,87 +1,56 @@
--- [[ Cryptic Hub - Ultimate Walk Fling + Anti-Fling ]]
--- المطور: مدمج (Walk Fling + Anti-Wall + Anti-Fling)
+-- [[ Cryptic Hub - Wall Walk (Spider) Module ]]
+-- المطور: يامي (Yami) | التحديث: تسلق الجدران بسلاسة باستخدام Raycast
 
 return function(Tab, UI)
     local RunService = game:GetService("RunService")
     local Players = game:GetService("Players")
     local LocalPlayer = Players.LocalPlayer
     
-    local flingConnection = nil
-    local bav = nil -- للتحكم في الدوران
-    local bv = nil  -- للتحكم في الثبات ومنع الارتداد من الجدران
+    local wallWalkConnection = nil
 
-    -- دالة الإشعارات المزدوجة
-    local function Notify(arText, enText)
-        pcall(function()
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "Cryptic Hub",
-                Text = arText .. "\n" .. enText,
-                Duration = 3
-            })
-        end)
-    end
-
-    Tab:AddToggle("Walk Fling / الدفع بالمشي", function(state)
-        local char = LocalPlayer.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-
+    Tab:AddToggle("المشي على الجدران / Wall Walk", function(state)
         if state then
-            if not hrp or not hum then return end
-            
-            -- إظهار الإشعار
-            Notify("🌪️ تم تفعيل الدفع بالمشي + مضاد التطيير", "🌪️ Walk Fling + Anti-Fling Activated")
-            
-            -- 1. أداة الدوران (تطير اللاعبين بقوة 20000)
-            bav = Instance.new("BodyAngularVelocity")
-            bav.Name = "CrypticFlingBAV"
-            bav.AngularVelocity = Vector3.new(0, 20000, 0) 
-            bav.MaxTorque = Vector3.new(0, math.huge, 0)
-            bav.P = math.huge
-            bav.Parent = hrp
-
-            -- 2. أداة الثبات (تمنع ارتدادك من الجدران)
-            bv = Instance.new("BodyVelocity")
-            bv.Name = "CrypticFlingBV"
-            bv.MaxForce = Vector3.new(math.huge, 0, math.huge) 
-            bv.Velocity = Vector3.new(0, 0, 0)
-            bv.Parent = hrp
-
-            -- 3. حلقة التحكم المستمر (تشمل كل شيء)
-            -- نستخدم Stepped لأنه الأفضل للتعامل مع الفيزياء والتصادم قبل رندرة اللعبة
-            flingConnection = RunService.Stepped:Connect(function()
+            -- نستخدم RenderStepped لضمان استجابة سريعة جداً عند ملامسة الجدار
+            wallWalkConnection = RunService.RenderStepped:Connect(function()
+                local char = LocalPlayer.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                
                 if char and hrp and hum then
+                    -- 1. إعداد شعاع الفحص (Raycast) للبحث عن جدار أمام اللاعب مباشرة
+                    local rayOrigin = hrp.Position
+                    local rayDirection = hrp.CFrame.LookVector * 2.5 -- يفحص مسافة 2.5 أمام اللاعب
                     
-                    -- [A] تحديث سرعتك لتتطابق مع حركتك الحقيقية (يمنع الحيط من دفعك)
-                    bv.Velocity = hum.MoveDirection * hum.WalkSpeed
+                    local raycastParams = RaycastParams.new()
+                    raycastParams.FilterDescendantsInstances = {char} -- تجاهل جسم اللاعب نفسه
+                    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
                     
-                    -- [B] حماية من السقف (قفل السرعة العمودية لمنع الطيران الفوق والموت)
-                    if hrp.Velocity.Y > 40 or hrp.Velocity.Y < -40 then
-                        hrp.Velocity = Vector3.new(hrp.Velocity.X, math.clamp(hrp.Velocity.Y, -40, 40), hrp.Velocity.Z)
-                    end
-
-                    -- [C] ميزة Anti-Fling (إلغاء التصادم مع اللاعبين الآخرين لتخترقهم)
-                    for _, otherPlayer in pairs(Players:GetPlayers()) do
-                        if otherPlayer ~= LocalPlayer and otherPlayer.Character then
-                            for _, part in pairs(otherPlayer.Character:GetChildren()) do
-                                if part:IsA("BasePart") and part.CanCollide then
-                                    part.CanCollide = false
-                                end
-                            end
+                    local result = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+                    
+                    -- 2. إذا اصطدم الشعاع بجدار، وكان اللاعب يضغط على زر المشي
+                    if result and hum.MoveDirection.Magnitude > 0 then
+                        -- نلغي الجاذبية مؤقتاً ونعطيه قوة دفع للأعلى تعادل سرعة مشيه (أو أسرع قليلاً)
+                        hrp.Velocity = Vector3.new(hrp.Velocity.X, hum.WalkSpeed * 1.5, hrp.Velocity.Z)
+                        
+                        -- تغيير حالة اللاعب لمنع أنميشن السقوط المزعج
+                        if hum:GetState() ~= Enum.HumanoidStateType.Climbing then
+                            hum:ChangeState(Enum.HumanoidStateType.Climbing)
                         end
                     end
-                    
                 end
             end)
         else
-            -- حالة الإيقاف: مسح الأدوات وإرجاع اللاعب لطبيعته
-            if flingConnection then flingConnection:Disconnect() flingConnection = nil end
-            if bav then bav:Destroy() bav = nil end
-            if bv then bv:Destroy() bv = nil end
+            -- حالة الإيقاف: فصل الاتصال وإرجاع اللاعب لطبيعته
+            if wallWalkConnection then
+                wallWalkConnection:Disconnect()
+                wallWalkConnection = nil
+            end
             
-            if hrp then
-                hrp.RotVelocity = Vector3.new(0, 0, 0)
-                hrp.Velocity = Vector3.new(0, 0, 0)
+            -- التأكد من إرجاع حالة اللاعب للطبيعة إذا تم إيقاف الميزة وهو يتسلق
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum and hum:GetState() == Enum.HumanoidStateType.Climbing then
+                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
             end
         end
     end)
