@@ -193,6 +193,123 @@ function UI:CreateWindow(title)
             return { Set = function() end, SetState = function() end }
         end
 
+        -- [[ إضافة قائمة اللاعبين الاحترافية (Player Selector) ]]
+        function TabOps:AddPlayerSelector(label, placeholder, callback)
+            orderIndex = orderIndex + 1
+            local Container = Instance.new("Frame", Page)
+            Container.LayoutOrder = orderIndex
+            Container.Size = UDim2.new(0.95, 0, 0, 75)
+            Container.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            Instance.new("UICorner", Container)
+            
+            local Lbl = Instance.new("TextLabel", Container)
+            Lbl.Text = label
+            Lbl.Size = UDim2.new(1, -10, 0, 25)
+            Lbl.TextColor3 = Color3.fromRGB(0, 255, 150)
+            Lbl.BackgroundTransparency = 1
+            Lbl.TextXAlignment = Enum.TextXAlignment.Right
+
+            -- المستطيل الأول (للبحث اليدوي) - النص لونه أبيض مو أخضر
+            local SearchBox = Instance.new("TextBox", Container)
+            SearchBox.Size = UDim2.new(0.9, 0, 0, 25)
+            SearchBox.Position = UDim2.new(0.05, 0, 0, 25)
+            SearchBox.PlaceholderText = placeholder
+            SearchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            SearchBox.TextColor3 = Color3.new(1, 1, 1)
+            SearchBox.Text = ""
+            Instance.new("UICorner", SearchBox)
+
+            -- المستطيل الأصغر (الزر لفتح القائمة)
+            local DropBtn = Instance.new("TextButton", Container)
+            DropBtn.Size = UDim2.new(0.9, 0, 0, 15)
+            DropBtn.Position = UDim2.new(0.05, 0, 0, 55)
+            DropBtn.Text = "▼ عرض قائمة اللاعبين ▼"
+            DropBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            DropBtn.TextColor3 = Color3.fromRGB(170, 170, 170)
+            DropBtn.TextSize = 11
+            Instance.new("UICorner", DropBtn)
+
+            -- القائمة المنسدلة (المكان الاحترافي)
+            local DropList = Instance.new("ScrollingFrame", Container)
+            DropList.Size = UDim2.new(0.9, 0, 0, 140)
+            DropList.Position = UDim2.new(0.05, 0, 0, 75)
+            DropList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            DropList.Visible = false
+            DropList.ScrollBarThickness = 2
+            Instance.new("UICorner", DropList)
+            
+            local ListLayout = Instance.new("UIListLayout", DropList)
+            ListLayout.Padding = UDim.new(0, 5)
+            ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() 
+                DropList.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 5) 
+            end)
+
+            local isOpen = false
+            DropBtn.MouseButton1Click:Connect(function()
+                isOpen = not isOpen
+                DropList.Visible = isOpen
+                Container.Size = isOpen and UDim2.new(0.95, 0, 0, 220) or UDim2.new(0.95, 0, 0, 75)
+                DropBtn.Text = isOpen and "▲ إغلاق القائمة ▲" or "▼ عرض قائمة اللاعبين ▼"
+            end)
+
+            local function UpdateList(playersList)
+                for _, v in pairs(DropList:GetChildren()) do
+                    if v:IsA("Frame") then v:Destroy() end
+                end
+                for _, p in pairs(playersList) do
+                    local PItem = Instance.new("Frame", DropList)
+                    PItem.Size = UDim2.new(1, -10, 0, 40)
+                    PItem.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                    Instance.new("UICorner", PItem)
+
+                    -- صورة اللاعب المصغرة
+                    local Avatar = Instance.new("ImageLabel", PItem)
+                    Avatar.Size = UDim2.new(0, 30, 0, 30)
+                    Avatar.Position = UDim2.new(0, 5, 0, 5)
+                    Avatar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                    Instance.new("UICorner", Avatar).CornerRadius = UDim.new(1, 0)
+                    task.spawn(function()
+                        local s, thumb = pcall(function() return game:GetService("Players"):GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
+                        if s and thumb then Avatar.Image = thumb end
+                    end)
+
+                    -- الاسم
+                    local NLabel = Instance.new("TextLabel", PItem)
+                    NLabel.Size = UDim2.new(1, -45, 0, 20); NLabel.Position = UDim2.new(0, 40, 0, 0)
+                    NLabel.Text = p.DisplayName; NLabel.TextColor3 = Color3.new(1, 1, 1)
+                    NLabel.BackgroundTransparency = 1; NLabel.TextXAlignment = Enum.TextXAlignment.Left; NLabel.Font = Enum.Font.GothamBold; NLabel.TextSize = 12
+
+                    -- اليوزر
+                    local ULabel = Instance.new("TextLabel", PItem)
+                    ULabel.Size = UDim2.new(1, -45, 0, 20); ULabel.Position = UDim2.new(0, 40, 0, 18)
+                    ULabel.Text = "@" .. p.Name; ULabel.TextColor3 = Color3.fromRGB(170, 170, 170)
+                    ULabel.BackgroundTransparency = 1; ULabel.TextXAlignment = Enum.TextXAlignment.Left; ULabel.Font = Enum.Font.Gotham; ULabel.TextSize = 10
+
+                    local SelectBtn = Instance.new("TextButton", PItem)
+                    SelectBtn.Size = UDim2.new(1, 0, 1, 0); SelectBtn.BackgroundTransparency = 1; SelectBtn.Text = ""
+                    
+                    SelectBtn.MouseButton1Click:Connect(function()
+                        -- لما تضغط يصير لون المربع أخضر وتنغلق القائمة
+                        PItem.BackgroundColor3 = Color3.fromRGB(0, 200, 100) 
+                        task.wait(0.15)
+                        isOpen = false; DropList.Visible = false
+                        Container.Size = UDim2.new(0.95, 0, 0, 75)
+                        DropBtn.Text = "▼ عرض قائمة اللاعبين ▼"
+                        SearchBox.Text = p.DisplayName .. " (@" .. p.Name .. ")"
+                        pcall(callback, p) -- إرسال الكائن للسكربت الرئيسي
+                    end)
+                end
+            end
+
+            -- عند كتابة اليوزر يدوياً وإغلاق الكيبورد
+            SearchBox.FocusLost:Connect(function()
+                if SearchBox.Text ~= "" then pcall(callback, SearchBox.Text) end
+            end)
+
+            return { SetText = function(t) SearchBox.Text = t end, UpdateList = UpdateList, Clear = function() SearchBox.Text = "" end }
+        end
+
+
         function TabOps:AddDropdown(label, options, callback)
             orderIndex = orderIndex + 1; local isOpen = false; local DropdownFrame = Instance.new("Frame", Page); DropdownFrame.LayoutOrder = orderIndex; DropdownFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25); DropdownFrame.ClipsDescendants = true; DropdownFrame.Size = UDim2.new(0.95, 0, 0, 40); Instance.new("UICorner", DropdownFrame); local MainBtn = Instance.new("TextButton", DropdownFrame); MainBtn.Size = UDim2.new(1, 0, 0, 40); MainBtn.BackgroundTransparency = 1; MainBtn.Text = ""; local TitleLbl = Instance.new("TextLabel", MainBtn); TitleLbl.Size = UDim2.new(1, -15, 1, 0); TitleLbl.Position = UDim2.new(0, -10, 0, 0); TitleLbl.BackgroundTransparency = 1; TitleLbl.Text = label .. " : [اختر]"; TitleLbl.TextColor3 = Color3.fromRGB(0, 255, 150); TitleLbl.TextXAlignment = Enum.TextXAlignment.Right; local ArrowLbl = Instance.new("TextLabel", MainBtn); ArrowLbl.Size = UDim2.new(0, 30, 1, 0); ArrowLbl.Position = UDim2.new(0, 5, 0, 0); ArrowLbl.BackgroundTransparency = 1; ArrowLbl.Text = "▼"; ArrowLbl.TextColor3 = Color3.new(1, 1, 1); local OptionsContainer = Instance.new("ScrollingFrame", DropdownFrame); OptionsContainer.Size = UDim2.new(1, 0, 1, -40); OptionsContainer.Position = UDim2.new(0, 0, 0, 40); OptionsContainer.BackgroundTransparency = 1; OptionsContainer.ScrollBarThickness = 2; local OptLayout = Instance.new("UIListLayout", OptionsContainer); OptLayout.SortOrder = Enum.SortOrder.LayoutOrder; OptLayout.Padding = UDim.new(0, 2)
             local function RefreshSize() if isOpen then local h = math.clamp(OptLayout.AbsoluteContentSize.Y + 40, 40, 150); DropdownFrame.Size = UDim2.new(0.95, 0, 0, h); OptionsContainer.CanvasSize = UDim2.new(0, 0, 0, OptLayout.AbsoluteContentSize.Y) else DropdownFrame.Size = UDim2.new(0.95, 0, 0, 40) end end
