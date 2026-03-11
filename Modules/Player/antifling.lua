@@ -1,67 +1,88 @@
--- [[ Cryptic Hub - ميزة مضاد الطيران (Anti-Fling) ]]
--- المطور: يامي (Yami) | تجعلك تخترق اللاعبين لمنع التخريب
+-- [[ Cryptic Hub - Ultimate Walk Fling + Anti-Fling ]]
+-- المطور: مدمج (Walk Fling + Anti-Wall + Anti-Fling)
 
 return function(Tab, UI)
     local RunService = game:GetService("RunService")
     local Players = game:GetService("Players")
-    local lp = Players.LocalPlayer
+    local LocalPlayer = Players.LocalPlayer
     
-    -- [[ دالة إرسال الإشعارات المزدوجة (عربي/إنجليزي) ]]
+    local flingConnection = nil
+    local bav = nil -- للتحكم في الدوران
+    local bv = nil  -- للتحكم في الثبات ومنع الارتداد من الجدران
+
+    -- دالة الإشعارات المزدوجة
     local function Notify(arText, enText)
         pcall(function()
             game:GetService("StarterGui"):SetCore("SendNotification", {
                 Title = "Cryptic Hub",
                 Text = arText .. "\n" .. enText,
-                Duration = 3 -- مدة بقاء الإشعار على الشاشة (3 ثواني)
+                Duration = 3
             })
         end)
     end
-    
-    local isAntiFling = false
-    local connection
 
-    local function toggleAntiFling(active)
-        isAntiFling = active
-        
-        if isAntiFling then
-            -- نستخدم Stepped لأنه ينفذ قبل حساب الفيزياء في اللعبة
-            connection = RunService.Stepped:Connect(function()
-                if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then return end
-                
-                -- المرور على كل اللاعبين في السيرفر
-                for _, otherPlayer in pairs(Players:GetPlayers()) do
-                    -- التأكد أنه ليس أنت، وأن لديه شخصية
-                    if otherPlayer ~= lp and otherPlayer.Character then
-                        -- نستخدم GetChildren بدلاً من GetDescendants لتخفيف الضغط
-                        for _, part in pairs(otherPlayer.Character:GetChildren()) do
-                            if part:IsA("BasePart") and part.CanCollide then
-                                -- إغلاق التصادم محلياً (على شاشتك فقط)
-                                part.CanCollide = false
+    Tab:AddToggle("Walk Fling / الدفع بالمشي", function(state)
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+        if state then
+            if not hrp or not hum then return end
+            
+            -- إظهار الإشعار
+            Notify("🌪️ تم تفعيل الدفع بالمشي + مضاد التطيير", "🌪️ Walk Fling + Anti-Fling Activated")
+            
+            -- 1. أداة الدوران (تطير اللاعبين بقوة 20000)
+            bav = Instance.new("BodyAngularVelocity")
+            bav.Name = "CrypticFlingBAV"
+            bav.AngularVelocity = Vector3.new(0, 20000, 0) 
+            bav.MaxTorque = Vector3.new(0, math.huge, 0)
+            bav.P = math.huge
+            bav.Parent = hrp
+
+            -- 2. أداة الثبات (تمنع ارتدادك من الجدران)
+            bv = Instance.new("BodyVelocity")
+            bv.Name = "CrypticFlingBV"
+            bv.MaxForce = Vector3.new(math.huge, 0, math.huge) 
+            bv.Velocity = Vector3.new(0, 0, 0)
+            bv.Parent = hrp
+
+            -- 3. حلقة التحكم المستمر (تشمل كل شيء)
+            -- نستخدم Stepped لأنه الأفضل للتعامل مع الفيزياء والتصادم قبل رندرة اللعبة
+            flingConnection = RunService.Stepped:Connect(function()
+                if char and hrp and hum then
+                    
+                    -- [A] تحديث سرعتك لتتطابق مع حركتك الحقيقية (يمنع الحيط من دفعك)
+                    bv.Velocity = hum.MoveDirection * hum.WalkSpeed
+                    
+                    -- [B] حماية من السقف (قفل السرعة العمودية لمنع الطيران الفوق والموت)
+                    if hrp.Velocity.Y > 40 or hrp.Velocity.Y < -40 then
+                        hrp.Velocity = Vector3.new(hrp.Velocity.X, math.clamp(hrp.Velocity.Y, -40, 40), hrp.Velocity.Z)
+                    end
+
+                    -- [C] ميزة Anti-Fling (إلغاء التصادم مع اللاعبين الآخرين لتخترقهم)
+                    for _, otherPlayer in pairs(Players:GetPlayers()) do
+                        if otherPlayer ~= LocalPlayer and otherPlayer.Character then
+                            for _, part in pairs(otherPlayer.Character:GetChildren()) do
+                                if part:IsA("BasePart") and part.CanCollide then
+                                    part.CanCollide = false
+                                end
                             end
                         end
                     end
+                    
                 end
             end)
         else
-            -- إيقاف الميزة لتوفير موارد الهاتف
-            if connection then
-                connection:Disconnect()
-                connection = nil
+            -- حالة الإيقاف: مسح الأدوات وإرجاع اللاعب لطبيعته
+            if flingConnection then flingConnection:Disconnect() flingConnection = nil end
+            if bav then bav:Destroy() bav = nil end
+            if bv then bv:Destroy() bv = nil end
+            
+            if hrp then
+                hrp.RotVelocity = Vector3.new(0, 0, 0)
+                hrp.Velocity = Vector3.new(0, 0, 0)
             end
         end
-    end
-
-    -- إضافة زر التبديل للواجهة
-    Tab:AddToggle("مضاد التطيير / Anti-Fling", function(active)
-        toggleAntiFling(active)
-        
-        -- إظهار الإشعار المزدوج على الشاشة عند التفعيل فقط
-        if active then
-            Notify(
-                "🛡️ تم تفعيل حماية الشبح (Anti-Fling)",
-                "🛡️ Anti-Fling activated"
-            )
-        end
-        -- إذا تم إيقاف الميزة (active = false) لن يظهر أي إشعار وتنطفئ بصمت
     end)
 end
