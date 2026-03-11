@@ -1,40 +1,45 @@
--- [[ Cryptic Hub - Suggestions & Feedback Module ]]
--- المطور: مدمج | قسم إرسال الاقتراحات إلى الديسكورد
+-- [[ Cryptic Hub - Suggestions & Feedback Module (Bilingual) ]]
+-- المطور: مدمج | قسم إرسال الاقتراحات إلى الديسكورد (عربي/إنجليزي)
 
 return function(Tab, UI)
     local userMessage = ""
 
-    Tab:AddParagraph("💡 قسم الاقتراحات والشكاوي\nاكتب رسالتك براحتك لتحت.")
+    -- نص توضيحي مزدوج اللغة
+    Tab:AddParagraph("💡 قسم الاقتراحات والشكاوى / Suggestions & Feedback\nاكتب رسالتك هنا بكل حرية، ستصل للمطور مباشرة.\nWrite your message freely here, it will be sent directly to the developer.")
 
     Tab:AddLine()
 
-    -- استدعاء المربع الكبير الجديد اللي ضفناه
-    local MessageInput = Tab:AddLargeInput("الرسالة / Message", "اكتب اقتراحك، أو بلغ عن مشكلة هنا...", function(text)
-        userMessage = text
-    end)
+    -- مربع الكتابة مزدوج اللغة
+    local MessageInput = Tab:AddLargeInput(
+        "الرسالة / Message", 
+        "اكتب اقتراحك أو مشكلتك هنا... / Write your suggestion or bug here...", 
+        function(text)
+            userMessage = text
+        end
+    )
 
-    -- زر الإرسال والحذف التلقائي
-    Tab:AddButton("🚀 إرسال الرسالة / Send", function()
+    -- زر الإرسال مزدوج اللغة
+    Tab:AddButton("🚀 إرسال الرسالة / Send Message", function()
         -- التأكد أن اللاعب كتب رسالة صالحة
         if userMessage == "" or string.len(userMessage) < 3 then
             pcall(function()
                 game:GetService("StarterGui"):SetCore("SendNotification", {
                     Title = "Cryptic Hub ⚠️",
-                    Text = "الرجاء كتابة رسالة صالحة قبل الإرسال!\nPlease write a valid message!",
+                    Text = "الرجاء كتابة رسالة صالحة!\nPlease write a valid message!",
                     Duration = 3
                 })
             end)
             return
         end
 
-        -- الإرسال للويب هوك الرابع (OnSuggestion)
+        -- الإرسال للويب هوك (OnSuggestion)
         if getgenv().CrypticLog then
             getgenv().CrypticLog(
                 "OnSuggestion", 
-                "💡 رسالة / اقتراح جديد من لاعب", 
+                "💡 رسالة جديدة / New Message", 
                 16766720, -- لون ذهبي
                 {
-                    {name = "📝 محتوى الرسالة:", value = "```\n" .. userMessage .. "\n```", inline = false}
+                    {name = "📝 محتوى الرسالة / Message Content:", value = "```\n" .. userMessage .. "\n```", inline = false}
                 }
             )
             
@@ -42,20 +47,20 @@ return function(Tab, UI)
             pcall(function()
                 game:GetService("StarterGui"):SetCore("SendNotification", {
                     Title = "Cryptic Hub ✅",
-                    Text = "تم إرسال رسالتك بنجاح، شكراً لدعمك!\nMessage sent successfully, Thank you!",
+                    Text = "تم الإرسال بنجاح، شكراً!\nSent successfully, Thank you!",
                     Duration = 5
                 })
             end)
             
-            -- [[ حذف الرسالة من المربع تلقائياً بعد الإرسال ]]
+            -- حذف الرسالة من المربع تلقائياً بعد الإرسال
             MessageInput.SetText("")
             userMessage = "" -- تصفير المتغير
         else
-            -- في حالة عدم وجود دالة الإرسال
+            -- في حالة خطأ الاتصال
             pcall(function()
                 game:GetService("StarterGui"):SetCore("SendNotification", {
                     Title = "Cryptic Hub ❌",
-                    Text = "حدث خطأ في الاتصال بالخادم.\nConnection error.",
+                    Text = "حدث خطأ في الاتصال.\nConnection error.",
                     Duration = 3
                 })
             end)
