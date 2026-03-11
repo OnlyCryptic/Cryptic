@@ -119,7 +119,7 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddToggle("Walk Fling / الدفع بالمشي", function(state)
+    Tab:AddToggle("Walk Fling / تطيير بالمشي", function(state)
         isToggleOn = state
 
         if state then
