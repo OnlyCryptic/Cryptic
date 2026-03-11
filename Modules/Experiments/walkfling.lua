@@ -17,7 +17,7 @@ return function(Tab, UI)
         pcall(function()
             game:GetService("StarterGui"):SetCore("SendNotification", {
                 Title = "Cryptic Hub ⚠️",
-                Text = "تحذير: لا تلمس الجدران، المس اللاعبين فقط! (يفضل تفعيل الطيران)\nWarning: Don't touch walls, touch players only! (Fly recommended)",
+                Text = "المس اللاعبين فقط! (يفضل تفعيل الطيران)\ntouch players only! (Fly recommended)",
                 Duration = 15
             })
         end)
