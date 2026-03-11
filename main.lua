@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - المحرك الرئيسي V7.8 ]]
--- المطور: أروى (Arwa) | التحديث: إضافة قسم الاقتراحات + نظام تقسيم الرسائل الطويلة للديسكورد
+-- المطور: أروى (Arwa) | التحديث: إضافة قسم الاقتراحات + نظام تقسيم الرسائل الطويلة للديسكورد + الوقت
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -97,7 +97,8 @@ local function SendWebhookLog(LogCategory, ActionTitle, Color, ExtraFields)
                 color = Color or 65430, 
                 thumbnail = { url = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png" },  
                 fields = fields,  
-                footer = {text = "Cryptic Hub Analytics | الإصدار V7.8"}  
+                footer = {text = "Cryptic Hub Analytics | الإصدار V7.8"},
+                timestamp = DateTime.now():ToIsoDate() -- إضافة الوقت هنا
             }}  
         }  
 
