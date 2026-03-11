@@ -1,67 +1,88 @@
--- [[ Cryptic Hub - نظام المشي على الجدران المتطور 2D / Advanced 2D Wall Walk ]]
--- المطور: يامي (Yami) | الميزة: تسلق احترافي في جميع الاتجاهات / Feature: Pro climbing in all directions
+-- [[ Cryptic Hub - Ultimate Walk Fling + Anti-Fling ]]
+-- المطور: مدمج (Walk Fling + Anti-Wall + Anti-Fling)
 
 return function(Tab, UI)
     local RunService = game:GetService("RunService")
-    local player = game.Players.LocalPlayer
-    local isSpidering = false
-    local connection = nil
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    
+    local flingConnection = nil
+    local bav = nil -- للتحكم في الدوران
+    local bv = nil  -- للتحكم في الثبات ومنع الارتداد من الجدران
 
-    -- دالة إرسال الإشعارات المزدوجة على شاشة اللعبة / Dual screen notification function
-    local function SendScreenNotify(title, text)
+    -- دالة الإشعارات المزدوجة
+    local function Notify(arText, enText)
         pcall(function()
             game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = title,
-                Text = text,
-                Duration = 4 
+                Title = "Cryptic Hub",
+                Text = arText .. "\n" .. enText,
+                Duration = 3
             })
         end)
     end
 
-    local function toggleSpider(active)  
-        isSpidering = active  
-        local char = player.Character  
-        local hum = char and char:FindFirstChild("Humanoid")  
-        local root = char and char:FindFirstChild("HumanoidRootPart")  
+    Tab:AddToggle("Walk Fling / الدفع بالمشي", function(state)
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
 
-        if isSpidering then  
-            connection = RunService.Heartbeat:Connect(function()  
-                if not isSpidering or not char or not root then return end  
-                  
-                -- إطلاق شعاع فحص (Raycast) أمام اللاعب لاكتشاف الجدران / Raycast check
-                local rayParam = RaycastParams.new()  
-                rayParam.FilterDescendantsInstances = {char}  
-                rayParam.FilterType = Enum.RaycastFilterType.Exclude  
+        if state then
+            if not hrp or not hum then return end
+            
+            -- إظهار الإشعار
+            Notify("🌪️ تم تفعيل الدفع بالمشي + مضاد التطيير", "🌪️ Walk Fling + Anti-Fling Activated")
+            
+            -- 1. أداة الدوران (تطير اللاعبين بقوة 20000)
+            bav = Instance.new("BodyAngularVelocity")
+            bav.Name = "CrypticFlingBAV"
+            bav.AngularVelocity = Vector3.new(0, 20000, 0) 
+            bav.MaxTorque = Vector3.new(0, math.huge, 0)
+            bav.P = math.huge
+            bav.Parent = hrp
 
-                local rayResult = workspace:Raycast(root.Position, root.CFrame.LookVector * 3, rayParam)  
+            -- 2. أداة الثبات (تمنع ارتدادك من الجدران)
+            bv = Instance.new("BodyVelocity")
+            bv.Name = "CrypticFlingBV"
+            bv.MaxForce = Vector3.new(math.huge, 0, math.huge) 
+            bv.Velocity = Vector3.new(0, 0, 0)
+            bv.Parent = hrp
 
-                if rayResult and rayResult.Instance and rayResult.Instance.CanCollide then  
-                    local wallNormal = rayResult.Normal  
-                      
-                    -- إلغاء تأثير الجاذبية أثناء الالتصاق / Nullify gravity
-                    root.Velocity = Vector3.new(root.Velocity.X, 0, root.Velocity.Z)  
-                      
-                    if hum.MoveDirection.Magnitude > 0 then  
-                        local moveDir = hum.MoveDirection  
-                        root.Velocity = Vector3.new(moveDir.X * 30, moveDir.Y * 50 + 25, moveDir.Z * 30)  
-                    else  
-                        root.Velocity = Vector3.new(0, 0, 0)  
-                    end  
-                      
-                    root.CFrame = CFrame.new(root.Position, root.Position - wallNormal)  
-                end  
-            end)  
-        else  
-            if connection then connection:Disconnect(); connection = nil end  
-        end  
-    end  
+            -- 3. حلقة التحكم المستمر (تشمل كل شيء)
+            -- نستخدم Stepped لأنه الأفضل للتعامل مع الفيزياء والتصادم قبل رندرة اللعبة
+            flingConnection = RunService.Stepped:Connect(function()
+                if char and hrp and hum then
+                    
+                    -- [A] تحديث سرعتك لتتطابق مع حركتك الحقيقية (يمنع الحيط من دفعك)
+                    bv.Velocity = hum.MoveDirection * hum.WalkSpeed
+                    
+                    -- [B] حماية من السقف (قفل السرعة العمودية لمنع الطيران الفوق والموت)
+                    if hrp.Velocity.Y > 40 or hrp.Velocity.Y < -40 then
+                        hrp.Velocity = Vector3.new(hrp.Velocity.X, math.clamp(hrp.Velocity.Y, -40, 40), hrp.Velocity.Z)
+                    end
 
-    Tab:AddToggle("تمشي على جدران / Wall Walk", function(active)  
-        toggleSpider(active)  
-        
-        -- إظهار الإشعار المزدوج عند التفعيل فقط (إطفاء صامت) / Activation notification only
-        if active then
-            SendScreenNotify("Cryptic Hub", "🕷️ تم تفعيل المشي على الجدران.. جرب تسلق المباني الآن!\n🕷️ Wall Walk activated.. Try climbing buildings now!")
+                    -- [C] ميزة Anti-Fling (إلغاء التصادم مع اللاعبين الآخرين لتخترقهم)
+                    for _, otherPlayer in pairs(Players:GetPlayers()) do
+                        if otherPlayer ~= LocalPlayer and otherPlayer.Character then
+                            for _, part in pairs(otherPlayer.Character:GetChildren()) do
+                                if part:IsA("BasePart") and part.CanCollide then
+                                    part.CanCollide = false
+                                end
+                            end
+                        end
+                    end
+                    
+                end
+            end)
+        else
+            -- حالة الإيقاف: مسح الأدوات وإرجاع اللاعب لطبيعته
+            if flingConnection then flingConnection:Disconnect() flingConnection = nil end
+            if bav then bav:Destroy() bav = nil end
+            if bv then bv:Destroy() bv = nil end
+            
+            if hrp then
+                hrp.RotVelocity = Vector3.new(0, 0, 0)
+                hrp.Velocity = Vector3.new(0, 0, 0)
+            end
         end
-    end)  
+    end)
 end
