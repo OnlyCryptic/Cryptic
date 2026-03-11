@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - Ultimate Walk Fling + Auto Noclip + Auto Respawn ]]
--- المطور: مدمج (Walk Fling + Noclip + Anti-Fling)
+-- [[ Cryptic Hub - Ultimate Walk Fling + Auto Noclip ]]
+-- المطور: مدمج (Walk Fling + Noclip) | التحديث: دوران النصف العلوي فقط مع كاميرا ثابتة
 
 return function(Tab, UI)
     local RunService = game:GetService("RunService")
@@ -12,13 +12,13 @@ return function(Tab, UI)
     local bav = nil 
     local bv = nil  
 
-    -- دالة الإشعار (تظهر مرة واحدة فقط لمدة 15 ثانية)
+    -- دالة الإشعار
     local function NotifyWarning()
         pcall(function()
             game:GetService("StarterGui"):SetCore("SendNotification", {
                 Title = "Cryptic Hub ⚠️",
-                Text = "المس اللاعبين فقط! (يفضل تفعيل الطيران)\ntouch players only! (Fly recommended)",
-                Duration = 15
+                Text = "تم تفعيل الدفع بالنصف العلوي!\nالكاميرا ثابتة الآن.",
+                Duration = 10
             })
         end)
     end
@@ -29,48 +29,54 @@ return function(Tab, UI)
         
         local hrp = char:WaitForChild("HumanoidRootPart", 5)
         local hum = char:WaitForChild("Humanoid", 5)
-        if not hrp or not hum then return end
+        -- نحدد الجذع (النصف العلوي) بناءً على نوع الشخصية (R15 أو R6)
+        local torso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso")
+        
+        if not hrp or not hum or not torso then return end
 
         -- مسح الأدوات القديمة لتجنب التكرار
         if flingConnection then flingConnection:Disconnect() end
         if bav then bav:Destroy() end
         if bv then bv:Destroy() end
 
-        -- 1. أداة الدوران (بقوة 20000)
+        -- 1. أداة الدوران (نحطها في الجذع العلوي بدل الـ RootPart عشان الكاميرا ما تدور)
         bav = Instance.new("BodyAngularVelocity")
-        bav.Name = "CrypticFlingBAV"
-        bav.AngularVelocity = Vector3.new(0, 20000, 0) 
+        bav.Name = "CrypticUpperFlingBAV"
+        bav.AngularVelocity = Vector3.new(0, 25000, 0) -- سرعة دوران قوية
         bav.MaxTorque = Vector3.new(0, math.huge, 0)
         bav.P = math.huge
-        bav.Parent = hrp
+        bav.Parent = torso -- هنا السر!
 
-        -- 2. أداة الثبات (لإعطاء تحكم في X و Z)
+        -- 2. أداة الثبات (لإعطاء تحكم سلس في المشي X و Z)
         bv = Instance.new("BodyVelocity")
         bv.Name = "CrypticFlingBV"
         bv.MaxForce = Vector3.new(math.huge, 0, math.huge) 
         bv.Velocity = Vector3.new(0, 0, 0)
         bv.Parent = hrp
 
-        -- 3. حلقة التحكم المستمر (Stepped هو الأفضل لمنع التصادم)
+        -- 3. حلقة التحكم المستمر
         flingConnection = RunService.Stepped:Connect(function()
-            if char and hrp and hum and hum.Health > 0 then
+            if char and hrp and hum and torso and hum.Health > 0 then
                 
-                -- [A] تحديث السرعة لتتطابق مع الحركة
-                bv.Velocity = hum.MoveDirection * hum.WalkSpeed
+                -- [A] تحديث السرعة لتتطابق مع حركة اللاعب (تقدر تتحكم بحرية)
+                bv.Velocity = Vector3.new(hum.MoveDirection.X * hum.WalkSpeed, hrp.Velocity.Y, hum.MoveDirection.Z * hum.WalkSpeed)
                 
-                -- [B] حماية من السقف والقفز العشوائي
+                -- [B] تثبيت الـ RootPart تماماً عشان الكاميرا ما تهتز وتدور
+                hrp.RotVelocity = Vector3.new(0, 0, 0)
+
+                -- [C] حماية من السقف والقفز العشوائي عشان ما تقلتش
                 if hrp.Velocity.Y > 40 or hrp.Velocity.Y < -40 then
                     hrp.Velocity = Vector3.new(hrp.Velocity.X, math.clamp(hrp.Velocity.Y, -40, 40), hrp.Velocity.Z)
                 end
 
-                -- [C] Noclip تلقائي للاعب (اختراق الجدران وكل شيء)
+                -- [D] Noclip تلقائي للاعب
                 for _, part in pairs(char:GetDescendants()) do
                     if part:IsA("BasePart") and part.CanCollide then
                         part.CanCollide = false
                     end
                 end
 
-                -- [D] Noclip للاعبين الآخرين (Anti-Fling لاختراقهم وتطييرهم)
+                -- [E] Noclip للاعبين الآخرين (Anti-Fling)
                 for _, otherPlayer in pairs(Players:GetPlayers()) do
                     if otherPlayer ~= LocalPlayer and otherPlayer.Character then
                         for _, part in pairs(otherPlayer.Character:GetChildren()) do
@@ -94,10 +100,16 @@ return function(Tab, UI)
         local char = LocalPlayer.Character
         if char then
             local hrp = char:FindFirstChild("HumanoidRootPart")
+            local torso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso")
+            
             if hrp then
                 hrp.RotVelocity = Vector3.new(0, 0, 0)
                 hrp.Velocity = Vector3.new(0, 0, 0)
             end
+            if torso then
+                torso.RotVelocity = Vector3.new(0, 0, 0)
+            end
+            
             -- إرجاع التصادم للطبيعة
             for _, part in pairs(char:GetDescendants()) do
                 if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
@@ -107,29 +119,25 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddToggle("Walk Fling / الدفع بالمشي", function(state)
+    Tab:AddToggle("Walk Fling / الدفع .بالمشي", function(state)
         isToggleOn = state
 
         if state then
-            -- إرسال الإشعار لمرة واحدة ولمدة 15 ثانية
             NotifyWarning()
             
-            -- تشغيل الميزة على الشخصية الحالية
             if LocalPlayer.Character then
                 StartFling(LocalPlayer.Character)
             end
             
-            -- تفعيل خاصية: الترسبين بعد ثانيتين
             if not charAddedConnection then
                 charAddedConnection = LocalPlayer.CharacterAdded:Connect(function(newChar)
                     if isToggleOn then
-                        task.wait(2) -- الانتظار ثانيتين كما طلبت
+                        task.wait(2)
                         StartFling(newChar)
                     end
                 end)
             end
         else
-            -- إيقاف كل شيء
             StopFling()
             if charAddedConnection then
                 charAddedConnection:Disconnect()
