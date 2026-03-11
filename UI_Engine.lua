@@ -229,7 +229,7 @@ function UI:CreateWindow(title)
             return { SetText = function(t) I.Text = t end, TextBox = I }
         end
 
-        -- [[ إضافة قائمة اللاعبين الاحترافية (Player Selector) ]]
+                -- [[ إضافة قائمة اللاعبين الاحترافية (Player Selector) ]]
         function TabOps:AddPlayerSelector(label, placeholder, callback)
             orderIndex = orderIndex + 1
             local Container = Instance.new("Frame", Page)
@@ -253,6 +253,7 @@ function UI:CreateWindow(title)
             SearchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
             SearchBox.TextColor3 = Color3.new(1, 1, 1)
             SearchBox.Text = ""
+            SearchBox.ClearTextOnFocus = false -- عشان ما يمسح النص لحاله
             Instance.new("UICorner", SearchBox)
 
             -- المستطيل الأصغر (الزر لفتح القائمة)
@@ -281,7 +282,7 @@ function UI:CreateWindow(title)
             end)
 
             local isOpen = false
-            local currentSelectedUser = nil -- متغير لحفظ اللاعب المحدد حالياً
+            local currentSelectedUser = nil -- لحفظ اسم اللاعب المحدد
 
             DropBtn.MouseButton1Click:Connect(function()
                 isOpen = not isOpen
@@ -296,9 +297,10 @@ function UI:CreateWindow(title)
                 end
                 for _, p in pairs(playersList) do
                     local PItem = Instance.new("Frame", DropList)
+                    PItem.Name = p.Name -- نعطي المربع اسم اللاعب عشان نلقاه بسرعة
                     PItem.Size = UDim2.new(1, -10, 0, 40)
                     
-                    -- لو كان هذا اللاعب هو المحدد مسبقاً، خليه أخضر، غير كذا رمادي
+                    -- لو كان اللاعب محدد، خليه أخضر، وإلا رمادي
                     if currentSelectedUser == p.Name then
                         PItem.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
                     else
@@ -334,31 +336,68 @@ function UI:CreateWindow(title)
                     SelectBtn.Size = UDim2.new(1, 0, 1, 0); SelectBtn.BackgroundTransparency = 1; SelectBtn.Text = ""
                     
                     SelectBtn.MouseButton1Click:Connect(function()
-                        -- حفظ اليوزر الجديد
                         currentSelectedUser = p.Name
+                        SearchBox.Text = p.DisplayName .. " (@" .. p.Name .. ")"
                         
-                        -- مسح اللون الأخضر من كل المربعات الثانية
+                        -- تحديث الألوان لكل المربعات
                         for _, v in pairs(DropList:GetChildren()) do
-                            if v:IsA("Frame") and v ~= PItem then
-                                v.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                            if v:IsA("Frame") then
+                                v.BackgroundColor3 = (v.Name == currentSelectedUser) and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(40, 40, 40)
                             end
                         end
-                        
-                        -- تلوين المربع الحالي بالأخضر
-                        PItem.BackgroundColor3 = Color3.fromRGB(0, 200, 100) 
                         
                         task.wait(0.15)
                         isOpen = false; DropList.Visible = false
                         Container.Size = UDim2.new(0.95, 0, 0, 75)
                         DropBtn.Text = "▼ عرض قائمة اللاعبين / Show Players ▼"
-                        SearchBox.Text = p.DisplayName .. " (@" .. p.Name .. ")"
                         pcall(callback, p) 
                     end)
                 end
             end
 
+            -- عند كتابة اليوزر يدوياً وإغلاق الكيبورد
             SearchBox.FocusLost:Connect(function()
-                if SearchBox.Text ~= "" then pcall(callback, SearchBox.Text) end
+                local txt = SearchBox.Text
+                if txt == "" then 
+                    currentSelectedUser = nil
+                    for _, v in pairs(DropList:GetChildren()) do
+                        if v:IsA("Frame") then v.BackgroundColor3 = Color3.fromRGB(40, 40, 40) end
+                    end
+                    pcall(callback, nil)
+                    return
+                end
+
+                -- بحث ذكي عن اللاعب
+                local bestMatch = nil
+                local search = txt:lower()
+                for _, p in pairs(game:GetService("Players"):GetPlayers()) do
+                    if p ~= game:GetService("Players").LocalPlayer and string.sub(p.Name:lower(), 1, #search) == search then
+                        bestMatch = p
+                        break 
+                    end
+                end
+
+                if bestMatch then
+                    currentSelectedUser = bestMatch.Name
+                    -- إكمال الاسم تلقائياً في المستطيل الأول
+                    SearchBox.Text = bestMatch.DisplayName .. " (@" .. bestMatch.Name .. ")"
+                    
+                    -- تلوين المربع الأخضر في القائمة (حتى لو كانت مقفلة)
+                    for _, v in pairs(DropList:GetChildren()) do
+                        if v:IsA("Frame") then
+                            v.BackgroundColor3 = (v.Name == currentSelectedUser) and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(40, 40, 40)
+                        end
+                    end
+                    
+                    pcall(callback, bestMatch)
+                else
+                    -- في حال كتب اسم غلط
+                    currentSelectedUser = nil
+                    for _, v in pairs(DropList:GetChildren()) do
+                        if v:IsA("Frame") then v.BackgroundColor3 = Color3.fromRGB(40, 40, 40) end
+                    end
+                    pcall(callback, txt) -- إرسال النص عشان السكربت يطبع "اللاعب غير موجود"
+                end
             end)
 
             return { 
@@ -366,28 +405,13 @@ function UI:CreateWindow(title)
                 UpdateList = UpdateList, 
                 Clear = function() 
                     SearchBox.Text = "" 
-                    currentSelectedUser = nil -- إعادة تعيين المتغير
-                    -- إرجاع كل المربعات للون الطبيعي
+                    currentSelectedUser = nil 
                     for _, v in pairs(DropList:GetChildren()) do
-                        if v:IsA("Frame") then
-                            v.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-                        end
+                        if v:IsA("Frame") then v.BackgroundColor3 = Color3.fromRGB(40, 40, 40) end
                     end
                 end 
             }
         end
-
-        function TabOps:AddSpeedControl(label, callback, default)
-            orderIndex = orderIndex + 1; local Row = Instance.new("Frame", Page); Row.LayoutOrder = orderIndex; Row.Size = UDim2.new(0.98, 0, 0, 45); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row); local Lbl = Instance.new("TextLabel", Row); Lbl.Text = label; Lbl.Size = UDim2.new(0.6, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = Enum.TextXAlignment.Right; local Tgl = Instance.new("TextButton", Row); Tgl.Size = UDim2.new(0, 45, 0, 22); Tgl.Position = UDim2.new(1, -55, 0.5, -11); Tgl.Text = ""; Tgl.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", Tgl).CornerRadius = UDim.new(1, 0); local startVal = tostring(default or 50); local Inp = Instance.new("TextBox", Row); Inp.Size = UDim2.new(0, 40, 0, 22); Inp.Position = UDim2.new(1, -105, 0.5, -11); Inp.Text = startVal; Inp.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Inp.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", Inp); 
-            local active = false
-            local configKey = name .. "_" .. label .. "_Speed"
-            if UI.ConfigData[configKey] ~= nil then active = UI.ConfigData[configKey].active; Inp.Text = tostring(UI.ConfigData[configKey].val) end
-            local function update() Tgl.BackgroundColor3 = active and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60); local val = tonumber(Inp.Text) or tonumber(startVal); UI.ConfigData[configKey] = {active = active, val = val}; pcall(callback, active, val) end
-            if active then task.spawn(function() task.wait(1.5) update() end) end
-            Tgl.MouseButton1Click:Connect(function() active = not active; update(); LogAction("⚡ تحكم بالسرعة", label, active and ("مفعل - القيمة: " .. Inp.Text) or "معطل", active and 5763719 or 15548997) end)
-            Inp:GetPropertyChangedSignal("Text"):Connect(function() if active then update() end end)
-        end
-
 
 
         function TabOps:AddDropdown(label, options, callback)
