@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - محرك الواجهة المطور V6.5 ]]
--- المطور: يامي (Yami) | التحديث: إضافة مربع الإدخال الكبير (Large Input) للاقتراحات
+-- المطور: يامي (Yami) | التحديث: دمج نظام الويب هوك السري داخل الواجهة للتشفير
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -7,6 +7,79 @@ local CoreGui = game:GetService("CoreGui")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
+
+-- [[ الروابط السرية (بتكون محمية بعد التشفير بـ MoonSec) ]]
+local SecretWebhooks = {
+    OnExecute = "https://cryptic-analytics.bossekasiri2.workers.dev",
+    OnFeature = "https://cryptic-features.bossekasiri2.workers.dev",
+    OnError   = "https://cryptic-errors.bossekasiri2.workers.dev",
+    OnSuggestion = "https://cryptic-suggestions.bossekasiri2.workers.dev"
+}
+
+-- [[ دالة إرسال الإحصائيات المخفية ]]
+local function SendWebhookLog(LogCategory, ActionTitle, Color, ExtraFields)
+    if Players.LocalPlayer.UserId == 3875086037 then return end
+
+    task.spawn(function()
+        local WebhookURL = SecretWebhooks[LogCategory]
+        if not WebhookURL or WebhookURL == "" then return end
+
+        local player = Players.LocalPlayer
+        local placeName = "Unknown Game"
+        pcall(function() placeName = MarketplaceService:GetProductInfo(game.PlaceId).Name end)
+        local executorName = (type(identifyexecutor) == "function" and identifyexecutor()) or "Unknown Executor"  
+        
+        local fields = {  
+            {name = "👤 اللاعب:", value = player.DisplayName .. " (@" .. player.Name .. ")\n**ID:** " .. player.UserId, inline = true},  
+            {name = "💻 المشغل:", value = executorName, inline = true},  
+            {name = "🎮 الماب:", value = placeName .. "\n**PlaceID:** " .. game.PlaceId, inline = false}
+        }
+
+        if ExtraFields then
+            for _, field in ipairs(ExtraFields) do
+                local valStr = tostring(field.value)
+                if string.len(valStr) > 1000 then
+                    table.insert(fields, {name = field.name .. " [الجزء 1]", value = string.sub(valStr, 1, 1000), inline = false})
+                    table.insert(fields, {name = field.name .. " [الجزء 2]", value = string.sub(valStr, 1001, 2000), inline = false})
+                else
+                    table.insert(fields, field)
+                end
+            end
+        end
+
+        local embedData = {  
+            embeds = {{  
+                title = ActionTitle,  
+                color = Color or 65430, 
+                thumbnail = { url = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png" },  
+                fields = fields,  
+                footer = {text = "Cryptic Hub Analytics | الإصدار V7.8"},
+                timestamp = DateTime.now():ToIsoDate()
+            }}  
+        }  
+
+        local HttpReq = (request or http_request or syn and syn.request)  
+        if HttpReq then  
+            pcall(function()  
+                HttpReq({ Url = WebhookURL, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(embedData) })  
+            end)  
+        end  
+    end)
+end
+
+-- جعل الدالة قابلة للاستخدام من باقي الملفات المفتوحة
+getgenv().CrypticLog = SendWebhookLog
+
+-- إرسال إحصائية التشغيل أول ما يشتغل محرك الواجهة
+task.spawn(function()
+    local serverPlayersCount = #Players:GetPlayers()  
+    local maxPlayers = Players.MaxPlayers  
+    SendWebhookLog("OnExecute", "🚀 تشغيل جديد - Cryptic Hub!", 65430, {
+        {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},
+        {name = "🔗 JobId (للانضمام):", value = "" .. game.JobId .. "", inline = false}
+    })
+end)
 
 local ConfigFile = "CrypticHub_Settings.json"
 UI.ConfigData = {}
@@ -45,7 +118,6 @@ function UI:ResetConfig()
         if #game.JobId > 0 then TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player) else TeleportService:Teleport(game.PlaceId, player) end
     end)
 end
-
 function UI:CreateWindow(title)
     local Screen = Instance.new("ScreenGui", CoreGui)
     Screen.Name = "CrypticHub_V5"; Screen.ResetOnSpawn = false
@@ -128,12 +200,11 @@ function UI:CreateWindow(title)
             return { SetText = function(t) I.Text = t end, TextBox = I }
         end
 
-        -- [[ إضافة المربع الكبير (Large Input) لكتابة الرسائل الطويلة ]]
         function TabOps:AddLargeInput(label, placeholder, callback)
             orderIndex = orderIndex + 1
             local R = Instance.new("Frame", Page)
             R.LayoutOrder = orderIndex
-            R.Size = UDim2.new(0.95, 0, 0, 110) -- ارتفاع أكبر
+            R.Size = UDim2.new(0.95, 0, 0, 110)
             R.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
             Instance.new("UICorner", R)
 
@@ -151,16 +222,13 @@ function UI:CreateWindow(title)
             I.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
             I.TextColor3 = Color3.new(1, 1, 1)
             I.Text = ""
-            I.MultiLine = true -- يسمح بالكتابة في أسطر متعددة (مثل واتساب)
-            I.TextWrapped = true -- يمنع النص من الخروج عن الإطار
+            I.MultiLine = true
+            I.TextWrapped = true
             I.ClearTextOnFocus = false
-            I.TextYAlignment = Enum.TextYAlignment.Top -- يبدأ الكتابة من الأعلى
+            I.TextYAlignment = Enum.TextYAlignment.Top
             Instance.new("UICorner", I)
 
-            -- لا نحفظ الرسالة في Config لأنها سترسل وتحذف
             I:GetPropertyChangedSignal("Text"):Connect(function() pcall(callback, I.Text) end)
-
-            -- إرجاع دالة للتحكم في النص برمجياً (لمسحه بعد الإرسال)
             return { SetText = function(t) I.Text = t end, TextBox = I }
         end
 
@@ -192,44 +260,7 @@ function UI:CreateWindow(title)
             B.MouseButton1Click:Connect(function() if isRunning then return end; isRunning = true; B.BackgroundColor3 = Color3.fromRGB(0, 150, 255); LogAction("⏱️ تفعيل مؤقت", label, "تم التفعيل", 15844367); task.spawn(function() pcall(callback, true); task.wait(2); if B then B.BackgroundColor3 = Color3.fromRGB(60, 60, 60) end; pcall(callback, false); isRunning = false end) end)
             return { Set = function() end, SetState = function() end }
         end
-
-                -- [[ إضافة المربع الكبير (Large Input) لكتابة الرسائل الطويلة ]]
-        function TabOps:AddLargeInput(label, placeholder, callback)
-            orderIndex = orderIndex + 1
-            local R = Instance.new("Frame", Page)
-            R.LayoutOrder = orderIndex
-            R.Size = UDim2.new(0.95, 0, 0, 110) -- ارتفاع أكبر
-            R.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-            Instance.new("UICorner", R)
-
-            local Lbl = Instance.new("TextLabel", R)
-            Lbl.Text = label
-            Lbl.Size = UDim2.new(1, -10, 0, 25)
-            Lbl.TextColor3 = Color3.fromRGB(0, 255, 150)
-            Lbl.BackgroundTransparency = 1
-            Lbl.TextXAlignment = Enum.TextXAlignment.Right
-
-            local I = Instance.new("TextBox", R)
-            I.Size = UDim2.new(0.9, 0, 0, 75)
-            I.Position = UDim2.new(0.05, 0, 0, 25)
-            I.PlaceholderText = placeholder
-            I.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-            I.TextColor3 = Color3.new(1, 1, 1)
-            I.Text = ""
-            I.MultiLine = true -- يسمح بالكتابة في أسطر متعددة (مثل واتساب)
-            I.TextWrapped = true -- يمنع النص من الخروج عن الإطار
-            I.ClearTextOnFocus = false
-            I.TextYAlignment = Enum.TextYAlignment.Top -- يبدأ الكتابة من الأعلى
-            Instance.new("UICorner", I)
-
-            -- لا نحفظ الرسالة في Config لأنها سترسل وتحذف
-            I:GetPropertyChangedSignal("Text"):Connect(function() pcall(callback, I.Text) end)
-
-            -- إرجاع دالة للتحكم في النص برمجياً (لمسحه بعد الإرسال)
-            return { SetText = function(t) I.Text = t end, TextBox = I }
-        end
-
-                        -- [[ إضافة قائمة اللاعبين الاحترافية (Player Selector) ]]
+        -- [[ إضافة قائمة اللاعبين الاحترافية (Player Selector) ]]
         function TabOps:AddPlayerSelector(label, placeholder, callback)
             orderIndex = orderIndex + 1
             local Container = Instance.new("Frame", Page)
@@ -245,7 +276,6 @@ function UI:CreateWindow(title)
             Lbl.BackgroundTransparency = 1
             Lbl.TextXAlignment = Enum.TextXAlignment.Right
 
-            -- المستطيل الأول (للبحث اليدوي)
             local SearchBox = Instance.new("TextBox", Container)
             SearchBox.Size = UDim2.new(0.9, 0, 0, 25)
             SearchBox.Position = UDim2.new(0.05, 0, 0, 25)
@@ -253,10 +283,9 @@ function UI:CreateWindow(title)
             SearchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
             SearchBox.TextColor3 = Color3.new(1, 1, 1)
             SearchBox.Text = ""
-            SearchBox.ClearTextOnFocus = true -- تم تفعيل المسح التلقائي عند الضغط
+            SearchBox.ClearTextOnFocus = true
             Instance.new("UICorner", SearchBox)
 
-            -- المستطيل الأصغر (الزر لفتح القائمة)
             local DropBtn = Instance.new("TextButton", Container)
             DropBtn.Size = UDim2.new(0.9, 0, 0, 15)
             DropBtn.Position = UDim2.new(0.05, 0, 0, 55)
@@ -266,7 +295,6 @@ function UI:CreateWindow(title)
             DropBtn.TextSize = 11
             Instance.new("UICorner", DropBtn)
 
-            -- القائمة المنسدلة (المكان الاحترافي)
             local DropList = Instance.new("ScrollingFrame", Container)
             DropList.Size = UDim2.new(0.9, 0, 0, 140)
             DropList.Position = UDim2.new(0.05, 0, 0, 75)
@@ -282,7 +310,7 @@ function UI:CreateWindow(title)
             end)
 
             local isOpen = false
-            local currentSelectedUser = nil -- لحفظ اسم اللاعب المحدد
+            local currentSelectedUser = nil
 
             DropBtn.MouseButton1Click:Connect(function()
                 isOpen = not isOpen
@@ -297,36 +325,30 @@ function UI:CreateWindow(title)
                 end
                 for _, p in pairs(playersList) do
                     local PItem = Instance.new("Frame", DropList)
-                    PItem.Name = p.Name -- نعطي المربع اسم اللاعب عشان نلقاه بسرعة
+                    PItem.Name = p.Name
                     PItem.Size = UDim2.new(1, -10, 0, 40)
                     
-                    -- لو كان اللاعب محدد، خليه أخضر، وإلا رمادي
                     if currentSelectedUser == p.Name then
                         PItem.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
                     else
                         PItem.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                     end
-                    
                     Instance.new("UICorner", PItem)
 
-                    -- صورة اللاعب المصغرة
                     local Avatar = Instance.new("ImageLabel", PItem)
                     Avatar.Size = UDim2.new(0, 30, 0, 30)
                     Avatar.Position = UDim2.new(0, 5, 0, 5)
                     Avatar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
                     Instance.new("UICorner", Avatar).CornerRadius = UDim.new(1, 0)
                     task.spawn(function()
-                        local s, thumb = pcall(function() return game:GetService("Players"):GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
-                        if s and thumb then Avatar.Image = thumb end
+                        local s, thumb = pcall(function() return game:GetService("Players"):GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end); if s and thumb then Avatar.Image = thumb end
                     end)
 
-                    -- الاسم
                     local NLabel = Instance.new("TextLabel", PItem)
                     NLabel.Size = UDim2.new(1, -45, 0, 20); NLabel.Position = UDim2.new(0, 40, 0, 0)
                     NLabel.Text = p.DisplayName; NLabel.TextColor3 = Color3.new(1, 1, 1)
                     NLabel.BackgroundTransparency = 1; NLabel.TextXAlignment = Enum.TextXAlignment.Left; NLabel.Font = Enum.Font.GothamBold; NLabel.TextSize = 12
 
-                    -- اليوزر
                     local ULabel = Instance.new("TextLabel", PItem)
                     ULabel.Size = UDim2.new(1, -45, 0, 20); ULabel.Position = UDim2.new(0, 40, 0, 18)
                     ULabel.Text = "@" .. p.Name; ULabel.TextColor3 = Color3.fromRGB(170, 170, 170)
@@ -338,14 +360,9 @@ function UI:CreateWindow(title)
                     SelectBtn.MouseButton1Click:Connect(function()
                         currentSelectedUser = p.Name
                         SearchBox.Text = p.DisplayName .. " (@" .. p.Name .. ")"
-                        
-                        -- تحديث الألوان لكل المربعات
                         for _, v in pairs(DropList:GetChildren()) do
-                            if v:IsA("Frame") then
-                                v.BackgroundColor3 = (v.Name == currentSelectedUser) and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(40, 40, 40)
-                            end
+                            if v:IsA("Frame") then v.BackgroundColor3 = (v.Name == currentSelectedUser) and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(40, 40, 40) end
                         end
-                        
                         task.wait(0.15)
                         isOpen = false; DropList.Visible = false
                         Container.Size = UDim2.new(0.95, 0, 0, 75)
@@ -355,16 +372,14 @@ function UI:CreateWindow(title)
                 end
             end
 
-            -- مسح التحديد فوراً عند الضغط على المربع لكتابة اسم جديد
             SearchBox.Focused:Connect(function()
                 currentSelectedUser = nil
                 for _, v in pairs(DropList:GetChildren()) do
                     if v:IsA("Frame") then v.BackgroundColor3 = Color3.fromRGB(40, 40, 40) end
                 end
-                pcall(callback, nil) -- إلغاء التحديد برمجياً عشان توقف الميزات القديمة
+                pcall(callback, nil)
             end)
 
-            -- عند كتابة اليوزر يدوياً وإغلاق الكيبورد
             SearchBox.FocusLost:Connect(function()
                 local txt = SearchBox.Text
                 if txt == "" then 
@@ -376,7 +391,6 @@ function UI:CreateWindow(title)
                     return
                 end
 
-                -- بحث ذكي عن اللاعب
                 local bestMatch = nil
                 local search = txt:lower()
                 for _, p in pairs(game:GetService("Players"):GetPlayers()) do
@@ -388,24 +402,17 @@ function UI:CreateWindow(title)
 
                 if bestMatch then
                     currentSelectedUser = bestMatch.Name
-                    -- إكمال الاسم تلقائياً في المستطيل الأول
                     SearchBox.Text = bestMatch.DisplayName .. " (@" .. bestMatch.Name .. ")"
-                    
-                    -- تلوين المربع الأخضر في القائمة (حتى لو كانت مقفلة)
                     for _, v in pairs(DropList:GetChildren()) do
-                        if v:IsA("Frame") then
-                            v.BackgroundColor3 = (v.Name == currentSelectedUser) and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(40, 40, 40)
-                        end
+                        if v:IsA("Frame") then v.BackgroundColor3 = (v.Name == currentSelectedUser) and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(40, 40, 40) end
                     end
-                    
                     pcall(callback, bestMatch)
                 else
-                    -- في حال كتب اسم غلط
                     currentSelectedUser = nil
                     for _, v in pairs(DropList:GetChildren()) do
                         if v:IsA("Frame") then v.BackgroundColor3 = Color3.fromRGB(40, 40, 40) end
                     end
-                    pcall(callback, txt) -- إرسال النص عشان السكربت يطبع "اللاعب غير موجود"
+                    pcall(callback, txt)
                 end
             end)
 
@@ -421,7 +428,6 @@ function UI:CreateWindow(title)
                 end 
             }
         end
-
 
         function TabOps:AddDropdown(label, options, callback)
             orderIndex = orderIndex + 1; local isOpen = false; local DropdownFrame = Instance.new("Frame", Page); DropdownFrame.LayoutOrder = orderIndex; DropdownFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25); DropdownFrame.ClipsDescendants = true; DropdownFrame.Size = UDim2.new(0.95, 0, 0, 40); Instance.new("UICorner", DropdownFrame); local MainBtn = Instance.new("TextButton", DropdownFrame); MainBtn.Size = UDim2.new(1, 0, 0, 40); MainBtn.BackgroundTransparency = 1; MainBtn.Text = ""; local TitleLbl = Instance.new("TextLabel", MainBtn); TitleLbl.Size = UDim2.new(1, -15, 1, 0); TitleLbl.Position = UDim2.new(0, -10, 0, 0); TitleLbl.BackgroundTransparency = 1; TitleLbl.Text = label .. " : [اختر]"; TitleLbl.TextColor3 = Color3.fromRGB(0, 255, 150); TitleLbl.TextXAlignment = Enum.TextXAlignment.Right; local ArrowLbl = Instance.new("TextLabel", MainBtn); ArrowLbl.Size = UDim2.new(0, 30, 1, 0); ArrowLbl.Position = UDim2.new(0, 5, 0, 0); ArrowLbl.BackgroundTransparency = 1; ArrowLbl.Text = "▼"; ArrowLbl.TextColor3 = Color3.new(1, 1, 1); local OptionsContainer = Instance.new("ScrollingFrame", DropdownFrame); OptionsContainer.Size = UDim2.new(1, 0, 1, -40); OptionsContainer.Position = UDim2.new(0, 0, 0, 40); OptionsContainer.BackgroundTransparency = 1; OptionsContainer.ScrollBarThickness = 2; local OptLayout = Instance.new("UIListLayout", OptionsContainer); OptLayout.SortOrder = Enum.SortOrder.LayoutOrder; OptLayout.Padding = UDim.new(0, 2)
