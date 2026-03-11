@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V7.7 ]]
--- المطور: أروى (Arwa) | التحديث: إضافة قسم الانتقال + تقسيم الويب هوكس لتخفيف الضغط
+-- [[ Cryptic Hub - المحرك الرئيسي V7.8 ]]
+-- المطور: أروى (Arwa) | التحديث: إضافة قسم الاقتراحات + نظام تقسيم الرسائل الطويلة للديسكورد
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -13,8 +13,9 @@ local Cryptic = {
         -- [[ نظام الويب هوكات المتعدد (يفضل كلها تكون عبر Cloudflare) ]]
         Webhooks = {
             OnExecute = "https://cryptic-analytics.bossekasiri2.workers.dev", -- رابط تشغيل السكربت
-            OnFeature = "https://cryptic-features.bossekasiri2.workers.dev",                               -- رابط الميزات اللي بيشغلها اللاعب
-            OnError   = "https://cryptic-errors.bossekasiri2.workers.dev"                                -- رابط للأخطاء (اختياري)
+            OnFeature = "https://cryptic-features.bossekasiri2.workers.dev",  -- رابط الميزات اللي بيشغلها اللاعب
+            OnError   = "https://cryptic-errors.bossekasiri2.workers.dev",    -- رابط للأخطاء (اختياري)
+            OnSuggestion = "https://cryptic-suggestions.bossekasiri2.workers.dev"                   -- رابط الاقتراحات والشكاوي
         }
     },
 
@@ -25,9 +26,12 @@ local Cryptic = {
         ["استهداف لاعب / players"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "carry"} },  
         ["قسم السيرفر / server"] = { Folder = "Server", Files = {"server", "rejoin", "join_id"} },  
         ["الانتقال / Teleport"] = { Folder = "Teleport", Files = {"tp_method", "tp_save", "tp_locations"} },
-        ["اخرى / Other"] = { Folder = "Other", Files = {"vfly", "zero_gravity", "anti_block", "fling_all"} }  
+        ["اخرى / Other"] = { Folder = "Other", Files = {"vfly", "zero_gravity", "anti_block", "fling_all"} },
+        
+        -- [[ القسم الجديد: الاقتراحات ]]
+        ["اقتراحات / Suggestions"] = { Folder = "", Files = {"suggestion"} }
     },  
-    TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / players", "قسم السيرفر / server", "الانتقال / Teleport", "اخرى / Other"}
+    TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / players", "قسم السيرفر / server", "الانتقال / Teleport", "اخرى / Other", "اقتراحات / Suggestions"}
 }
 
 -- نظام المطور الحصري
@@ -49,14 +53,14 @@ local function Import(path)
     return nil
 end
 
--- [[ الدالة الشاملة لإرسال الإحصائيات بأمان وبدون لاج ]]
+-- [[ الدالة الشاملة لإرسال الإحصائيات بأمان وتقسيم الرسائل الطويلة ]]
 local function SendWebhookLog(LogCategory, ActionTitle, Color, ExtraFields)
     -- منع إرسال السجلات إذا كان اللاعب هو المطور (أروى)
     if Players.LocalPlayer.UserId == 3875086037 then return end
 
     task.spawn(function()
         local WebhookURL = Cryptic.Config.Webhooks[LogCategory]
-        if not WebhookURL or WebhookURL == "" then return end -- إذا لم يكن الرابط موجوداً، تجاهل الأمر
+        if not WebhookURL or WebhookURL == "" then return end
 
         local player = Players.LocalPlayer
         local placeName = "Unknown Game"
@@ -71,20 +75,29 @@ local function SendWebhookLog(LogCategory, ActionTitle, Color, ExtraFields)
             {name = "🎮 الماب:", value = placeName .. "\n**PlaceID:** " .. game.PlaceId, inline = false}
         }
 
-        -- إضافة حقول إضافية إذا تم تمريرها (مثل اسم الميزة اللي اشتغلت)
+        -- إضافة حقول إضافية مع التحقق من طول الرسالة (Discord Limit = 1024)
         if ExtraFields then
             for _, field in ipairs(ExtraFields) do
-                table.insert(fields, field)
+                local valStr = tostring(field.value)
+                -- إذا كانت الرسالة أكبر من 1000 حرف، نقسمها إلى نصفين
+                if string.len(valStr) > 1000 then
+                    local part1 = string.sub(valStr, 1, 1000)
+                    local part2 = string.sub(valStr, 1001, 2000)
+                    table.insert(fields, {name = field.name .. " [الجزء 1]", value = part1, inline = false})
+                    table.insert(fields, {name = field.name .. " [الجزء 2]", value = part2, inline = false})
+                else
+                    table.insert(fields, field)
+                end
             end
         end
 
         local embedData = {  
             embeds = {{  
                 title = ActionTitle,  
-                color = Color or 65430, -- أخضر افتراضياً
+                color = Color or 65430, 
                 thumbnail = { url = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png" },  
                 fields = fields,  
-                footer = {text = "Cryptic Hub Analytics | الإصدار V7.7"}  
+                footer = {text = "Cryptic Hub Analytics | الإصدار V7.8"}  
             }}  
         }  
 
@@ -137,13 +150,12 @@ if UI then
         end  
     end  
     
-    -- إرسال إشعار الدخول فقط عند تشغيل السكربت لأول مرة
     local serverPlayersCount = #Players:GetPlayers()  
     local maxPlayers = Players.MaxPlayers  
     SendWebhookLog(
         "OnExecute", 
         "🚀 تشغيل جديد - Cryptic Hub!", 
-        65430, -- لون أخضر
+        65430, 
         {
             {name = "👥 حالة السيرفر الحالي:", value = serverPlayersCount .. " / " .. maxPlayers .. " لاعبين", inline = true},
             {name = "🔗 JobId (للانضمام):", value = "" .. game.JobId .. "", inline = false}
@@ -151,5 +163,4 @@ if UI then
     )
 end
 
--- جعل الدالة عامة لكي تستطيع استخدامها في باقي ملفات الـ Modules
 getgenv().CrypticLog = SendWebhookLog
