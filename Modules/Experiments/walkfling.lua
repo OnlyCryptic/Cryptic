@@ -1,4 +1,4 @@
--- [[ Cryptic Hub - Walk Fling Module ]]
+-- [[ Cryptic Hub - Walk Fling Module (Controllable) ]]
 return function(Tab, UI)
     local RunService = game:GetService("RunService")
     local Players = game:GetService("Players")
@@ -6,22 +6,22 @@ return function(Tab, UI)
     
     local flingConnection = nil
 
-    -- إضافة زر التفعيل والإيقاف داخل الهاب مباشرة
     Tab:AddToggle("Walk Fling / الدفع بالمشي", function(state)
         if state then
-            -- حالة التفعيل: تشغيل الدوران الخيالي
+            -- حالة التفعيل: الدوران على المحور Y فقط
             flingConnection = RunService.Stepped:Connect(function()
                 local char = LocalPlayer.Character
                 if char then
                     local hrp = char:FindFirstChild("HumanoidRootPart")
                     if hrp then
-                        -- السر الحقيقي ديال Fling: دوران بسرعة 50 ألف
-                        hrp.RotVelocity = Vector3.new(50000, 50000, 50000)
+                        -- ركز هنا: خلينا X و Z صفر، ودرنا 50000 غير فـ Y
+                        -- هادشي كيخليك واقف مقاد ومتحكم فالمشي/الطيران ديالك 100%
+                        hrp.RotVelocity = Vector3.new(0, 50000, 0)
                     end
                 end
             end)
         else
-            -- حالة الإيقاف: فصل الاتصال وإرجاع اللاعب لطبيعته
+            -- حالة الإيقاف: إرجاع اللاعب لطبيعته
             if flingConnection then
                 flingConnection:Disconnect()
                 flingConnection = nil
