@@ -138,7 +138,7 @@ if UI then
                 end  
                 
                 if nameOfTab == "معلومات / info" then
-                    tab:AddButton("💾 حفظ الإعدادات / save config", function()
+                    tab:AddButton("💾 حفظ الإعدادات / .save config", function()
                         pcall(function() UI:SaveConfig() end)
                     end)
 
