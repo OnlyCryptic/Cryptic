@@ -7,7 +7,7 @@ return function(Tab, UI)
     local flingLoop = nil
     local bav = nil
 
-    Tab:AddToggle("Walk Fling / الدفع بالمشي", function(state)
+    Tab:AddToggle("Walk Fling / .الدفع بالمشي", function(state)
         local char = LocalPlayer.Character
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
         local hum = char and char:FindFirstChildOfClass("Humanoid")
