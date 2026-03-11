@@ -229,7 +229,7 @@ function UI:CreateWindow(title)
             return { SetText = function(t) I.Text = t end, TextBox = I }
         end
 
-                -- [[ إضافة قائمة اللاعبين الاحترافية (Player Selector) ]]
+                        -- [[ إضافة قائمة اللاعبين الاحترافية (Player Selector) ]]
         function TabOps:AddPlayerSelector(label, placeholder, callback)
             orderIndex = orderIndex + 1
             local Container = Instance.new("Frame", Page)
@@ -253,7 +253,7 @@ function UI:CreateWindow(title)
             SearchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
             SearchBox.TextColor3 = Color3.new(1, 1, 1)
             SearchBox.Text = ""
-            SearchBox.ClearTextOnFocus = false -- عشان ما يمسح النص لحاله
+            SearchBox.ClearTextOnFocus = true -- تم تفعيل المسح التلقائي عند الضغط
             Instance.new("UICorner", SearchBox)
 
             -- المستطيل الأصغر (الزر لفتح القائمة)
@@ -354,6 +354,15 @@ function UI:CreateWindow(title)
                     end)
                 end
             end
+
+            -- مسح التحديد فوراً عند الضغط على المربع لكتابة اسم جديد
+            SearchBox.Focused:Connect(function()
+                currentSelectedUser = nil
+                for _, v in pairs(DropList:GetChildren()) do
+                    if v:IsA("Frame") then v.BackgroundColor3 = Color3.fromRGB(40, 40, 40) end
+                end
+                pcall(callback, nil) -- إلغاء التحديد برمجياً عشان توقف الميزات القديمة
+            end)
 
             -- عند كتابة اليوزر يدوياً وإغلاق الكيبورد
             SearchBox.FocusLost:Connect(function()
