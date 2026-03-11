@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - Ultimate Walk Fling (Anti-Wall + Auto Respawn) ]]
--- المطور: يامي (Yami) | التحديث: حل مشكلة الجدران + إعادة التفعيل بعد الموت
+-- [[ Cryptic Hub - Ultimate Walk Fling + Anti-Fling + Smart Wall Detection ]]
+-- المطور: مدمج (Walk Fling + Anti-Wall + Anti-Fling + Auto-Respawn)
 
 return function(Tab, UI)
     local RunService = game:GetService("RunService")
@@ -7,10 +7,13 @@ return function(Tab, UI)
     local LocalPlayer = Players.LocalPlayer
     
     local isFlinging = false
-    local flingLoop = nil
+    local flingConnection = nil
     local charAddedConnection = nil
+    local bav = nil -- للتحكم في الدوران
+    local bv = nil  -- للتحكم في الثبات
+    local isPaused = false -- متغير لمعرفة هل الدوران متوقف مؤقتاً
 
-    -- دالة الإشعارات
+    -- دالة الإشعارات المزدوجة
     local function Notify(arText, enText)
         pcall(function()
             game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -21,42 +24,49 @@ return function(Tab, UI)
         end)
     end
 
-    -- دالة إعداد الشخصية للطيران (يتم استدعاؤها في البداية وبعد كل ريسباون)
+    -- دالة التشغيل التي سيتم استدعاؤها في البداية وبعد كل ريسباون
     local function SetupFling(char)
         if not isFlinging then return end
         
-        -- انتظار تحميل أجزاء الشخصية
         local hrp = char:WaitForChild("HumanoidRootPart", 5)
         local hum = char:WaitForChild("Humanoid", 5)
         if not hrp or not hum then return end
 
-        -- تحويل اللاعب لكتلة لا ترتد نهائياً (تمنع الموت عند الاصطدام)
-        for _, part in ipairs(char:GetDescendants()) do
-            if part:IsA("BasePart") then
-                -- Density=100 (ثقيل جداً), Elasticity=0 (بدون ارتداد نهائياً)
-                part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 0, 0, 0)
-            end
-        end
+        -- مسح الأدوات القديمة لتجنب التكرار
+        if flingConnection then flingConnection:Disconnect() end
+        if bav then bav:Destroy() end
+        if bv then bv:Destroy() end
 
-        if flingLoop then flingLoop:Disconnect() end
-        
-        -- حلقة التحكم المستمر
-        flingLoop = RunService.Heartbeat:Connect(function()
+        -- 1. أداة الدوران (تطير اللاعبين)
+        bav = Instance.new("BodyAngularVelocity")
+        bav.Name = "CrypticFlingBAV"
+        bav.AngularVelocity = Vector3.new(0, 20000, 0) 
+        bav.MaxTorque = Vector3.new(0, math.huge, 0)
+        bav.P = math.huge
+        bav.Parent = hrp
+
+        -- 2. أداة الثبات (تمنع ارتدادك من الجدران)
+        bv = Instance.new("BodyVelocity")
+        bv.Name = "CrypticFlingBV"
+        bv.MaxForce = Vector3.new(math.huge, 0, math.huge) 
+        bv.Velocity = Vector3.new(0, 0, 0)
+        bv.Parent = hrp
+
+        isPaused = false
+
+        -- 3. حلقة التحكم المستمر
+        flingConnection = RunService.Stepped:Connect(function()
             if char and hrp and hum and hum.Health > 0 then
-                -- 1. الدوران المباشر (أفضل من BodyAngularVelocity لعدم التفاعل مع الجدران)
-                hrp.RotVelocity = Vector3.new(0, 25000, 0)
                 
-                -- 2. التحكم الصارم في السرعة لمنع الجدران أو السقف من دفعك
-                local moveDir = hum.MoveDirection
-                local walkSpeed = hum.WalkSpeed
+                -- [A] حرية الحركة: تحديث سرعتك لتتطابق مع حركتك الحقيقية
+                bv.Velocity = hum.MoveDirection * hum.WalkSpeed
                 
-                -- نحافظ على سرعة السقوط والقفز الطبيعية، لكن نحدها بين -50 و 50 لمنع الطيران الفوق
-                local safeYVelocity = math.clamp(hrp.Velocity.Y, -50, 50)
-                
-                -- إجبار الشخصية على التحرك فقط في الاتجاه الذي تريده أنت
-                hrp.Velocity = Vector3.new(moveDir.X * walkSpeed, safeYVelocity, moveDir.Z * walkSpeed)
+                -- [B] حماية السقف: قفل السرعة العمودية لمنع الطيران
+                if hrp.Velocity.Y > 40 or hrp.Velocity.Y < -40 then
+                    hrp.Velocity = Vector3.new(hrp.Velocity.X, math.clamp(hrp.Velocity.Y, -40, 40), hrp.Velocity.Z)
+                end
 
-                -- 3. ميزة Anti-Fling (اختراق اللاعبين لمنع ارتداد القوة لك)
+                -- [C] ميزة Anti-Fling: اختراق اللاعبين
                 for _, otherPlayer in pairs(Players:GetPlayers()) do
                     if otherPlayer ~= LocalPlayer and otherPlayer.Character then
                         for _, part in pairs(otherPlayer.Character:GetChildren()) do
@@ -66,13 +76,45 @@ return function(Tab, UI)
                         end
                     end
                 end
+
+                -- [D] الذكاء الاصطناعي للجدران: إيقاف الدوران لمدة ثانيتين عند الاصطدام
+                if not isPaused then
+                    -- تحديد اتجاه الفحص (أمام اللاعب أو في اتجاه مشيه)
+                    local checkDirection = (hum.MoveDirection.Magnitude > 0) and hum.MoveDirection or hrp.CFrame.LookVector
+                    
+                    local rayParams = RaycastParams.new()
+                    rayParams.FilterDescendantsInstances = {char}
+                    rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
+                    -- فحص مسافة 3.5 أمام اللاعب
+                    local hit = workspace:Raycast(hrp.Position, checkDirection * 3.5, rayParams)
+                    
+                    if hit and hit.Instance and hit.Instance.CanCollide then
+                        -- تم اكتشاف جدار! إيقاف الدوران فوراً
+                        isPaused = true
+                        if bav then bav.AngularVelocity = Vector3.new(0, 0, 0) end
+                        
+                        -- الانتظار ثانيتين ثم إعادة التشغيل
+                        task.spawn(function()
+                            task.wait(2)
+                            -- التحقق من أن الميزة ما زالت مفعلة واللاعب حي
+                            if isFlinging and bav and hum.Health > 0 then
+                                bav.AngularVelocity = Vector3.new(0, 20000, 0)
+                            end
+                            isPaused = false
+                        end)
+                    end
+                end
+                
             end
         end)
     end
 
-    -- دالة الإيقاف الكلي
+    -- دالة الإيقاف
     local function StopFling()
-        if flingLoop then flingLoop:Disconnect() flingLoop = nil end
+        if flingConnection then flingConnection:Disconnect() flingConnection = nil end
+        if bav then bav:Destroy() bav = nil end
+        if bv then bv:Destroy() bv = nil end
         
         local char = LocalPlayer.Character
         if char then
@@ -81,41 +123,30 @@ return function(Tab, UI)
                 hrp.RotVelocity = Vector3.new(0, 0, 0)
                 hrp.Velocity = Vector3.new(0, 0, 0)
             end
-            
-            -- إرجاع الخصائص الفيزيائية الافتراضية
-            for _, part in ipairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CustomPhysicalProperties = nil
-                end
-            end
         end
     end
 
-    Tab:AddToggle("Walk Fling / .الدفع بالمشي", function(state)
+    Tab:AddToggle("Walk Fling / الدفع بالمشي", function(state)
         isFlinging = state
         
         if state then
-            Notify("🌪️ تم تفعيل الدفع بالمشي (آمن 100%)", "🌪️ Walk Fling Activated")
+            Notify("🌪️ تم تفعيل الدفع بالمشي (المتطور)", "🌪️ Smart Walk Fling Activated")
             
-            -- تفعيل فوري للشخصية الحالية
             if LocalPlayer.Character then
                 SetupFling(LocalPlayer.Character)
             end
             
-            -- [[ الميزة الجديدة: إعادة التفعيل التلقائي بعد الموت (Respawn) ]]
+            -- تفعيل مراقب الترسبين
             if not charAddedConnection then
                 charAddedConnection = LocalPlayer.CharacterAdded:Connect(function(newChar)
                     if isFlinging then
-                        task.wait(1) -- الانتظار ثانية واحدة بعد الترسبين كما طلبت
+                        task.wait(1) -- ينتظر ثانية بعد الموت
                         SetupFling(newChar)
                     end
                 end)
             end
         else
-            -- حالة الإيقاف
             StopFling()
-            
-            -- فصل مراقب الترسبين
             if charAddedConnection then
                 charAddedConnection:Disconnect()
                 charAddedConnection = nil
