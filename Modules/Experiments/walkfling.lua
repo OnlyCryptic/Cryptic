@@ -6,7 +6,7 @@ return function(Tab, UI)
     
     local flingConnection = nil
 
-    Tab:AddToggle("Walk Fling / الدفع بالمشي", function(state)
+    Tab:AddToggle("Walk Fling / الدفع .بالمشي", function(state)
         if state then
             flingConnection = RunService.Stepped:Connect(function()
                 local char = LocalPlayer.Character
