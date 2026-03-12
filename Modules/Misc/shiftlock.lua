@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة الشيفت لوك للجوال V5 / Mobile Shift Lock ]]
--- المطور: يامي (Yami) | التحديث: إشعار تفعيل فقط + ترجمة مزدوجة / Update: Activation notify only + Dual language
+-- [[ Cryptic Hub - ميزة الشيفت لوك للجوال V6 / Mobile Shift Lock ]]
+-- المطور: يامي (Yami) | التحديث: نظام ذكي للجلوس + مكان جديد + دمج الأكواد
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -10,7 +10,9 @@ return function(Tab, UI)
     local Camera = workspace.CurrentCamera
     
     local ShiftLockActive = false
+    local WasActiveBeforeSitting = false -- المتغير الذكي لحفظ حالة الشفت لوك قبل الجلوس
     local Connection = nil
+    local SitConnection = nil
 
     -- دالة الإشعارات المزدوجة / Dual notification function
     local function Notify(arText, enText)
@@ -23,18 +25,14 @@ return function(Tab, UI)
         end)
     end
     
-    -- [[ 1. تصميم الواجهة (UI) - دائرة ميني وشفافة ]]
+    -- [[ 1. تصميم الواجهة (UI) - مكان جديد وإطار برتقالي ]]
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "CrypticShiftLock_V5"
+    ScreenGui.Name = "CrypticShiftLock_V6"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
-    local success, _ = pcall(function()
-        ScreenGui.Parent = game:GetService("CoreGui")
-    end)
-    if not success then
-        ScreenGui.Parent = lp:WaitForChild("PlayerGui")
-    end
+    local success, _ = pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
+    if not success then ScreenGui.Parent = lp:WaitForChild("PlayerGui") end
     ScreenGui.Enabled = false
 
     local ShiftButton = Instance.new("ImageButton")
@@ -42,8 +40,11 @@ return function(Tab, UI)
     ShiftButton.Parent = ScreenGui
     ShiftButton.BackgroundColor3 = Color3.fromRGB(0, 200, 80) -- أخضر البداية
     ShiftButton.BackgroundTransparency = 0.6 
-    ShiftButton.Position = UDim2.new(0.85, 0, 0.6, 0)
-    ShiftButton.Size = UDim2.new(0, 35, 0, 35)
+    
+    -- المكان الافتراضي الجديد (فوق زر القفز بناءً على صورتك)
+    ShiftButton.Position = UDim2.new(1, -75, 0.65, 0)
+    ShiftButton.Size = UDim2.new(0, 45, 0, 45) -- تكبير خفيف ليناسب اللمس بشكل أفضل
+    ShiftButton.AnchorPoint = Vector2.new(0.5, 0.5)
     ShiftButton.Image = "" 
     ShiftButton.ClipsDescendants = true
     
@@ -51,27 +52,26 @@ return function(Tab, UI)
     UICorner.CornerRadius = UDim.new(1, 0)
     UICorner.Parent = ShiftButton
     
+    -- الإطار البرتقالي 
     local UIStroke = Instance.new("UIStroke")
-    UIStroke.Color = Color3.fromRGB(255, 255, 255)
-    UIStroke.Transparency = 0.8
-    UIStroke.Thickness = 1
+    UIStroke.Color = Color3.fromRGB(255, 100, 0)
+    UIStroke.Transparency = 0.2
+    UIStroke.Thickness = 2.5
     UIStroke.Parent = ShiftButton
 
-    -- النص الداخلي (عربي وانجليزي)
+    -- النص الداخلي
     local TextLabel = Instance.new("TextLabel")
     TextLabel.Parent = ShiftButton
     TextLabel.BackgroundTransparency = 1
     TextLabel.Size = UDim2.new(1, 0, 1, 0)
     TextLabel.Font = Enum.Font.GothamBold
-    TextLabel.Text = "شيفت لوك\nShift Lock"
+    TextLabel.Text = "Shift\nLock"
     TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TextLabel.TextSize = 7
+    TextLabel.TextSize = 11
     TextLabel.TextWrapped = true
-    TextLabel.TextTransparency = 0.2
 
-    -- [[ 2. دالة التشغيل/الإيقاف ]]
-    local ToggleShiftLock
-    ToggleShiftLock = function(state)
+    -- [[ 2. دالة التشغيل/الإيقاف الأساسية ]]
+    local function UpdateShiftLock(state)
         ShiftLockActive = state
         local char = lp.Character
         local hum = char and char:FindFirstChildOfClass("Humanoid")
@@ -100,7 +100,34 @@ return function(Tab, UI)
         end
     end
 
-    -- [[ 3. نظام السحب واللمس الذكي ]]
+    -- [[ 3. نظام المراقبة الذكي للجلوس والنهوض ]]
+    local function MonitorSitting(char)
+        local hum = char:WaitForChild("Humanoid", 5)
+        if not hum then return end
+        
+        if SitConnection then SitConnection:Disconnect() end
+        SitConnection = hum:GetPropertyChangedSignal("Sit"):Connect(function()
+            if hum.Sit then
+                -- إذا جلس: احفظ الحالة وأطفئ الشفت لوك فوراً
+                if ShiftLockActive then
+                    WasActiveBeforeSitting = true
+                    UpdateShiftLock(false)
+                else
+                    WasActiveBeforeSitting = false
+                end
+            else
+                -- إذا نهض: أعد تشغيله فقط إذا كان شغال قبل الجلوس
+                if WasActiveBeforeSitting then
+                    UpdateShiftLock(true)
+                end
+            end
+        end)
+    end
+
+    if lp.Character then MonitorSitting(lp.Character) end
+    lp.CharacterAdded:Connect(MonitorSitting)
+
+    -- [[ 4. نظام السحب واللمس الذكي ]]
     local dragging, dragInput, dragStart, startPos
     local touchTime = 0 
     
@@ -114,8 +141,15 @@ return function(Tab, UI)
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
+                    -- إذا كانت ضغطة سريعة (أقل من 0.2 ثانية) نعتبرها كليك وليست سحب
                     if tick() - touchTime < 0.2 then
-                        ToggleShiftLock(not ShiftLockActive)
+                        local char = lp.Character
+                        local hum = char and char:FindFirstChildOfClass("Humanoid")
+                        -- منع التشغيل اليدوي إذا كان اللاعب جالساً
+                        if hum and hum.Sit then return end
+                        
+                        WasActiveBeforeSitting = not ShiftLockActive
+                        UpdateShiftLock(not ShiftLockActive)
                     end
                 end
             end)
@@ -129,16 +163,25 @@ return function(Tab, UI)
         end
     end)
 
-    -- [[ 4. زر التحكم في الواجهة الرئيسية ]]
+    -- [[ 5. زر التحكم في الواجهة الرئيسية ]]
     Tab:AddToggle("قفل شاشة / Shift Lock", function(state)
         ScreenGui.Enabled = state 
         if state then
-            ToggleShiftLock(true) 
-            -- إشعار التفعيل المزدوج فقط / Activation notify only
+            local char = lp.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            
+            -- إذا فعل الميزة من الواجهة وهو جالس، نحفظها كمفعلة لكن لا نشغلها إلا لما يقوم
+            if hum and hum.Sit then
+                WasActiveBeforeSitting = true
+                UpdateShiftLock(false)
+            else
+                WasActiveBeforeSitting = true
+                UpdateShiftLock(true) 
+            end
             Notify("✅ تم التفعيل! الزر متاح الآن على الشاشة.", "✅ Activated! Button is now available on screen.")
         else
-            ToggleShiftLock(false)
-            -- إيقاف صامت: لا توجد إشعارات هنا
+            WasActiveBeforeSitting = false
+            UpdateShiftLock(false)
         end
     end)
 end
