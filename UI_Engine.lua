@@ -260,7 +260,7 @@ function UI:CreateWindow(title)
             local DropList = Instance.new("ScrollingFrame", Container); DropList.Size = UDim2.new(0.9, 0, 0, 140); DropList.Position = UDim2.new(0.05, 0, 0, 75); DropList.BackgroundColor3 = Color3.fromRGB(30, 30, 30); DropList.Visible = false; DropList.ScrollBarThickness = 2; Instance.new("UICorner", DropList); local ListLayout = Instance.new("UIListLayout", DropList); ListLayout.Padding = UDim.new(0, 5); ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() DropList.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 5) end)
 
             local isOpen = false; local currentSelectedUser = nil
-            DropBtn.MouseButton1Click:Connect(function() isOpen = not isOpen; DropList.Visible = isOpen; Container.Size = isOpen and UDim2.new(0.95, 0, 0, 220) or UDim2.new(0.95, 0, 0, 75); DropBtn.Text = isOpen and "▲ إغلاق القائمة ▲" or "▼ عرض قائمة اللاعبين ▼" end)
+            DropBtn.MouseButton1Click:Connect(function() isOpen = not isOpen; DropList.Visible = isOpen; Container.Size = isOpen and UDim2.new(0.95, 0, 0, 220) or UDim2.new(0.95, 0, 0, 75); DropBtn.Text = isOpen and "▲ إغلاق القائمة Close list  ▲" or "▼ عرض قائمة اللاعبين Player list ▼" end)
 
             local function UpdateList(playersList)
                 for _, v in pairs(DropList:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
