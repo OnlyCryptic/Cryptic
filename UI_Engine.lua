@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - محرك الواجهة المطور V7.5 ]]
--- المطور: يامي (Yami) | التحديث: محرك كامل + نظام لغات احترافي + حماية ويب هوك
+-- [[ Cryptic Hub - محرك الواجهة المطور V8.0 ]]
+-- المطور: يامي (Yami) | التحديث: إصلاح القلتشات + انتظار تحميل اللغة + توافق الإحداثيات
 
 local UI = { Logger = nil } 
 local UserInputService = game:GetService("UserInputService")
@@ -23,7 +23,7 @@ UI.Languages = {
     }
 }
 
-UI.SelectedLang = "Arabic" -- اللغة الافتراضية
+UI.SelectedLang = "Arabic"
 
 function UI:GetText(key)
     if UI.Languages[UI.SelectedLang] and UI.Languages[UI.SelectedLang][key] then
@@ -138,10 +138,10 @@ function UI:ChangeLanguage(newLang)
     })
 end
 
--- [[ 5. محرك الواجهة ]]
+-- [[ 5. محرك الواجهة والانتظار ]]
 function UI:CreateWindow(title)
     local Screen = Instance.new("ScreenGui", CoreGui)
-    Screen.Name = "CrypticHub_V5"; Screen.ResetOnSpawn = false
+    Screen.Name = "CrypticHub_V8"; Screen.ResetOnSpawn = false
 
     if hasSavedData then
         local Callback = Instance.new("BindableFunction")
@@ -155,7 +155,9 @@ function UI:CreateWindow(title)
         pcall(function() game:GetService("StarterGui"):SetCore("SendNotification", { Title = "Cryptic Hub 🚀", Text = "تم تحميل إعداداتك / Config Loaded.", Duration = 10, Button1 = "حسناً", Button2 = "مسح / Reset", Callback = Callback }) end)
     end
 
-    -- [[ شاشة اختيار اللغة الاحترافية (تظهر أول مرة فقط) ]]
+    -- متغير للتحقق من اختيار اللغة
+    local langSelected = false 
+
     if not UI.ConfigData.SelectedLanguage then
         local LangWin = Instance.new("Frame", Screen)
         LangWin.Size = UDim2.new(0, 360, 0, 220)
@@ -193,12 +195,16 @@ function UI:CreateWindow(title)
                 UI.ConfigData.SelectedLanguage = lang
                 UI:SaveConfig()
                 LangWin:Destroy()
-                UI:InitMain(Screen, title)
+                langSelected = true -- السماح للسكربت بإكمال العمل
             end)
         end
 
         CreateBtn("العربية", UDim2.new(0.08, 0, 0.65, 0), "Arabic")
         CreateBtn("English", UDim2.new(0.55, 0, 0.65, 0), "English")
+
+        -- [[ الإيقاف المؤقت (هنا سر حل مشكلة الواجهة الفارغة) ]]
+        repeat task.wait(0.1) until langSelected
+        UI:InitMain(Screen, title)
     else
         UI:InitMain(Screen, title)
     end
@@ -254,7 +260,7 @@ function UI:InitMain(Screen, title)
     UI.Content.Position = UDim2.new(0, 115, 0, 40); UI.Content.Size = UDim2.new(1, -120, 1, -45); UI.Content.BackgroundTransparency = 1
 end
 
--- [[ دالة إنشاء الأقسام والميزات كاملة دون نقص ]]
+-- [[ دالة إنشاء الأقسام والميزات بتوافق كامل مع اللغتين ]]
 function UI:CreateTab(name)
     local TabBtn = Instance.new("TextButton", UI.Sidebar); TabBtn.Size = UDim2.new(1, 0, 0, 35); TabBtn.Text = name; TabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TabBtn.TextColor3 = Color3.new(1, 1, 1); TabBtn.BorderSizePixel = 0
     local Page = Instance.new("ScrollingFrame", UI.Content); Page.Size = UDim2.new(1, 0, 1, 0); Page.Visible = false; Page.BackgroundTransparency = 1; Page.ScrollBarThickness = 2; Page.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -266,19 +272,20 @@ function UI:CreateTab(name)
 
     local TabOps = {}
     local orderIndex = 0 
+    local tAlign = UI.SelectedLang == "Arabic" and Enum.TextXAlignment.Right or Enum.TextXAlignment.Left
 
     local function LogAction(title, fieldName, fieldValue, color)
         if getgenv().CrypticLog then pcall(function() getgenv().CrypticLog("OnFeature", title, color or 16776960, {{name = fieldName, value = tostring(fieldValue), inline = false}}) end) end
     end
 
-    function TabOps:AddProfileCard(player) orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 75); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R).CornerRadius = UDim.new(0, 8); local Avatar = Instance.new("ImageLabel", R); Avatar.Size = UDim2.new(0, 55, 0, 55); Avatar.Position = UDim2.new(1, -65, 0, 10); Avatar.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Instance.new("UICorner", Avatar).CornerRadius = UDim.new(1, 0); task.spawn(function() local s, thumb = pcall(function() return game:GetService("Players"):GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end); if s and thumb then Avatar.Image = thumb end end); local NameLbl = Instance.new("TextLabel", R); NameLbl.Size = UDim2.new(1, -80, 0, 25); NameLbl.Position = UDim2.new(0, 10, 0, 12); NameLbl.BackgroundTransparency = 1; NameLbl.Text = "welcome, " .. player.DisplayName; NameLbl.TextColor3 = Color3.fromRGB(0, 255, 150); NameLbl.TextXAlignment = Enum.TextXAlignment.Right; NameLbl.Font = Enum.Font.GothamBold; NameLbl.TextSize = 16; local UserLbl = Instance.new("TextLabel", R); UserLbl.Size = UDim2.new(1, -80, 0, 20); UserLbl.Position = UDim2.new(0, 10, 0, 37); UserLbl.BackgroundTransparency = 1; UserLbl.Text = "@" .. player.Name; UserLbl.TextColor3 = Color3.fromRGB(170, 170, 170); UserLbl.TextXAlignment = Enum.TextXAlignment.Right; UserLbl.Font = Enum.Font.Gotham; UserLbl.TextSize = 13 end
+    function TabOps:AddProfileCard(player) orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 75); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R).CornerRadius = UDim.new(0, 8); local Avatar = Instance.new("ImageLabel", R); Avatar.Size = UDim2.new(0, 55, 0, 55); Avatar.Position = UDim2.new(1, -65, 0, 10); Avatar.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Instance.new("UICorner", Avatar).CornerRadius = UDim.new(1, 0); task.spawn(function() local s, thumb = pcall(function() return game:GetService("Players"):GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end); if s and thumb then Avatar.Image = thumb end end); local NameLbl = Instance.new("TextLabel", R); NameLbl.Size = UDim2.new(1, -80, 0, 25); NameLbl.Position = UDim2.new(0, 10, 0, 12); NameLbl.BackgroundTransparency = 1; NameLbl.Text = "welcome, " .. player.DisplayName; NameLbl.TextColor3 = Color3.fromRGB(0, 255, 150); NameLbl.TextXAlignment = tAlign; NameLbl.Font = Enum.Font.GothamBold; NameLbl.TextSize = 16; local UserLbl = Instance.new("TextLabel", R); UserLbl.Size = UDim2.new(1, -80, 0, 20); UserLbl.Position = UDim2.new(0, 10, 0, 37); UserLbl.BackgroundTransparency = 1; UserLbl.Text = "@" .. player.Name; UserLbl.TextColor3 = Color3.fromRGB(170, 170, 170); UserLbl.TextXAlignment = tAlign; UserLbl.Font = Enum.Font.Gotham; UserLbl.TextSize = 13 end
     function TabOps:AddLine() orderIndex = orderIndex + 1; local L = Instance.new("Frame", Page); L.LayoutOrder = orderIndex; L.Size = UDim2.new(0.95, 0, 0, 1); L.BackgroundColor3 = Color3.fromRGB(50, 50, 50); L.BackgroundTransparency = 0.5; L.BorderSizePixel = 0 end
-    function TabOps:AddLabel(t) orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98,0,0,35); R.BackgroundColor3 = Color3.fromRGB(25,25,25); Instance.new("UICorner",R); local L = Instance.new("TextLabel",R); L.Text = t; L.Size = UDim2.new(1,-10,1,0); L.TextColor3 = Color3.fromRGB(0, 255, 150); L.BackgroundTransparency = 1; L.TextXAlignment = (UI.SelectedLang == "Arabic" and Enum.TextXAlignment.Right or Enum.TextXAlignment.Left); return {SetText=function(nt) L.Text=nt end} end
-    function TabOps:AddParagraph(text) orderIndex = orderIndex + 1; local Lbl = Instance.new("TextLabel", Page); Lbl.LayoutOrder = orderIndex; Lbl.Size = UDim2.new(0.95, 0, 0, 0); Lbl.AutomaticSize = Enum.AutomaticSize.Y; Lbl.TextWrapped = true; Lbl.Text = text; Lbl.TextColor3 = Color3.fromRGB(170, 170, 170); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = (UI.SelectedLang == "Arabic" and Enum.TextXAlignment.Right or Enum.TextXAlignment.Left); Lbl.TextSize = 13 end
+    function TabOps:AddLabel(t) orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98,0,0,35); R.BackgroundColor3 = Color3.fromRGB(25,25,25); Instance.new("UICorner",R); local L = Instance.new("TextLabel",R); L.Text = t; L.Size = UDim2.new(1,-20,1,0); L.Position = UDim2.new(0, 10, 0, 0); L.TextColor3 = Color3.fromRGB(0, 255, 150); L.BackgroundTransparency = 1; L.TextXAlignment = tAlign; return {SetText=function(nt) L.Text=nt end} end
+    function TabOps:AddParagraph(text) orderIndex = orderIndex + 1; local Lbl = Instance.new("TextLabel", Page); Lbl.LayoutOrder = orderIndex; Lbl.Size = UDim2.new(0.95, 0, 0, 0); Lbl.AutomaticSize = Enum.AutomaticSize.Y; Lbl.TextWrapped = true; Lbl.Text = text; Lbl.TextColor3 = Color3.fromRGB(170, 170, 170); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = tAlign; Lbl.TextSize = 13 end
     function TabOps:AddButton(t, c) orderIndex = orderIndex + 1; local B = Instance.new("TextButton", Page); B.LayoutOrder = orderIndex; B.Size = UDim2.new(0.95, 0, 0, 40); B.BackgroundColor3 = Color3.fromRGB(30, 30, 30); B.Text = t; B.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", B); B.MouseButton1Click:Connect(function() LogAction("🔘 ضغطة زر", "تم الضغط على:", t, 3447003); pcall(c) end) end
 
     function TabOps:AddInput(label, placeholder, callback)
-        orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.95, 0, 0, 60); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R); local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(1, -10, 0, 25); Lbl.TextColor3 = Color3.fromRGB(0, 255, 150); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = (UI.SelectedLang == "Arabic" and Enum.TextXAlignment.Right or Enum.TextXAlignment.Left); local I = Instance.new("TextBox", R); I.Size = UDim2.new(0.9, 0, 0, 25); I.Position = UDim2.new(0.05, 0, 0, 30); I.PlaceholderText = placeholder; I.BackgroundColor3 = Color3.fromRGB(40, 40, 40); I.TextColor3 = Color3.new(1, 1, 1); I.Text = ""; Instance.new("UICorner", I); 
+        orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.95, 0, 0, 60); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R); local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(1, -20, 0, 25); Lbl.Position = UDim2.new(0, 10, 0, 0); Lbl.TextColor3 = Color3.fromRGB(0, 255, 150); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = tAlign; local I = Instance.new("TextBox", R); I.Size = UDim2.new(0.9, 0, 0, 25); I.Position = UDim2.new(0.05, 0, 0, 30); I.PlaceholderText = placeholder; I.BackgroundColor3 = Color3.fromRGB(40, 40, 40); I.TextColor3 = Color3.new(1, 1, 1); I.Text = ""; Instance.new("UICorner", I); 
         local configKey = name .. "_" .. label .. "_Input"
         if UI.ConfigData[configKey] ~= nil then I.Text = UI.ConfigData[configKey]; task.spawn(function() task.wait(1.5) pcall(callback, I.Text) end) end
         I:GetPropertyChangedSignal("Text"):Connect(function() UI.ConfigData[configKey] = I.Text; pcall(callback, I.Text) end)
@@ -288,14 +295,14 @@ function UI:CreateTab(name)
 
     function TabOps:AddLargeInput(label, placeholder, callback)
         orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.95, 0, 0, 110); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R)
-        local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(1, -10, 0, 25); Lbl.TextColor3 = Color3.fromRGB(0, 255, 150); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = (UI.SelectedLang == "Arabic" and Enum.TextXAlignment.Right or Enum.TextXAlignment.Left)
+        local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(1, -20, 0, 25); Lbl.Position = UDim2.new(0, 10, 0, 0); Lbl.TextColor3 = Color3.fromRGB(0, 255, 150); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = tAlign
         local I = Instance.new("TextBox", R); I.Size = UDim2.new(0.9, 0, 0, 75); I.Position = UDim2.new(0.05, 0, 0, 25); I.PlaceholderText = placeholder; I.BackgroundColor3 = Color3.fromRGB(40, 40, 40); I.TextColor3 = Color3.new(1, 1, 1); I.Text = ""; I.MultiLine = true; I.TextWrapped = true; I.ClearTextOnFocus = false; I.TextYAlignment = Enum.TextYAlignment.Top; Instance.new("UICorner", I)
         I:GetPropertyChangedSignal("Text"):Connect(function() pcall(callback, I.Text) end)
         return { SetText = function(t) I.Text = t end, TextBox = I }
     end
 
     function TabOps:AddSpeedControl(label, callback, default)
-        orderIndex = orderIndex + 1; local Row = Instance.new("Frame", Page); Row.LayoutOrder = orderIndex; Row.Size = UDim2.new(0.98, 0, 0, 45); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row); local Lbl = Instance.new("TextLabel", Row); Lbl.Text = label; Lbl.Size = UDim2.new(0.6, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = (UI.SelectedLang == "Arabic" and Enum.TextXAlignment.Right or Enum.TextXAlignment.Left); local Tgl = Instance.new("TextButton", Row); Tgl.Size = UDim2.new(0, 45, 0, 22); Tgl.Position = UDim2.new(1, -55, 0.5, -11); Tgl.Text = ""; Tgl.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", Tgl).CornerRadius = UDim.new(1, 0); local startVal = tostring(default or 50); local Inp = Instance.new("TextBox", Row); Inp.Size = UDim2.new(0, 40, 0, 22); Inp.Position = UDim2.new(1, -105, 0.5, -11); Inp.Text = startVal; Inp.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Inp.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", Inp); 
+        orderIndex = orderIndex + 1; local Row = Instance.new("Frame", Page); Row.LayoutOrder = orderIndex; Row.Size = UDim2.new(0.98, 0, 0, 45); Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Row); local Lbl = Instance.new("TextLabel", Row); Lbl.Text = label; Lbl.Size = UDim2.new(0.6, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = tAlign; local Tgl = Instance.new("TextButton", Row); Tgl.Size = UDim2.new(0, 45, 0, 22); Tgl.Position = UDim2.new(1, -55, 0.5, -11); Tgl.Text = ""; Tgl.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", Tgl).CornerRadius = UDim.new(1, 0); local startVal = tostring(default or 50); local Inp = Instance.new("TextBox", Row); Inp.Size = UDim2.new(0, 40, 0, 22); Inp.Position = UDim2.new(1, -105, 0.5, -11); Inp.Text = startVal; Inp.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Inp.TextColor3 = Color3.new(1, 1, 1); Instance.new("UICorner", Inp); 
         local active = false
         local configKey = name .. "_" .. label .. "_Speed"
         if UI.ConfigData[configKey] ~= nil then active = UI.ConfigData[configKey].active; Inp.Text = tostring(UI.ConfigData[configKey].val) end
@@ -306,7 +313,7 @@ function UI:CreateTab(name)
     end
 
     function TabOps:AddToggle(label, callback)
-        orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R); local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0); local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = (UI.SelectedLang == "Arabic" and Enum.TextXAlignment.Right or Enum.TextXAlignment.Left); 
+        orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R); local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0); local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = tAlign; 
         local a = false
         local configKey = name .. "_" .. label
         if UI.ConfigData[configKey] ~= nil then a = UI.ConfigData[configKey] end
@@ -318,14 +325,14 @@ function UI:CreateTab(name)
     end
 
     function TabOps:AddTimedToggle(label, callback)
-        orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R); local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0); local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = (UI.SelectedLang == "Arabic" and Enum.TextXAlignment.Right or Enum.TextXAlignment.Left); local isRunning = false
+        orderIndex = orderIndex + 1; local R = Instance.new("Frame", Page); R.LayoutOrder = orderIndex; R.Size = UDim2.new(0.98, 0, 0, 45); R.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", R); local B = Instance.new("TextButton", R); B.Size = UDim2.new(0, 45, 0, 22); B.Position = UDim2.new(1, -55, 0.5, -11); B.Text = ""; B.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0); local Lbl = Instance.new("TextLabel", R); Lbl.Text = label; Lbl.Size = UDim2.new(0.7, 0, 1, 0); Lbl.Position = UDim2.new(0.05, 0, 0, 0); Lbl.TextColor3 = Color3.new(1, 1, 1); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = tAlign; local isRunning = false
         B.MouseButton1Click:Connect(function() if isRunning then return end; isRunning = true; B.BackgroundColor3 = Color3.fromRGB(0, 150, 255); LogAction("⏱️ تفعيل مؤقت", label, "تم التفعيل", 15844367); task.spawn(function() pcall(callback, true); task.wait(2); if B then B.BackgroundColor3 = Color3.fromRGB(60, 60, 60) end; pcall(callback, false); isRunning = false end) end)
         return { Set = function() end, SetState = function() end }
     end
 
     function TabOps:AddPlayerSelector(label, placeholder, callback)
         orderIndex = orderIndex + 1; local Container = Instance.new("Frame", Page); Container.LayoutOrder = orderIndex; Container.Size = UDim2.new(0.95, 0, 0, 75); Container.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Container)
-        local Lbl = Instance.new("TextLabel", Container); Lbl.Text = label; Lbl.Size = UDim2.new(1, -10, 0, 25); Lbl.TextColor3 = Color3.fromRGB(0, 255, 150); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = (UI.SelectedLang == "Arabic" and Enum.TextXAlignment.Right or Enum.TextXAlignment.Left)
+        local Lbl = Instance.new("TextLabel", Container); Lbl.Text = label; Lbl.Size = UDim2.new(1, -20, 0, 25); Lbl.Position = UDim2.new(0, 10, 0, 0); Lbl.TextColor3 = Color3.fromRGB(0, 255, 150); Lbl.BackgroundTransparency = 1; Lbl.TextXAlignment = tAlign
         local SearchBox = Instance.new("TextBox", Container); SearchBox.Size = UDim2.new(0.9, 0, 0, 25); SearchBox.Position = UDim2.new(0.05, 0, 0, 25); SearchBox.PlaceholderText = UI:GetText("SearchPlace"); SearchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SearchBox.TextColor3 = Color3.new(1, 1, 1); SearchBox.Text = ""; SearchBox.ClearTextOnFocus = true; Instance.new("UICorner", SearchBox)
         local DropBtn = Instance.new("TextButton", Container); DropBtn.Size = UDim2.new(0.9, 0, 0, 15); DropBtn.Position = UDim2.new(0.05, 0, 0, 55); DropBtn.Text = "▼ عرض قائمة اللاعبين / Show Players ▼"; DropBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35); DropBtn.TextColor3 = Color3.fromRGB(170, 170, 170); DropBtn.TextSize = 11; Instance.new("UICorner", DropBtn)
         local DropList = Instance.new("ScrollingFrame", Container); DropList.Size = UDim2.new(0.9, 0, 0, 140); DropList.Position = UDim2.new(0.05, 0, 0, 75); DropList.BackgroundColor3 = Color3.fromRGB(30, 30, 30); DropList.Visible = false; DropList.ScrollBarThickness = 2; Instance.new("UICorner", DropList)
@@ -352,7 +359,10 @@ function UI:CreateTab(name)
     end
 
     function TabOps:AddDropdown(label, options, callback)
-        orderIndex = orderIndex + 1; local isOpen = false; local DropdownFrame = Instance.new("Frame", Page); DropdownFrame.LayoutOrder = orderIndex; DropdownFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25); DropdownFrame.ClipsDescendants = true; DropdownFrame.Size = UDim2.new(0.95, 0, 0, 40); Instance.new("UICorner", DropdownFrame); local MainBtn = Instance.new("TextButton", DropdownFrame); MainBtn.Size = UDim2.new(1, 0, 0, 40); MainBtn.BackgroundTransparency = 1; MainBtn.Text = ""; local TitleLbl = Instance.new("TextLabel", MainBtn); TitleLbl.Size = UDim2.new(1, -15, 1, 0); TitleLbl.Position = UDim2.new(0, -10, 0, 0); TitleLbl.BackgroundTransparency = 1; TitleLbl.Text = label .. " : [اختر]"; TitleLbl.TextColor3 = Color3.fromRGB(0, 255, 150); TitleLbl.TextXAlignment = (UI.SelectedLang == "Arabic" and Enum.TextXAlignment.Right or Enum.TextXAlignment.Left); local ArrowLbl = Instance.new("TextLabel", MainBtn); ArrowLbl.Size = UDim2.new(0, 30, 1, 0); ArrowLbl.Position = UDim2.new(0, 5, 0, 0); ArrowLbl.BackgroundTransparency = 1; ArrowLbl.Text = "▼"; ArrowLbl.TextColor3 = Color3.new(1, 1, 1); local OptionsContainer = Instance.new("ScrollingFrame", DropdownFrame); OptionsContainer.Size = UDim2.new(1, 0, 1, -40); OptionsContainer.Position = UDim2.new(0, 0, 0, 40); OptionsContainer.BackgroundTransparency = 1; OptionsContainer.ScrollBarThickness = 2; local OptLayout = Instance.new("UIListLayout", OptionsContainer); OptLayout.SortOrder = Enum.SortOrder.LayoutOrder; OptLayout.Padding = UDim.new(0, 2)
+        orderIndex = orderIndex + 1; local isOpen = false; local DropdownFrame = Instance.new("Frame", Page); DropdownFrame.LayoutOrder = orderIndex; DropdownFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25); DropdownFrame.ClipsDescendants = true; DropdownFrame.Size = UDim2.new(0.95, 0, 0, 40); Instance.new("UICorner", DropdownFrame); local MainBtn = Instance.new("TextButton", DropdownFrame); MainBtn.Size = UDim2.new(1, 0, 0, 40); MainBtn.BackgroundTransparency = 1; MainBtn.Text = ""; 
+        local TitleLbl = Instance.new("TextLabel", MainBtn); TitleLbl.Size = UDim2.new(1, -40, 1, 0); TitleLbl.Position = UDim2.new(0, 10, 0, 0); TitleLbl.BackgroundTransparency = 1; TitleLbl.Text = label .. " : [اختر]"; TitleLbl.TextColor3 = Color3.fromRGB(0, 255, 150); TitleLbl.TextXAlignment = tAlign; 
+        local ArrowLbl = Instance.new("TextLabel", MainBtn); ArrowLbl.Size = UDim2.new(0, 30, 1, 0); ArrowLbl.Position = UDim2.new(1, -30, 0, 0); ArrowLbl.BackgroundTransparency = 1; ArrowLbl.Text = "▼"; ArrowLbl.TextColor3 = Color3.new(1, 1, 1); 
+        local OptionsContainer = Instance.new("ScrollingFrame", DropdownFrame); OptionsContainer.Size = UDim2.new(1, 0, 1, -40); OptionsContainer.Position = UDim2.new(0, 0, 0, 40); OptionsContainer.BackgroundTransparency = 1; OptionsContainer.ScrollBarThickness = 2; local OptLayout = Instance.new("UIListLayout", OptionsContainer); OptLayout.SortOrder = Enum.SortOrder.LayoutOrder; OptLayout.Padding = UDim.new(0, 2)
         local function RefreshSize() if isOpen then local h = math.clamp(OptLayout.AbsoluteContentSize.Y + 40, 40, 150); DropdownFrame.Size = UDim2.new(0.95, 0, 0, h); OptionsContainer.CanvasSize = UDim2.new(0, 0, 0, OptLayout.AbsoluteContentSize.Y) else DropdownFrame.Size = UDim2.new(0.95, 0, 0, 40) end end
         MainBtn.MouseButton1Click:Connect(function() isOpen = not isOpen; ArrowLbl.Text = isOpen and "▲" or "▼"; RefreshSize() end)
         for i, opt in ipairs(options) do local OptBtn = Instance.new("TextButton", OptionsContainer); OptBtn.Size = UDim2.new(1, 0, 0, 30); OptBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35); OptBtn.Text = tostring(opt); OptBtn.TextColor3 = Color3.new(1, 1, 1); OptBtn.BorderSizePixel = 0; OptBtn.MouseButton1Click:Connect(function() TitleLbl.Text = label .. " : " .. tostring(opt); isOpen = false; ArrowLbl.Text = "▼"; RefreshSize(); LogAction("🔽 اختيار من القائمة", label, tostring(opt), 15105570); pcall(callback, opt) end) end
