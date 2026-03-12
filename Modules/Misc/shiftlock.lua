@@ -42,7 +42,7 @@ return function(Tab, UI)
     ShiftButton.BackgroundTransparency = 0.6 
     
     -- المكان الافتراضي المعدل (مرفوع قليلاً للأعلى)
-    ShiftButton.Position = UDim2.new(1, -75, 0.55, 0) -- تم تعديل Y إلى 0.55 لرفعه
+    ShiftButton.Position = UDim2.new(1, -75, 0.80, 0) -- تم تعديل Y إلى 0.55 لرفعه
     
     -- الحجم المعدل (أصغر للنصف تقريباً)
     ShiftButton.Size = UDim2.new(0, 25, 0, 25) -- تم تعديل الحجم إلى 25x25
