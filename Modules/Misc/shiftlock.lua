@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة الشيفت لوك للجوال V6 / Mobile Shift Lock ]]
--- المطور: يامي (Yami) | التحديث: نظام ذكي للجلوس + مكان جديد + دمج الأكواد
+-- [[ Cryptic Hub - ميزة الشيفت لوك للجوال V6.1 / Mobile Shift Lock ]]
+-- المطور: يامي (Yami) | التحديث: نظام ذكي للجلوس + مكان جديد ومعدل + دمج الأكواد
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -25,9 +25,9 @@ return function(Tab, UI)
         end)
     end
     
-    -- [[ 1. تصميم الواجهة (UI) - مكان جديد وإطار برتقالي ]]
+    -- [[ 1. تصميم الواجهة (UI) - مكان معدل وحجم أصغر وإطار برتقالي ]]
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "CrypticShiftLock_V6"
+    ScreenGui.Name = "CrypticShiftLock_V6.1"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
@@ -41,9 +41,11 @@ return function(Tab, UI)
     ShiftButton.BackgroundColor3 = Color3.fromRGB(0, 200, 80) -- أخضر البداية
     ShiftButton.BackgroundTransparency = 0.6 
     
-    -- المكان الافتراضي الجديد (فوق زر القفز بناءً على صورتك)
-    ShiftButton.Position = UDim2.new(1, -75, 0.65, 0)
-    ShiftButton.Size = UDim2.new(0, 45, 0, 45) -- تكبير خفيف ليناسب اللمس بشكل أفضل
+    -- المكان الافتراضي المعدل (مرفوع قليلاً للأعلى)
+    ShiftButton.Position = UDim2.new(1, -75, 0.55, 0) -- تم تعديل Y إلى 0.55 لرفعه
+    
+    -- الحجم المعدل (أصغر للنصف تقريباً)
+    ShiftButton.Size = UDim2.new(0, 25, 0, 25) -- تم تعديل الحجم إلى 25x25
     ShiftButton.AnchorPoint = Vector2.new(0.5, 0.5)
     ShiftButton.Image = "" 
     ShiftButton.ClipsDescendants = true
@@ -56,7 +58,7 @@ return function(Tab, UI)
     local UIStroke = Instance.new("UIStroke")
     UIStroke.Color = Color3.fromRGB(255, 100, 0)
     UIStroke.Transparency = 0.2
-    UIStroke.Thickness = 2.5
+    UIStroke.Thickness = 1.5 -- تم تقليل السمك قليلاً ليتناسب مع الحجم الصغير
     UIStroke.Parent = ShiftButton
 
     -- النص الداخلي
@@ -67,7 +69,7 @@ return function(Tab, UI)
     TextLabel.Font = Enum.Font.GothamBold
     TextLabel.Text = "Shift\nLock"
     TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TextLabel.TextSize = 11
+    TextLabel.TextSize = 7 -- تم تصغير حجم النص ليتناسب مع حجم الزر
     TextLabel.TextWrapped = true
 
     -- [[ 2. دالة التشغيل/الإيقاف الأساسية ]]
