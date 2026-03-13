@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - التحكم التخاطري المطور (Telekinesis Tower FE) ]]
--- المطور: أروى (Arwa) | الوصف: رفع البلوكات وتستيفها فوق بعضها بشكل مرتب ومنع السقوط (نسخة خالية من الاهتزاز والطيران)
+-- المطور: أروى (Arwa) | الوصف: رفع البلوكات وتستيفها فوق بعضها بشكل مرتب ومنع السقوط + (بدون اهتزاز)
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -48,7 +48,7 @@ return function(Tab, UI)
         if isActive then
             SendRobloxNotification("Cryptic Hub", "🏗️ تم تفعيل البرج! (البلوكات ستترتب فوق بعضها)")
             
-            -- 🟢 التعديل الأول: استخدام Stepped بدلاً من Heartbeat لمنع الاهتزاز الفيزيائي
+            -- 🟢 تم التغيير هنا إلى Stepped لمنع الاهتزاز الفيزيائي
             connection = RunService.Stepped:Connect(function()
                 local char = lp.Character
                 local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -95,10 +95,10 @@ return function(Tab, UI)
                         data.bp.Position = targetPos
                         data.bg.CFrame = root.CFrame -- جعل البلوكات تواجه نفس اتجاهك
                         
-                        -- إضافة سرعة وهمية صغيرة لإجبار السيرفر على إعطائك الملكية
+                        -- إضافة سرعة وهمية صغيرة جداً لإجبار السيرفر على إعطائك الملكية
                         pcall(function()
                             part.CanCollide = false
-                            -- 🟢 التعديل الثاني: تقليل السرعة من 30.1 إلى 0.1 لمنعك من الطيران والموت
+                            -- 🟢 تم التغيير هنا إلى 0.1 لمنع الاهتزاز والطيران
                             part.Velocity = Vector3.new(0, 0.1, 0) 
                         end)
 
