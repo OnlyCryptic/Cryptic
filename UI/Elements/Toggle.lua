@@ -20,11 +20,13 @@ return function(TabOps, label, callback)
     
     local Lbl = Instance.new("TextLabel", R)
     Lbl.Text = label
-    Lbl.Size = UDim2.new(0.7, 0, 1, 0)
-    Lbl.Position = UDim2.new(0.05, 0, 0, 0)
+    Lbl.Size = UDim2.new(1, -70, 1, 0) -- المساحة مضبوطة لتفادي التداخل
+    Lbl.Position = UDim2.new(0, 5, 0, 0)
     Lbl.TextColor3 = Color3.new(1, 1, 1)
     Lbl.BackgroundTransparency = 1
     Lbl.TextXAlignment = Enum.TextXAlignment.Right
+    Lbl.TextSize = 13 -- نفس حجم خط SpeedControl تماماً
+    Lbl.TextWrapped = true
     
     -- 2. نظام الحفظ واسترجاع الحالة (Config)
     local isActive = false
@@ -38,8 +40,8 @@ return function(TabOps, label, callback)
     -- 3. دالة تغيير الحالة (التشغيل/الإيقاف)
     local function setState(state, isClick)
         isActive = state
-        -- تغيير اللون: أزرق إذا شغال، رمادي إذا طافي
-        B.BackgroundColor3 = isActive and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
+        -- تغيير اللون: أخضر نيون إذا شغال، رمادي إذا طافي
+        B.BackgroundColor3 = isActive and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(60, 60, 60)
         
         -- حفظ الحالة الجديدة في الإعدادات
         TabOps.UI.ConfigData[configKey] = isActive
@@ -54,7 +56,7 @@ return function(TabOps, label, callback)
     end
     
     -- 4. تطبيق الحالة الابتدائية عند فتح السكربت
-    B.BackgroundColor3 = isActive and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
+    B.BackgroundColor3 = isActive and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(60, 60, 60)
     if isActive then 
         task.spawn(function() 
             task.wait(1.5) -- تأخير بسيط لضمان تحميل اللعبة بالكامل قبل التشغيل التلقائي
