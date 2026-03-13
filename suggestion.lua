@@ -4,8 +4,11 @@
 return function(Tab, UI)
     local userMessage = ""
 
-    -- نص توضيحي مزدوج اللغة
-    Tab:AddParagraph("💡 قسم الاقتراحات والشكاوى / Suggestions & Feedback\nاكتب رسالتك هنا بكل حرية، ستصل للمطور مباشرة.\nWrite your message freely here, it will be sent directly to the developer.")
+    -- 🟢 الحل هنا: تم فصل العنوان عن المحتوى بفاصلة (,) لكي يترتب بشكل صحيح
+    Tab:AddParagraph(
+        "💡 قسم الاقتراحات والشكاوى / Suggestions", 
+        "اكتب رسالتك هنا بكل حرية، ستصل للمطور مباشرة.\nWrite your message freely here, it will be sent directly to the developer."
+    )
 
     Tab:AddLine()
 
@@ -52,8 +55,10 @@ return function(Tab, UI)
                 })
             end)
             
-            -- حذف الرسالة من المربع تلقائياً بعد الإرسال
-            MessageInput.SetText("")
+            -- 🟢 تم حل مشكلة مسح النص بعد الإرسال
+            if MessageInput and MessageInput.SetText then
+                MessageInput:SetText("")
+            end
             userMessage = "" -- تصفير المتغير
         else
             -- في حالة خطأ الاتصال
