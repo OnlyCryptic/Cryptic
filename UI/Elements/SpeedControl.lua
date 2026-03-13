@@ -10,6 +10,7 @@ return function(TabOps, label, callback, default)
     Row.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     Instance.new("UICorner", Row)
     
+    -- زر التفعيل
     local Tgl = Instance.new("TextButton", Row)
     Tgl.Size = UDim2.new(0, 45, 0, 22)
     Tgl.Position = UDim2.new(1, -55, 0.5, -11)
@@ -17,6 +18,7 @@ return function(TabOps, label, callback, default)
     Tgl.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     Instance.new("UICorner", Tgl).CornerRadius = UDim.new(1, 0)
     
+    -- مربع الإدخال (الرقم)
     local startVal = tostring(default or 50)
     local Inp = Instance.new("TextBox", Row)
     Inp.Size = UDim2.new(0, 40, 0, 22)
@@ -26,14 +28,16 @@ return function(TabOps, label, callback, default)
     Inp.TextColor3 = Color3.new(1, 1, 1)
     Instance.new("UICorner", Inp)
 
-    -- تم إصلاح التناسق هنا: نفس مقاسات وأبعاد زر الـ Toggle العادي تماماً
+    -- العنوان (الحل هنا: سيأخذ المساحة بالكامل ويقف قبل المربع بـ 15 بكسل)
     local Lbl = Instance.new("TextLabel", Row)
     Lbl.Text = label
-    Lbl.Size = UDim2.new(0.65, 0, 1, 0) 
-    Lbl.Position = UDim2.new(0.05, 0, 0, 0)
+    Lbl.Size = UDim2.new(1, -120, 1, 0) -- السر هنا: خصم 120 بكسل من اليمين للأزرار
+    Lbl.Position = UDim2.new(0, 5, 0, 0)
     Lbl.TextColor3 = Color3.new(1, 1, 1)
     Lbl.BackgroundTransparency = 1
     Lbl.TextXAlignment = Enum.TextXAlignment.Right
+    Lbl.TextSize = 13
+    Lbl.TextWrapped = true -- يمنع النص من الخروج إذا كان طويلاً جداً
     
     local active = false
     local configKey = TabOps.TabName .. "_" .. label .. "_Speed"
