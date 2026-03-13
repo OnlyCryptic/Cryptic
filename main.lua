@@ -1,5 +1,4 @@
--- [[ Cryptic Hub - المحرك الرئيسي V8.0 (النسخة المجزأة مع الكاش) ]]
--- المطور: يامي (Yami) | التحديث: نظام الكاش لتسريع الواجهة ومنع اللاق
+-- [[ Cryptic Hub - المحرك الرئيسي V8.0 (النسخة المجزأة + نظام كشف الأخطاء) ]]
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -23,7 +22,6 @@ local Cryptic = {
     TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / players", "قسم السيرفر / server", "الانتقال / Teleport", "اخرى / Other", "اقتراحات / Suggestions"}
 }
 
--- إضافة قسم التجارب للمالك فقط
 if Players.LocalPlayer.UserId == 3875086037 then
     Cryptic.Structure["تجارب"] = {
         Folder = "Experiments",
@@ -32,45 +30,51 @@ if Players.LocalPlayer.UserId == 3875086037 then
     table.insert(Cryptic.TabsOrder, "تجارب")
 end
 
--- دالة الاستدعاء العادية لملفات الميزات (مثل speed و fly)
 local function Import(path)
     local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. "?v=" .. tick()
     local s, r = pcall(game.HttpGet, game, url)
     if s and r then
-        local f = loadstring(r)
-        if f then return f() end
+        if r:match("404: Not Found") then
+            warn("❌ خطأ: الملف غير موجود في GitHub! المسار: " .. path)
+            return nil
+        end
+        local f, compileErr = loadstring(r)
+        if f then 
+            return f() 
+        else
+            warn("❌ خطأ في برمجة الملف: " .. path .. " | السبب: " .. tostring(compileErr))
+        end
+    else
+        warn("❌ فشل الاتصال بالإنترنت لجلب: " .. path)
     end
     return nil
 end
 
--- ========================================================
--- 🔥 نظام الذاكرة المؤقتة (Cache) لعناصر الواجهة (مهم جداً للسرعة)
--- ========================================================
 local ElementCache = {}
 
 local function LoadElement(elementName)
-    -- إذا كان الملف محملاً مسبقاً، خذه من الذاكرة فوراً
     if ElementCache[elementName] then return ElementCache[elementName] end
     
-    -- إذا لم يكن محملاً، اجلبه من GitHub
-    local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/UI/Elements/" .. elementName .. ".lua?v=" .. tick()
+    local path = "UI/Elements/" .. elementName .. ".lua"
+    local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. "?v=" .. tick()
     local s, r = pcall(game.HttpGet, game, url)
     if s and r then
+        if r:match("404: Not Found") then
+            warn("❌ خطأ: عنصر الواجهة مفقود! المسار: " .. path)
+            return nil
+        end
         local chunk = loadstring(r)
         if chunk then 
-            local func = chunk() -- تفعيل الدالة
-            ElementCache[elementName] = func -- حفظها في الذاكرة
+            local func = chunk()
+            ElementCache[elementName] = func
             return func
         end
     end
-    warn("Cryptic Hub: Failed to load element - " .. elementName)
+    warn("❌ فشل تحميل العنصر: " .. elementName)
     return nil
 end
 
--- ========================================================
--- بناء الواجهة وتركيب التابات
--- ========================================================
-local UI = Import("UI/Core.lua") -- استدعاء النواة الجديدة
+local UI = Import("UI/Core.lua") 
 
 if UI then
     local MainWin = UI:CreateWindow("Cryptic Hub / " .. Cryptic.Config.Discord)
@@ -80,7 +84,6 @@ if UI then
         if tabData then  
             local CurrentTab = MainWin:CreateTab(tabName)  
 
-            -- ربط كل دوال إضافة الأزرار بنظام الكاش الذكي
             local elementsList = {
                 "Button", "Toggle", "TimedToggle", "Input", "LargeInput", 
                 "SpeedControl", "Dropdown", "PlayerSelector", "ProfileCard", 
@@ -94,28 +97,24 @@ if UI then
                 end
             end
 
-            -- استدعاء ملفات الأقسام (المميزات الخاصة بك)
             task.spawn(function(data, tab, nameOfTab)  
                 for _, fileName in ipairs(data.Files) do  
                     local filePath = (data.Folder == "") and (fileName .. ".lua") or ("Modules/" .. data.Folder .. "/" .. fileName .. ".lua")  
                     local init = Import(filePath)  
                     if type(init) == "function" then  
-                        pcall(function()   
+                        local success, err = pcall(function()   
                             init(tab, UI)  
                             tab:AddLine()  
-                        end)  
+                        end)
+                        if not success then
+                            warn("❌ خطأ أثناء تشغيل الملف: " .. filePath .. " | السبب: " .. tostring(err))
+                        end
                     end  
                 end  
                 
-                -- أزرار الحفظ في قسم المعلومات
                 if nameOfTab == "معلومات / info" then
-                    tab:AddButton("💾 حفظ الإعدادات / save config", function()
-                        pcall(function() UI:SaveConfig() end)
-                    end)
-
-                    tab:AddButton("🔄 مسح اعدادات محفوضه / restart config", function()
-                        pcall(function() UI:ResetConfig() end)
-                    end)
+                    tab:AddButton("💾 حفظ الإعدادات / save config", function() pcall(function() UI:SaveConfig() end) end)
+                    tab:AddButton("🔄 مسح اعدادات محفوضه / restart config", function() pcall(function() UI:ResetConfig() end) end)
                 end
                 
             end, tabData, CurrentTab, tabName)  
