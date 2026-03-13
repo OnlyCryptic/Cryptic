@@ -1,3 +1,5 @@
+-- [[ Cryptic Hub - Element: Speed Control ]]
+
 return function(TabOps, label, callback, default)
     TabOps.Order = TabOps.Order + 1
     
@@ -25,14 +27,14 @@ return function(TabOps, label, callback, default)
 
     local Lbl = Instance.new("TextLabel", Row)
     Lbl.Text = label
-    Lbl.Size = UDim2.new(1, -120, 1, 0)
+    Lbl.Size = UDim2.new(1, -115, 1, 0) -- 🟢 إزاحة لليسار بعيداً عن المربع تماماً
     Lbl.Position = UDim2.new(0, 5, 0, 0)
     Lbl.TextColor3 = Color3.new(1, 1, 1)
     Lbl.BackgroundTransparency = 1
     Lbl.TextXAlignment = Enum.TextXAlignment.Right
-    Lbl.TextSize = 13
-    Lbl.TextWrapped = false -- 🟢 تم إيقاف التفاف النص
-    Lbl.TextTruncate = Enum.TextTruncate.AtEnd -- 🟢 إضافة (...) لو النص طويل
+    Lbl.Font = Enum.Font.GothamSemibold
+    Lbl.TextSize = 11 -- 🟢 نفس الحجم الصغير ليكون متطابقاً
+    Lbl.TextWrapped = false 
     
     local active = false
     local configKey = TabOps.TabName .. "_" .. label .. "_Speed"
