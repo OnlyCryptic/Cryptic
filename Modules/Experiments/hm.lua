@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - التحكم التخاطري المطور (Telekinesis Tower FE) ]]
--- المطور: أروى (Arwa) | الوصف: رفع البلوكات وتستيفها فوق بعضها بشكل مرتب ومنع السقوط + (بدون اهتزاز)
+-- المطور: أروى (Arwa) | الوصف: رفع البلوكات وتستيفها فوق بعضها بشكل مرتب ومنع السقوط
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -10,13 +10,19 @@ return function(Tab, UI)
     local isActive = false
     local connection = nil
     local capturedParts = {} 
-    local capturedOrder = {} -- لتخزين الترتيب
+    local capturedOrder = {} 
     
-    local START_HEIGHT = 15 -- بداية الارتفاع فوق الرأس
-    local SCAN_RADIUS = 60 -- مسافة التقاط البلوكات (تمت زيادتها)
+    local START_HEIGHT = 15
+    local SCAN_RADIUS = 60
 
     local function SendRobloxNotification(title, text)
-        pcall(function() StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 4 }) end)
+        pcall(function()
+            StarterGui:SetCore("SendNotification", {
+                Title = title,
+                Text = text,
+                Duration = 4
+            })
+        end)
     end
 
     local function releaseAllParts()
@@ -27,6 +33,8 @@ return function(Tab, UI)
                 pcall(function() 
                     part.Massless = false 
                     part.CanCollide = data.origCollide
+                    part.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                    part.AssemblyAngularVelocity = Vector3.new(0,0,0)
                 end)
             end
         end
@@ -48,8 +56,7 @@ return function(Tab, UI)
         if isActive then
             SendRobloxNotification("Cryptic Hub", "🏗️ تم تفعيل البرج! (البلوكات ستترتب فوق بعضها)")
             
-            -- 🟢 تم التغيير هنا إلى Stepped لمنع الاهتزاز الفيزيائي
-            connection = RunService.Stepped:Connect(function()
+            connection = RunService.Heartbeat:Connect(function()
                 local char = lp.Character
                 local root = char and char:FindFirstChild("HumanoidRootPart")
                 if not root then return end
@@ -66,7 +73,7 @@ return function(Tab, UI)
                             
                             local bp = Instance.new("BodyPosition")
                             bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                            bp.P = 200000 -- قوة سحب هائلة لمنع السقوط
+                            bp.P = 200000
                             bp.D = 1500 
                             bp.Parent = obj
 
@@ -75,44 +82,49 @@ return function(Tab, UI)
                             bg.P = 50000
                             bg.Parent = obj
 
+                            -- إعطاء السرعة مرة واحدة فقط للبلوك الجديد
+                            pcall(function()
+                                obj.AssemblyLinearVelocity = Vector3.new(0, 25, 0)
+                                obj.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                            end)
+
                             capturedParts[obj] = {
                                 bp = bp, 
                                 bg = bg, 
                                 origCollide = origCollide
                             }
-                            table.insert(capturedOrder, obj) -- إضافة للترتيب
+
+                            table.insert(capturedOrder, obj)
                         end
                     end
                 end
 
-                -- تحريك البلوكات بنظام البرج (Stacking)
+                -- تحريك البلوكات بنظام البرج
                 local currentStackHeight = START_HEIGHT
                 for i, part in ipairs(capturedOrder) do
                     local data = capturedParts[part]
                     if part and part.Parent and data and not part.Anchored then
-                        -- حساب الموضع: كل بلوكة فوق اللي قبلها بناءً على حجمها
+                        
                         local targetPos = root.Position + Vector3.new(0, currentStackHeight, 0)
                         data.bp.Position = targetPos
-                        data.bg.CFrame = root.CFrame -- جعل البلوكات تواجه نفس اتجاهك
+                        data.bg.CFrame = root.CFrame
                         
-                        -- إضافة سرعة وهمية صغيرة جداً لإجبار السيرفر على إعطائك الملكية
                         pcall(function()
                             part.CanCollide = false
-                            -- 🟢 تم التغيير هنا إلى 0.1 لمنع الاهتزاز والطيران
-                            part.Velocity = Vector3.new(0, 0.1, 0) 
                         end)
 
-                        -- زيادة الارتفاع للبلوكة القادمة بناءً على حجم البلوكة الحالية
                         currentStackHeight = currentStackHeight + (part.Size.Y + 0.5)
                     else
-                        -- تنظيف لو البلوكة اختفت
                         capturedParts[part] = nil
                         table.remove(capturedOrder, i)
                     end
                 end
             end)
         else
-            if connection then connection:Disconnect(); connection = nil end
+            if connection then
+                connection:Disconnect()
+                connection = nil
+            end
             releaseAllParts()
             SendRobloxNotification("Cryptic Hub", "⬇️ تم إسقاط البرج.")
         end
