@@ -1,11 +1,14 @@
--- [[ Cryptic Hub - المحرك الرئيسي V8.0 (النسخة المجزأة + كاشف الأخطاء العميق) ]]
+-- [[ Cryptic Hub - المحرك الرئيسي (فرع التجارب - Test Branch) ]]
+-- التحديث: إصلاح المسارات لتعمل مع مجلد UI/Element
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 
 local Cryptic = {
     Config = {
-        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main",
+        UserName = "OnlyCryptic", 
+        RepoName = "Cryptic", 
+        Branch = "test", -- 🟢 التأكد من أنه يقرأ من فرع التجارب
         Discord = "https://discord.gg/QSvQJs7BdP"
     },
 
@@ -22,52 +25,47 @@ local Cryptic = {
     TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / players", "قسم السيرفر / server", "الانتقال / Teleport", "اخرى / Other", "اقتراحات / Suggestions"}
 }
 
+-- إضافة قسم التجارب للمالك
 if Players.LocalPlayer.UserId == 3875086037 then
-    Cryptic.Structure["تجارب"] = { Folder = "Experiments", Files = {"owner_only", "block_surfer", "hm", "closest_aimbot", "auto_apple", "part_flinger"} }
+    Cryptic.Structure["تجارب"] = {
+        Folder = "Experiments",
+        Files = {"owner_only", "block_surfer", "hm", "closest_aimbot", "auto_apple", "part_flinger"}
+    }
     table.insert(Cryptic.TabsOrder, "تجارب")
 end
 
+-- دالة الاستدعاء
 local function Import(path)
     local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. "?v=" .. tick()
     local s, r = pcall(game.HttpGet, game, url)
     if s and r then
-        if r:match("404: Not Found") then return nil end
         local f = loadstring(r)
         if f then return f() end
     end
     return nil
 end
 
+-- نظام الذاكرة المؤقتة (Cache) للأزرار
 local ElementCache = {}
 
 local function LoadElement(elementName)
     if ElementCache[elementName] then return ElementCache[elementName] end
     
-    local path = "UI/Element/" .. elementName .. ".lua"
-    local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. "?v=" .. tick()
+    -- 🟢 تم التعديل هنا ليكون "Element" بدون s ليتوافق مع صور ملفاتك
+    local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/UI/Element/" .. elementName .. ".lua?v=" .. tick()
     local s, r = pcall(game.HttpGet, game, url)
-    
     if s and r then
-        if r:match("404: Not Found") then
-            warn("❌ خطأ: الملف غير موجود في المستودع! المسار: " .. path)
-            return nil
-        end
-        
-        local chunk, compileErr = loadstring(r)
+        local chunk = loadstring(r)
         if chunk then 
             local func = chunk()
             ElementCache[elementName] = func
             return func
-        else
-            -- هنا سيكشف لنا السر!
-            warn("❌ الكود داخل [" .. elementName .. "] غير صالح للتشغيل!")
-            warn("تفاصيل الخطأ: " .. tostring(compileErr))
-            warn("🔍 محتوى الملف الذي تم تحميله (أول 50 حرف): " .. string.sub(r, 1, 50))
         end
     end
     return nil
 end
 
+-- بناء الواجهة
 local UI = Import("UI/Core.lua") 
 
 if UI then
@@ -78,6 +76,7 @@ if UI then
         if tabData then  
             local CurrentTab = MainWin:CreateTab(tabName)  
 
+            -- ربط العناصر
             local elementsList = {
                 "Button", "Toggle", "TimedToggle", "Input", "LargeInput", 
                 "SpeedControl", "Dropdown", "PlayerSelector", "ProfileCard", 
@@ -91,12 +90,16 @@ if UI then
                 end
             end
 
+            -- تشغيل ملفات الميزات
             task.spawn(function(data, tab, nameOfTab)  
                 for _, fileName in ipairs(data.Files) do  
                     local filePath = (data.Folder == "") and (fileName .. ".lua") or ("Modules/" .. data.Folder .. "/" .. fileName .. ".lua")  
                     local init = Import(filePath)  
                     if type(init) == "function" then  
-                        pcall(function() init(tab, UI); tab:AddLine() end)
+                        pcall(function()   
+                            init(tab, UI)  
+                            tab:AddLine()  
+                        end)  
                     end  
                 end  
                 
