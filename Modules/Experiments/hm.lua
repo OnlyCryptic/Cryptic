@@ -39,13 +39,17 @@ return function(Tab, UI)
         if not part or not part:IsA("BasePart") then return false end
         if part.Anchored then return false end 
         
+        -- 1. منع التقاط أجزاء الشخصيات الأساسية
         local model = part:FindFirstAncestorOfClass("Model")
         if model and model:FindFirstChildOfClass("Humanoid") then return false end
+        
+        -- 2. (حل المشكلة الثانية) منع التقاط الأدوات والإكسسوارات لمنع تقليتش اللاعبين
+        if part:FindFirstAncestorOfClass("Tool") or part:FindFirstAncestorOfClass("Accessory") then return false end
         
         return true
     end
 
-    Tab:AddToggle("رفع بلوكات غير مثبته / Telekinesis", function(state)
+    Tab:AddToggle("رفع بلوكات غ.ير مثبته / Telekinesis", function(state)
         isActive = state
         
         if isActive then
@@ -99,6 +103,13 @@ return function(Tab, UI)
                     if part and part.Parent and not part.Anchored then
                         data.bp.Position = root.Position + Vector3.new(0, LEVITATION_HEIGHT, 0) + data.offset
                         data.bg.CFrame = root.CFrame * CFrame.Angles(math.rad(math.random(-15, 15)), tick() % 360, math.rad(math.random(-15, 15)))
+                        
+                        -- 3. (حل المشكلة الأولى) إجبار اللعبة على إبقاء البلوكات لك ومنع سقوطها
+                        pcall(function()
+                            part.CanCollide = false
+                            -- سرعة وهمية صغيرة جداً تمنع نظام روبلوكس من نقل ملكية البلوكة للاعب آخر
+                            part.Velocity = Vector3.new(0, 0.1, 0)
+                        end)
                     else
                         capturedParts[part] = nil
                     end
