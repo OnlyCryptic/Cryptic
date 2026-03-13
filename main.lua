@@ -6,7 +6,7 @@ local Players = game:GetService("Players")
 
 local Cryptic = {
     Config = {
-        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main", -- فرع التجارب
+        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "test", -- فرع التجارب
         Discord = "https://discord.gg/QSvQJs7BdP"
     },
 
