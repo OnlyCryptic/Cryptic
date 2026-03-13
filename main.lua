@@ -1,4 +1,4 @@
--- [[ Cryptic Hub - المحرك الرئيسي V8.0 (النسخة المجزأة + نظام كشف الأخطاء) ]]
+-- [[ Cryptic Hub - المحرك الرئيسي V8.0 (النسخة المجزأة + تصحيح مسار Element) ]]
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -55,7 +55,8 @@ local ElementCache = {}
 local function LoadElement(elementName)
     if ElementCache[elementName] then return ElementCache[elementName] end
     
-    local path = "UI/Elements/" .. elementName .. ".lua"
+    -- 🟢 تم التعديل هنا: Element بدون حرف s ليتوافق مع مجلدك في GitHub
+    local path = "UI/Element/" .. elementName .. ".lua"
     local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. "?v=" .. tick()
     local s, r = pcall(game.HttpGet, game, url)
     if s and r then
