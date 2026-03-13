@@ -26,15 +26,14 @@ return function(TabOps, label, callback, default)
     Inp.TextColor3 = Color3.new(1, 1, 1)
     Instance.new("UICorner", Inp)
 
-    -- تم إصلاح التداخل هنا: تقليل حجم النص ليقف قبل المربع بمسافة آمنة
+    -- تم إصلاح التناسق هنا: نفس مقاسات وأبعاد زر الـ Toggle العادي تماماً
     local Lbl = Instance.new("TextLabel", Row)
     Lbl.Text = label
-    Lbl.Size = UDim2.new(1, -115, 1, 0) -- المساحة المحجوزة للنص (بعيد عن الأزرار)
-    Lbl.Position = UDim2.new(0, 5, 0, 0)
+    Lbl.Size = UDim2.new(0.65, 0, 1, 0) 
+    Lbl.Position = UDim2.new(0.05, 0, 0, 0)
     Lbl.TextColor3 = Color3.new(1, 1, 1)
     Lbl.BackgroundTransparency = 1
     Lbl.TextXAlignment = Enum.TextXAlignment.Right
-    Lbl.TextSize = 13 -- حجم خط مناسب لتفادي الخروج عن السطر
     
     local active = false
     local configKey = TabOps.TabName .. "_" .. label .. "_Speed"
@@ -45,7 +44,7 @@ return function(TabOps, label, callback, default)
     end
     
     local function update() 
-        Tgl.BackgroundColor3 = active and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(60, 60, 60)
+        Tgl.BackgroundColor3 = active and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(60, 60, 60)
         local val = tonumber(Inp.Text) or tonumber(startVal)
         TabOps.UI.ConfigData[configKey] = {active = active, val = val}
         pcall(callback, active, val) 
