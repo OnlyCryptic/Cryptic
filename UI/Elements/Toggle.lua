@@ -1,3 +1,5 @@
+-- [[ Cryptic Hub - Element: Toggle ]]
+
 return function(TabOps, label, callback)
     TabOps.Order = TabOps.Order + 1
     
@@ -16,14 +18,14 @@ return function(TabOps, label, callback)
     
     local Lbl = Instance.new("TextLabel", R)
     Lbl.Text = label
-    Lbl.Size = UDim2.new(1, -70, 1, 0) 
+    Lbl.Size = UDim2.new(1, -65, 1, 0) -- مساحة آمنة جداً
     Lbl.Position = UDim2.new(0, 5, 0, 0)
     Lbl.TextColor3 = Color3.new(1, 1, 1)
     Lbl.BackgroundTransparency = 1
     Lbl.TextXAlignment = Enum.TextXAlignment.Right
-    Lbl.TextSize = 13 
-    Lbl.TextWrapped = false -- 🟢 تم إيقاف التفاف النص لمنع السطرين
-    Lbl.TextTruncate = Enum.TextTruncate.AtEnd -- 🟢 إضافة (...) لو النص طويل
+    Lbl.Font = Enum.Font.GothamSemibold
+    Lbl.TextSize = 11 -- 🟢 الحجم الصغير والموحد
+    Lbl.TextWrapped = false 
     
     local isActive = false
     local configKey = TabOps.TabName .. "_" .. label
