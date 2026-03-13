@@ -33,7 +33,7 @@ return function(Tab, UI)
         btn.Size = UDim2.new(0, 55, 0, 18) 
         btn.Position = UDim2.new(0.5, 30, 0, 15) 
         btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        btn.BackgroundTransparency = 0.75 
+        btn.BackgroundTransparency = 0.60 
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn.Text = "Jerk Tool" 
         btn.Font = Enum.Font.GothamBold
