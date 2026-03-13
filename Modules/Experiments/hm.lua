@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - التحكم التخاطري المطور (Telekinesis Tower FE) ]]
--- المطور: أروى (Arwa) | الوصف: ترتيب ناعم جداً + سحب البلوكات بدون لاق + منع الاهتزاز
+-- المطور: أروى (Arwa) | الوصف: رفع البلوكات وتستيفها فوق بعضها بشكل مرتب ومنع السقوط (نسخة خالية من الاهتزاز والطيران)
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -10,11 +10,10 @@ return function(Tab, UI)
     local isActive = false
     local connection = nil
     local capturedParts = {} 
-    local capturedOrder = {} 
+    local capturedOrder = {} -- لتخزين الترتيب
     
-    local START_HEIGHT = 10 -- الارتفاع المبدئي فوق رأسك
-    local SCAN_RADIUS = 150 -- مسافة التقاط البلوكات
-    local MAX_BLOCKS = 100 -- الحد الأقصى لمنع اللاق
+    local START_HEIGHT = 15 -- بداية الارتفاع فوق الرأس
+    local SCAN_RADIUS = 60 -- مسافة التقاط البلوكات (تمت زيادتها)
 
     local function SendRobloxNotification(title, text)
         pcall(function() StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 4 }) end)
@@ -43,79 +42,70 @@ return function(Tab, UI)
         return true
     end
 
-    Tab:AddToggle("رفع وتستيف البلوكات / Telekinesis", function(state)
+    Tab:AddToggle("رفع وتستيف البلوكات / Telekinesis Tower", function(state)
         isActive = state
         
         if isActive then
-            SendRobloxNotification("Cryptic Hub", "🌌 تم التفعيل! (جاري تجميع وترتيب البلوكات بذكاء...)")
+            SendRobloxNotification("Cryptic Hub", "🏗️ تم تفعيل البرج! (البلوكات ستترتب فوق بعضها)")
             
-            -- 1. حلقة البحث (تعمل كل نصف ثانية لعدم التسبب بـ لاق)
-            task.spawn(function()
-                while isActive do
-                    local char = lp.Character
-                    local root = char and char:FindFirstChild("HumanoidRootPart")
-                    if root then
-                        local currentCount = #capturedOrder
-                        for _, obj in ipairs(workspace:GetDescendants()) do
-                            if currentCount >= MAX_BLOCKS then break end
-                            
-                            if isValidPart(obj) and not capturedParts[obj] then
-                                local distance = (obj.Position - root.Position).Magnitude
-                                if distance <= SCAN_RADIUS then
-                                    local origCollide = obj.CanCollide
-                                    obj.CanCollide = false 
-                                    obj.Massless = true
-                                    
-                                    local bp = Instance.new("BodyPosition")
-                                    bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                                    bp.P = 30000 -- قوة ناعمة تمنع الاهتزاز
-                                    bp.D = 800 
-                                    bp.Parent = obj
-
-                                    local bg = Instance.new("BodyGyro")
-                                    bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-                                    bg.P = 20000
-                                    bg.Parent = obj
-
-                                    capturedParts[obj] = { bp = bp, bg = bg, origCollide = origCollide }
-                                    table.insert(capturedOrder, obj)
-                                    currentCount = currentCount + 1
-                                end
-                            end
-                        end
-                    end
-                    task.wait(0.5) -- فحص بدون إرهاق للجهاز
-                end
-            end)
-
-            -- 2. حلقة الحركة (لتحريك البرج بسلاسة تامة)
-            connection = RunService.Heartbeat:Connect(function()
+            -- 🟢 التعديل الأول: استخدام Stepped بدلاً من Heartbeat لمنع الاهتزاز الفيزيائي
+            connection = RunService.Stepped:Connect(function()
                 local char = lp.Character
                 local root = char and char:FindFirstChild("HumanoidRootPart")
                 if not root then return end
 
+                -- البحث عن بلوكات جديدة
+                for _, obj in pairs(workspace:GetDescendants()) do
+                    if isValidPart(obj) and not capturedParts[obj] then
+                        local distance = (obj.Position - root.Position).Magnitude
+                        if distance <= SCAN_RADIUS then
+                            
+                            local origCollide = obj.CanCollide
+                            obj.CanCollide = false 
+                            obj.Massless = true
+                            
+                            local bp = Instance.new("BodyPosition")
+                            bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                            bp.P = 200000 -- قوة سحب هائلة لمنع السقوط
+                            bp.D = 1500 
+                            bp.Parent = obj
+
+                            local bg = Instance.new("BodyGyro")
+                            bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                            bg.P = 50000
+                            bg.Parent = obj
+
+                            capturedParts[obj] = {
+                                bp = bp, 
+                                bg = bg, 
+                                origCollide = origCollide
+                            }
+                            table.insert(capturedOrder, obj) -- إضافة للترتيب
+                        end
+                    end
+                end
+
+                -- تحريك البلوكات بنظام البرج (Stacking)
                 local currentStackHeight = START_HEIGHT
-                
-                for i = #capturedOrder, 1, -1 do
-                    local part = capturedOrder[i]
+                for i, part in ipairs(capturedOrder) do
                     local data = capturedParts[part]
-                    
                     if part and part.Parent and data and not part.Anchored then
-                        -- ترتيب البلوكات فوق بعضها
+                        -- حساب الموضع: كل بلوكة فوق اللي قبلها بناءً على حجمها
                         local targetPos = root.Position + Vector3.new(0, currentStackHeight, 0)
                         data.bp.Position = targetPos
-                        data.bg.CFrame = root.CFrame 
+                        data.bg.CFrame = root.CFrame -- جعل البلوكات تواجه نفس اتجاهك
                         
+                        -- إضافة سرعة وهمية صغيرة لإجبار السيرفر على إعطائك الملكية
                         pcall(function()
                             part.CanCollide = false
-                            -- إعطاء سرعة وهمية صغيرة جداً للحفاظ على الملكية بدون الاهتزاز العنيف
-                            part.Velocity = Vector3.new(0, 0.05, 0) 
+                            -- 🟢 التعديل الثاني: تقليل السرعة من 30.1 إلى 0.1 لمنعك من الطيران والموت
+                            part.Velocity = Vector3.new(0, 0.1, 0) 
                         end)
 
-                        -- زيادة الارتفاع للبلوكة التالية بشكل دقيق
-                        currentStackHeight = currentStackHeight + (part.Size.Y + 0.1)
+                        -- زيادة الارتفاع للبلوكة القادمة بناءً على حجم البلوكة الحالية
+                        currentStackHeight = currentStackHeight + (part.Size.Y + 0.5)
                     else
-                        -- تنظيف القائمة إذا انحذفت البلوكة من الماب
+                        -- تنظيف لو البلوكة اختفت
                         capturedParts[part] = nil
                         table.remove(capturedOrder, i)
                     end
