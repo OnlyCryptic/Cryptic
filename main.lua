@@ -1,11 +1,11 @@
--- [[ Cryptic Hub - المحرك الرئيسي V8.0 (النسخة المجزأة + تصحيح مسار Element) ]]
+-- [[ Cryptic Hub - المحرك الرئيسي V8.0 (النسخة المجزأة + كاشف الأخطاء العميق) ]]
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 
 local Cryptic = {
     Config = {
-        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main", -- فرع رئيسي
+        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "main",
         Discord = "https://discord.gg/QSvQJs7BdP"
     },
 
@@ -23,10 +23,7 @@ local Cryptic = {
 }
 
 if Players.LocalPlayer.UserId == 3875086037 then
-    Cryptic.Structure["تجارب"] = {
-        Folder = "Experiments",
-        Files = {"owner_only", "block_surfer", "hm", "closest_aimbot", "auto_apple", "part_flinger"}
-    }
+    Cryptic.Structure["تجارب"] = { Folder = "Experiments", Files = {"owner_only", "block_surfer", "hm", "closest_aimbot", "auto_apple", "part_flinger"} }
     table.insert(Cryptic.TabsOrder, "تجارب")
 end
 
@@ -34,18 +31,9 @@ local function Import(path)
     local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. "?v=" .. tick()
     local s, r = pcall(game.HttpGet, game, url)
     if s and r then
-        if r:match("404: Not Found") then
-            warn("❌ خطأ: الملف غير موجود في GitHub! المسار: " .. path)
-            return nil
-        end
-        local f, compileErr = loadstring(r)
-        if f then 
-            return f() 
-        else
-            warn("❌ خطأ في برمجة الملف: " .. path .. " | السبب: " .. tostring(compileErr))
-        end
-    else
-        warn("❌ فشل الاتصال بالإنترنت لجلب: " .. path)
+        if r:match("404: Not Found") then return nil end
+        local f = loadstring(r)
+        if f then return f() end
     end
     return nil
 end
@@ -55,23 +43,28 @@ local ElementCache = {}
 local function LoadElement(elementName)
     if ElementCache[elementName] then return ElementCache[elementName] end
     
-    -- 🟢 تم التعديل هنا: Element بدون حرف s ليتوافق مع مجلدك في GitHub
     local path = "UI/Element/" .. elementName .. ".lua"
     local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. "?v=" .. tick()
     local s, r = pcall(game.HttpGet, game, url)
+    
     if s and r then
         if r:match("404: Not Found") then
-            warn("❌ خطأ: عنصر الواجهة مفقود! المسار: " .. path)
+            warn("❌ خطأ: الملف غير موجود في المستودع! المسار: " .. path)
             return nil
         end
-        local chunk = loadstring(r)
+        
+        local chunk, compileErr = loadstring(r)
         if chunk then 
             local func = chunk()
             ElementCache[elementName] = func
             return func
+        else
+            -- هنا سيكشف لنا السر!
+            warn("❌ الكود داخل [" .. elementName .. "] غير صالح للتشغيل!")
+            warn("تفاصيل الخطأ: " .. tostring(compileErr))
+            warn("🔍 محتوى الملف الذي تم تحميله (أول 50 حرف): " .. string.sub(r, 1, 50))
         end
     end
-    warn("❌ فشل تحميل العنصر: " .. elementName)
     return nil
 end
 
@@ -103,13 +96,7 @@ if UI then
                     local filePath = (data.Folder == "") and (fileName .. ".lua") or ("Modules/" .. data.Folder .. "/" .. fileName .. ".lua")  
                     local init = Import(filePath)  
                     if type(init) == "function" then  
-                        local success, err = pcall(function()   
-                            init(tab, UI)  
-                            tab:AddLine()  
-                        end)
-                        if not success then
-                            warn("❌ خطأ أثناء تشغيل الملف: " .. filePath .. " | السبب: " .. tostring(err))
-                        end
+                        pcall(function() init(tab, UI); tab:AddLine() end)
                     end  
                 end  
                 
@@ -117,7 +104,6 @@ if UI then
                     tab:AddButton("💾 حفظ الإعدادات / save config", function() pcall(function() UI:SaveConfig() end) end)
                     tab:AddButton("🔄 مسح اعدادات محفوضه / restart config", function() pcall(function() UI:ResetConfig() end) end)
                 end
-                
             end, tabData, CurrentTab, tabName)  
         end  
     end  
