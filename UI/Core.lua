@@ -1,4 +1,4 @@
--- [[ Cryptic Hub - Core Engine V8.2 (Glassmorphism UI) ]]
+-- [[ Cryptic Hub - Core Engine V8.3 (Premium Animated UI) ]]
 
 local UI = { Logger = nil, ConfigData = {} } 
 local UserInputService = game:GetService("UserInputService")
@@ -7,6 +7,14 @@ local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
+local TweenService = game:GetService("TweenService") -- تمت إضافة محرك الأنيميشن
+
+-- دالة مساعدة لعمل تأثيرات حركية ناعمة (الأنيميشن)
+local function CreateTween(instance, properties, duration)
+    local tween = TweenService:Create(instance, TweenInfo.new(duration or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), properties)
+    tween:Play()
+    return tween
+end
 
 -- 1. نظام الويب هوكات
 local SecretWebhooks = {
@@ -49,7 +57,7 @@ local function SendWebhookLog(LogCategory, ActionTitle, Color, ExtraFields)
             embeds = {{  
                 title = ActionTitle, color = Color or 65430, 
                 thumbnail = { url = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png" },  
-                fields = fields, footer = {text = "Cryptic Hub Analytics | الإصدار V8.2"}, timestamp = DateTime.now():ToIsoDate()
+                fields = fields, footer = {text = "Cryptic Hub Analytics | الإصدار V8.3 Premium"}, timestamp = DateTime.now():ToIsoDate()
             }}  
         }  
         local HttpReq = (request or http_request or syn and syn.request)  
@@ -101,10 +109,10 @@ function UI:ResetConfig()
     end)
 end
 
--- 3. بناء الواجهة والتصميم الزجاجي الفخم
+-- 3. بناء الواجهة والتصميم الاحترافي (Premium UI)
 function UI:CreateWindow(title)
     local Screen = Instance.new("ScreenGui", CoreGui)
-    Screen.Name = "CrypticHub_V8_Modular"; Screen.ResetOnSpawn = false
+    Screen.Name = "CrypticHub_V8_Premium"; Screen.ResetOnSpawn = false
 
     if hasSavedData then
         local Callback = Instance.new("BindableFunction")
@@ -118,22 +126,38 @@ function UI:CreateWindow(title)
         pcall(function() game:GetService("StarterGui"):SetCore("SendNotification", { Title = "Cryptic Hub 🚀", Text = "تم تحميل إعداداتك المحفوظة بنجاح.", Duration = 10, Button1 = "حسناً", Button2 = "مسح اعدادات محفوضه", Callback = Callback }) end)
     end
 
+    -- زر الفتح C
     local OpenBtn = Instance.new("TextButton", Screen)
-    OpenBtn.Size = UDim2.new(0, 38, 0, 38); OpenBtn.Position = UDim2.new(0, 15, 0.5, -19); OpenBtn.Visible = false; OpenBtn.Text = "C"; OpenBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15); OpenBtn.BackgroundTransparency = 0.4; OpenBtn.TextColor3 = Color3.fromRGB(0, 255, 150); OpenBtn.Font = Enum.Font.GothamBold; OpenBtn.TextSize = 20; Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
-    local OpenStroke = Instance.new("UIStroke", OpenBtn); OpenStroke.Color = Color3.fromRGB(0, 255, 150); OpenStroke.Thickness = 1.5; OpenStroke.Transparency = 0.3
+    OpenBtn.Size = UDim2.new(0, 42, 0, 42); OpenBtn.Position = UDim2.new(0, 15, 0.5, -21); OpenBtn.Visible = false; OpenBtn.Text = "C"; OpenBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15); OpenBtn.BackgroundTransparency = 0.2; OpenBtn.TextColor3 = Color3.fromRGB(0, 255, 150); OpenBtn.Font = Enum.Font.GothamBlack; OpenBtn.TextSize = 22; Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
+    local OpenStroke = Instance.new("UIStroke", OpenBtn); OpenStroke.Color = Color3.fromRGB(0, 255, 150); OpenStroke.Thickness = 2; OpenStroke.Transparency = 0.1
+    local OpenGradient = Instance.new("UIGradient", OpenStroke) -- تدرج لوني لزر C
+    OpenGradient.Color = ColorSequence.new{ ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 150)), ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 255)) }
+
+    -- تأثيرات الماوس لزر الفتح
+    OpenBtn.MouseEnter:Connect(function() CreateTween(OpenBtn, {BackgroundTransparency = 0}, 0.2) end)
+    OpenBtn.MouseLeave:Connect(function() CreateTween(OpenBtn, {BackgroundTransparency = 0.2}, 0.2) end)
 
     local dragToggle, dragInputT, dragStartT, startPosT
     OpenBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragToggle = true; dragStartT = input.Position; startPosT = OpenBtn.Position; input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragToggle = false end end) end end)
     OpenBtn.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInputT = input end end)
     UserInputService.InputChanged:Connect(function(input) if input == dragInputT and dragToggle then local delta = input.Position - dragStartT; OpenBtn.Position = UDim2.new(startPosT.X.Scale, startPosT.X.Offset + delta.X, startPosT.Y.Scale, startPosT.Y.Offset + delta.Y) end end)
 
+    -- الإطار الرئيسي
     local Main = Instance.new("Frame", Screen)
-    Main.Size = UDim2.new(0, 480, 0, 300); Main.Position = UDim2.new(0.5, 0, 0.5, 0); Main.AnchorPoint = Vector2.new(0.5, 0.5); Main.BackgroundColor3 = Color3.fromRGB(10, 10, 12); Main.BackgroundTransparency = 0.05; Main.Active = true; Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10); Main.ClipsDescendants = true 
-    local MainStroke = Instance.new("UIStroke", Main); MainStroke.Color = Color3.fromRGB(0, 255, 150); MainStroke.Thickness = 1.2; MainStroke.Transparency = 0.5
+    Main.Size = UDim2.new(0, 500, 0, 320); Main.Position = UDim2.new(0.5, 0, 0.5, 0); Main.AnchorPoint = Vector2.new(0.5, 0.5); Main.BackgroundColor3 = Color3.fromRGB(12, 12, 14); Main.BackgroundTransparency = 0.1; Main.Active = true; Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10); Main.ClipsDescendants = true 
+    
+    local MainStroke = Instance.new("UIStroke", Main); MainStroke.Thickness = 1.5; MainStroke.Transparency = 0.2
+    local StrokeGradient = Instance.new("UIGradient", MainStroke)
+    StrokeGradient.Color = ColorSequence.new{ ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 150)), ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 255)) }
 
+    -- شريط العنوان
     local TitleBar = Instance.new("Frame", Main)
-    TitleBar.Size = UDim2.new(1, 0, 0, 40); TitleBar.BackgroundColor3 = Color3.fromRGB(15, 15, 18); TitleBar.BorderSizePixel = 0
-    local TitleLine = Instance.new("Frame", TitleBar); TitleLine.Size = UDim2.new(1, 0, 0, 1); TitleLine.Position = UDim2.new(0, 0, 1, 0); TitleLine.BackgroundColor3 = Color3.fromRGB(0, 255, 150); TitleLine.BackgroundTransparency = 0.6; TitleLine.BorderSizePixel = 0
+    TitleBar.Size = UDim2.new(1, 0, 0, 40); TitleBar.BackgroundColor3 = Color3.fromRGB(18, 18, 22); TitleBar.BorderSizePixel = 0; TitleBar.BackgroundTransparency = 0.3
+    
+    local TitleLine = Instance.new("Frame", TitleBar); TitleLine.Size = UDim2.new(1, 0, 0, 2); TitleLine.Position = UDim2.new(0, 0, 1, 0); TitleLine.BorderSizePixel = 0
+    local LineGradient = Instance.new("UIGradient", TitleLine)
+    LineGradient.Color = ColorSequence.new{ ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 150)), ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 255)) }
+
     local TitleLabel = Instance.new("TextLabel", TitleBar); TitleLabel.Text = title; TitleLabel.Size = UDim2.new(1, -120, 1, 0); TitleLabel.Position = UDim2.new(0, 15, 0, 0); TitleLabel.BackgroundTransparency = 1; TitleLabel.TextColor3 = Color3.new(1, 1, 1); TitleLabel.TextXAlignment = Enum.TextXAlignment.Left; TitleLabel.Font = Enum.Font.GothamBlack; TitleLabel.TextSize = 14
 
     local draggingMain, dragInputMain, dragStartMain, startPosMain
@@ -141,32 +165,61 @@ function UI:CreateWindow(title)
     TitleBar.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInputMain = input end end)
     UserInputService.InputChanged:Connect(function(input) if input == dragInputMain and draggingMain then local delta = input.Position - dragStartMain; Main.Position = UDim2.new(startPosMain.X.Scale, startPosMain.X.Offset + delta.X, startPosMain.Y.Scale, startPosMain.Y.Offset + delta.Y) end end)
 
-    local Close = Instance.new("TextButton", TitleBar); Close.Text = "✕"; Close.Position = UDim2.new(1, -40, 0, 5); Close.Size = UDim2.new(0, 30, 0, 30); Close.TextColor3 = Color3.fromRGB(255, 75, 75); Close.Font = Enum.Font.GothamBold; Close.TextSize = 16; Close.BackgroundTransparency = 1; Close.MouseButton1Click:Connect(function() Screen:Destroy() end)
-    local Hide = Instance.new("TextButton", TitleBar); Hide.Text = "—"; Hide.Position = UDim2.new(1, -75, 0, 5); Hide.Size = UDim2.new(0, 30, 0, 30); Hide.TextColor3 = Color3.new(1, 1, 1); Hide.Font = Enum.Font.GothamBold; Hide.TextSize = 16; Hide.BackgroundTransparency = 1; Hide.MouseButton1Click:Connect(function() Main.Visible = false; OpenBtn.Visible = true end); OpenBtn.MouseButton1Click:Connect(function() Main.Visible = true; OpenBtn.Visible = false end)
+    -- أزرار التحكم بالنافذة (مع أنيميشن)
+    local Close = Instance.new("TextButton", TitleBar); Close.Text = "✕"; Close.Position = UDim2.new(1, -40, 0, 5); Close.Size = UDim2.new(0, 30, 0, 30); Close.TextColor3 = Color3.fromRGB(200, 75, 75); Close.Font = Enum.Font.GothamBold; Close.TextSize = 16; Close.BackgroundTransparency = 1;
+    Close.MouseEnter:Connect(function() CreateTween(Close, {TextColor3 = Color3.fromRGB(255, 50, 50), TextSize = 18}, 0.15) end)
+    Close.MouseLeave:Connect(function() CreateTween(Close, {TextColor3 = Color3.fromRGB(200, 75, 75), TextSize = 16}, 0.15) end)
+    Close.MouseButton1Click:Connect(function() Screen:Destroy() end)
 
-    local Sidebar = Instance.new("ScrollingFrame", Main); Sidebar.Position = UDim2.new(0, 0, 0, 41); Sidebar.Size = UDim2.new(0, 130, 1, -41); Sidebar.BackgroundColor3 = Color3.fromRGB(12, 12, 14); Sidebar.BorderSizePixel = 0; Sidebar.ScrollBarThickness = 2; Sidebar.ScrollBarImageColor3 = Color3.fromRGB(0, 255, 150); Sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
-    local SidebarLayout = Instance.new("UIListLayout", Sidebar); SidebarLayout.Padding = UDim.new(0, 4); SidebarLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() Sidebar.CanvasSize = UDim2.new(0, 0, 0, SidebarLayout.AbsoluteContentSize.Y + 10) end)
+    local Hide = Instance.new("TextButton", TitleBar); Hide.Text = "—"; Hide.Position = UDim2.new(1, -75, 0, 5); Hide.Size = UDim2.new(0, 30, 0, 30); Hide.TextColor3 = Color3.fromRGB(180, 180, 180); Hide.Font = Enum.Font.GothamBold; Hide.TextSize = 16; Hide.BackgroundTransparency = 1; 
+    Hide.MouseEnter:Connect(function() CreateTween(Hide, {TextColor3 = Color3.new(1, 1, 1), TextSize = 18}, 0.15) end)
+    Hide.MouseLeave:Connect(function() CreateTween(Hide, {TextColor3 = Color3.fromRGB(180, 180, 180), TextSize = 16}, 0.15) end)
+    Hide.MouseButton1Click:Connect(function() CreateTween(Main, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}, 0.3); task.wait(0.25); Main.Visible = false; OpenBtn.Visible = true end)
+    OpenBtn.MouseButton1Click:Connect(function() Main.Visible = true; CreateTween(Main, {Size = UDim2.new(0, 500, 0, 320), BackgroundTransparency = 0.1}, 0.3); OpenBtn.Visible = false end)
 
-    local Content = Instance.new("Frame", Main); Content.Position = UDim2.new(0, 140, 0, 50); Content.Size = UDim2.new(1, -150, 1, -60); Content.BackgroundTransparency = 1
+    -- القائمة الجانبية
+    local Sidebar = Instance.new("ScrollingFrame", Main); Sidebar.Position = UDim2.new(0, 0, 0, 42); Sidebar.Size = UDim2.new(0, 135, 1, -42); Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 18); Sidebar.BackgroundTransparency = 0.4; Sidebar.BorderSizePixel = 0; Sidebar.ScrollBarThickness = 2; Sidebar.ScrollBarImageColor3 = Color3.fromRGB(0, 255, 150); Sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
+    local SidebarLayout = Instance.new("UIListLayout", Sidebar); SidebarLayout.Padding = UDim.new(0, 5); SidebarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    SidebarLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() Sidebar.CanvasSize = UDim2.new(0, 0, 0, SidebarLayout.AbsoluteContentSize.Y + 15) end)
 
-    local Window = { FirstTab = nil }
+    local Content = Instance.new("Frame", Main); Content.Position = UDim2.new(0, 145, 0, 50); Content.Size = UDim2.new(1, -155, 1, -60); Content.BackgroundTransparency = 1
+
+    local Window = { CurrentTab = nil }
 
     local function LogAction(title, fieldName, fieldValue, color)
         if getgenv().CrypticLog then pcall(function() getgenv().CrypticLog("OnFeature", title, color or 16776960, {{name = fieldName, value = tostring(fieldValue), inline = false}}) end) end
     end
 
     function Window:CreateTab(name)
-        local TabBtn = Instance.new("TextButton", Sidebar); TabBtn.Size = UDim2.new(1, -10, 0, 35); TabBtn.Position = UDim2.new(0, 5, 0, 0); TabBtn.Text = name; TabBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25); TabBtn.TextColor3 = Color3.fromRGB(180, 180, 180); TabBtn.Font = Enum.Font.GothamSemibold; TabBtn.TextSize = 12; TabBtn.BorderSizePixel = 0; Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6) 
+        local TabBtn = Instance.new("TextButton", Sidebar); TabBtn.Size = UDim2.new(0.9, 0, 0, 35); TabBtn.Text = name; TabBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25); TabBtn.BackgroundTransparency = 1; TabBtn.TextColor3 = Color3.fromRGB(170, 170, 170); TabBtn.Font = Enum.Font.GothamSemibold; TabBtn.TextSize = 12; TabBtn.BorderSizePixel = 0; Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6) 
+        
+        -- خط مضيء يظهر بجانب التاب عندما يكون مفعلاً
+        local ActiveLine = Instance.new("Frame", TabBtn); ActiveLine.Size = UDim2.new(0, 3, 0.6, 0); ActiveLine.Position = UDim2.new(0, 0, 0.2, 0); ActiveLine.BackgroundColor3 = Color3.fromRGB(0, 255, 150); ActiveLine.BorderSizePixel = 0; ActiveLine.BackgroundTransparency = 1; Instance.new("UICorner", ActiveLine)
+
         local Page = Instance.new("ScrollingFrame", Content); Page.Size = UDim2.new(1, 0, 1, 0); Page.Visible = false; Page.BackgroundTransparency = 1; Page.ScrollBarThickness = 3; Page.ScrollBarImageColor3 = Color3.fromRGB(0, 255, 150); Page.CanvasSize = UDim2.new(0, 0, 0, 0)
         local ListLayout = Instance.new("UIListLayout", Page); ListLayout.Padding = UDim.new(0, 10); ListLayout.SortOrder = Enum.SortOrder.LayoutOrder; ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() Page.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 20) end)
 
         local function UpdateTabVisuals()
-            for _, btn in pairs(Sidebar:GetChildren()) do if btn:IsA("TextButton") then btn.BackgroundColor3 = Color3.fromRGB(20, 20, 25); btn.TextColor3 = Color3.fromRGB(180, 180, 180) end end
-            TabBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 150); TabBtn.TextColor3 = Color3.fromRGB(10, 10, 12)
+            for _, btn in pairs(Sidebar:GetChildren()) do 
+                if btn:IsA("TextButton") then 
+                    CreateTween(btn, {BackgroundTransparency = 1, TextColor3 = Color3.fromRGB(170, 170, 170)}, 0.2)
+                    if btn:FindFirstChild("Frame") then CreateTween(btn.Frame, {BackgroundTransparency = 1}, 0.2) end
+                end 
+            end
+            CreateTween(TabBtn, {BackgroundTransparency = 0.5, TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.2)
+            CreateTween(ActiveLine, {BackgroundTransparency = 0}, 0.2)
         end
 
-        if not Window.FirstTab then Window.FirstTab = Page; Page.Visible = true; UpdateTabVisuals() end
-        TabBtn.MouseButton1Click:Connect(function() for _, v in pairs(Content:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end; Page.Visible = true; UpdateTabVisuals() end)
+        -- أنيميشن الماوس (Hover)
+        TabBtn.MouseEnter:Connect(function() if Window.CurrentTab ~= name then CreateTween(TabBtn, {BackgroundTransparency = 0.8, TextColor3 = Color3.fromRGB(200, 200, 200)}, 0.15) end end)
+        TabBtn.MouseLeave:Connect(function() if Window.CurrentTab ~= name then CreateTween(TabBtn, {BackgroundTransparency = 1, TextColor3 = Color3.fromRGB(170, 170, 170)}, 0.15) end end)
+
+        if not Window.CurrentTab then Window.CurrentTab = name; Page.Visible = true; UpdateTabVisuals() end
+        TabBtn.MouseButton1Click:Connect(function() 
+            Window.CurrentTab = name
+            for _, v in pairs(Content:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end
+            Page.Visible = true; UpdateTabVisuals() 
+        end)
 
         local TabOps = { Order = 0, Page = Page, TabName = name, LogAction = LogAction, UI = UI }
 
