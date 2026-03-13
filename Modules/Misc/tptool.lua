@@ -25,7 +25,7 @@ return function(Tab, UI)
         btn.Size = UDim2.new(0, 55, 0, 18) -- 🟢 حجم كبسولة صغيرة جداً
         btn.Position = UDim2.new(0.5, -27, 0, 15) -- 🟢 في المنتصف بالأعلى
         btn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-        btn.BackgroundTransparency = 0.75 -- 🟢 شفافية عالية جداً 75%
+        btn.BackgroundTransparency = 0.60 -- 🟢 شفافية عالية جداً 75%
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn.Text = "TP Tool" 
         btn.Font = Enum.Font.GothamBold
