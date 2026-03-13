@@ -15,7 +15,7 @@ return function(Tab, UI)
             StarterGui:SetCore("SendNotification", {
                 Title = "Cryptic Hub",
                 Text = arText .. "\n" .. enText,
-                Duration = 10, 
+                Duration = 5, 
             })
         end)
     end
@@ -97,7 +97,7 @@ return function(Tab, UI)
 
             -- الملاحقة على مسافة مقربة جداً ومضبوطة (1.6) ليكون الجلوس واقعياً على الأكتاف والرأس
             root.Velocity = Vector3.new(0, 0, 0)
-            root.CFrame = targetHead.CFrame * CFrame.new(0, 1.6, 0)
+            root.CFrame = targetHead.CFrame * CFrame.new(0, 1.9, 0)
         end
     end)
 end
