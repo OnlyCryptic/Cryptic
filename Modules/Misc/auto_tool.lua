@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - أداة الحركة سريه (Smart Rig Tool V3.1) ]]
--- المطور: يامي (Yami) | الميزات: فحص العظام (R15/R6)، إجبار الخانة 2، استرجاع وترتيب بعد الموت، نظام احتياطي، واجهة تجهيز قابلة للتحريك
+-- [[ Cryptic Hub - أداة الحركة السرية (Smart Rig Tool V3.2) ]]
+-- المطور: يامي (Yami) | الميزات: فحص العظام، إجبار الخانة 2، واجهة تحريك ذكية مصغرة، ومنع التكرار
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -9,58 +9,52 @@ return function(Tab, UI)
     
     local isActive = false
     local isProcessing = false
+    local hasLoadedOnce = false -- 🟢 متغير لمنع تحميل السكربتات أكثر من مرة
     local toolNames = {["Jerk Off"] = true, ["Jerk Off R15"] = true}
     
-    -- متغيرات لتتبع الموت والعودة
     local lastCharacter = nil
     local hasSortedThisLife = false
 
-    -- دالة الإشعارات (تم تقليلها وجعلها عربي/إنجليزي)
     local function SendRobloxNotification(title, text)
         pcall(function()
-            StarterGui:SetCore("SendNotification", {
-                Title = title, Text = text, Duration = 3
-            })
+            StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 3 })
         end)
     end
 
-    -- واجهة مخصصة لتجهيز الأداة صغيرة، شفافة، وقابلة للتحريك
+    -- واجهة مخصصة لتجهيز الأداة (صغيرة جداً، شفافة 75%، وسحب ذكي)
     local function EnsureCustomInventory()
-        if lp.PlayerGui:FindFirstChild("CrypticToolUI") then return end
+        if lp.PlayerGui:FindFirstChild("CrypticJerkUI") then return end
         
         local sg = Instance.new("ScreenGui")
-        sg.Name = "CrypticToolUI"
+        sg.Name = "CrypticJerkUI"
         sg.ResetOnSpawn = false
         sg.Parent = lp.PlayerGui
         
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(0, 100, 0, 25) -- أصغر حجم ممكن
-        btn.Position = UDim2.new(1, -110, 0.5, 0)
+        btn.Size = UDim2.new(0, 55, 0, 18) -- 🟢 حجم كبسولة صغيرة جداً
+        btn.Position = UDim2.new(0.5, 30, 0, 15) -- 🟢 في المنتصف بجوار زر الـ TP
         btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        btn.BackgroundTransparency = 0.5 -- شفافية 50%
+        btn.BackgroundTransparency = 0.60 -- 🟢 شفافية عالية 75%
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.Text = "مسك اداة/Jerk"
-        btn.Font = Enum.Font.SourceSansBold
-        btn.TextSize = 12
+        btn.Text = "Jerk Tool" 
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 10 -- 🟢 خط صغير
         btn.Active = true
         btn.Parent = sg
         
         local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 6)
+        corner.CornerRadius = UDim.new(0, 4)
         corner.Parent = btn
 
-        -- كود السحب والتحريك (Draggable)
+        -- كود السحب الذكي بإصبع واحد (Draggable)
         local dragging = false
         local dragInput, dragStart, startPos
-
-        local function update(input)
-            local delta = input.Position - dragStart
-            btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
+        local hasMoved = false
 
         btn.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = true
+                hasMoved = false
                 dragStart = input.Position
                 startPos = btn.Position
 
@@ -80,14 +74,16 @@ return function(Tab, UI)
 
         UserInputService.InputChanged:Connect(function(input)
             if input == dragInput and dragging then
-                update(input)
+                local delta = input.Position - dragStart
+                if delta.Magnitude > 3 then -- 🟢 التمييز بين الضغطة والسحب
+                    hasMoved = true
+                    btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                end
             end
         end)
 
-        -- وظيفة الزر (التجهيز والإخفاء)
         btn.MouseButton1Click:Connect(function()
-            -- نمنع التجهيز إذا كان اللاعب يسحب الزر فقط
-            if dragging then return end 
+            if hasMoved then return end -- 🟢 إذا كان يسحب، لا تشغل الأداة
             
             local char = lp.Character
             local hum = char and char:FindFirstChild("Humanoid")
@@ -109,53 +105,42 @@ return function(Tab, UI)
         end)
     end
 
-    -- دالة إخفاء الواجهة المخصصة عند الإيقاف
     local function RemoveCustomInventory()
-        local ui = lp.PlayerGui:FindFirstChild("CrypticToolUI")
+        local ui = lp.PlayerGui:FindFirstChild("CrypticJerkUI")
         if ui then ui:Destroy() end
     end
 
-    -- [[ دالة كشف النوع المتقدمة ]]
     local function DetectRigType(char)
         local hum = char:FindFirstChild("Humanoid")
-        
         if hum then
             if hum.RigType == Enum.HumanoidRigType.R15 then return "R15" end
             if hum.RigType == Enum.HumanoidRigType.R6 then return "R6" end
         end
-
-        if char:FindFirstChild("UpperTorso") or char:FindFirstChild("LowerTorso") or char:FindFirstChild("RightFoot") then
-            return "R15"
-        elseif char:FindFirstChild("Torso") and not char:FindFirstChild("UpperTorso") then
-            return "R6"
-        end
-
+        if char:FindFirstChild("UpperTorso") or char:FindFirstChild("LowerTorso") or char:FindFirstChild("RightFoot") then return "R15"
+        elseif char:FindFirstChild("Torso") and not char:FindFirstChild("UpperTorso") then return "R6" end
         return "Unknown"
     end
 
-    -- [[ دالة التفعيل الاحتياطي (تحميل الـ R15 والـ R6 معاً) ]]
     local function LoadBothScripts()
+        if hasLoadedOnce then return end -- 🟢 منع التحميل المتكرر
         pcall(function()
-            loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))() -- R15
+            loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))() 
             task.wait(0.5)
-            loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))() -- R6
+            loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))() 
+            hasLoadedOnce = true
         end)
     end
 
-    -- دالة ترتيب الحقيبة (إجبار الخانة 2)
     local function EnforceSlot2(targetTool)
         local backpack = lp.Backpack
         local otherTools = {}
 
         for _, t in pairs(backpack:GetChildren()) do
-            if not toolNames[t.Name] and t ~= targetTool then
-                table.insert(otherTools, t)
-            end
+            if not toolNames[t.Name] and t ~= targetTool then table.insert(otherTools, t) end
         end
 
         if #otherTools > 0 then
             local firstTool = otherTools[1]
-            
             local tempFolder = Instance.new("Folder")
             firstTool.Parent = tempFolder
             targetTool.Parent = tempFolder
@@ -174,7 +159,6 @@ return function(Tab, UI)
         end
     end
 
-    -- العملية الرئيسية
     local function ExecuteToolProcess()
         if isProcessing then return end
         isProcessing = true
@@ -196,11 +180,11 @@ return function(Tab, UI)
 
         local rigType = DetectRigType(char)
 
-        if not foundTool then
+        if not foundTool and not hasLoadedOnce then -- 🟢 منع التحميل إذا تم التحميل مسبقاً
             if rigType == "R15" then
-                pcall(function() loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))() end)
+                pcall(function() loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))(); hasLoadedOnce = true end)
             elseif rigType == "R6" then
-                pcall(function() loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))() end)
+                pcall(function() loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))(); hasLoadedOnce = true end)
             else
                 LoadBothScripts()
                 SendRobloxNotification("Cryptic Hub", "⚠️ لم نتمكن من كشف النوع! تم تفعيل الاثنين | Unknown rig, both loaded")
@@ -216,15 +200,9 @@ return function(Tab, UI)
         end
 
         if foundTool and not hasSortedThisLife then
-            if foundTool.Parent == char then
-                foundTool.Parent = lp.Backpack
-            end
-
+            if foundTool.Parent == char then foundTool.Parent = lp.Backpack end
             local success = EnforceSlot2(foundTool)
-            
-            if not success and rigType ~= "Unknown" then
-                LoadBothScripts()
-            end
+            if not success and rigType ~= "Unknown" and not hasLoadedOnce then LoadBothScripts() end
             
             EnsureCustomInventory()
             hasSortedThisLife = true 
@@ -238,7 +216,6 @@ return function(Tab, UI)
         isActive = state
         if state then
             SendRobloxNotification("Cryptic Hub", "🔄 تفعيل | Activated")
-            
             lastCharacter = nil
             hasSortedThisLife = false
 
