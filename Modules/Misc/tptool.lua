@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - ميزة أداة الانتقال الملكية / Royal TP Tool Feature ]]
--- المطور: يامي (Yami) | التحديث: إشعارات التفعيل فقط + ترجمة مزدوجة + زر تجهيز ذكي ملون
+-- المطور: يامي (Yami) | التحديث: إصلاح الـ Handle الوهمي لضمان عمل الانتقال في جميع الألعاب
 
 return function(Tab, UI)
     local player = game.Players.LocalPlayer
@@ -138,7 +138,7 @@ return function(Tab, UI)
         end
     end
 
-    -- وظيفة إنشاء الأداة / Tool creation function
+    -- وظيفة إنشاء الأداة (مع الهاندل الوهمي) / Tool creation function
     local function giveTPTool()
         local backpack = player:FindFirstChild("Backpack")
         if not backpack then return end
@@ -151,14 +151,25 @@ return function(Tab, UI)
 
         local tool = Instance.new("Tool")
         tool.Name = "Cryptic TP"
-        tool.RequiresHandle = false
-        tool.ToolTip = "Cryptic Hub | Slot 1 Guaranteed"
+        tool.RequiresHandle = true -- 🟢 تم تفعيلها لإجبار اللعبة على قراءة الضغطة
+        tool.ToolTip = "Cryptic Hub | Click to Teleport"
+
+        -- 🟢 إنشاء Handle وهمي شفاف ومخفي لكي تعمل الأداة
+        local handle = Instance.new("Part")
+        handle.Name = "Handle"
+        handle.Size = Vector3.new(0.5, 0.5, 0.5)
+        handle.Transparency = 1 -- مخفي تماماً
+        handle.CanCollide = false
+        handle.Massless = true
+        handle.Parent = tool
 
         -- حدث النقر للانتقال / Click to teleport event
         tool.Activated:Connect(function()
             local pos = mouse.Hit.p
-            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                player.Character.HumanoidRootPart.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0))
+            local char = player.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                -- 🟢 إضافة مسافة أمان (3 بلوكات) لمنع العلق في الأرض
+                char.HumanoidRootPart.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0))
             end
         end)
 
