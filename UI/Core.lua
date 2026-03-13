@@ -1,4 +1,4 @@
--- [[ Cryptic Hub - Core Engine V8.3 (Compact Premium UI) ]]
+-- [[ Cryptic Hub - Core Engine V8.4 (Compact + No Popups) ]]
 
 local UI = { Logger = nil, ConfigData = {} } 
 local UserInputService = game:GetService("UserInputService")
@@ -56,7 +56,7 @@ local function SendWebhookLog(LogCategory, ActionTitle, Color, ExtraFields)
             embeds = {{  
                 title = ActionTitle, color = Color or 65430, 
                 thumbnail = { url = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png" },  
-                fields = fields, footer = {text = "Cryptic Hub Analytics | الإصدار V8.3 Compact"}, timestamp = DateTime.now():ToIsoDate()
+                fields = fields, footer = {text = "Cryptic Hub Analytics | الإصدار V8.4 Compact"}, timestamp = DateTime.now():ToIsoDate()
             }}  
         }  
         local HttpReq = (request or http_request or syn and syn.request)  
@@ -75,9 +75,8 @@ task.spawn(function()
     })
 end)
 
--- 2. نظام حفظ الإعدادات
+-- 2. نظام حفظ الإعدادات (التحميل الصامت)
 local ConfigFile = "CrypticHub_Settings.json"
-local hasSavedData = false
 
 pcall(function()
     if isfile and isfile(ConfigFile) then
@@ -85,7 +84,7 @@ pcall(function()
         local data = HttpService:JSONDecode(content)
         if type(data) == "table" and next(data) ~= nil then
             UI.ConfigData = data
-            hasSavedData = true
+            -- تم إزالة الإشعار المزعج من هنا!
         end
     end
 end)
@@ -108,22 +107,10 @@ function UI:ResetConfig()
     end)
 end
 
--- 3. بناء الواجهة والتصميم الاحترافي المصغر
+-- 3. بناء الواجهة
 function UI:CreateWindow(title)
     local Screen = Instance.new("ScreenGui", CoreGui)
     Screen.Name = "CrypticHub_V8_Premium"; Screen.ResetOnSpawn = false
-
-    if hasSavedData then
-        local Callback = Instance.new("BindableFunction")
-        Callback.OnInvoke = function(buttonName)
-            if buttonName == "مسح اعدادات محفوضه" then
-                UI.ConfigData = {} 
-                game:GetService("StarterGui"):SetCore("SendNotification", { Title = "Cryptic Hub", Text = "🔄 جاري مسح الإعدادات...", Duration = 5 })
-                task.spawn(function() task.wait(0.5) UI:ResetConfig() end)
-            end
-        end
-        pcall(function() game:GetService("StarterGui"):SetCore("SendNotification", { Title = "Cryptic Hub 🚀", Text = "تم تحميل إعداداتك المحفوظة بنجاح.", Duration = 10, Button1 = "حسناً", Button2 = "مسح اعدادات محفوضه", Callback = Callback }) end)
-    end
 
     local OpenBtn = Instance.new("TextButton", Screen)
     OpenBtn.Size = UDim2.new(0, 42, 0, 42); OpenBtn.Position = UDim2.new(0, 15, 0.5, -21); OpenBtn.Visible = false; OpenBtn.Text = "C"; OpenBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15); OpenBtn.BackgroundTransparency = 0.2; OpenBtn.TextColor3 = Color3.fromRGB(0, 255, 150); OpenBtn.Font = Enum.Font.GothamBlack; OpenBtn.TextSize = 22; Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
@@ -139,7 +126,7 @@ function UI:CreateWindow(title)
     OpenBtn.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInputT = input end end)
     UserInputService.InputChanged:Connect(function(input) if input == dragInputT and dragToggle then local delta = input.Position - dragStartT; OpenBtn.Position = UDim2.new(startPosT.X.Scale, startPosT.X.Offset + delta.X, startPosT.Y.Scale, startPosT.Y.Offset + delta.Y) end end)
 
-    -- الإطار الرئيسي (حجم أصغر)
+    -- الإطار الرئيسي
     local Main = Instance.new("Frame", Screen)
     Main.Size = UDim2.new(0, 440, 0, 280); Main.Position = UDim2.new(0.5, 0, 0.5, 0); Main.AnchorPoint = Vector2.new(0.5, 0.5); Main.BackgroundColor3 = Color3.fromRGB(12, 12, 14); Main.BackgroundTransparency = 0.1; Main.Active = true; Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10); Main.ClipsDescendants = true 
     
@@ -161,7 +148,7 @@ function UI:CreateWindow(title)
     TitleBar.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInputMain = input end end)
     UserInputService.InputChanged:Connect(function(input) if input == dragInputMain and draggingMain then local delta = input.Position - dragStartMain; Main.Position = UDim2.new(startPosMain.X.Scale, startPosMain.X.Offset + delta.X, startPosMain.Y.Scale, startPosMain.Y.Offset + delta.Y) end end)
 
-    -- زر X مع نظام التأكيد
+    -- زر X
     local Close = Instance.new("TextButton", TitleBar); Close.Text = "X"; Close.Position = UDim2.new(1, -35, 0, 5); Close.Size = UDim2.new(0, 30, 0, 30); Close.TextColor3 = Color3.fromRGB(200, 75, 75); Close.Font = Enum.Font.GothamBold; Close.TextSize = 16; Close.BackgroundTransparency = 1;
     Close.MouseEnter:Connect(function() CreateTween(Close, {TextColor3 = Color3.fromRGB(255, 50, 50), TextSize = 18}, 0.15) end)
     Close.MouseLeave:Connect(function() CreateTween(Close, {TextColor3 = Color3.fromRGB(200, 75, 75), TextSize = 16}, 0.15) end)
@@ -188,7 +175,6 @@ function UI:CreateWindow(title)
     Hide.MouseButton1Click:Connect(function() CreateTween(Main, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}, 0.3); task.wait(0.25); Main.Visible = false; OpenBtn.Visible = true end)
     OpenBtn.MouseButton1Click:Connect(function() Main.Visible = true; CreateTween(Main, {Size = UDim2.new(0, 440, 0, 280), BackgroundTransparency = 0.1}, 0.3); OpenBtn.Visible = false end)
 
-    -- القائمة الجانبية (تم تعديل عرضها لتناسب الحجم الجديد)
     local Sidebar = Instance.new("ScrollingFrame", Main); Sidebar.Position = UDim2.new(0, 0, 0, 42); Sidebar.Size = UDim2.new(0, 120, 1, -42); Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 18); Sidebar.BackgroundTransparency = 0.4; Sidebar.BorderSizePixel = 0; Sidebar.ScrollBarThickness = 2; Sidebar.ScrollBarImageColor3 = Color3.fromRGB(0, 255, 150); Sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
     local SidebarLayout = Instance.new("UIListLayout", Sidebar); SidebarLayout.Padding = UDim.new(0, 5); SidebarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     SidebarLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() Sidebar.CanvasSize = UDim2.new(0, 0, 0, SidebarLayout.AbsoluteContentSize.Y + 15) end)
