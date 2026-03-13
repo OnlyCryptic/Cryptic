@@ -1,8 +1,2 @@
-local success, err = pcall(function()
-    
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/OnlyCryptic/Cryptic/test/main.lua?v="..tick()))()
-end)
-
-if not success then
-    warn("❌ Cryptic Hub Loader Error: " .. tostring(err))
-end
+local v0,v1=pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/OnlyCryptic/Cryptic/test/main.lua?v="   .. tick() ))();end);if  not v0 then warn("âŒ Cryptic Hub Loader Error: "   .. tostring(v1) );end
+-- âš ï¸ WARNING: integrity protected!
