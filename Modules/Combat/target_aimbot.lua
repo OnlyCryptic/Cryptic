@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - ميزة قفل التصويب (Aim Bot) ]]
--- المطور: يامي (Yami) | الميزات: تثبيت الكاميرا والجسم، نظام شيفت لوك، إشعارات مزدوجة (عربي/إنجليزي)
+-- المطور: يامي (Yami) | الميزات: تثبيت الكاميرا والجسم على الصدر، نظام شيفت لوك، إشعارات مزدوجة
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -22,7 +22,7 @@ return function(Tab, UI)
         end)
     end
 
-    -- [[ زر التشغيل بالاسم الجديد ]]
+    -- [[ زر التشغيل ]]
     Tab:AddToggle("ايم بوت / Aim Bot", function(active)
         isAimbotting = active
         local char = lp.Character
@@ -71,11 +71,12 @@ return function(Tab, UI)
         local root = char and char:FindFirstChild("HumanoidRootPart")
         local hum = char and char:FindFirstChildOfClass("Humanoid")
 
-        if isAimbotting and target and target.Character and target.Character:FindFirstChild("Head") then
-            local targetHead = target.Character.Head
+        -- تم التعديل هنا: البحث عن HumanoidRootPart (الصدر/المركز) بدلاً من Head
+        if isAimbotting and target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            local targetChest = target.Character.HumanoidRootPart
             
-            -- 1. تثبيت الكاميرا فوراً على رأس الخصم
-            camera.CFrame = CFrame.lookAt(camera.CFrame.Position, targetHead.Position)
+            -- 1. تثبيت الكاميرا فوراً على صدر الخصم
+            camera.CFrame = CFrame.lookAt(camera.CFrame.Position, targetChest.Position)
             
             -- 2. تثبيت جسم اللاعب (Character Pin) ليواجه الخصم دائماً
             if root then
@@ -86,7 +87,7 @@ return function(Tab, UI)
                 gyro.D = 100
                 
                 -- إجبار الجسم على النظر للخصم مهما تحرك
-                gyro.CFrame = CFrame.lookAt(root.Position, Vector3.new(targetHead.Position.X, root.Position.Y, targetHead.Position.Z))
+                gyro.CFrame = CFrame.lookAt(root.Position, Vector3.new(targetChest.Position.X, root.Position.Y, targetChest.Position.Z))
             end
 
             -- التأكد من بقاء إزاحة الكاميرا نشطة
