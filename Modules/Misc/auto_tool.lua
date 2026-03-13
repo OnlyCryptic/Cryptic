@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - أداة الحركة السرية (Smart Rig Tool V3.2) ]]
--- المطور: يامي (Yami) | الميزات: فحص العظام، إجبار الخانة 2، واجهة تحريك ذكية مصغرة، ومنع التكرار
+-- [[ Cryptic Hub - أداة الحركة السرية (Smart Rig Tool V3.3) ]]
+-- المطور: يامي (Yami) | الميزات: إخفاء صامت عند الإيقاف بدون إشعارات مزعجة
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -9,7 +9,7 @@ return function(Tab, UI)
     
     local isActive = false
     local isProcessing = false
-    local hasLoadedOnce = false -- 🟢 متغير لمنع تحميل السكربتات أكثر من مرة
+    local hasLoadedOnce = false 
     local toolNames = {["Jerk Off"] = true, ["Jerk Off R15"] = true}
     
     local lastCharacter = nil
@@ -21,7 +21,6 @@ return function(Tab, UI)
         end)
     end
 
-    -- واجهة مخصصة لتجهيز الأداة (صغيرة جداً، شفافة 75%، وسحب ذكي)
     local function EnsureCustomInventory()
         if lp.PlayerGui:FindFirstChild("CrypticJerkUI") then return end
         
@@ -31,14 +30,14 @@ return function(Tab, UI)
         sg.Parent = lp.PlayerGui
         
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(0, 55, 0, 18) -- 🟢 حجم كبسولة صغيرة جداً
-        btn.Position = UDim2.new(0.5, 30, 0, 15) -- 🟢 في المنتصف بجوار زر الـ TP
+        btn.Size = UDim2.new(0, 55, 0, 18) 
+        btn.Position = UDim2.new(0.5, 30, 0, 15) 
         btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        btn.BackgroundTransparency = 0.60 -- 🟢 شفافية عالية 75%
+        btn.BackgroundTransparency = 0.75 
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn.Text = "Jerk Tool" 
         btn.Font = Enum.Font.GothamBold
-        btn.TextSize = 10 -- 🟢 خط صغير
+        btn.TextSize = 10 
         btn.Active = true
         btn.Parent = sg
         
@@ -46,7 +45,6 @@ return function(Tab, UI)
         corner.CornerRadius = UDim.new(0, 4)
         corner.Parent = btn
 
-        -- كود السحب الذكي بإصبع واحد (Draggable)
         local dragging = false
         local dragInput, dragStart, startPos
         local hasMoved = false
@@ -75,7 +73,7 @@ return function(Tab, UI)
         UserInputService.InputChanged:Connect(function(input)
             if input == dragInput and dragging then
                 local delta = input.Position - dragStart
-                if delta.Magnitude > 3 then -- 🟢 التمييز بين الضغطة والسحب
+                if delta.Magnitude > 3 then 
                     hasMoved = true
                     btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
                 end
@@ -83,7 +81,7 @@ return function(Tab, UI)
         end)
 
         btn.MouseButton1Click:Connect(function()
-            if hasMoved then return end -- 🟢 إذا كان يسحب، لا تشغل الأداة
+            if hasMoved then return end 
             
             local char = lp.Character
             local hum = char and char:FindFirstChild("Humanoid")
@@ -122,7 +120,7 @@ return function(Tab, UI)
     end
 
     local function LoadBothScripts()
-        if hasLoadedOnce then return end -- 🟢 منع التحميل المتكرر
+        if hasLoadedOnce then return end 
         pcall(function()
             loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))() 
             task.wait(0.5)
@@ -180,7 +178,7 @@ return function(Tab, UI)
 
         local rigType = DetectRigType(char)
 
-        if not foundTool and not hasLoadedOnce then -- 🟢 منع التحميل إذا تم التحميل مسبقاً
+        if not foundTool and not hasLoadedOnce then 
             if rigType == "R15" then
                 pcall(function() loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))(); hasLoadedOnce = true end)
             elseif rigType == "R6" then
@@ -228,7 +226,7 @@ return function(Tab, UI)
                 end
             end)
         else
-            SendRobloxNotification("Cryptic Hub", "❌ تم الإيقاف | Deactivated")
+            -- 🟢 تم إزالة إشعار "تم الإيقاف" من هنا
             RemoveCustomInventory()
         end
     end)
