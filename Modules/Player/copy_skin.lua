@@ -1,79 +1,83 @@
--- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين (متناسقة مع الواجهة) ]]
--- المطور: يامي | الوصف: تحديد اللاعب عبر مربع نص ثم ضغط زر النسخ
+-- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين (باستخدام PlayerSelector و Toggle) ]]
+-- المطور: يامي/أروى | الوصف: تحديد اللاعب ثم التشغيل لنسخ السكن والإيقاف للرجوع للأصلي
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
     local lp = Players.LocalPlayer
     
-    -- متغير لحفظ اسم اللاعب الذي ستكتبه
-    local targetPlayerName = ""
+    local targetPlayer = nil 
     
-    -- العنوان (بالعربي والإنجليزي كما طلبت)
     Tab:AddParagraph("نسخ سكن / Copy Outfit", "فقط انت تقدر تشوفه / Only you can see it")
     
-    -- مربع إدخال اسم اللاعب (تقدر تكتب اسمه كامل أو أول كم حرف بس)
-    Tab:AddInput("اسم اللاعب / Player Name", function(text)
-        targetPlayerName = text
+    -- 1. استدعاء قائمة اللاعبين (PlayerSelector)
+    local PlayerDropdown = Tab:AddPlayerSelector("اختر اللاعب / Select Player", "ابحث عن لاعب...", function(selected)
+        if typeof(selected) == "Instance" and selected:IsA("Player") then
+            targetPlayer = selected
+        else
+            targetPlayer = nil
+        end
     end)
     
-    -- زر النسخ
-    Tab:AddButton("نسخ السكن / Copy Skin", function()
-        -- التأكد أنك كتبت اسماً
-        if targetPlayerName == "" then
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "Cryptic Hub",
-                Text = "❌ يرجى كتابة اسم اللاعب أولاً!",
-                Duration = 3
-            })
-            return
+    -- دالة لتحديث الأسماء داخل القائمة تلقائياً
+    local function UpdateDropdown()
+        local list = {}
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= lp then table.insert(list, p) end
         end
-        
-        -- نظام ذكي للبحث عن اللاعب (حتى لو كتبت جزء من اسمه)
-        local targetPlayer = nil
-        local lowerName = string.lower(targetPlayerName)
-        for _, p in ipairs(Players:GetPlayers()) do
-            if string.lower(string.sub(p.Name, 1, #lowerName)) == lowerName or string.lower(string.sub(p.DisplayName, 1, #lowerName)) == lowerName then
-                targetPlayer = p
-                break
-            end
+        -- نرسل التحديث إذا كان PlayerSelector جاهزاً
+        if PlayerDropdown and PlayerDropdown.UpdateList then
+            PlayerDropdown.UpdateList(list) 
         end
+    end
+    
+    UpdateDropdown()
+    Players.PlayerAdded:Connect(UpdateDropdown)
+    Players.PlayerRemoving:Connect(UpdateDropdown)
+    
+    -- 2. زر التشغيل والإيقاف (Toggle)
+    Tab:AddToggle("تفعيل السكن المستنسخ / Toggle Copied Skin", function(state)
+        local myChar = lp.Character
+        local myHum = myChar and myChar:FindFirstChild("Humanoid")
         
-        -- إذا وجدنا اللاعب
-        if targetPlayer then
-            if targetPlayer == lp then
+        if not myHum then return end
+
+        if state then
+            -- عند التشغيل (نسخ سكن الهدف)
+            if not targetPlayer then
                 game:GetService("StarterGui"):SetCore("SendNotification", {
                     Title = "Cryptic Hub",
-                    Text = "⚠️ لا يمكنك نسخ سكنك لنفسك!",
+                    Text = "❌ يرجى اختيار لاعب من القائمة أولاً!",
                     Duration = 3
                 })
                 return
             end
             
-            -- عملية نسخ السكن الآمنة (محلياً)
             pcall(function()
-                local myChar = lp.Character
-                local myHum = myChar and myChar:FindFirstChild("Humanoid")
-                if myHum then
-                    local targetDesc = Players:GetHumanoidDescriptionFromUserId(targetPlayer.UserId)
-                    if targetDesc then
-                        myHum:ApplyDescription(targetDesc)
-                        game:GetService("StarterGui"):SetCore("SendNotification", {
-                            Title = "Cryptic Hub 🎭",
-                            Text = "✅ تم نسخ سكن [" .. targetPlayer.DisplayName .. "] بنجاح!",
-                            Duration = 4
-                        })
-                    end
+                local targetDesc = Players:GetHumanoidDescriptionFromUserId(targetPlayer.UserId)
+                if targetDesc then
+                    myHum:ApplyDescription(targetDesc)
+                    game:GetService("StarterGui"):SetCore("SendNotification", {
+                        Title = "Cryptic Hub 🎭",
+                        Text = "✅ تم لبس سكن [" .. targetPlayer.DisplayName .. "]",
+                        Duration = 3
+                    })
                 end
             end)
         else
-            -- إذا كان الاسم غير موجود بالسيرفر
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "Cryptic Hub",
-                Text = "❌ لم يتم العثور على اللاعب! تأكد من الاسم.",
-                Duration = 3
-            })
+            -- عند الإيقاف (الرجوع لشكلك الأصلي)
+            pcall(function()
+                local myDesc = Players:GetHumanoidDescriptionFromUserId(lp.UserId)
+                if myDesc then
+                    myHum:ApplyDescription(myDesc)
+                    game:GetService("StarterGui"):SetCore("SendNotification", {
+                        Title = "Cryptic Hub",
+                        Text = "🔄 تم استرجاع سكنك الأصلي!",
+                        Duration = 3
+                    })
+                end
+            end)
         end
     end)
-    
+
     Tab:AddLine()
 end
