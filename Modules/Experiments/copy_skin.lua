@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل (نظام الهولوغرام الخفي - Anti-Fly) ]]
--- المطور: يامي | الوصف: يظهر للجميع سكني العادي، وأنا أرى الهدف بدون أي طيران أو لاق
+-- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل (نظام الخيال الحر 100%) ]]
+-- المطور: يامي | الوصف: تحكم طبيعي جداً + عدم تداخل فيزيائي + نسخ مثالي لشكل الجسم
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -18,7 +18,7 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- نظام إخفاء شخصيتك (محلياً فقط - الجميع سيراك طبيعي)
+    -- نظام إخفاء شخصيتك (الجميع يراك طبيعياً)
     -- ==========================================
     local function HideMyCharacter(char)
         originalProps = {}
@@ -47,7 +47,7 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- نظام الهولوغرام الخالي من الفيزياء (لمنع الطيران والتشوه)
+    -- نظام الخيال الحر (بدون أي تأثير على تحكمك)
     -- ==========================================
     local function ApplyHologram(sourceChar)
         local myChar = lp.Character
@@ -65,28 +65,36 @@ return function(Tab, UI)
         if syncConnection then syncConnection:Disconnect(); syncConnection = nil end
         if fakeClone then fakeClone:Destroy(); fakeClone = nil end
 
-        -- إخفاء جسمك في شاشتك فقط
         HideMyCharacter(myChar)
 
         sourceChar.Archivable = true
         fakeClone = sourceChar:Clone()
-        fakeClone.Name = "CrypticLocalHologram"
+        fakeClone.Name = "CrypticGhostClone"
         
-        -- 🟢 مسح أي شيء قد يسبب طيران أو تجميد حركتك
+        -- 🟢 تدمير أي فيزياء ومنع التصادم القطعي
         for _, v in ipairs(fakeClone:GetDescendants()) do
-            if v:IsA("Script") or v:IsA("LocalScript") or v:IsA("Tool") or v:IsA("BodyMover") or v:IsA("BodyVelocity") or v:IsA("BodyPosition") or v:IsA("BodyGyro") or v:IsA("AlignPosition") or v:IsA("AlignOrientation") then
+            if v:IsA("Script") or v:IsA("LocalScript") or v:IsA("Tool") or v:IsA("BodyMover") or v:IsA("BodyVelocity") or v:IsA("AlignPosition") then
                 v:Destroy()
             elseif v:IsA("BasePart") then
-                -- تفريغ القطع من الفيزياء تماماً لكي لا تصطدم بك
                 v.Anchored = false
                 v.CanCollide = false
                 v.Massless = true
                 v.CanTouch = false
                 v.CanQuery = false
+                
+                -- 🟢 السر هنا: منع التصادم بين الدمية وجسمك نهائياً لكي لا تدفعك
+                for _, myPart in ipairs(myChar:GetDescendants()) do
+                    if myPart:IsA("BasePart") then
+                        local ncc = Instance.new("NoCollisionConstraint")
+                        ncc.Part0 = v
+                        ncc.Part1 = myPart
+                        ncc.Parent = v
+                    end
+                end
             end
         end
 
-        -- إيقاف عقل الهولوغرام لكي لا يتخذ أي حركة من تلقاء نفسه أو يعلق على رقصة
+        -- شل حركة الدمية وبرمجتها لتصبح مجرد صورة
         local cloneHum = fakeClone:FindFirstChildOfClass("Humanoid")
         if cloneHum then
             cloneHum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
@@ -103,16 +111,13 @@ return function(Tab, UI)
         local cloneRoot = fakeClone:WaitForChild("HumanoidRootPart", 5)
         if cloneRoot then cloneRoot.Anchored = true end
         
-        -- وضعه في مجلد خاص لتجنب الأخطاء
-        local folder = workspace:FindFirstChild("CrypticMorphs")
-        if not folder then
-            folder = Instance.new("Folder")
-            folder.Name = "CrypticMorphs"
-            folder.Parent = workspace
-        end
-        fakeClone.Parent = folder
+        -- وضع الدمية في الكاميرا لكي لا تتدخل في الماب
+        fakeClone.Parent = workspace.CurrentCamera
+        
+        -- التأكد من أن الكاميرا تتبع جسمك الحقيقي لتستمر بالتحكم بشكل طبيعي
+        workspace.CurrentCamera.CameraSubject = myHum
 
-        -- استخراج العظام لربطها ببطاقة الجرافيكس (حركة لحظية بدون لاق)
+        -- استخراج مفاصل الحركة
         local motorPairs = {}
         for _, myDesc in ipairs(myChar:GetDescendants()) do
             if myDesc:IsA("Motor6D") then
@@ -128,17 +133,17 @@ return function(Tab, UI)
 
         local myRoot = myChar:WaitForChild("HumanoidRootPart", 5)
         
-        -- المزامنة الحية البصرية فقط (تأخذ حركتك وتطبقها على الدمية بدون فيزياء)
+        -- المزامنة البصرية (الدمية تلحقك بدون فيزياء)
         syncConnection = RunService.RenderStepped:Connect(function()
             if not myChar or not fakeClone or not myRoot or not cloneRoot then
                 if syncConnection then syncConnection:Disconnect() end
                 return
             end
 
-            -- نقل الدمية لمكانك
+            -- نقل مركز الدمية لمكانك
             cloneRoot.CFrame = myRoot.CFrame
 
-            -- تطبيق حركتك (مشي، ركض، رقص) على الدمية
+            -- نقل زوايا المشي والركض (Animation Sync)
             for _, pair in ipairs(motorPairs) do
                 if pair.CloneMotor and pair.MyMotor then
                     pair.CloneMotor.Transform = pair.MyMotor.Transform
@@ -188,13 +193,14 @@ return function(Tab, UI)
             
             pcall(function()
                 ApplyHologram(targetPlayer.Character)
-                Notify("Cryptic Hub 🎭", "✅ تم النسخ بنجاح! حركتك حرة تماماً!")
+                Notify("Cryptic Hub 🎭", "✅ تم النسخ بنجاح! تحكمك طبيعي 100%!")
             end)
         else
             pcall(function()
                 if syncConnection then syncConnection:Disconnect(); syncConnection = nil end
                 if fakeClone then fakeClone:Destroy(); fakeClone = nil end
                 ShowMyCharacter()
+                workspace.CurrentCamera.CameraSubject = myChar:FindFirstChildOfClass("Humanoid")
                 Notify("Cryptic Hub 🔄", "✅ تم استرجاع سكنك الأصلي!")
             end)
         end
