@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل (إصدار خالي من الأخطاء 100%) ]]
--- المطور: يامي | الوصف: نسخ جبري شامل (اكسسوارات، جسم، مشية، اسم) بدون الاعتماد على الويب
+-- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل (إصدار اللحام الوهمي) ]]
+-- المطور: يامي | الوصف: نسخ محلي شامل يركب الإكسسوارات والمشية غصباً عن السيرفر
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -58,7 +58,7 @@ return function(Tab, UI)
             local targetHum = targetChar:FindFirstChild("Humanoid")
             
             pcall(function()
-                -- 1. تنظيف سكنك الحالي بالكامل (مسح ملابسك)
+                -- 1. مسح ملابسك وإكسسواراتك الحالية
                 for _, v in ipairs(myChar:GetChildren()) do
                     if v:IsA("Accessory") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") or v:IsA("BodyColors") then
                         v:Destroy()
@@ -67,17 +67,54 @@ return function(Tab, UI)
                 local myHead = myChar:FindFirstChild("Head")
                 if myHead then
                     for _, v in ipairs(myHead:GetChildren()) do
-                        if v:IsA("Decal") then v:Destroy() end -- مسح وجهك
+                        if v:IsA("Decal") then v:Destroy() end
                     end
                 end
 
-                -- 2. نسخ الملابس، الألوان، والإكسسوارات (شعر، قبعات)
+                -- 2. نسخ الملابس والإكسسوارات (بنظام اللحام الوهمي)
                 for _, v in ipairs(targetChar:GetChildren()) do
                     if v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") or v:IsA("BodyColors") then
                         v:Clone().Parent = myChar
                     elseif v:IsA("Accessory") then
-                        -- إضافة الإكسسوارات بالطريقة الصحيحة بدون تكسيرها
-                        myHum:AddAccessory(v:Clone())
+                        local clone = v:Clone()
+                        local handle = clone:FindFirstChild("Handle")
+                        
+                        if handle then
+                            -- مسح لحام اللاعب القديم
+                            for _, w in ipairs(handle:GetChildren()) do
+                                if w:IsA("Weld") or w:IsA("Motor6D") or w.Name == "AccessoryWeld" then
+                                    w:Destroy()
+                                end
+                            end
+                            
+                            clone.Parent = myChar
+                            
+                            -- إنشاء لحام وهمي جديد يربط الإكسسوار بجسمك أنت
+                            local att = handle:FindFirstChildOfClass("Attachment")
+                            if att then
+                                local targetPart = nil
+                                local targetAtt = nil
+                                for _, part in ipairs(myChar:GetChildren()) do
+                                    if part:IsA("BasePart") then
+                                        targetAtt = part:FindFirstChild(att.Name)
+                                        if targetAtt then
+                                            targetPart = part
+                                            break
+                                        end
+                                    end
+                                end
+                                
+                                if targetPart and targetAtt then
+                                    local weld = Instance.new("Weld")
+                                    weld.Name = "FakeAccessoryWeld"
+                                    weld.Part0 = handle
+                                    weld.Part1 = targetPart
+                                    weld.C0 = att.CFrame
+                                    weld.C1 = targetAtt.CFrame
+                                    weld.Parent = handle
+                                end
+                            end
+                        end
                     end
                 end
 
@@ -91,7 +128,7 @@ return function(Tab, UI)
                     end
                 end
 
-                -- 4. نسخ أبعاد الجسم (طول، عرض، نحافة) والاسم
+                -- 4. نسخ أبعاد الجسم والاسم
                 if targetHum then
                     myHum.DisplayName = targetHum.DisplayName
                     local scales = {"BodyDepthScale", "BodyHeightScale", "BodyProportionScale", "BodyTypeScale", "BodyWidthScale", "HeadScale"}
@@ -99,21 +136,19 @@ return function(Tab, UI)
                         local sVal = targetHum:FindFirstChild(scale)
                         local tVal = myHum:FindFirstChild(scale)
                         if sVal and tVal and sVal:IsA("NumberValue") and tVal:IsA("NumberValue") then
-                            tVal.Value = sVal.Value -- نقل الحجم
+                            tVal.Value = sVal.Value 
                         end
                     end
                 end
 
-                -- 5. نسخ الانيميشن (طريقة المشي، الركض، القفز)
+                -- 5. نسخ الانيميشن (طريقة المشي والركض)
                 local targetAnimate = targetChar:FindFirstChild("Animate")
                 local myAnimate = myChar:FindFirstChild("Animate")
                 if targetAnimate and myAnimate then
                     for _, obj in ipairs(targetAnimate:GetChildren()) do
                         local myObj = myAnimate:FindFirstChild(obj.Name)
-                        if myObj then
-                            if obj:IsA("StringValue") and myObj:IsA("StringValue") then
-                                myObj.Value = obj.Value
-                            end
+                        if myObj and obj:IsA("StringValue") and myObj:IsA("StringValue") then
+                            myObj.Value = obj.Value
                             for _, anim in ipairs(obj:GetChildren()) do
                                 if anim:IsA("Animation") then
                                     local myAnim = myObj:FindFirstChild(anim.Name)
@@ -126,12 +161,11 @@ return function(Tab, UI)
                     end
                 end
 
-                Notify("Cryptic Hub 🎭", "✅ تم النسخ بالكامل (إكسسوارات، مشية، جسم)!\nEverything fully copied!")
+                Notify("Cryptic Hub 🎭", "✅ تم النسخ بالكامل (إكسسوارات وهمية، مشية، جسم)!\nEverything fully copied locally!")
             end)
         else
-            -- 🟢 إيقاف الميزة (الرجوع للسكن الأصلي)
+            -- 🟢 إيقاف الميزة (الرجوع للسكن الأصلي من سيرفر روبلوكس)
             pcall(function()
-                -- جلب سكنك الأصلي من حسابك في روبلوكس مباشرة 
                 local myDesc = Players:GetHumanoidDescriptionFromUserId(lp.UserId)
                 if myDesc then
                     myHum:ApplyDescription(myDesc)
