@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل (Local Avatar Copier) ]]
--- المطور: يامي | الوصف: نسخ السكن، الجسم، والاسم محلياً بطريقة جبرية مضمونة 100%
+-- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل والمضمون ]]
+-- المطور: يامي | الوصف: نسخ دقيق 100% مع استرجاع مضمون للسكن الأصلي
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -7,20 +7,31 @@ return function(Tab, UI)
     local StarterGui = game:GetService("StarterGui")
     
     local targetPlayer = nil 
-    local originalDisplayName = lp.DisplayName -- لحفظ اسمك الأصلي
+    local originalDisplayName = lp.DisplayName 
     
-    -- دالة إرسال الإشعارات (عربي / إنجليزي)
+    -- 🟢 حفظ سكنك الأصلي في الذاكرة بمجرد تشغيل السكربت لضمان رجوعه
+    local originalDesc = nil
+    task.spawn(function()
+        pcall(function()
+            local char = lp.Character or lp.CharacterAdded:Wait()
+            local hum = char:WaitForChild("Humanoid")
+            originalDesc = hum:GetAppliedDescription()
+        end)
+        -- إذا فشل، يحمله من حسابك في روبلوكس مباشرة
+        if not originalDesc then
+            pcall(function()
+                originalDesc = Players:GetHumanoidDescriptionFromUserId(lp.UserId)
+            end)
+        end
+    end)
+    
     local function Notify(title, text)
         pcall(function()
-            StarterGui:SetCore("SendNotification", {
-                Title = title,
-                Text = text,
-                Duration = 4
-            })
+            StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 4 })
         end)
     end
 
-    -- 1. استدعاء قائمة اللاعبين (بدون عنوان)
+    -- 1. قائمة اللاعبين
     local PlayerDropdown = Tab:AddPlayerSelector("اختر اللاعب / Select Player", "ابحث عن لاعب / Search...", function(selected)
         if typeof(selected) == "Instance" and selected:IsA("Player") then
             targetPlayer = selected
@@ -31,7 +42,7 @@ return function(Tab, UI)
     
     local function UpdateDropdown()
         local list = {}
-        for _, p in pairs(Players:GetPlayers()) do
+        for _, p in ipairs(Players:GetPlayers()) do
             if p ~= lp then table.insert(list, p) end
         end
         if PlayerDropdown and PlayerDropdown.UpdateList then
@@ -43,38 +54,43 @@ return function(Tab, UI)
     Players.PlayerAdded:Connect(UpdateDropdown)
     Players.PlayerRemoving:Connect(UpdateDropdown)
     
-    -- 2. دالة النسخ اليدوي الجبري (تعمل 100% في كل المابات)
+    -- 2. دالة النسخ اليدوي (تم إصلاحها لنسخ وتركيب الإكسسوارات بشكل صحيح)
     local function CopyAppearance(sourceChar, targetChar)
-        if not sourceChar or not targetChar then return end
-        
-        -- مسح ملابس وأدوات وشكل اللاعب الحالي (أنت)
-        for _, v in pairs(targetChar:GetChildren()) do
-            if v:IsA("Accessory") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") or v:IsA("BodyColors") or v:IsA("CharacterMesh") then
+        local sourceHum = sourceChar:FindFirstChildOfClass("Humanoid")
+        local targetHum = targetChar:FindFirstChildOfClass("Humanoid")
+        if not sourceHum or not targetHum then return end
+
+        -- تنظيف شخصيتك الحالية
+        for _, v in ipairs(targetChar:GetChildren()) do
+            if v:IsA("Accessory") or v:IsA("Clothing") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") or v:IsA("BodyColors") or v:IsA("CharacterMesh") then
                 v:Destroy()
             end
         end
         local targetHead = targetChar:FindFirstChild("Head")
         if targetHead then
-            for _, v in pairs(targetHead:GetChildren()) do
+            for _, v in ipairs(targetHead:GetChildren()) do
                 if v:IsA("Decal") or v:IsA("SpecialMesh") then v:Destroy() end
             end
         end
 
-        -- استنساخ ملابس وأدوات الهدف وتركيبها عليك
-        for _, v in pairs(sourceChar:GetChildren()) do
-            if v:IsA("Accessory") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") or v:IsA("BodyColors") or v:IsA("CharacterMesh") then
+        -- استنساخ أغراض الهدف وتركيبها
+        for _, v in ipairs(sourceChar:GetChildren()) do
+            if v:IsA("Accessory") then
+                -- 🟢 الإكسسوارات (الشعر والقبعات) تحتاج دالة خاصة لتركيبها
                 local clone = v:Clone()
-                if clone then clone.Parent = targetChar end
+                targetHum:AddAccessory(clone) 
+            elseif v:IsA("Clothing") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") or v:IsA("BodyColors") or v:IsA("CharacterMesh") then
+                local clone = v:Clone()
+                clone.Parent = targetChar
             end
         end
         
-        -- استنساخ الوجه (الفيس) وحجم الرأس
+        -- نسخ الوجه
         local sourceHead = sourceChar:FindFirstChild("Head")
         if sourceHead and targetHead then
-            for _, v in pairs(sourceHead:GetChildren()) do
+            for _, v in ipairs(sourceHead:GetChildren()) do
                 if v:IsA("Decal") or v:IsA("SpecialMesh") then
-                    local clone = v:Clone()
-                    if clone then clone.Parent = targetHead end
+                    v:Clone().Parent = targetHead
                 end
             end
             if not targetHead:FindFirstChildOfClass("SpecialMesh") then
@@ -83,54 +99,51 @@ return function(Tab, UI)
             end
         end
 
-        -- نسخ الاسم الوهمي وأبعاد الجسم (الطول، العرض، النحافة)
-        local sourceHum = sourceChar:FindFirstChildOfClass("Humanoid")
-        local targetHum = targetChar:FindFirstChildOfClass("Humanoid")
-        if sourceHum and targetHum then
-            targetHum.DisplayName = sourceHum.DisplayName
-            
-            local scales = {"BodyDepthScale", "BodyHeightScale", "BodyProportionScale", "BodyTypeScale", "BodyWidthScale", "HeadScale"}
-            for _, scale in pairs(scales) do
-                local sVal = sourceHum:FindFirstChild(scale)
-                local tVal = targetHum:FindFirstChild(scale)
-                if sVal and tVal and sVal:IsA("NumberValue") and tVal:IsA("NumberValue") then
-                    tVal.Value = sVal.Value
-                end
+        -- نسخ الاسم الوهمي وتفاصيل حجم الجسم
+        targetHum.DisplayName = sourceHum.DisplayName
+        local scales = {"BodyDepthScale", "BodyHeightScale", "BodyProportionScale", "BodyTypeScale", "BodyWidthScale", "HeadScale"}
+        for _, scale in ipairs(scales) do
+            local sVal = sourceHum:FindFirstChild(scale)
+            local tVal = targetHum:FindFirstChild(scale)
+            if sVal and tVal and sVal:IsA("NumberValue") and tVal:IsA("NumberValue") then
+                tVal.Value = sVal.Value
             end
         end
     end
 
+    -- 🟢 الجملة التوضيحية التي طلبتها
+    Tab:AddLabel("⚠️ الميزة لك فقط (فقط انت تقدر تشوف السكن)")
+
     -- 3. زر التشغيل والإيقاف الشامل
-    Tab:AddToggle("تفعيل السكن المستنسخ / Toggle Copied Skin", function(state)
+    Tab:AddToggle("تفعيل السكن المستنسخ / Copy Skin", function(state)
         local myChar = lp.Character
         local myHum = myChar and myChar:FindFirstChild("Humanoid")
         
         if not myHum then return end
 
         if state then
-            -- عند التشغيل: نسخ السكن
+            -- تشغيل: نسخ
             if not targetPlayer or not targetPlayer.Character then
                 Notify("Cryptic Hub ⚠️", "يرجى اختيار لاعب موجود باللعبة!\nPlease select a valid player!")
                 return
             end
             
             pcall(function()
-                -- استخدام الطريقة اليدوية المضمونة
                 CopyAppearance(targetPlayer.Character, myChar)
-                Notify("Cryptic Hub 🎭", "تم نسخ السكن والاسم بنجاح!\nSuccessfully copied skin & name!")
+                Notify("Cryptic Hub 🎭", "تم نسخ السكن بالكامل بنجاح!\nSkin fully copied!")
             end)
         else
-            -- عند الإيقاف: إرجاع السكن الأصلي
+            -- إيقاف: إرجاع السكن الأصلي من الذاكرة
             pcall(function()
-                -- تحميل سكنك الأصلي من روبلوكس مباشرة
-                local myDesc = Players:GetHumanoidDescriptionFromUserId(lp.UserId)
-                if myDesc then
-                    myHum:ApplyDescription(myDesc)
+                if originalDesc then
+                    myHum:ApplyDescription(originalDesc)
+                else
+                    local fallbackDesc = Players:GetHumanoidDescriptionFromUserId(lp.UserId)
+                    myHum:ApplyDescription(fallbackDesc)
                 end
-                -- إرجاع اسمك
                 myHum.DisplayName = originalDisplayName
                 
-                Notify("Cryptic Hub 🔄", "تم استرجاع سكنك الأصلي!\nOriginal skin restored successfully!")
+                Notify("Cryptic Hub 🔄", "تم استرجاع سكنك الأصلي!\nOriginal skin restored!")
             end)
         end
     end)
