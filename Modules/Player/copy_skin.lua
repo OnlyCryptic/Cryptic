@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل (نظام التزامن العظمي 100%) ]]
--- المطور: يامي | الوصف: نسخ شكل الجسم بدقة متناهية بدون تشوه باستخدام Motor6D Sync
+-- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل (نظام CFrame السلس 100%) ]]
+-- المطور: يامي | الوصف: نسخ الجسم والمشية بدون أي تأثير على حركتك الفيزيائية
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -10,7 +10,7 @@ return function(Tab, UI)
     local targetPlayer = nil 
     local isToggleOn = false
     local originalState = nil 
-    local syncConnection = nil -- متغير للتحكم في حلقة التزامن
+    local syncConnection = nil 
 
     local function Notify(title, text)
         pcall(function() StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 4 }) end)
@@ -39,12 +39,10 @@ return function(Tab, UI)
         local myChar = lp.Character
         if not myChar or not originalState then return end
 
-        -- تدمير الدمية
+        if syncConnection then syncConnection:Disconnect(); syncConnection = nil end
         local morph = myChar:FindFirstChild("FakeMorph")
         if morph then morph:Destroy() end
-        if syncConnection then syncConnection:Disconnect(); syncConnection = nil end
 
-        -- إرجاع ألوانك ومؤثراتك
         for obj, props in pairs(originalState.Props) do
             if obj and obj.Parent then
                 if props.Transparency ~= nil then obj.Transparency = props.Transparency end
@@ -57,7 +55,7 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- دالة التزامن العظمي (نسخ الجسم والحركة بدون تشوه)
+    -- دالة التزامن البصري (CFrame Sync)
     -- ==========================================
     local function ApplyPuppetMorph(sourceChar)
         local myChar = lp.Character
@@ -86,12 +84,11 @@ return function(Tab, UI)
             end
         end
 
-        -- 2. استنساخ الهدف وتجهيز الدمية
+        -- 2. استنساخ الهدف ليكون الدمية
         sourceChar.Archivable = true
         local morph = sourceChar:Clone()
         morph.Name = "FakeMorph"
 
-        -- تجميد عقل الدمية لكي لا تتعارض مع حركتك
         local morphHum = morph:FindFirstChildOfClass("Humanoid")
         if morphHum then
             morphHum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
@@ -101,48 +98,59 @@ return function(Tab, UI)
             if animator then animator:Destroy() end
         end
 
-        -- تنظيف الدمية من السكربتات وإلغاء التصادم
+        -- تنظيف الدمية وإلغاء مفاصل الجسم حتى لا تسبب تجمد الحركة
         for _, v in ipairs(morph:GetDescendants()) do
             if v:IsA("Script") or v:IsA("LocalScript") then
                 v:Destroy()
-            elseif v:IsA("BasePart") then
-                v.CanCollide = false
-                v.Massless = true
-                v.Anchored = false
-                if v.Name == "HumanoidRootPart" then v.Transparency = 1 end
+            elseif v:IsA("Motor6D") or v:IsA("Weld") or v:IsA("WeldConstraint") then
+                -- لا نحذف لحامات الإكسسوارات لكي لا تسقط
+                if not v:FindFirstAncestorOfClass("Accessory") then
+                    v:Destroy()
+                end
             end
         end
 
-        -- 3. اللحام المركزي فقط (للحفاظ على أبعاد الجسم)
-        local rootWeld = Instance.new("Weld")
-        rootWeld.Name = "CenterWeld"
-        rootWeld.Part0 = myChar:WaitForChild("HumanoidRootPart")
-        rootWeld.Part1 = morph:WaitForChild("HumanoidRootPart")
-        rootWeld.C0 = CFrame.new()
-        rootWeld.C1 = CFrame.new()
-        rootWeld.Parent = morph:WaitForChild("HumanoidRootPart")
+        -- 3. تجهيز أجزاء الدمية لعملية التتبع السلس
+        local syncPairs = {}
+        for _, myPart in ipairs(myChar:GetChildren()) do
+            if myPart:IsA("BasePart") then
+                local morphPart = morph:FindFirstChild(myPart.Name)
+                if morphPart and morphPart:IsA("BasePart") then
+                    table.insert(syncPairs, {Morph = morphPart, My = myPart})
+                    morphPart.Anchored = true -- تجميد الدمية فيزيائياً
+                    morphPart.CanCollide = false
+                    morphPart.Massless = true
+                    if morphPart.Name == "HumanoidRootPart" then morphPart.Transparency = 1 end
+                end
+            end
+        end
+
+        -- تجهيز الإكسسوارات لكي تتبع الجسم
+        for _, acc in ipairs(morph:GetChildren()) do
+            if acc:IsA("Accessory") then
+                local handle = acc:FindFirstChild("Handle")
+                if handle then
+                    handle.Anchored = false
+                    handle.CanCollide = false
+                    handle.Massless = true
+                end
+            end
+        end
 
         myHum.DisplayName = sourceHum.DisplayName
         morph.Parent = myChar
 
-        -- 4. التزامن السحري للعظام (نقل المشية والحركة لحظياً)
+        -- 4. التزامن البصري المرعب (RenderStepped لمطابقة الحركة 100%)
         if syncConnection then syncConnection:Disconnect() end
-        syncConnection = RunService.Stepped:Connect(function()
+        syncConnection = RunService.RenderStepped:Connect(function()
             if not myChar or not morph or not myChar.Parent then
                 if syncConnection then syncConnection:Disconnect() end
                 return
             end
-            
-            -- مطابقة زوايا المفاصل (Motor6D) لتتحرك الدمية كأنها أنت
-            for _, myMotor in ipairs(myChar:GetDescendants()) do
-                if myMotor:IsA("Motor6D") and myMotor.Parent then
-                    local morphPart = morph:FindFirstChild(myMotor.Parent.Name)
-                    if morphPart then
-                        local morphMotor = morphPart:FindFirstChild(myMotor.Name)
-                        if morphMotor and morphMotor:IsA("Motor6D") then
-                            morphMotor.Transform = myMotor.Transform
-                        end
-                    end
+            -- نقل كل قطعة من الدمية لمكان قطعتك المخفية بشكل لحظي وبدون فيزياء!
+            for _, pair in ipairs(syncPairs) do
+                if pair.Morph and pair.My then
+                    pair.Morph.CFrame = pair.My.CFrame
                 end
             end
         end)
@@ -189,7 +197,7 @@ return function(Tab, UI)
             
             pcall(function()
                 ApplyPuppetMorph(targetPlayer.Character)
-                Notify("Cryptic Hub 🎭", "✅ تم نسخ الجسم 100% بدون تشويه!\nPerfect body copy applied!")
+                Notify("Cryptic Hub 🎭", "✅ تم النسخ! حركتك ستظل طبيعية!\nSkin copied seamlessly!")
             end)
         else
             pcall(function()
@@ -199,7 +207,7 @@ return function(Tab, UI)
         end
     end)
 
-    lp.CharacterAdded:Connect(function(newChar)
+    lp.CharacterAdded:Connect(function()
         originalState = nil 
         if syncConnection then syncConnection:Disconnect(); syncConnection = nil end
         
