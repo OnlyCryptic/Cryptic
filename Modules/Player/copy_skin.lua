@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل (Auto-Update & Perfect Restore) ]]
--- المطور: يامي | الوصف: تحديث تلقائي للسكن + استرجاع يدوي مضمون 100%
+-- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل (نسخ الجسم 100%) ]]
+-- المطور: يامي | الوصف: تحديث تلقائي للسكن + نسخ شكل الجسم الدقيق + استرجاع مضمون
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -8,7 +8,7 @@ return function(Tab, UI)
     
     local targetPlayer = nil 
     local isToggleOn = false
-    local originalBackup = nil -- سيتم حفظ سكنك الأصلي هنا
+    local originalBackup = nil 
 
     local function Notify(title, text)
         pcall(function() StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 4 }) end)
@@ -49,8 +49,9 @@ return function(Tab, UI)
     end
 
     local function ClearChar(char)
+        -- مسح كل شيء بما فيها شكل الجسم (CharacterMesh)
         for _, v in ipairs(char:GetChildren()) do
-            if v:IsA("Accessory") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") or v:IsA("BodyColors") or v:IsA("Highlight") or v:IsA("ForceField") then
+            if v:IsA("Accessory") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") or v:IsA("BodyColors") or v:IsA("Highlight") or v:IsA("ForceField") or v:IsA("CharacterMesh") then
                 v:Destroy()
             end
         end
@@ -62,18 +63,19 @@ return function(Tab, UI)
         local head = char:FindFirstChild("Head")
         if head then
             for _, v in ipairs(head:GetChildren()) do
-                if v:IsA("Decal") then v:Destroy() end
+                if v:IsA("Decal") or v:IsA("SpecialMesh") then v:Destroy() end
             end
         end
     end
 
     -- ==========================================
-    -- نظام النسخ الاحتياطي (يأخذ نسخة لشكلك الأصلي)
+    -- نظام النسخ الاحتياطي لشكلك الأصلي
     -- ==========================================
     local function CreateBackup(char)
-        local b = { Items = {}, Particles = {}, Scales = {}, Face = nil, DisplayName = lp.DisplayName, Anims = {} }
+        local b = { Items = {}, Particles = {}, Scales = {}, Face = nil, HeadMesh = nil, DisplayName = lp.DisplayName, Anims = {} }
         for _, v in ipairs(char:GetChildren()) do
-            if v:IsA("Accessory") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") or v:IsA("BodyColors") or v:IsA("Highlight") or v:IsA("ForceField") then
+            -- 🟢 حفظ شكل الجسم الأصلي
+            if v:IsA("Accessory") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") or v:IsA("BodyColors") or v:IsA("Highlight") or v:IsA("ForceField") or v:IsA("CharacterMesh") then
                 table.insert(b.Items, v:Clone())
             end
         end
@@ -91,7 +93,8 @@ return function(Tab, UI)
         local head = char:FindFirstChild("Head")
         if head then
             for _, v in ipairs(head:GetChildren()) do
-                if v:IsA("Decal") then b.Face = v:Clone() end
+                if v:IsA("Decal") then b.Face = v:Clone()
+                elseif v:IsA("SpecialMesh") then b.HeadMesh = v:Clone() end
             end
         end
         local hum = char:FindFirstChildOfClass("Humanoid")
@@ -118,7 +121,7 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- دوال تركيب السكن (للاعب الهدف أو لاسترجاع الأصلي)
+    -- دالة تطبيق سكن الهدف عليك
     -- ==========================================
     local function ApplyLiveSkin(sourceChar)
         local myChar = lp.Character
@@ -129,7 +132,8 @@ return function(Tab, UI)
         ClearChar(myChar)
 
         for _, v in ipairs(sourceChar:GetChildren()) do
-            if v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") or v:IsA("BodyColors") or v:IsA("Highlight") or v:IsA("ForceField") then
+            -- 🟢 تم إضافة CharacterMesh هنا لنسخ شكل الجسم بالضبط
+            if v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") or v:IsA("BodyColors") or v:IsA("Highlight") or v:IsA("ForceField") or v:IsA("CharacterMesh") then
                 v:Clone().Parent = myChar
             elseif v:IsA("Accessory") then
                 WeldAccessory(v:Clone(), myChar)
@@ -149,11 +153,12 @@ return function(Tab, UI)
             end
         end
 
+        -- نسخ تفاصيل الرأس والوجه
         local targetHead = sourceChar:FindFirstChild("Head")
         local myHead = myChar:FindFirstChild("Head")
         if targetHead and myHead then
             for _, v in ipairs(targetHead:GetChildren()) do
-                if v:IsA("Decal") then v:Clone().Parent = myHead end
+                if v:IsA("Decal") or v:IsA("SpecialMesh") then v:Clone().Parent = myHead end
             end
         end
 
@@ -203,7 +208,10 @@ return function(Tab, UI)
         end
 
         local myHead = myChar:FindFirstChild("Head")
-        if originalBackup.Face and myHead then originalBackup.Face:Clone().Parent = myHead end
+        if myHead then 
+            if originalBackup.Face then originalBackup.Face:Clone().Parent = myHead end
+            if originalBackup.HeadMesh then originalBackup.HeadMesh:Clone().Parent = myHead end
+        end
 
         myHum.DisplayName = originalBackup.DisplayName
         for scale, val in pairs(originalBackup.Scales) do
@@ -234,7 +242,6 @@ return function(Tab, UI)
     local PlayerDropdown = Tab:AddPlayerSelector("اختر اللاعب / Select Player", "ابحث عن لاعب / Search...", function(selected)
         targetPlayer = (typeof(selected) == "Instance" and selected:IsA("Player")) and selected or nil
         
-        -- 🟢 نظام التحديث التلقائي: إذا كان الزر مفعلاً، سيغير السكن فوراً عند اختيار لاعب جديد!
         if isToggleOn and targetPlayer and targetPlayer.Character then
             pcall(function()
                 ApplyLiveSkin(targetPlayer.Character)
@@ -263,14 +270,11 @@ return function(Tab, UI)
         if state then
             if not targetPlayer or not targetPlayer.Character then
                 Notify("Cryptic Hub ⚠️", "يرجى اختيار لاعب موجود باللعبة!\nPlease select a valid player!")
-                -- إطفاء الزر تلقائياً لأنه لا يوجد لاعب
                 return
             end
             
             pcall(function()
-                -- أخذ نسخة من سكنك الأصلي "مرة واحدة فقط" قبل أول عملية نسخ
                 if not originalBackup then originalBackup = CreateBackup(myChar) end
-                
                 ApplyLiveSkin(targetPlayer.Character)
                 Notify("Cryptic Hub 🎭", "✅ تم النسخ بالكامل!\nEverything fully copied!")
             end)
@@ -282,10 +286,8 @@ return function(Tab, UI)
         end
     end)
 
-    -- لو اللاعب مات ورسبن، تتفرمت الذاكرة عشان يسجل سكنه الجديد (لو غيره)
     lp.CharacterAdded:Connect(function(newChar)
         originalBackup = nil 
-        -- إذا كان الزر مفعل، يرجع يلبس سكن اللاعب المستهدف بعد الرسباون!
         task.delay(1, function()
             if isToggleOn and targetPlayer and targetPlayer.Character then
                 originalBackup = CreateBackup(newChar)
