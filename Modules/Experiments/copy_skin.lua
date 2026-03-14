@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل (نظام الهولوغرام النهائي 100%) ]]
--- المطور: يامي | الوصف: نسخ دقيق جداً بدون تشوهات (لا مربعات ولا تمصص) مع حركة طبيعية
+-- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل (نظام الهولوغرام الخفي - Anti-Fly) ]]
+-- المطور: يامي | الوصف: يظهر للجميع سكني العادي، وأنا أرى الهدف بدون أي طيران أو لاق
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -18,7 +18,7 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- دوال إخفاء وإظهار شخصيتك الحقيقية
+    -- نظام إخفاء شخصيتك (محلياً فقط - الجميع سيراك طبيعي)
     -- ==========================================
     local function HideMyCharacter(char)
         originalProps = {}
@@ -47,7 +47,7 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- دالة إنشاء الهولوغرام ومطابقة الحركة (بدون تشوه)
+    -- نظام الهولوغرام الخالي من الفيزياء (لمنع الطيران والتشوه)
     -- ==========================================
     local function ApplyHologram(sourceChar)
         local myChar = lp.Character
@@ -62,46 +62,57 @@ return function(Tab, UI)
             return
         end
 
-        -- تنظيف أي نسخ سابقة
         if syncConnection then syncConnection:Disconnect(); syncConnection = nil end
         if fakeClone then fakeClone:Destroy(); fakeClone = nil end
 
-        -- 1. إخفاء جسمك الحقيقي
+        -- إخفاء جسمك في شاشتك فقط
         HideMyCharacter(myChar)
 
-        -- 2. إنشاء الهولوغرام المطابق 100% للهدف
         sourceChar.Archivable = true
         fakeClone = sourceChar:Clone()
-        fakeClone.Name = "LocalHologram"
+        fakeClone.Name = "CrypticLocalHologram"
         
-        -- إيقاف فيزياء وبرمجيات الهولوغرام لكي لا يتحرك من تلقاء نفسه أو يسبب تعليق
+        -- 🟢 مسح أي شيء قد يسبب طيران أو تجميد حركتك
         for _, v in ipairs(fakeClone:GetDescendants()) do
-            if v:IsA("Script") or v:IsA("LocalScript") then
+            if v:IsA("Script") or v:IsA("LocalScript") or v:IsA("Tool") or v:IsA("BodyMover") or v:IsA("BodyVelocity") or v:IsA("BodyPosition") or v:IsA("BodyGyro") or v:IsA("AlignPosition") or v:IsA("AlignOrientation") then
                 v:Destroy()
             elseif v:IsA("BasePart") then
+                -- تفريغ القطع من الفيزياء تماماً لكي لا تصطدم بك
                 v.Anchored = false
                 v.CanCollide = false
                 v.Massless = true
+                v.CanTouch = false
+                v.CanQuery = false
             end
         end
 
+        -- إيقاف عقل الهولوغرام لكي لا يتخذ أي حركة من تلقاء نفسه أو يعلق على رقصة
         local cloneHum = fakeClone:FindFirstChildOfClass("Humanoid")
         if cloneHum then
             cloneHum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
             cloneHum.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
             cloneHum.PlatformStand = true
+            for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
+                pcall(function() cloneHum:SetStateEnabled(state, false) end)
+            end
+            pcall(function() cloneHum:ChangeState(Enum.HumanoidStateType.Physics) end)
             local animator = cloneHum:FindFirstChildOfClass("Animator")
-            if animator then animator:Destroy() end -- مسح العقل المحرك لمنع الرقصات المعلقة
+            if animator then animator:Destroy() end 
         end
 
-        -- تثبيت مركز الهولوغرام لكي نتحكم به بالكود
-        local cloneRoot = fakeClone:WaitForChild("HumanoidRootPart")
-        cloneRoot.Anchored = true
+        local cloneRoot = fakeClone:WaitForChild("HumanoidRootPart", 5)
+        if cloneRoot then cloneRoot.Anchored = true end
         
-        -- وضعه في الكاميرا لكي تراه أنت فقط ولا يتأثر بمؤثرات الماب
-        fakeClone.Parent = workspace.CurrentCamera
+        -- وضعه في مجلد خاص لتجنب الأخطاء
+        local folder = workspace:FindFirstChild("CrypticMorphs")
+        if not folder then
+            folder = Instance.new("Folder")
+            folder.Name = "CrypticMorphs"
+            folder.Parent = workspace
+        end
+        fakeClone.Parent = folder
 
-        -- 3. تجهيز قائمة العظام لربط حركة الهولوغرام بحركتك (بسرعة فائقة وبدون لاق)
+        -- استخراج العظام لربطها ببطاقة الجرافيكس (حركة لحظية بدون لاق)
         local motorPairs = {}
         for _, myDesc in ipairs(myChar:GetDescendants()) do
             if myDesc:IsA("Motor6D") then
@@ -115,18 +126,19 @@ return function(Tab, UI)
             end
         end
 
-        -- 4. الحلقة السحرية: تحديث مكان الهولوغرام وحركته 60 مرة في الثانية!
-        local myRoot = myChar:WaitForChild("HumanoidRootPart")
+        local myRoot = myChar:WaitForChild("HumanoidRootPart", 5)
+        
+        -- المزامنة الحية البصرية فقط (تأخذ حركتك وتطبقها على الدمية بدون فيزياء)
         syncConnection = RunService.RenderStepped:Connect(function()
             if not myChar or not fakeClone or not myRoot or not cloneRoot then
                 if syncConnection then syncConnection:Disconnect() end
                 return
             end
 
-            -- أ. جعل الهولوغرام يتبع مكانك بالضبط
+            -- نقل الدمية لمكانك
             cloneRoot.CFrame = myRoot.CFrame
 
-            -- ب. جعل الهولوغرام يقلد حركة مفاصلك (المشي، الركض، الرقص) لحظياً
+            -- تطبيق حركتك (مشي، ركض، رقص) على الدمية
             for _, pair in ipairs(motorPairs) do
                 if pair.CloneMotor and pair.MyMotor then
                     pair.CloneMotor.Transform = pair.MyMotor.Transform
@@ -138,7 +150,7 @@ return function(Tab, UI)
     -- ==========================================
     -- بناء الواجهة
     -- ==========================================
-    Tab:AddLabel("⚠️ الميزة لك فقط / Only you can see the skin")
+    Tab:AddLabel("⚠️ الميزة لك فقط (باقي السيرفر يشوفك طبيعي)")
 
     local PlayerDropdown = Tab:AddPlayerSelector("اختر اللاعب / Select Player", "ابحث عن لاعب / Search...", function(selected)
         targetPlayer = (typeof(selected) == "Instance" and selected:IsA("Player")) and selected or nil
@@ -163,7 +175,7 @@ return function(Tab, UI)
     Players.PlayerAdded:Connect(UpdateDropdown)
     Players.PlayerRemoving:Connect(UpdateDropdown)
 
-    Tab:AddToggle("تفعيل السكن المستنسخ / Copy. Skin", function(state)
+    Tab:AddToggle("تفعيل السكن المستنسخ / Copy Skin", function(state)
         isToggleOn = state
         local myChar = lp.Character
         if not myChar then return end
@@ -176,7 +188,7 @@ return function(Tab, UI)
             
             pcall(function()
                 ApplyHologram(targetPlayer.Character)
-                Notify("Cryptic Hub 🎭", "✅ تم النسخ 100%! الجسم سليم وحركتك طبيعية!")
+                Notify("Cryptic Hub 🎭", "✅ تم النسخ بنجاح! حركتك حرة تماماً!")
             end)
         else
             pcall(function()
