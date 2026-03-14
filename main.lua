@@ -1,79 +1,124 @@
--- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين (متناسقة مع الواجهة) ]]
--- المطور: يامي | الوصف: تحديد اللاعب عبر مربع نص ثم ضغط زر النسخ
+-- [[ Cryptic Hub - المحرك الرئيسي V8.0 (النسخة المجزأة مع الكاش) ]]
+-- المطور: يامي (Yami) | التحديث: نظام الكاش لتسريع الواجهة ومنع اللاق
 
-return function(Tab, UI)
-    local Players = game:GetService("Players")
-    local lp = Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+
+local Cryptic = {
+    Config = {
+        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "test", -- فرع التجارب
+        Discord = "https://discord.gg/QSvQJs7BdP"
+    },
+
+    Structure = {  
+        ["معلومات / info"] = { Folder = "", Files = {"info"} },   
+        ["قسم اللاعب / player"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "walkfling", "antifling", "wallwalk", "nofall", "infinitejump", "copy_skin"} },  
+        ["أدوات / tools"] = { Folder = "Misc", Files = {"tptool", "auto_tool", "esp", "shiftlock", "emotes", "camera", "fullbright"} },  
+        ["استهداف لاعب / players"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "carry"} },  
+        ["قسم السيرفر / server"] = { Folder = "Server", Files = {"server", "rejoin", "join_id"} },  
+        ["الانتقال / Teleport"] = { Folder = "Teleport", Files = {"tp_method", "tp_save", "tp_locations"} },
+        ["اخرى / Other"] = { Folder = "Other", Files = {"vfly", "zero_gravity", "anti_block", "fling_all"} },
+        ["اقتراحات / Suggestions"] = { Folder = "", Files = {"suggestion"} }
+    },  
+    TabsOrder = {"معلومات / info", "قسم اللاعب / player", "أدوات / tools", "استهداف لاعب / players", "قسم السيرفر / server", "الانتقال / Teleport", "اخرى / Other", "اقتراحات / Suggestions"}
+}
+
+-- إضافة قسم التجارب للمالك فقط
+if Players.LocalPlayer.UserId == 3875086037 then
+    Cryptic.Structure["تجارب"] = {
+        Folder = "Experiments",
+        Files = {"owner_only", "block_surfer", "hm", "closest_aimbot", "auto_apple", "part_flinger"}
+    }
+    table.insert(Cryptic.TabsOrder, "تجارب")
+end
+
+-- دالة الاستدعاء العادية لملفات الميزات (مثل speed و fly)
+local function Import(path)
+    local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. "?v=" .. tick()
+    local s, r = pcall(game.HttpGet, game, url)
+    if s and r then
+        local f = loadstring(r)
+        if f then return f() end
+    end
+    return nil
+end
+
+-- ========================================================
+-- 🔥 نظام الذاكرة المؤقتة (Cache) لعناصر الواجهة (مهم جداً للسرعة)
+-- ========================================================
+local ElementCache = {}
+
+local function LoadElement(elementName)
+    -- إذا كان الملف محملاً مسبقاً، خذه من الذاكرة فوراً
+    if ElementCache[elementName] then return ElementCache[elementName] end
     
-    -- متغير لحفظ اسم اللاعب الذي ستكتبه
-    local targetPlayerName = ""
-    
-    -- العنوان (بالعربي والإنجليزي كما طلبت)
-    Tab:AddParagraph("نسخ سكن / Copy Outfit", "فقط انت تقدر تشوفه / Only you can see it")
-    
-    -- مربع إدخال اسم اللاعب (تقدر تكتب اسمه كامل أو أول كم حرف بس)
-    Tab:AddInput("اسم اللاعب / Player Name", function(text)
-        targetPlayerName = text
-    end)
-    
-    -- زر النسخ
-    Tab:AddButton("نسخ السكن / Copy Skin", function()
-        -- التأكد أنك كتبت اسماً
-        if targetPlayerName == "" then
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "Cryptic Hub",
-                Text = "❌ يرجى كتابة اسم اللاعب أولاً!",
-                Duration = 3
-            })
-            return
+    -- إذا لم يكن محملاً، اجلبه من GitHub
+    local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/UI/Elements/" .. elementName .. ".lua?v=" .. tick()
+    local s, r = pcall(game.HttpGet, game, url)
+    if s and r then
+        local chunk = loadstring(r)
+        if chunk then 
+            local func = chunk() -- تفعيل الدالة
+            ElementCache[elementName] = func -- حفظها في الذاكرة
+            return func
         end
-        
-        -- نظام ذكي للبحث عن اللاعب (حتى لو كتبت جزء من اسمه)
-        local targetPlayer = nil
-        local lowerName = string.lower(targetPlayerName)
-        for _, p in ipairs(Players:GetPlayers()) do
-            if string.lower(string.sub(p.Name, 1, #lowerName)) == lowerName or string.lower(string.sub(p.DisplayName, 1, #lowerName)) == lowerName then
-                targetPlayer = p
-                break
-            end
-        end
-        
-        -- إذا وجدنا اللاعب
-        if targetPlayer then
-            if targetPlayer == lp then
-                game:GetService("StarterGui"):SetCore("SendNotification", {
-                    Title = "Cryptic Hub",
-                    Text = "⚠️ لا يمكنك نسخ سكنك لنفسك!",
-                    Duration = 3
-                })
-                return
-            end
+    end
+    warn("Cryptic Hub: Failed to load element - " .. elementName)
+    return nil
+end
+
+-- ========================================================
+-- بناء الواجهة وتركيب التابات
+-- ========================================================
+local UI = Import("UI/Core.lua") -- استدعاء النواة الجديدة
+
+if UI then
+    local MainWin = UI:CreateWindow("Cryptic Hub / " .. Cryptic.Config.Discord)
+
+    for _, tabName in ipairs(Cryptic.TabsOrder) do  
+        local tabData = Cryptic.Structure[tabName]  
+        if tabData then  
+            local CurrentTab = MainWin:CreateTab(tabName)  
+
+            -- ربط كل دوال إضافة الأزرار بنظام الكاش الذكي
+            local elementsList = {
+                "Button", "Toggle", "TimedToggle", "Input", "LargeInput", 
+                "SpeedControl", "Dropdown", "PlayerSelector", "ProfileCard", 
+                "Line", "Label", "Paragraph"
+            }
             
-            -- عملية نسخ السكن الآمنة (محلياً)
-            pcall(function()
-                local myChar = lp.Character
-                local myHum = myChar and myChar:FindFirstChild("Humanoid")
-                if myHum then
-                    local targetDesc = Players:GetHumanoidDescriptionFromUserId(targetPlayer.UserId)
-                    if targetDesc then
-                        myHum:ApplyDescription(targetDesc)
-                        game:GetService("StarterGui"):SetCore("SendNotification", {
-                            Title = "Cryptic Hub 🎭",
-                            Text = "✅ تم نسخ سكن [" .. targetPlayer.DisplayName .. "] بنجاح!",
-                            Duration = 4
-                        })
-                    end
+            for _, el in ipairs(elementsList) do
+                CurrentTab["Add" .. el] = function(self, ...)
+                    local elementFunc = LoadElement(el)
+                    if elementFunc then return elementFunc(self, ...) end
                 end
-            end)
-        else
-            -- إذا كان الاسم غير موجود بالسيرفر
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "Cryptic Hub",
-                Text = "❌ لم يتم العثور على اللاعب! تأكد من الاسم.",
-                Duration = 3
-            })
-        end
-    end)
-    
-    Tab:AddLine()
+            end
+
+            -- استدعاء ملفات الأقسام (المميزات الخاصة بك)
+            task.spawn(function(data, tab, nameOfTab)  
+                for _, fileName in ipairs(data.Files) do  
+                    local filePath = (data.Folder == "") and (fileName .. ".lua") or ("Modules/" .. data.Folder .. "/" .. fileName .. ".lua")  
+                    local init = Import(filePath)  
+                    if type(init) == "function" then  
+                        pcall(function()   
+                            init(tab, UI)  
+                            tab:AddLine()  
+                        end)  
+                    end  
+                end  
+                
+                -- أزرار الحفظ في قسم المعلومات
+                if nameOfTab == "معلومات / info" then
+                    tab:AddButton("💾 حفظ الإعدادات / save config", function()
+                        pcall(function() UI:SaveConfig() end)
+                    end)
+
+                    tab:AddButton("🔄 مسح اعدادات محفوضه / restart config", function()
+                        pcall(function() UI:ResetConfig() end)
+                    end)
+                end
+                
+            end, tabData, CurrentTab, tabName)  
+        end  
+    end  
 end
