@@ -17,7 +17,7 @@ return function(Tab, UI)
     end
 
     -- 1. قائمة اختيار اللاعبين
-    local PlayerDropdown = Tab:AddPlayerSelector("اختر اللاعب / Select Player", "ابحث عن لاعب / Search...", function(selected)
+    local PlayerDropdown = Tab:AddPlayerSelector("اختر اللاعب / Select Player", ".ابحث عن لاعب / Search...", function(selected)
         if typeof(selected) == "Instance" and selected:IsA("Player") then
             targetPlayer = selected
         else
