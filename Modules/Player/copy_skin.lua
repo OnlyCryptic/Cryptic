@@ -159,7 +159,7 @@ return function(Tab, UI)
     -- ==========================================
     -- بناء الواجهة
     -- ==========================================
-    Tab:AddLabel("⚠️ الميزة لك فقط / Only you can see the skin")
+    Tab:AddLabel("⚠️ .الميزة لك فقط / Only you can see the skin")
 
     local PlayerDropdown = Tab:AddPlayerSelector("اختر اللاعب / Select Player", "ابحث عن لاعب / Search...", function(selected)
         targetPlayer = (typeof(selected) == "Instance" and selected:IsA("Player")) and selected or nil
