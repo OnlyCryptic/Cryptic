@@ -1,16 +1,14 @@
--- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل (نظام CFrame السلس 100%) ]]
--- المطور: يامي | الوصف: نسخ الجسم والمشية بدون أي تأثير على حركتك الفيزيائية
+-- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل (الإصدار الذهبي والخالي من الأخطاء 100%) ]]
+-- المطور: يامي | الوصف: تحكم حر وطبيعي + نسخ الهيكل العظمي لمنع التشوه + استرجاع دقيق
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
     local lp = Players.LocalPlayer
     local StarterGui = game:GetService("StarterGui")
     
     local targetPlayer = nil 
     local isToggleOn = false
     local originalState = nil 
-    local syncConnection = nil 
 
     local function Notify(title, text)
         pcall(function() StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 4 }) end)
@@ -21,16 +19,25 @@ return function(Tab, UI)
     -- ==========================================
     local function SaveOriginalState(char)
         if originalState then return end
-        originalState = { Props = {}, DisplayName = lp.DisplayName }
+        originalState = { Props = {}, Motors = {}, Scales = {}, DisplayName = lp.DisplayName }
 
         local hum = char:FindFirstChildOfClass("Humanoid")
-        if hum then originalState.DisplayName = hum.DisplayName end
+        if hum then 
+            originalState.DisplayName = hum.DisplayName 
+            local scales = {"BodyDepthScale", "BodyHeightScale", "BodyProportionScale", "BodyTypeScale", "BodyWidthScale", "HeadScale"}
+            for _, scale in ipairs(scales) do
+                local val = hum:FindFirstChild(scale)
+                if val and val:IsA("NumberValue") then originalState.Scales[scale] = val.Value end
+            end
+        end
 
         for _, v in ipairs(char:GetDescendants()) do
             if v:IsA("BasePart") or v:IsA("Decal") then
                 originalState.Props[v] = { Transparency = v.Transparency }
             elseif v:IsA("ParticleEmitter") or v:IsA("Fire") or v:IsA("Sparkles") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Highlight") or v:IsA("ForceField") then
                 originalState.Props[v] = { Enabled = v.Enabled }
+            elseif v:IsA("Motor6D") then
+                originalState.Motors[v] = { C0 = v.C0, C1 = v.C1 }
             end
         end
     end
@@ -39,7 +46,6 @@ return function(Tab, UI)
         local myChar = lp.Character
         if not myChar or not originalState then return end
 
-        if syncConnection then syncConnection:Disconnect(); syncConnection = nil end
         local morph = myChar:FindFirstChild("FakeMorph")
         if morph then morph:Destroy() end
 
@@ -50,14 +56,27 @@ return function(Tab, UI)
             end
         end
 
+        for motor, cframes in pairs(originalState.Motors) do
+            if motor and motor.Parent then
+                motor.C0 = cframes.C0
+                motor.C1 = cframes.C1
+            end
+        end
+
         local hum = myChar:FindFirstChildOfClass("Humanoid")
-        if hum then hum.DisplayName = originalState.DisplayName end
+        if hum then 
+            hum.DisplayName = originalState.DisplayName 
+            for scale, val in pairs(originalState.Scales) do
+                local tVal = hum:FindFirstChild(scale)
+                if tVal and tVal:IsA("NumberValue") then tVal.Value = val end
+            end
+        end
     end
 
     -- ==========================================
-    -- دالة التزامن البصري (CFrame Sync)
+    -- دالة النسخ الفعلي (نظام الدرع العظمي)
     -- ==========================================
-    local function ApplyPuppetMorph(sourceChar)
+    local function ApplyPerfectMorph(sourceChar)
         local myChar = lp.Character
         if not myChar or not sourceChar then return end
 
@@ -73,7 +92,30 @@ return function(Tab, UI)
         RestoreOriginalState()
         SaveOriginalState(myChar)
 
-        -- 1. إخفاء جسمك الأصلي بالكامل
+        -- 1. تعديل حجم مفاصل جسمك الخفي ليتطابق بالمليمتر مع الهدف (هذا يمنع التفكك والمربعات)
+        for _, myMotor in ipairs(myChar:GetDescendants()) do
+            if myMotor:IsA("Motor6D") then
+                local targetPart = sourceChar:FindFirstChild(myMotor.Parent.Name)
+                if targetPart then
+                    local targetMotor = targetPart:FindFirstChild(myMotor.Name)
+                    if targetMotor and targetMotor:IsA("Motor6D") then
+                        myMotor.C0 = targetMotor.C0
+                        myMotor.C1 = targetMotor.C1
+                    end
+                end
+            end
+        end
+
+        local scales = {"BodyDepthScale", "BodyHeightScale", "BodyProportionScale", "BodyTypeScale", "BodyWidthScale", "HeadScale"}
+        for _, scale in ipairs(scales) do
+            local sVal = sourceHum:FindFirstChild(scale)
+            local tVal = myHum:FindFirstChild(scale)
+            if sVal and tVal and sVal:IsA("NumberValue") and tVal:IsA("NumberValue") then tVal.Value = sVal.Value end
+        end
+
+        task.wait(0.05) -- انتظار تطبيق شكل الجسم
+
+        -- 2. إخفاء جسمك الأصلي بالكامل
         for _, v in ipairs(myChar:GetDescendants()) do
             if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then
                 v.Transparency = 1
@@ -84,7 +126,7 @@ return function(Tab, UI)
             end
         end
 
-        -- 2. استنساخ الهدف ليكون الدمية
+        -- 3. استنساخ الهدف وتجهيز بدلة الدمية
         sourceChar.Archivable = true
         local morph = sourceChar:Clone()
         morph.Name = "FakeMorph"
@@ -98,75 +140,50 @@ return function(Tab, UI)
             if animator then animator:Destroy() end
         end
 
-        -- تنظيف الدمية وإلغاء مفاصل الجسم حتى لا تسبب تجمد الحركة
+        -- 4. اللحام الخفيف السريع (بدون إيقاف حركتك)
         for _, v in ipairs(morph:GetDescendants()) do
             if v:IsA("Script") or v:IsA("LocalScript") then
                 v:Destroy()
             elseif v:IsA("Motor6D") or v:IsA("Weld") or v:IsA("WeldConstraint") then
-                -- لا نحذف لحامات الإكسسوارات لكي لا تسقط
+                -- لا نحذف لحامات الإكسسوارات لكي لا تسقط القبعات
                 if not v:FindFirstAncestorOfClass("Accessory") then
                     v:Destroy()
                 end
-            end
-        end
-
-        -- 3. تجهيز أجزاء الدمية لعملية التتبع السلس
-        local syncPairs = {}
-        for _, myPart in ipairs(myChar:GetChildren()) do
-            if myPart:IsA("BasePart") then
-                local morphPart = morph:FindFirstChild(myPart.Name)
-                if morphPart and morphPart:IsA("BasePart") then
-                    table.insert(syncPairs, {Morph = morphPart, My = myPart})
-                    morphPart.Anchored = true -- تجميد الدمية فيزيائياً
-                    morphPart.CanCollide = false
-                    morphPart.Massless = true
-                    if morphPart.Name == "HumanoidRootPart" then morphPart.Transparency = 1 end
-                end
-            end
-        end
-
-        -- تجهيز الإكسسوارات لكي تتبع الجسم
-        for _, acc in ipairs(morph:GetChildren()) do
-            if acc:IsA("Accessory") then
-                local handle = acc:FindFirstChild("Handle")
-                if handle then
-                    handle.Anchored = false
-                    handle.CanCollide = false
-                    handle.Massless = true
+            elseif v:IsA("BasePart") then
+                v.CanCollide = false
+                v.Massless = true
+                v.Anchored = false
+                if v.Name == "HumanoidRootPart" then v.Transparency = 1 end
+                
+                -- ربط أجزاء البدلة بأجزاء جسمك
+                local myPart = myChar:FindFirstChild(v.Name)
+                if myPart then
+                    local weld = Instance.new("Weld")
+                    weld.Name = "ArmorWeld"
+                    weld.Part0 = myPart
+                    weld.Part1 = v
+                    weld.C0 = CFrame.new()
+                    weld.C1 = CFrame.new()
+                    weld.Parent = v
                 end
             end
         end
 
         myHum.DisplayName = sourceHum.DisplayName
         morph.Parent = myChar
-
-        -- 4. التزامن البصري المرعب (RenderStepped لمطابقة الحركة 100%)
-        if syncConnection then syncConnection:Disconnect() end
-        syncConnection = RunService.RenderStepped:Connect(function()
-            if not myChar or not morph or not myChar.Parent then
-                if syncConnection then syncConnection:Disconnect() end
-                return
-            end
-            -- نقل كل قطعة من الدمية لمكان قطعتك المخفية بشكل لحظي وبدون فيزياء!
-            for _, pair in ipairs(syncPairs) do
-                if pair.Morph and pair.My then
-                    pair.Morph.CFrame = pair.My.CFrame
-                end
-            end
-        end)
     end
 
     -- ==========================================
     -- بناء الواجهة
     -- ==========================================
-    Tab:AddLabel("⚠️ .الميزة لك فقط / Only you can see the skin")
+    Tab:AddLabel("⚠️ الميزة لك فقط / Only you can see the skin")
 
     local PlayerDropdown = Tab:AddPlayerSelector("اختر اللاعب / Select Player", "ابحث عن لاعب / Search...", function(selected)
         targetPlayer = (typeof(selected) == "Instance" and selected:IsA("Player")) and selected or nil
         
         if isToggleOn and targetPlayer and targetPlayer.Character then
             pcall(function()
-                ApplyPuppetMorph(targetPlayer.Character)
+                ApplyPerfectMorph(targetPlayer.Character)
                 Notify("Cryptic Hub 🎭", "تم تحديث السكن إلى: " .. targetPlayer.DisplayName)
             end)
         end
@@ -196,8 +213,8 @@ return function(Tab, UI)
             end
             
             pcall(function()
-                ApplyPuppetMorph(targetPlayer.Character)
-                Notify("Cryptic Hub 🎭", "✅ تم النسخ! حركتك ستظل طبيعية!\nSkin copied seamlessly!")
+                ApplyPerfectMorph(targetPlayer.Character)
+                Notify("Cryptic Hub 🎭", "✅ تم النسخ! تحكمك حر بالكامل!\nPerfect copy with normal controls!")
             end)
         else
             pcall(function()
@@ -209,11 +226,9 @@ return function(Tab, UI)
 
     lp.CharacterAdded:Connect(function()
         originalState = nil 
-        if syncConnection then syncConnection:Disconnect(); syncConnection = nil end
-        
         task.delay(1, function()
             if isToggleOn and targetPlayer and targetPlayer.Character then
-                ApplyPuppetMorph(targetPlayer.Character)
+                ApplyPerfectMorph(targetPlayer.Character)
             end
         end)
     end)
