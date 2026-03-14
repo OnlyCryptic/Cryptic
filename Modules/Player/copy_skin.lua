@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل (نسخ الجسم 100%) ]]
--- المطور: يامي | الوصف: تحديث تلقائي للسكن + نسخ شكل الجسم الدقيق + استرجاع مضمون
+-- [[ Cryptic Hub - ميزة نسخ سكن اللاعبين الشامل (نظام الدمية / Puppet Morph) ]]
+-- المطور: يامي | الوصف: نسخ جبري لشكل الجسم 100% (R15 و R6) باستخدام تقنية الدرع الخارجي
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -8,103 +8,32 @@ return function(Tab, UI)
     
     local targetPlayer = nil 
     local isToggleOn = false
-    local originalBackup = nil 
+    local originalState = nil 
 
     local function Notify(title, text)
         pcall(function() StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 4 }) end)
     end
 
     -- ==========================================
-    -- دوال اللحام والتنظيف
+    -- نظام حفظ سكنك الأصلي لضمان الاسترجاع الدقيق
     -- ==========================================
-    local function WeldAccessory(acc, targetChar)
-        local handle = acc:FindFirstChild("Handle")
-        if handle then
-            for _, w in ipairs(handle:GetChildren()) do
-                if w:IsA("Weld") or w:IsA("Motor6D") or w.Name == "AccessoryWeld" then w:Destroy() end
-            end
-            acc.Parent = targetChar
-            local att = handle:FindFirstChildOfClass("Attachment")
-            if att then
-                local targetPart, targetAtt = nil, nil
-                for _, part in ipairs(targetChar:GetChildren()) do
-                    if part:IsA("BasePart") then
-                        targetAtt = part:FindFirstChild(att.Name)
-                        if targetAtt then targetPart = part; break end
-                    end
-                end
-                if targetPart and targetAtt then
-                    local weld = Instance.new("Weld")
-                    weld.Name = "FakeAccessoryWeld"
-                    weld.Part0 = handle
-                    weld.Part1 = targetPart
-                    weld.C0 = att.CFrame
-                    weld.C1 = targetAtt.CFrame
-                    weld.Parent = handle
-                end
-            end
-        else
-            acc.Parent = targetChar
-        end
-    end
+    local function SaveOriginalState(char)
+        if originalState then return end
+        originalState = { Props = {}, Anims = {}, DisplayName = lp.DisplayName }
 
-    local function ClearChar(char)
-        -- مسح كل شيء بما فيها شكل الجسم (CharacterMesh)
-        for _, v in ipairs(char:GetChildren()) do
-            if v:IsA("Accessory") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") or v:IsA("BodyColors") or v:IsA("Highlight") or v:IsA("ForceField") or v:IsA("CharacterMesh") then
-                v:Destroy()
-            end
-        end
-        for _, part in ipairs(char:GetDescendants()) do
-            if part:IsA("ParticleEmitter") or part:IsA("Fire") or part:IsA("Sparkles") or part:IsA("Trail") or part:IsA("Beam") then
-                part:Destroy()
-            end
-        end
-        local head = char:FindFirstChild("Head")
-        if head then
-            for _, v in ipairs(head:GetChildren()) do
-                if v:IsA("Decal") or v:IsA("SpecialMesh") then v:Destroy() end
-            end
-        end
-    end
-
-    -- ==========================================
-    -- نظام النسخ الاحتياطي لشكلك الأصلي
-    -- ==========================================
-    local function CreateBackup(char)
-        local b = { Items = {}, Particles = {}, Scales = {}, Face = nil, HeadMesh = nil, DisplayName = lp.DisplayName, Anims = {} }
-        for _, v in ipairs(char:GetChildren()) do
-            -- 🟢 حفظ شكل الجسم الأصلي
-            if v:IsA("Accessory") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") or v:IsA("BodyColors") or v:IsA("Highlight") or v:IsA("ForceField") or v:IsA("CharacterMesh") then
-                table.insert(b.Items, v:Clone())
-            end
-        end
-        for _, part in ipairs(char:GetChildren()) do
-            if part:IsA("BasePart") then
-                local effects = {}
-                for _, effect in ipairs(part:GetChildren()) do
-                    if effect:IsA("ParticleEmitter") or effect:IsA("Fire") or effect:IsA("Sparkles") or effect:IsA("Trail") or effect:IsA("Beam") then
-                        table.insert(effects, effect:Clone())
-                    end
-                end
-                if #effects > 0 then b.Particles[part.Name] = effects end
-            end
-        end
-        local head = char:FindFirstChild("Head")
-        if head then
-            for _, v in ipairs(head:GetChildren()) do
-                if v:IsA("Decal") then b.Face = v:Clone()
-                elseif v:IsA("SpecialMesh") then b.HeadMesh = v:Clone() end
-            end
-        end
         local hum = char:FindFirstChildOfClass("Humanoid")
-        if hum then
-            for _, scale in ipairs({"BodyDepthScale", "BodyHeightScale", "BodyProportionScale", "BodyTypeScale", "BodyWidthScale", "HeadScale"}) do
-                local val = hum:FindFirstChild(scale)
-                if val and val:IsA("NumberValue") then b.Scales[scale] = val.Value end
+        if hum then originalState.DisplayName = hum.DisplayName end
+
+        -- حفظ شفافية كل جزء وحالة تشغيل المؤثرات
+        for _, v in ipairs(char:GetDescendants()) do
+            if v:IsA("BasePart") or v:IsA("Decal") then
+                originalState.Props[v] = { Transparency = v.Transparency }
+            elseif v:IsA("ParticleEmitter") or v:IsA("Fire") or v:IsA("Sparkles") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Highlight") or v:IsA("ForceField") then
+                originalState.Props[v] = { Enabled = v.Enabled }
             end
-            b.DisplayName = hum.DisplayName
         end
+
+        -- حفظ الانيميشن
         local anim = char:FindFirstChild("Animate")
         if anim then
             for _, obj in ipairs(anim:GetChildren()) do
@@ -113,62 +42,122 @@ return function(Tab, UI)
                     for _, a in ipairs(obj:GetChildren()) do
                         if a:IsA("Animation") then animData.Anims[a.Name] = a.AnimationId end
                     end
-                    b.Anims[obj.Name] = animData
+                    originalState.Anims[obj.Name] = animData
                 end
             end
         end
-        return b
     end
 
-    -- ==========================================
-    -- دالة تطبيق سكن الهدف عليك
-    -- ==========================================
-    local function ApplyLiveSkin(sourceChar)
+    local function RestoreOriginalState()
         local myChar = lp.Character
-        local myHum = myChar and myChar:FindFirstChild("Humanoid")
-        local sourceHum = sourceChar and sourceChar:FindFirstChild("Humanoid")
-        if not myHum or not sourceHum then return end
+        if not myChar or not originalState then return end
 
-        ClearChar(myChar)
+        -- تدمير الدمية المستنسخة
+        local morph = myChar:FindFirstChild("FakeMorph")
+        if morph then morph:Destroy() end
 
-        for _, v in ipairs(sourceChar:GetChildren()) do
-            -- 🟢 تم إضافة CharacterMesh هنا لنسخ شكل الجسم بالضبط
-            if v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") or v:IsA("BodyColors") or v:IsA("Highlight") or v:IsA("ForceField") or v:IsA("CharacterMesh") then
-                v:Clone().Parent = myChar
-            elseif v:IsA("Accessory") then
-                WeldAccessory(v:Clone(), myChar)
+        -- استرجاع الألوان والمؤثرات الأصلية
+        for obj, props in pairs(originalState.Props) do
+            if obj and obj.Parent then
+                if props.Transparency ~= nil then obj.Transparency = props.Transparency end
+                if props.Enabled ~= nil then obj.Enabled = props.Enabled end
             end
         end
 
-        for _, targetPart in ipairs(sourceChar:GetChildren()) do
-            if targetPart:IsA("BasePart") then
-                local myPart = myChar:FindFirstChild(targetPart.Name)
-                if myPart then
-                    for _, effect in ipairs(targetPart:GetChildren()) do
-                        if effect:IsA("ParticleEmitter") or effect:IsA("Fire") or effect:IsA("Sparkles") or effect:IsA("Trail") or effect:IsA("Beam") then
-                            effect:Clone().Parent = myPart
-                        end
+        local hum = myChar:FindFirstChildOfClass("Humanoid")
+        if hum then hum.DisplayName = originalState.DisplayName end
+
+        -- استرجاع مشيتك
+        local anim = myChar:FindFirstChild("Animate")
+        if anim then
+            for objName, data in pairs(originalState.Anims) do
+                local myObj = anim:FindFirstChild(objName)
+                if myObj and myObj:IsA("StringValue") then
+                    myObj.Value = data.Value
+                    for animName, animId in pairs(data.Anims) do
+                        local myAnim = myObj:FindFirstChild(animName)
+                        if myAnim and myAnim:IsA("Animation") then myAnim.AnimationId = animId end
                     end
                 end
             end
         end
+    end
 
-        -- نسخ تفاصيل الرأس والوجه
-        local targetHead = sourceChar:FindFirstChild("Head")
-        local myHead = myChar:FindFirstChild("Head")
-        if targetHead and myHead then
-            for _, v in ipairs(targetHead:GetChildren()) do
-                if v:IsA("Decal") or v:IsA("SpecialMesh") then v:Clone().Parent = myHead end
+    -- ==========================================
+    -- دالة تركيب الدمية فوقك (النسخ الفعلي)
+    -- ==========================================
+    local function ApplyPuppetMorph(sourceChar)
+        local myChar = lp.Character
+        if not myChar or not sourceChar then return end
+
+        local myHum = myChar:FindFirstChildOfClass("Humanoid")
+        local sourceHum = sourceChar:FindFirstChildOfClass("Humanoid")
+        if not myHum or not sourceHum then return end
+
+        -- التأكد من أن نوع الجسم متطابق (عشان ما يتفكك)
+        if myHum.RigType ~= sourceHum.RigType then
+            Notify("Cryptic Hub ⚠️", "لا يمكن نسخ السكن: أنواع الأجسام مختلفة!\nRig types must match (R6 / R15)!")
+            return
+        end
+
+        -- تنظيف أي نسخ سابقة وحفظ الأصل
+        RestoreOriginalState()
+        SaveOriginalState(myChar)
+
+        -- 1. إخفاء جسمك بالكامل وإطفاء مؤثراتك
+        for _, v in ipairs(myChar:GetDescendants()) do
+            if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then
+                v.Transparency = 1
+            elseif v:IsA("Decal") and v.Name == "face" then
+                v.Transparency = 1
+            elseif v:IsA("ParticleEmitter") or v:IsA("Fire") or v:IsA("Sparkles") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Highlight") or v:IsA("ForceField") then
+                v.Enabled = false
             end
         end
 
-        myHum.DisplayName = sourceHum.DisplayName
-        for _, scale in ipairs({"BodyDepthScale", "BodyHeightScale", "BodyProportionScale", "BodyTypeScale", "BodyWidthScale", "HeadScale"}) do
-            local sVal = sourceHum:FindFirstChild(scale)
-            local tVal = myHum:FindFirstChild(scale)
-            if sVal and tVal and sVal:IsA("NumberValue") and tVal:IsA("NumberValue") then tVal.Value = sVal.Value end
+        -- 2. استنساخ الهدف ليكون الدمية
+        sourceChar.Archivable = true
+        local morph = sourceChar:Clone()
+        morph.Name = "FakeMorph"
+
+        local morphHum = morph:FindFirstChildOfClass("Humanoid")
+        if morphHum then
+            morphHum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+            morphHum.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
+            morphHum.PlatformStand = true -- منعه من المشي لحاله
         end
 
+        -- 3. تجهيز الدمية وربطها بجسمك المخفي
+        for _, v in ipairs(morph:GetDescendants()) do
+            if v:IsA("Script") or v:IsA("LocalScript") then
+                v:Destroy()
+            elseif v:IsA("Motor6D") then
+                -- كسر مفاصل الجسم فقط للحفاظ على الإكسسوارات
+                if not v:FindFirstAncestorOfClass("Accessory") then
+                    v:Destroy()
+                end
+            elseif v:IsA("BasePart") then
+                v.CanCollide = false
+                v.Massless = true
+                v.Anchored = false
+
+                if v.Name == "HumanoidRootPart" then v.Transparency = 1 end
+
+                -- اللحام: ربط يد الدمية بيدك المخفية، ورجل الدمية برجلك...
+                local myPart = myChar:FindFirstChild(v.Name)
+                if myPart and myPart:IsA("BasePart") then
+                    local weld = Instance.new("Weld")
+                    weld.Name = "PuppetWeld"
+                    weld.Part0 = myPart
+                    weld.Part1 = v
+                    weld.C0 = CFrame.new()
+                    weld.C1 = CFrame.new()
+                    weld.Parent = v
+                end
+            end
+        end
+
+        -- 4. نسخ الانيميشن وتغيير الاسم
         local targetAnimate = sourceChar:FindFirstChild("Animate")
         local myAnimate = myChar:FindFirstChild("Animate")
         if targetAnimate and myAnimate then
@@ -185,53 +174,9 @@ return function(Tab, UI)
                 end
             end
         end
-    end
 
-    local function RestoreOriginalSkin()
-        if not originalBackup then return end
-        local myChar = lp.Character
-        local myHum = myChar and myChar:FindFirstChild("Humanoid")
-        if not myHum then return end
-
-        ClearChar(myChar)
-
-        for _, item in ipairs(originalBackup.Items) do
-            local clone = item:Clone()
-            if clone:IsA("Accessory") then WeldAccessory(clone, myChar) else clone.Parent = myChar end
-        end
-
-        for partName, effects in pairs(originalBackup.Particles) do
-            local myPart = myChar:FindFirstChild(partName)
-            if myPart then
-                for _, effect in ipairs(effects) do effect:Clone().Parent = myPart end
-            end
-        end
-
-        local myHead = myChar:FindFirstChild("Head")
-        if myHead then 
-            if originalBackup.Face then originalBackup.Face:Clone().Parent = myHead end
-            if originalBackup.HeadMesh then originalBackup.HeadMesh:Clone().Parent = myHead end
-        end
-
-        myHum.DisplayName = originalBackup.DisplayName
-        for scale, val in pairs(originalBackup.Scales) do
-            local tVal = myHum:FindFirstChild(scale)
-            if tVal and tVal:IsA("NumberValue") then tVal.Value = val end
-        end
-
-        local myAnimate = myChar:FindFirstChild("Animate")
-        if myAnimate then
-            for objName, data in pairs(originalBackup.Anims) do
-                local myObj = myAnimate:FindFirstChild(objName)
-                if myObj and myObj:IsA("StringValue") then
-                    myObj.Value = data.Value
-                    for animName, animId in pairs(data.Anims) do
-                        local myAnim = myObj:FindFirstChild(animName)
-                        if myAnim and myAnim:IsA("Animation") then myAnim.AnimationId = animId end
-                    end
-                end
-            end
-        end
+        myHum.DisplayName = sourceHum.DisplayName
+        morph.Parent = myChar
     end
 
     -- ==========================================
@@ -242,9 +187,10 @@ return function(Tab, UI)
     local PlayerDropdown = Tab:AddPlayerSelector("اختر اللاعب / Select Player", "ابحث عن لاعب / Search...", function(selected)
         targetPlayer = (typeof(selected) == "Instance" and selected:IsA("Player")) and selected or nil
         
+        -- التبديل التلقائي إذا كان الزر مفعلاً
         if isToggleOn and targetPlayer and targetPlayer.Character then
             pcall(function()
-                ApplyLiveSkin(targetPlayer.Character)
+                ApplyPuppetMorph(targetPlayer.Character)
                 Notify("Cryptic Hub 🎭", "تم تحديث السكن إلى: " .. targetPlayer.DisplayName)
             end)
         end
@@ -262,6 +208,7 @@ return function(Tab, UI)
     Players.PlayerAdded:Connect(UpdateDropdown)
     Players.PlayerRemoving:Connect(UpdateDropdown)
 
+    -- زر التشغيل والإيقاف
     Tab:AddToggle("تفعيل السكن المستنسخ / Copy Skin", function(state)
         isToggleOn = state
         local myChar = lp.Character
@@ -274,24 +221,23 @@ return function(Tab, UI)
             end
             
             pcall(function()
-                if not originalBackup then originalBackup = CreateBackup(myChar) end
-                ApplyLiveSkin(targetPlayer.Character)
-                Notify("Cryptic Hub 🎭", "✅ تم النسخ بالكامل!\nEverything fully copied!")
+                ApplyPuppetMorph(targetPlayer.Character)
+                Notify("Cryptic Hub 🎭", "✅ تم نسخ الجسم بالكامل!\nFull body perfectly copied!")
             end)
         else
             pcall(function()
-                RestoreOriginalSkin()
+                RestoreOriginalState()
                 Notify("Cryptic Hub 🔄", "✅ تم استرجاع سكنك الأصلي!\nOriginal skin restored!")
             end)
         end
     end)
 
+    -- إعادة التهيئة لو متّ ورسبنت
     lp.CharacterAdded:Connect(function(newChar)
-        originalBackup = nil 
+        originalState = nil 
         task.delay(1, function()
             if isToggleOn and targetPlayer and targetPlayer.Character then
-                originalBackup = CreateBackup(newChar)
-                ApplyLiveSkin(targetPlayer.Character)
+                ApplyPuppetMorph(targetPlayer.Character)
             end
         end)
     end)
