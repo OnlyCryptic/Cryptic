@@ -156,16 +156,16 @@ function UI:CreateWindow(title)
     Close.MouseButton1Click:Connect(function() 
         local confirmBindable = Instance.new("BindableFunction")
         confirmBindable.OnInvoke = function(choice)
-            if choice == "إغلاق" then
+            if choice == "إغلاق / Close" then
                 Screen:Destroy()
             end
         end
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Cryptic Hub",
-            Text = "هل أنت متأكد من إغلاق السكربت؟",
+            Text = "هل أنت متأكد من إغلاق السكربت؟ / Are you sure you want to close the script?",
             Duration = 5,
-            Button1 = "إغلاق",
-            Button2 = "إلغاء",
+            Button1 = "إغلاق / Close",
+            Button2 = "إلغاء / Cancel",
             Callback = confirmBindable
         })
     end)
