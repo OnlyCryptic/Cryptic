@@ -113,7 +113,7 @@ if UI then
                         pcall(function() UI:SaveConfig() end)
                     end)
 
-                    tab:AddButton("🔄 مسح اعدادات محفوضه / restart config", function()
+                    tab:AddButton("🔄 مسح اعدادات محفوضة / restart config", function()
                         pcall(function() UI:ResetConfig() end)
                     end)
                 end
