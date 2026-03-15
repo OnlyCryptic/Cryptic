@@ -1,12 +1,11 @@
--- [[ Cryptic Hub - Animation Changer (Anti-Statue Bug & Glitch-Free) ]]
--- المطور: يامي | الوصف: مكتبة ضخمة، مفضلة، وتدمير مشكلة التمثال (Statue Bug Fix)
+-- [[ Cryptic Hub - Animation Changer (Corrected IDs 100%) ]]
+-- المطور: يامي | الوصف: مكتبة مصححة، نظام مفضلة (⭐)، وبحث نظيف
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local lp = Players.LocalPlayer
 local StarterGui = game:GetService("StarterGui")
 
--- 🟢 ملف الحفظ للمفضلات / Save File for Favorites
 local FavFileName = "CrypticHub_FavoriteAnims.json"
 local FavoriteAnims = {}
 
@@ -25,14 +24,14 @@ local function SaveFavorites()
     end)
 end
 
--- 🟢 مكتبة ضخمة وشاملة لكل المشيات / Huge Animations Library
+-- 🟢 مكتبة المشيات (تم تصحيح الأكواد الداخلية لمنع الانعكاس)
 local AnimationPacks = {
     ["Ninja / النينجا"] = {idle="656117400", walk="656121766", run="656118852", jump="656117878", fall="656115606", climb="656114359", swim="656119721"},
     ["Cartoony / كارتوني"] = {idle="742637544", walk="742640026", run="742638842", jump="742637942", fall="742637151", climb="742636889", swim="742639220"},
     ["Superhero / بطل خارق"] = {idle="782841498", walk="782843345", run="782842708", jump="782842230", fall="782842046", climb="782841270", swim="782843136"},
     ["Mage / الساحر"] = {idle="707742142", walk="707897309", run="707861613", jump="707853694", fall="707829716", climb="707826056", swim="707876443"},
     ["Robot / الروبوت"] = {idle="616089559", walk="616095330", run="616091570", jump="616090535", fall="616088211", climb="616087119", swim="616094499"},
-    ["Toy / اللعبة"] = {idle="782847240", walk="782847767", run="782847020", jump="782847321", fall="782846875", climb="782846665", swim="782847667"},
+    ["Toy / اللعبة"] = {idle="782847240", walk="782847321", run="782847020", jump="782847767", fall="782846875", climb="782846665", swim="782847667"}, -- تم تصحيح المشي والقفز
     ["Sneaky / المتسلل"] = {idle="1132473842", walk="1132510127", run="1132494274", jump="1132489678", fall="1132461320", climb="1132456461", swim="1132512130"},
     ["Levitation / طيران سحري"] = {idle="616006778", walk="616013216", run="616010382", jump="616008936", fall="616005863", climb="616003713", swim="616011509"},
     ["Astronaut / رائد فضاء"] = {idle="891621366", walk="891636393", run="891636393", jump="891627522", fall="891617961", climb="891609353", swim="891639666"},
@@ -55,9 +54,6 @@ return function(Tab, UI)
         pcall(function() StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 3 }) end)
     end
 
-    -- ==========================================
-    -- دالة الدروب داون (تصميم نظيف وبحث ذكي)
-    -- ==========================================
     local function AddAdvancedDropdown(tabRef, title, options, callback)
         tabRef.Order = tabRef.Order + 1
         
@@ -79,7 +75,7 @@ return function(Tab, UI)
         local SearchBox = Instance.new("TextBox", Container)
         SearchBox.Size = UDim2.new(0.9, 0, 0, 30)
         SearchBox.Position = UDim2.new(0.05, 0, 0, 45)
-        SearchBox.Text = "" -- نص فارغ لمنع مشكلة TextBox
+        SearchBox.Text = "" 
         SearchBox.PlaceholderText = "بحث / Search" 
         SearchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
         SearchBox.TextColor3 = Color3.new(1, 1, 1)
@@ -168,9 +164,6 @@ return function(Tab, UI)
         SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateListDisplay)
     end
 
-    -- ==========================================
-    -- دالة تطبيق المشيات (المدمرة لقلتش التمثال)
-    -- ==========================================
     local function ApplyAnimation(animData, isRestoring)
         local char = lp.Character
         if not char then return end
@@ -198,7 +191,6 @@ return function(Tab, UI)
                 }
             end
 
-            -- 1. كنس الرقصات القديمة
             local animator = hum:FindFirstChildOfClass("Animator")
             if animator then
                 for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
@@ -206,7 +198,6 @@ return function(Tab, UI)
                 end
             end
 
-            -- 2. إدخال أكواد المشية الجديدة
             local function setAnim(animType, animName, id)
                 local trackValue = animate:FindFirstChild(animType)
                 if trackValue then
@@ -227,23 +218,16 @@ return function(Tab, UI)
             setAnim("climb", "ClimbAnim", animData.climb)
             setAnim("swim", "Swim", animData.swim)
             
-            -- 3. تحديث السكربت
             animate.Disabled = true
             task.wait(0.05)
             animate.Disabled = false
 
-            -- 🔴 4. الضربة القاضية لمشكلة التجميد (Statue Fix)
-            -- تغيير السرعة للحظة لإيقاظ اللعبة وإجبارها على تشغيل المشية!
             local oldSpeed = hum.WalkSpeed
             hum.WalkSpeed = 0
-            task.wait(0.01) -- جزء بسيط جداً من الثانية لن تحس به
+            task.wait(0.01)
             hum.WalkSpeed = oldSpeed
         end)
     end
-
-    -- ==========================================
-    -- بناء الواجهة وربط الأزرار (عربي / إنجليزي)
-    -- ==========================================
     
     AddAdvancedDropdown(Tab, "اختر مشية / Select Animation", AnimationPacks, function(name, data)
         selectedAnimData = data
@@ -271,7 +255,6 @@ return function(Tab, UI)
         end
     end)
 
-    -- إعادة التركيب عند الترسبن / Auto-restore on respawn
     lp.CharacterAdded:Connect(function()
         originalAnims = nil 
         task.delay(1, function()
