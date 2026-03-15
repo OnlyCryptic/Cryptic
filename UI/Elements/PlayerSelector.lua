@@ -36,7 +36,7 @@ return function(TabOps, label, placeholder, callback)
     local DropBtn = Instance.new("TextButton", Container)
     DropBtn.Size = UDim2.new(0.9, 0, 0, 15)
     DropBtn.Position = UDim2.new(0.05, 0, 0, 55)
-    DropBtn.Text = "▼ عرض قائمة اللاعبين / Show Players ▼"
+    DropBtn.Text = "▼ عرض قائمة لاعبين / Show Players ▼"
     DropBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     DropBtn.TextColor3 = Color3.fromRGB(170, 170, 170)
     DropBtn.TextSize = 11
