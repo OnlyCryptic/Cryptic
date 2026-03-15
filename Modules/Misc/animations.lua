@@ -1,12 +1,13 @@
--- [[ ميزة المشيات المتقدمة (إصدار خالي من الأغلاط 100%) ]]
--- الوصف: مكتبة ضخمة، نظام مفضلة (⭐)، دعم كامل للأجسام، وتغيير جذري للقيم
+-- [[ Cryptic Hub - Animation Changer (Bilingual & Glitch-Free) ]]
+-- المطور: يامي | الوصف: مكتبة ضخمة، نظام مفضلة (⭐)، بحث نظيف، وعربي/إنجليزي بالكامل
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local lp = Players.LocalPlayer
 local StarterGui = game:GetService("StarterGui")
 
-local FavFileName = "MyScript_FavoriteAnims.json"
+-- 🟢 ملف حفظ المفضلات / Favorites Save File
+local FavFileName = "CrypticHub_FavoriteAnims.json"
 local FavoriteAnims = {}
 
 pcall(function()
@@ -24,7 +25,7 @@ local function SaveFavorites()
     end)
 end
 
--- مكتبة المشيات بأرقام دقيقة
+-- 🟢 مكتبة ضخمة تشمل كل المشيات / Huge Animations Library
 local AnimationPacks = {
     ["Ninja / النينجا"] = {idle="656117400", walk="656121766", run="656118852", jump="656117878", fall="656115606", climb="656114359", swim="656119721"},
     ["Cartoony / كارتوني"] = {idle="742637544", walk="742640026", run="742638842", jump="742637942", fall="742637151", climb="742636889", swim="742639220"},
@@ -54,6 +55,9 @@ return function(Tab, UI)
         pcall(function() StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 3 }) end)
     end
 
+    -- ==========================================
+    -- دالة الدروب داون (تصميم نظيف وبحث ذكي)
+    -- ==========================================
     local function AddAdvancedDropdown(tabRef, title, options, callback)
         tabRef.Order = tabRef.Order + 1
         
@@ -72,10 +76,11 @@ return function(Tab, UI)
         MainBtn.Font = Enum.Font.GothamBold
         MainBtn.TextSize = 13
 
+        -- 🟢 صندوق البحث النظيف 100%
         local SearchBox = Instance.new("TextBox", Container)
         SearchBox.Size = UDim2.new(0.9, 0, 0, 30)
         SearchBox.Position = UDim2.new(0.05, 0, 0, 45)
-        SearchBox.Text = "" 
+        SearchBox.Text = "" -- مسح النص لضمان عدم ظهور TextBox
         SearchBox.PlaceholderText = "بحث / Search" 
         SearchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
         SearchBox.TextColor3 = Color3.new(1, 1, 1)
@@ -164,6 +169,9 @@ return function(Tab, UI)
         SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateListDisplay)
     end
 
+    -- ==========================================
+    -- دالة تطبيق المشيات (إصدار خالي من الأخطاء)
+    -- ==========================================
     local function ApplyAnimation(animData, isRestoring)
         local char = lp.Character
         if not char then return end
@@ -173,9 +181,9 @@ return function(Tab, UI)
         
         if not hum or not animate then return end
         
-        -- 🔴 الحماية من الانهيار: المشيات لا تدعم R6
+        -- 🔴 الحماية من الانهيار في مابات R6
         if hum.RigType == Enum.HumanoidRigType.R6 then
-            Notify("تحذير ⚠️", "هذا الماب يستخدم أجسام R6، المشيات تدعم R15 فقط!")
+            Notify("تنبيه / Warning ⚠️", "هذا الماب يستخدم أجسام R6، المشيات تدعم R15 فقط!\nThis map uses R6, animations require R15!")
             return
         end
 
@@ -192,7 +200,7 @@ return function(Tab, UI)
                 }
             end
 
-            -- 🔴 إيقاف فوري لأي أنميشن شغال لتجنب التداخل
+            -- إيقاف أي أنميشن شغال لمنع التداخل والقلتشات
             local animator = hum:FindFirstChildOfClass("Animator")
             if animator then
                 for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
@@ -206,7 +214,6 @@ return function(Tab, UI)
                     local animObj = trackValue:FindFirstChild(animName)
                     local finalId = "rbxassetid://" .. id
                     
-                    -- 🔴 تغيير القيمة داخل الكائن نفسه وداخل الـ StringValue
                     if animObj then animObj.AnimationId = finalId end
                     if trackValue:IsA("StringValue") then trackValue.Value = finalId end
                 end
@@ -227,11 +234,15 @@ return function(Tab, UI)
         end)
     end
 
+    -- ==========================================
+    -- بناء الواجهة وربط الأزرار (عربي / إنجليزي)
+    -- ==========================================
+    
     AddAdvancedDropdown(Tab, "اختر مشية / Select Animation", AnimationPacks, function(name, data)
         selectedAnimData = data
         if isToggleOn then
             ApplyAnimation(data, false)
-            Notify("نجاح 🏃‍♂️", "تم تغيير المشية إلى:\n" .. name)
+            Notify("نجاح / Success 🏃‍♂️", "تم تغيير المشية إلى / Changed to:\n" .. name)
         end
     end)
 
@@ -240,19 +251,20 @@ return function(Tab, UI)
         
         if state then
             if not selectedAnimData then
-                Notify("تنبيه ⚠️", "يرجى اختيار مشية من القائمة أولاً!")
+                Notify("تنبيه / Warning ⚠️", "يرجى اختيار مشية من القائمة أولاً!\nPlease select an animation first!")
                 return
             end
             ApplyAnimation(selectedAnimData, false)
-            Notify("تفعيل ✅", "تم تفعيل المشية بنجاح!")
+            Notify("تفعيل / Applied ✅", "تم تفعيل المشية للجميع!\nAnimation applied for everyone!")
         else
             if originalAnims then
                 ApplyAnimation(originalAnims, true)
-                Notify("إيقاف 🔄", "تم استرجاع مشيتك الأصلية!")
+                Notify("إيقاف / Restored 🔄", "تم استرجاع مشيتك الأصلية!\nOriginal animation restored!")
             end
         end
     end)
 
+    -- إعادة التركيب عند الترسبن / Auto-restore on respawn
     lp.CharacterAdded:Connect(function()
         originalAnims = nil 
         task.delay(1, function()
