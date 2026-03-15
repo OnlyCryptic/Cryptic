@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - نظام الانتقال المتقدم V3 ]]
--- المطور: يامي | الوصف: انتقال سريع (🚀)، مفضلات (⭐)، وحذف مخصص (❌)
+-- [[ Cryptic Hub - نظام الانتقال المتقدم (Clean V4) ]]
+-- المطور: يامي | الوصف: انتقال سريع (🚀)، مفضلة (⭐)، حذف (❌) + دمج الحفظ لمنع التكرار
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -7,47 +7,39 @@ local TweenService = game:GetService("TweenService")
 local lp = Players.LocalPlayer
 local StarterGui = game:GetService("StarterGui")
 
-local PlaceId = game.PlaceId
-local LocFileName = "Cryptic_TP_Locs_" .. PlaceId .. ".json"
-local FavFileName = "Cryptic_TP_Favs_" .. PlaceId .. ".json"
-
-local locations = {}
-local favoriteLocs = {}
+-- 🟢 دمجنا ملفات الحفظ في ملف واحد ذكي لمنع التكرار!
+local FileName = "Cryptic_TP_Data_" .. game.PlaceId .. ".json"
+local tpData = { Locs = {}, Favs = {} } 
 local TPMethod = "انتقال فوري | Instant"
 local currentSelectedLocation = nil
 
 return function(Tab, UI)
     -- ==========================================
-    -- دوال الإشعارات وحفظ/تحميل البيانات
+    -- دوال الإشعارات وحفظ/تحميل البيانات الذكية
     -- ==========================================
     local function Notify(title, text)
         pcall(function() StarterGui:SetCore("SendNotification", {Title=title, Text=text, Duration=3}) end)
     end
 
     local function LoadData()
-        if isfile and isfile(LocFileName) then
-            pcall(function() locations = HttpService:JSONDecode(readfile(LocFileName)) end)
-        end
-        if isfile and isfile(FavFileName) then
-            pcall(function() favoriteLocs = HttpService:JSONDecode(readfile(FavFileName)) end)
+        if isfile and isfile(FileName) then
+            pcall(function() tpData = HttpService:JSONDecode(readfile(FileName)) end)
+            tpData.Locs = tpData.Locs or {}
+            tpData.Favs = tpData.Favs or {}
         end
     end
 
-    local function SaveLocations()
-        if writefile then pcall(function() writefile(LocFileName, HttpService:JSONEncode(locations)) end) end
-    end
-
-    local function SaveFavorites()
-        if writefile then pcall(function() writefile(FavFileName, HttpService:JSONEncode(favoriteLocs)) end) end
+    local function SaveData()
+        if writefile then pcall(function() writefile(FileName, HttpService:JSONEncode(tpData)) end) end
     end
 
     LoadData()
 
     -- ==========================================
-    -- دالة الانتقال الأساسية (تستخدم للزر الداخلي والخارجي)
+    -- دالة الانتقال
     -- ==========================================
     local function TeleportTo(locName)
-        local locData = locations[locName]
+        local locData = tpData.Locs[locName]
         local char = lp.Character
         if not locData or not char or not char:FindFirstChild("HumanoidRootPart") then return end
         
@@ -61,14 +53,13 @@ return function(Tab, UI)
             local dist = (rootPart.Position - targetCFrame.Position).Magnitude
             local tweenTime = dist / 150 
             local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Linear)
-            local tween = TweenService:Create(rootPart, tweenInfo, {CFrame = targetCFrame})
-            tween:Play()
+            TweenService:Create(rootPart, tweenInfo, {CFrame = targetCFrame}):Play()
             Notify("نجاح | Success 🛸", "جاري الطيران إلى / Flying to:\n" .. locName)
         end
     end
 
     -- ==========================================
-    -- إعدادات طريقة الانتقال
+    -- واجهة المستخدم الرئيسية (بدون تكرارات)
     -- ==========================================
     Tab:AddDropdown("طريقة الانتقال | TP Method", {"انتقال فوري | Instant", "طيران سريع | Fly (Tween)"}, function(selected)
         TPMethod = selected
@@ -76,11 +67,9 @@ return function(Tab, UI)
     end)
     Tab:AddLine()
 
-    -- ==========================================
-    -- بناء القائمة الاحترافية (Custom UI)
-    -- ==========================================
     local DropdownContainer = Instance.new("Frame", Tab.Page)
-    DropdownContainer.LayoutOrder = 100
+    DropdownContainer.LayoutOrder = Tab.Order + 1
+    Tab.Order = Tab.Order + 1
     DropdownContainer.Size = UDim2.new(0.95, 0, 0, 40)
     DropdownContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     DropdownContainer.ClipsDescendants = true
@@ -121,7 +110,7 @@ return function(Tab, UI)
     local function UpdateListDisplay()
         local searchText = SearchBox.Text:lower()
         for _, item in ipairs(optionItems) do
-            local isFav = favoriteLocs[item.Name]
+            local isFav = tpData.Favs[item.Name]
             local matchSearch = (searchText == "" or string.find(item.LowerName, searchText) ~= nil)
             
             item.Frame.Visible = matchSearch
@@ -136,14 +125,13 @@ return function(Tab, UI)
         optionItems = {}
         
         local hasLocations = false
-        for locName, _ in pairs(locations) do
+        for locName, _ in pairs(tpData.Locs) do
             hasLocations = true
             local ItemFrame = Instance.new("Frame", ListFrame)
             ItemFrame.Size = UDim2.new(1, -10, 0, 30)
             ItemFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
             Instance.new("UICorner", ItemFrame)
             
-            -- زر اختيار الاسم (مساحة 55%)
             local SelectBtn = Instance.new("TextButton", ItemFrame)
             SelectBtn.Size = UDim2.new(0.55, 0, 1, 0)
             SelectBtn.BackgroundTransparency = 1
@@ -151,7 +139,6 @@ return function(Tab, UI)
             SelectBtn.Text = "  " .. locName
             SelectBtn.TextXAlignment = Enum.TextXAlignment.Left
 
-            -- 🚀 زر الانتقال السريع (مساحة 15%)
             local TpBtn = Instance.new("TextButton", ItemFrame)
             TpBtn.Size = UDim2.new(0.15, 0, 1, 0)
             TpBtn.Position = UDim2.new(0.55, 0, 0, 0)
@@ -159,7 +146,6 @@ return function(Tab, UI)
             TpBtn.Text = "🚀"
             TpBtn.TextSize = 14
 
-            -- ⭐ زر المفضلة (مساحة 15%)
             local StarBtn = Instance.new("TextButton", ItemFrame)
             StarBtn.Size = UDim2.new(0.15, 0, 1, 0)
             StarBtn.Position = UDim2.new(0.70, 0, 0, 0)
@@ -167,7 +153,6 @@ return function(Tab, UI)
             StarBtn.Text = "☆"
             StarBtn.TextSize = 16
 
-            -- ❌ زر الحذف باللون الأحمر (مساحة 15%)
             local DeleteBtn = Instance.new("TextButton", ItemFrame)
             DeleteBtn.Size = UDim2.new(0.15, 0, 1, 0)
             DeleteBtn.Position = UDim2.new(0.85, 0, 0, 0)
@@ -178,7 +163,6 @@ return function(Tab, UI)
 
             table.insert(optionItems, {Frame = ItemFrame, Name = locName, LowerName = locName:lower(), SelectBtn = SelectBtn, StarBtn = StarBtn})
 
-            -- عند تحديد الاسم فقط
             SelectBtn.MouseButton1Click:Connect(function()
                 MainBtn.Text = "▼ " .. locName
                 currentSelectedLocation = locName
@@ -186,26 +170,22 @@ return function(Tab, UI)
                 DropdownContainer.Size = UDim2.new(0.95, 0, 0, 40)
             end)
 
-            -- 🚀 عند ضغط زر الانتقال السريع
             TpBtn.MouseButton1Click:Connect(function()
                 TeleportTo(locName)
                 isOpen = false
                 DropdownContainer.Size = UDim2.new(0.95, 0, 0, 40)
             end)
 
-            -- ⭐ عند ضغط النجمة
             StarBtn.MouseButton1Click:Connect(function()
-                favoriteLocs[locName] = favoriteLocs[locName] and nil or true
-                SaveFavorites()
+                tpData.Favs[locName] = tpData.Favs[locName] and nil or true
+                SaveData()
                 UpdateListDisplay()
             end)
 
-            -- ❌ عند ضغط الحذف
             DeleteBtn.MouseButton1Click:Connect(function()
-                locations[locName] = nil
-                favoriteLocs[locName] = nil
-                SaveLocations()
-                SaveFavorites()
+                tpData.Locs[locName] = nil
+                tpData.Favs[locName] = nil
+                SaveData()
                 
                 if currentSelectedLocation == locName then
                     currentSelectedLocation = nil
@@ -220,7 +200,7 @@ return function(Tab, UI)
         if not hasLocations then
             MainBtn.Text = "▼ لا توجد أماكن محفوظة | No saved locations"
             currentSelectedLocation = nil
-        elseif currentSelectedLocation and not locations[currentSelectedLocation] then
+        elseif currentSelectedLocation and not tpData.Locs[currentSelectedLocation] then
             MainBtn.Text = "▼ اختر مكان للانتقال | Select TP Location"
             currentSelectedLocation = nil
         end
@@ -241,20 +221,10 @@ return function(Tab, UI)
     SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateListDisplay)
 
     -- ==========================================
-    -- زر الانتقال الخارجي (للمكان المحدد)
+    -- قسم حفظ الأماكن الجديدة (تم مسح الزر المكرر)
     -- ==========================================
-    Tab:AddButton("🚀 انتقال إلى المكان المحدد | Teleport to Selected", function()
-        if not currentSelectedLocation then
-            Notify("تنبيه | Alert ⚠️", "الرجاء اختيار مكان من القائمة أولاً!\nPlease select a location first!")
-            return
-        end
-        TeleportTo(currentSelectedLocation)
-    end)
     Tab:AddLine()
-
-    -- ==========================================
-    -- قسم حفظ الأماكن الجديدة
-    -- ==========================================
+    
     local locationNameInput = ""
     Tab:AddInput("اسم المكان الجديد | New Location Name", "اكتب اسم المكان... | Type name...", function(text)
         locationNameInput = text
@@ -270,23 +240,18 @@ return function(Tab, UI)
         if not char or not char:FindFirstChild("HumanoidRootPart") then return end
         
         local pos = char.HumanoidRootPart.CFrame
-        locations[locationNameInput] = {x = pos.X, y = pos.Y, z = pos.Z}
-        SaveLocations()
+        tpData.Locs[locationNameInput] = {x = pos.X, y = pos.Y, z = pos.Z}
+        SaveData()
         
         RebuildDropdown() 
         Notify("نجاح | Success ✅", "تم حفظ الإحداثيات / Saved:\n" .. locationNameInput)
     end)
-    Tab:AddLine()
-
-    -- ==========================================
-    -- مسح كل البيانات
-    -- ==========================================
+    
     Tab:AddButton("🗑️ مسح كل أماكن هذا الماب | Clear All Locations", function()
-        if isfile and isfile(LocFileName) then delfile(LocFileName) end
-        if isfile and isfile(FavFileName) then delfile(FavFileName) end
-        locations = {}
-        favoriteLocs = {}
+        if isfile and isfile(FileName) then delfile(FileName) end
+        tpData = { Locs = {}, Favs = {} }
         RebuildDropdown()
         Notify("تم المسح | Cleared 🗑️", "تم مسح جميع الأماكن والمفضلات!\nAll locations cleared!")
     end)
+    Tab:AddLine()
 end
