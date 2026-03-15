@@ -1,26 +1,47 @@
--- [[ Cryptic Hub - ميزة تغيير المشيات الشاملة (بدون قلتشات + تحديث تلقائي) ]]
--- المطور: يامي | الوصف: مكتبة ضخمة، تشغيل/إيقاف، إيقاف تداخل الحركات، واسترجاع عند الموت
+-- [[ Cryptic Hub - ميزة المشيات المتقدمة (نظام المفضلة + بحث ذكي + حفظ تلقائي) ]]
+-- المطور: يامي | الوصف: مكتبة ضخمة، نظام مفضلة (⭐) يحفظ تلقائياً، وتحديث عند الترسبن
 
 local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
 local lp = Players.LocalPlayer
 local StarterGui = game:GetService("StarterGui")
 
--- 🟢 مكتبة ضخمة تضم أشهر حزم المشيات في روبلوكس
+-- 🟢 ملف حفظ المفضلات الخاص بسكربت Cryptic Hub
+local FavFileName = "CrypticHub_FavoriteAnims.json"
+local FavoriteAnims = {}
+
+-- تحميل المفضلات المحفوظة مسبقاً (إن وجدت)
+pcall(function()
+    if isfile and isfile(FavFileName) then
+        local fileData = readfile(FavFileName)
+        FavoriteAnims = HttpService:JSONDecode(fileData)
+    end
+end)
+
+-- دالة حفظ المفضلات في جهاز اللاعب
+local function SaveFavorites()
+    pcall(function()
+        if writefile then
+            writefile(FavFileName, HttpService:JSONEncode(FavoriteAnims))
+        end
+    end)
+end
+
+-- 🟢 مكتبة المشيات الرسمية (تم إضافة حزم حديثة ومطلوبة)
 local AnimationPacks = {
-    ["Ninja / النينجا"] = {idle="656117400", walk="656121766", run="656118852", jump="656117878", fall="656117606", climb="656114359", swim="656121397"},
-    ["Zombie / الزومبي"] = {idle="616158929", walk="616168032", run="616163682", jump="616161748", fall="616157476", climb="616156119", swim="616165109"},
-    ["Vampire / مصاص الدماء"] = {idle="1083445855", walk="1083473930", run="1083462077", jump="1083466540", fall="1083443587", climb="1083439240", swim="1083477197"},
-    ["Cartoony / كارتوني"] = {idle="742637095", walk="742640026", run="742638842", jump="742637982", fall="742637497", climb="742636889", swim="742641262"},
+    ["Ninja / النينجا"] = {idle="656117400", walk="656121766", run="656118852", jump="656117878", fall="656115606", climb="656114359", swim="656119721"},
+    ["Cartoony / كارتوني"] = {idle="742637544", walk="742640026", run="742638842", jump="742637942", fall="742637151", climb="742636889", swim="742639220"},
     ["Superhero / بطل خارق"] = {idle="782841498", walk="782843345", run="782842708", jump="782842230", fall="782842046", climb="782841270", swim="782843136"},
-    ["Mage / الساحر"] = {idle="1084999930", walk="1085001851", run="1085001188", jump="1085000438", fall="1085000213", climb="1084999554", swim="1085001603"},
-    ["Robot / الروبوت"] = {idle="616089559", walk="616095330", run="616091901", jump="616090535", fall="616088211", climb="616087119", swim="616094499"},
-    ["Astronaut / رائد فضاء"] = {idle="891621366", walk="891633237", run="891626245", jump="891623143", fall="891617351", climb="891609353", swim="891631310"},
-    ["Werewolf / المستذئب"] = {idle="1083195517", walk="1083216690", run="1083214717", jump="1083202519", fall="1083189019", climb="1083182000", swim="1083218792"},
-    ["Pirate / القرصان"] = {idle="750781874", walk="750785693", run="750784481", jump="750782230", fall="750780242", climb="750779899", swim="750787378"}
+    ["Mage / الساحر"] = {idle="707742142", walk="707897309", run="707861613", jump="707853694", fall="707829716", climb="707826056", swim="707876443"},
+    ["Robot / الروبوت"] = {idle="616089559", walk="616095330", run="616091570", jump="616090535", fall="616088211", climb="616087119", swim="616094499"},
+    ["Toy / اللعبة (الدمية)"] = {idle="782847240", walk="782847767", run="782847020", jump="782847321", fall="782846875", climb="782846665", swim="782847667"},
+    ["Sneaky / المتسلل"] = {idle="1132473842", walk="1132510127", run="1132494274", jump="1132489678", fall="1132461320", climb="1132456461", swim="1132512130"},
+    ["Levitation / الطيران السحري"] = {idle="616006778", walk="616013216", run="616010382", jump="616008936", fall="616005863", climb="616003713", swim="616011509"},
+    ["Astronaut / رائد فضاء"] = {idle="891621366", walk="891636393", run="891636393", jump="891627522", fall="891617961", climb="891609353", swim="891639666"},
+    ["Zombie / الزومبي"] = {idle="616158929", walk="616168032", run="616163682", jump="616161748", fall="616157476", climb="616156119", swim="616165109"}
 }
 
 return function(Tab, UI)
-    
     local isToggleOn = false
     local selectedAnimData = nil
     local originalAnims = nil
@@ -30,9 +51,9 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- دالة الدروب داون (مع مربع البحث)
+    -- دالة الدروب داون (مع نظام المفضلة والبحث)
     -- ==========================================
-    local function AddSearchableDropdown(tabRef, title, options, callback)
+    local function AddAdvancedDropdown(tabRef, title, options, callback)
         tabRef.Order = tabRef.Order + 1
         
         local Container = Instance.new("Frame", tabRef.Page)
@@ -53,7 +74,7 @@ return function(Tab, UI)
         local SearchBox = Instance.new("TextBox", Container)
         SearchBox.Size = UDim2.new(0.9, 0, 0, 30)
         SearchBox.Position = UDim2.new(0.05, 0, 0, 45)
-        SearchBox.PlaceholderText = "بحث / Search"
+        SearchBox.PlaceholderText = "بحث / Search" -- التعديل الذي طلبته
         SearchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
         SearchBox.TextColor3 = Color3.new(1, 1, 1)
         SearchBox.ClearTextOnFocus = false
@@ -68,27 +89,70 @@ return function(Tab, UI)
         
         local ListLayout = Instance.new("UIListLayout", ListFrame)
         ListLayout.Padding = UDim.new(0, 5)
+        ListLayout.SortOrder = Enum.SortOrder.LayoutOrder -- لترتيب المفضلات في الأعلى
 
         local isOpen = false
-        local optionButtons = {}
+        local optionItems = {}
+
+        -- دالة تحديث ترتيب وعرض القائمة
+        local function UpdateListDisplay()
+            local searchText = SearchBox.Text:lower()
+            for _, item in ipairs(optionItems) do
+                local isFav = FavoriteAnims[item.RealName]
+                local matchSearch = (searchText == "" or string.find(item.LowerName, searchText) ~= nil)
+                
+                item.Frame.Visible = matchSearch
+                item.Frame.LayoutOrder = isFav and 1 or 2 -- المفضلات تصعد للأعلى (رقم 1)
+                item.StarBtn.Text = isFav and "⭐" or "☆"
+                item.StarBtn.TextColor3 = isFav and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(150, 150, 150)
+            end
+        end
 
         for optName, data in pairs(options) do
-            local btn = Instance.new("TextButton", ListFrame)
-            btn.Size = UDim2.new(1, -10, 0, 30)
-            btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-            btn.TextColor3 = Color3.fromRGB(220, 220, 220)
-            btn.Text = optName
-            Instance.new("UICorner", btn)
+            local ItemFrame = Instance.new("Frame", ListFrame)
+            ItemFrame.Size = UDim2.new(1, -10, 0, 30)
+            ItemFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            Instance.new("UICorner", ItemFrame)
             
-            table.insert(optionButtons, {Button = btn, Name = optName:lower()})
+            -- زر اختيار المشية
+            local SelectBtn = Instance.new("TextButton", ItemFrame)
+            SelectBtn.Size = UDim2.new(0.85, 0, 1, 0)
+            SelectBtn.BackgroundTransparency = 1
+            SelectBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+            SelectBtn.Text = "  " .. optName
+            SelectBtn.TextXAlignment = Enum.TextXAlignment.Left
 
-            btn.MouseButton1Click:Connect(function()
+            -- زر النجمة (المفضلة)
+            local StarBtn = Instance.new("TextButton", ItemFrame)
+            StarBtn.Size = UDim2.new(0.15, 0, 1, 0)
+            StarBtn.Position = UDim2.new(0.85, 0, 0, 0)
+            StarBtn.BackgroundTransparency = 1
+            StarBtn.Text = "☆"
+            StarBtn.TextSize = 16
+
+            table.insert(optionItems, {Frame = ItemFrame, SelectBtn = SelectBtn, StarBtn = StarBtn, RealName = optName, LowerName = optName:lower()})
+
+            -- عند اختيار المشية
+            SelectBtn.MouseButton1Click:Connect(function()
                 MainBtn.Text = "▼ " .. optName
                 isOpen = false
                 Container.Size = UDim2.new(0.95, 0, 0, 40)
                 callback(optName, data)
             end)
+
+            -- عند الضغط على النجمة (حفظ/إزالة من المفضلة)
+            StarBtn.MouseButton1Click:Connect(function()
+                if FavoriteAnims[optName] then
+                    FavoriteAnims[optName] = nil -- إزالة
+                else
+                    FavoriteAnims[optName] = true -- إضافة
+                end
+                SaveFavorites()
+                UpdateListDisplay() -- إعادة الترتيب فوراً
+            end)
         end
+
+        UpdateListDisplay() -- الترتيب الأولي عند التشغيل
 
         ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
             ListFrame.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 10)
@@ -100,17 +164,11 @@ return function(Tab, UI)
             MainBtn.Text = (isOpen and "▲ " or "▼ ") .. title
         end)
 
-        -- الفلترة عند الكتابة
-        SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-            local searchText = SearchBox.Text:lower()
-            for _, item in ipairs(optionButtons) do
-                item.Button.Visible = (searchText == "" or string.find(item.Name, searchText) ~= nil)
-            end
-        end)
+        SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateListDisplay)
     end
 
     -- ==========================================
-    -- دالة تطبيق المشيات مع حل القلتشات
+    -- دالة تطبيق المشيات (الخالية من القلتشات)
     -- ==========================================
     local function ApplyAnimation(animData, isRestoring)
         local char = lp.Character
@@ -120,7 +178,6 @@ return function(Tab, UI)
         if not hum or not animate then return end
 
         pcall(function()
-            -- 🟢 حفظ المشية الأصلية قبل تغييرها (أول مرة فقط)
             if not originalAnims and not isRestoring then
                 originalAnims = {
                     idle = animate.idle.Animation1.AnimationId,
@@ -133,7 +190,7 @@ return function(Tab, UI)
                 }
             end
 
-            -- 🟢 حل القلتش: إيقاف كل الحركات الشغالة حالياً لكي لا تتداخل مع الجديدة!
+            -- تنظيف الحركات القديمة لكي لا تتداخل
             local animator = hum:FindFirstChildOfClass("Animator")
             if animator then
                 for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
@@ -141,7 +198,6 @@ return function(Tab, UI)
                 end
             end
 
-            -- تركيب الأكواد الجديدة
             local function setAnim(animType, animName, id)
                 local track = animate:FindFirstChild(animType)
                 if track then
@@ -161,7 +217,6 @@ return function(Tab, UI)
             setAnim("climb", "ClimbAnim", animData.climb)
             setAnim("swim", "Swim", animData.swim)
             
-            -- إعادة تشغيل السكربت لتحديث الحركة للجميع
             animate.Disabled = true
             task.wait(0.05)
             animate.Disabled = false
@@ -172,7 +227,7 @@ return function(Tab, UI)
     -- بناء الواجهة وربط الأزرار
     -- ==========================================
     
-    AddSearchableDropdown(Tab, "اختر مشية / Select Animation", AnimationPacks, function(name, data)
+    AddAdvancedDropdown(Tab, "اختر مشية / Select Animation", AnimationPacks, function(name, data)
         selectedAnimData = data
         if isToggleOn then
             ApplyAnimation(data, false)
@@ -198,9 +253,8 @@ return function(Tab, UI)
         end
     end)
 
-    -- 🟢 حل مشكلة الموت: عند الترسبن يرجع يركب المشية تلقائياً
-    lp.CharacterAdded:Connect(function(char)
-        originalAnims = nil -- تصفير الأصلي لأن روبلوكس يركب لك مشيتك العادية عند الترسبن
+    lp.CharacterAdded:Connect(function()
+        originalAnims = nil 
         task.delay(1, function()
             if isToggleOn and selectedAnimData then
                 ApplyAnimation(selectedAnimData, false)
