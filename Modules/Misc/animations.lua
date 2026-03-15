@@ -81,7 +81,7 @@ return function(Tab, UI)
         SearchBox.Size = UDim2.new(0.9, 0, 0, 30)
         SearchBox.Position = UDim2.new(0.05, 0, 0, 45)
         SearchBox.Text = "" -- مسح النص لضمان عدم ظهور TextBox
-        SearchBox.PlaceholderText = "بحث / Search" 
+        SearchBox.PlaceholderText = "بحث. / Search" 
         SearchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
         SearchBox.TextColor3 = Color3.new(1, 1, 1)
         SearchBox.ClearTextOnFocus = false
