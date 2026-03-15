@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - نظام الانتقال المتقدم (Teleport Manager V2) ]]
--- المطور: يامي | الوصف: انتقال فوري/طيران، حفظ أماكن، مفضلات (⭐)، وتصميم احترافي خالي من التعليق
+-- [[ Cryptic Hub - نظام الانتقال المتقدم V3 ]]
+-- المطور: يامي | الوصف: انتقال سريع (🚀)، مفضلات (⭐)، وحذف مخصص (❌)
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -42,6 +42,30 @@ return function(Tab, UI)
     end
 
     LoadData()
+
+    -- ==========================================
+    -- دالة الانتقال الأساسية (تستخدم للزر الداخلي والخارجي)
+    -- ==========================================
+    local function TeleportTo(locName)
+        local locData = locations[locName]
+        local char = lp.Character
+        if not locData or not char or not char:FindFirstChild("HumanoidRootPart") then return end
+        
+        local targetCFrame = CFrame.new(locData.x, locData.y, locData.z)
+        local rootPart = char.HumanoidRootPart
+        
+        if TPMethod == "انتقال فوري | Instant" then
+            rootPart.CFrame = targetCFrame
+            Notify("نجاح | Success 🚀", "تم الانتقال إلى / Teleported to:\n" .. locName)
+        else
+            local dist = (rootPart.Position - targetCFrame.Position).Magnitude
+            local tweenTime = dist / 150 
+            local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Linear)
+            local tween = TweenService:Create(rootPart, tweenInfo, {CFrame = targetCFrame})
+            tween:Play()
+            Notify("نجاح | Success 🛸", "جاري الطيران إلى / Flying to:\n" .. locName)
+        end
+    end
 
     -- ==========================================
     -- إعدادات طريقة الانتقال
@@ -94,7 +118,6 @@ return function(Tab, UI)
     local isOpen = false
     local optionItems = {}
 
-    -- دالة تحديث وعرض القائمة بناءً على البحث والمفضلات
     local function UpdateListDisplay()
         local searchText = SearchBox.Text:lower()
         for _, item in ipairs(optionItems) do
@@ -102,13 +125,12 @@ return function(Tab, UI)
             local matchSearch = (searchText == "" or string.find(item.LowerName, searchText) ~= nil)
             
             item.Frame.Visible = matchSearch
-            item.Frame.LayoutOrder = isFav and 1 or 2 -- المفضلات تصعد للأعلى
+            item.Frame.LayoutOrder = isFav and 1 or 2 
             item.StarBtn.Text = isFav and "⭐" or "☆"
             item.StarBtn.TextColor3 = isFav and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(150, 150, 150)
         end
     end
 
-    -- دالة حيوية: تمسح الأزرار القديمة وتبنيها من جديد (تمنع التعليق)
     local function RebuildDropdown()
         for _, item in ipairs(optionItems) do item.Frame:Destroy() end
         optionItems = {}
@@ -121,22 +143,42 @@ return function(Tab, UI)
             ItemFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
             Instance.new("UICorner", ItemFrame)
             
+            -- زر اختيار الاسم (مساحة 55%)
             local SelectBtn = Instance.new("TextButton", ItemFrame)
-            SelectBtn.Size = UDim2.new(0.85, 0, 1, 0)
+            SelectBtn.Size = UDim2.new(0.55, 0, 1, 0)
             SelectBtn.BackgroundTransparency = 1
             SelectBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
             SelectBtn.Text = "  " .. locName
             SelectBtn.TextXAlignment = Enum.TextXAlignment.Left
 
+            -- 🚀 زر الانتقال السريع (مساحة 15%)
+            local TpBtn = Instance.new("TextButton", ItemFrame)
+            TpBtn.Size = UDim2.new(0.15, 0, 1, 0)
+            TpBtn.Position = UDim2.new(0.55, 0, 0, 0)
+            TpBtn.BackgroundTransparency = 1
+            TpBtn.Text = "🚀"
+            TpBtn.TextSize = 14
+
+            -- ⭐ زر المفضلة (مساحة 15%)
             local StarBtn = Instance.new("TextButton", ItemFrame)
             StarBtn.Size = UDim2.new(0.15, 0, 1, 0)
-            StarBtn.Position = UDim2.new(0.85, 0, 0, 0)
+            StarBtn.Position = UDim2.new(0.70, 0, 0, 0)
             StarBtn.BackgroundTransparency = 1
             StarBtn.Text = "☆"
             StarBtn.TextSize = 16
 
+            -- ❌ زر الحذف باللون الأحمر (مساحة 15%)
+            local DeleteBtn = Instance.new("TextButton", ItemFrame)
+            DeleteBtn.Size = UDim2.new(0.15, 0, 1, 0)
+            DeleteBtn.Position = UDim2.new(0.85, 0, 0, 0)
+            DeleteBtn.BackgroundTransparency = 1
+            DeleteBtn.Text = "❌"
+            DeleteBtn.TextSize = 12
+            DeleteBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+
             table.insert(optionItems, {Frame = ItemFrame, Name = locName, LowerName = locName:lower(), SelectBtn = SelectBtn, StarBtn = StarBtn})
 
+            -- عند تحديد الاسم فقط
             SelectBtn.MouseButton1Click:Connect(function()
                 MainBtn.Text = "▼ " .. locName
                 currentSelectedLocation = locName
@@ -144,10 +186,34 @@ return function(Tab, UI)
                 DropdownContainer.Size = UDim2.new(0.95, 0, 0, 40)
             end)
 
+            -- 🚀 عند ضغط زر الانتقال السريع
+            TpBtn.MouseButton1Click:Connect(function()
+                TeleportTo(locName)
+                isOpen = false
+                DropdownContainer.Size = UDim2.new(0.95, 0, 0, 40)
+            end)
+
+            -- ⭐ عند ضغط النجمة
             StarBtn.MouseButton1Click:Connect(function()
                 favoriteLocs[locName] = favoriteLocs[locName] and nil or true
                 SaveFavorites()
                 UpdateListDisplay()
+            end)
+
+            -- ❌ عند ضغط الحذف
+            DeleteBtn.MouseButton1Click:Connect(function()
+                locations[locName] = nil
+                favoriteLocs[locName] = nil
+                SaveLocations()
+                SaveFavorites()
+                
+                if currentSelectedLocation == locName then
+                    currentSelectedLocation = nil
+                    MainBtn.Text = "▼ اختر مكان للانتقال | Select TP Location"
+                end
+                
+                RebuildDropdown()
+                Notify("تم الحذف | Deleted 🗑️", "تم حذف المكان / Deleted:\n" .. locName)
             end)
         end
 
@@ -175,33 +241,14 @@ return function(Tab, UI)
     SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateListDisplay)
 
     -- ==========================================
-    -- زر الانتقال (Teleport)
+    -- زر الانتقال الخارجي (للمكان المحدد)
     -- ==========================================
-    local TPSettingsOrder = Tab.Order + 10
     Tab:AddButton("🚀 انتقال إلى المكان المحدد | Teleport to Selected", function()
         if not currentSelectedLocation then
             Notify("تنبيه | Alert ⚠️", "الرجاء اختيار مكان من القائمة أولاً!\nPlease select a location first!")
             return
         end
-
-        local locData = locations[currentSelectedLocation]
-        local char = lp.Character
-        if not locData or not char or not char:FindFirstChild("HumanoidRootPart") then return end
-        
-        local targetCFrame = CFrame.new(locData.x, locData.y, locData.z)
-        local rootPart = char.HumanoidRootPart
-        
-        if TPMethod == "انتقال فوري | Instant" then
-            rootPart.CFrame = targetCFrame
-            Notify("نجاح | Success 🚀", "تم الانتقال فورياً إلى / Teleported to:\n" .. currentSelectedLocation)
-        else
-            local dist = (rootPart.Position - targetCFrame.Position).Magnitude
-            local tweenTime = dist / 150 
-            local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Linear)
-            local tween = TweenService:Create(rootPart, tweenInfo, {CFrame = targetCFrame})
-            tween:Play()
-            Notify("نجاح | Success 🛸", "جاري الطيران إلى / Flying to:\n" .. currentSelectedLocation)
-        end
+        TeleportTo(currentSelectedLocation)
     end)
     Tab:AddLine()
 
@@ -226,13 +273,13 @@ return function(Tab, UI)
         locations[locationNameInput] = {x = pos.X, y = pos.Y, z = pos.Z}
         SaveLocations()
         
-        RebuildDropdown() -- 🔴 تحديث القائمة فوراً بدون أي تعليق
+        RebuildDropdown() 
         Notify("نجاح | Success ✅", "تم حفظ الإحداثيات / Saved:\n" .. locationNameInput)
     end)
     Tab:AddLine()
 
     -- ==========================================
-    -- مسح البيانات
+    -- مسح كل البيانات
     -- ==========================================
     Tab:AddButton("🗑️ مسح كل أماكن هذا الماب | Clear All Locations", function()
         if isfile and isfile(LocFileName) then delfile(LocFileName) end
