@@ -1,12 +1,12 @@
--- [[ Cryptic Hub - ميزة المشيات المتقدمة (بحث نظيف 100% + مكتبة شاملة) ]]
--- المطور: يامي | الوصف: نظام مفضلة (⭐)، بحث ديكور ذكي، ومكتبة مشيات ضخمة
+-- [[ ميزة المشيات المتقدمة (إصدار خالي من الأغلاط 100%) ]]
+-- الوصف: مكتبة ضخمة، نظام مفضلة (⭐)، دعم كامل للأجسام، وتغيير جذري للقيم
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local lp = Players.LocalPlayer
 local StarterGui = game:GetService("StarterGui")
 
-local FavFileName = "CrypticHub_FavoriteAnims.json"
+local FavFileName = "MyScript_FavoriteAnims.json"
 local FavoriteAnims = {}
 
 pcall(function()
@@ -24,7 +24,7 @@ local function SaveFavorites()
     end)
 end
 
--- 🟢 مكتبة ضخمة تشمل كل المشيات المعروفة في روبلوكس تقريباً
+-- مكتبة المشيات بأرقام دقيقة
 local AnimationPacks = {
     ["Ninja / النينجا"] = {idle="656117400", walk="656121766", run="656118852", jump="656117878", fall="656115606", climb="656114359", swim="656119721"},
     ["Cartoony / كارتوني"] = {idle="742637544", walk="742640026", run="742638842", jump="742637942", fall="742637151", climb="742636889", swim="742639220"},
@@ -72,12 +72,11 @@ return function(Tab, UI)
         MainBtn.Font = Enum.Font.GothamBold
         MainBtn.TextSize = 13
 
-        -- 🟢 حل مشكلة الـ TextBox نهائياً
         local SearchBox = Instance.new("TextBox", Container)
         SearchBox.Size = UDim2.new(0.9, 0, 0, 30)
         SearchBox.Position = UDim2.new(0.05, 0, 0, 45)
-        SearchBox.Text = "" -- مسح النص الحقيقي لكي لا يظهر ككلمة مكتوبة
-        SearchBox.PlaceholderText = "بحث / Search" -- ديكور شفاف يختفي عند الكتابة
+        SearchBox.Text = "" 
+        SearchBox.PlaceholderText = "بحث / Search" 
         SearchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
         SearchBox.TextColor3 = Color3.new(1, 1, 1)
         SearchBox.ClearTextOnFocus = false
@@ -167,10 +166,18 @@ return function(Tab, UI)
 
     local function ApplyAnimation(animData, isRestoring)
         local char = lp.Character
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        local animate = char and char:FindFirstChild("Animate")
+        if not char then return end
+        
+        local hum = char:WaitForChild("Humanoid", 3)
+        local animate = char:WaitForChild("Animate", 3)
         
         if not hum or not animate then return end
+        
+        -- 🔴 الحماية من الانهيار: المشيات لا تدعم R6
+        if hum.RigType == Enum.HumanoidRigType.R6 then
+            Notify("تحذير ⚠️", "هذا الماب يستخدم أجسام R6، المشيات تدعم R15 فقط!")
+            return
+        end
 
         pcall(function()
             if not originalAnims and not isRestoring then
@@ -185,20 +192,23 @@ return function(Tab, UI)
                 }
             end
 
+            -- 🔴 إيقاف فوري لأي أنميشن شغال لتجنب التداخل
             local animator = hum:FindFirstChildOfClass("Animator")
             if animator then
                 for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
-                    track:Stop()
+                    track:Stop(0)
                 end
             end
 
             local function setAnim(animType, animName, id)
-                local track = animate:FindFirstChild(animType)
-                if track then
-                    local animObj = track:FindFirstChild(animName)
-                    if animObj then
-                        animObj.AnimationId = string.find(id, "http") and id or "http://www.roblox.com/asset/?id=" .. id
-                    end
+                local trackValue = animate:FindFirstChild(animType)
+                if trackValue then
+                    local animObj = trackValue:FindFirstChild(animName)
+                    local finalId = "rbxassetid://" .. id
+                    
+                    -- 🔴 تغيير القيمة داخل الكائن نفسه وداخل الـ StringValue
+                    if animObj then animObj.AnimationId = finalId end
+                    if trackValue:IsA("StringValue") then trackValue.Value = finalId end
                 end
             end
 
@@ -221,7 +231,7 @@ return function(Tab, UI)
         selectedAnimData = data
         if isToggleOn then
             ApplyAnimation(data, false)
-            Notify("Cryptic Hub 🏃‍♂️", "✅ تم تغيير المشية إلى / Changed to:\n" .. name)
+            Notify("نجاح 🏃‍♂️", "تم تغيير المشية إلى:\n" .. name)
         end
     end)
 
@@ -230,15 +240,15 @@ return function(Tab, UI)
         
         if state then
             if not selectedAnimData then
-                Notify("Cryptic Hub ⚠️", "يرجى اختيار مشية من القائمة أولاً!\nPlease select an animation first!")
+                Notify("تنبيه ⚠️", "يرجى اختيار مشية من القائمة أولاً!")
                 return
             end
             ApplyAnimation(selectedAnimData, false)
-            Notify("Cryptic Hub ✅", "تم تفعيل المشية للجميع!\nAnimation applied for everyone!")
+            Notify("تفعيل ✅", "تم تفعيل المشية بنجاح!")
         else
             if originalAnims then
                 ApplyAnimation(originalAnims, true)
-                Notify("Cryptic Hub 🔄", "تم استرجاع مشيتك الأصلية!\nOriginal animation restored!")
+                Notify("إيقاف 🔄", "تم استرجاع مشيتك الأصلية!")
             end
         end
     end)
