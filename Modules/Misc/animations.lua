@@ -1,12 +1,12 @@
--- [[ Cryptic Hub - Animation Changer (Bilingual & Glitch-Free) ]]
--- المطور: يامي | الوصف: مكتبة ضخمة، نظام مفضلة (⭐)، بحث نظيف، وعربي/إنجليزي بالكامل
+-- [[ Cryptic Hub - Animation Changer (Anti-Statue Bug & Glitch-Free) ]]
+-- المطور: يامي | الوصف: مكتبة ضخمة، مفضلة، وتدمير مشكلة التمثال (Statue Bug Fix)
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local lp = Players.LocalPlayer
 local StarterGui = game:GetService("StarterGui")
 
--- 🟢 ملف حفظ المفضلات / Favorites Save File
+-- 🟢 ملف الحفظ للمفضلات / Save File for Favorites
 local FavFileName = "CrypticHub_FavoriteAnims.json"
 local FavoriteAnims = {}
 
@@ -25,7 +25,7 @@ local function SaveFavorites()
     end)
 end
 
--- 🟢 مكتبة ضخمة تشمل كل المشيات / Huge Animations Library
+-- 🟢 مكتبة ضخمة وشاملة لكل المشيات / Huge Animations Library
 local AnimationPacks = {
     ["Ninja / النينجا"] = {idle="656117400", walk="656121766", run="656118852", jump="656117878", fall="656115606", climb="656114359", swim="656119721"},
     ["Cartoony / كارتوني"] = {idle="742637544", walk="742640026", run="742638842", jump="742637942", fall="742637151", climb="742636889", swim="742639220"},
@@ -76,12 +76,11 @@ return function(Tab, UI)
         MainBtn.Font = Enum.Font.GothamBold
         MainBtn.TextSize = 13
 
-        -- 🟢 صندوق البحث النظيف 100%
         local SearchBox = Instance.new("TextBox", Container)
         SearchBox.Size = UDim2.new(0.9, 0, 0, 30)
         SearchBox.Position = UDim2.new(0.05, 0, 0, 45)
-        SearchBox.Text = "" -- مسح النص لضمان عدم ظهور TextBox
-        SearchBox.PlaceholderText = "بحث. / Search" 
+        SearchBox.Text = "" -- نص فارغ لمنع مشكلة TextBox
+        SearchBox.PlaceholderText = "بحث / Search" 
         SearchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
         SearchBox.TextColor3 = Color3.new(1, 1, 1)
         SearchBox.ClearTextOnFocus = false
@@ -170,7 +169,7 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- دالة تطبيق المشيات (إصدار خالي من الأخطاء)
+    -- دالة تطبيق المشيات (المدمرة لقلتش التمثال)
     -- ==========================================
     local function ApplyAnimation(animData, isRestoring)
         local char = lp.Character
@@ -181,9 +180,8 @@ return function(Tab, UI)
         
         if not hum or not animate then return end
         
-        -- 🔴 الحماية من الانهيار في مابات R6
         if hum.RigType == Enum.HumanoidRigType.R6 then
-            Notify("تنبيه / Warning ⚠️", "هذا الماب يستخدم أجسام R6، المشيات تدعم R15 فقط!\nThis map uses R6, animations require R15!")
+            Notify("تنبيه / Warning ⚠️", "هذا الماب يستخدم أجسام R6، المشيات تدعم R15 فقط!\nAnimations require R15!")
             return
         end
 
@@ -200,7 +198,7 @@ return function(Tab, UI)
                 }
             end
 
-            -- إيقاف أي أنميشن شغال لمنع التداخل والقلتشات
+            -- 1. كنس الرقصات القديمة
             local animator = hum:FindFirstChildOfClass("Animator")
             if animator then
                 for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
@@ -208,6 +206,7 @@ return function(Tab, UI)
                 end
             end
 
+            -- 2. إدخال أكواد المشية الجديدة
             local function setAnim(animType, animName, id)
                 local trackValue = animate:FindFirstChild(animType)
                 if trackValue then
@@ -228,9 +227,17 @@ return function(Tab, UI)
             setAnim("climb", "ClimbAnim", animData.climb)
             setAnim("swim", "Swim", animData.swim)
             
+            -- 3. تحديث السكربت
             animate.Disabled = true
             task.wait(0.05)
             animate.Disabled = false
+
+            -- 🔴 4. الضربة القاضية لمشكلة التجميد (Statue Fix)
+            -- تغيير السرعة للحظة لإيقاظ اللعبة وإجبارها على تشغيل المشية!
+            local oldSpeed = hum.WalkSpeed
+            hum.WalkSpeed = 0
+            task.wait(0.01) -- جزء بسيط جداً من الثانية لن تحس به
+            hum.WalkSpeed = oldSpeed
         end)
     end
 
@@ -255,7 +262,7 @@ return function(Tab, UI)
                 return
             end
             ApplyAnimation(selectedAnimData, false)
-            Notify("تفعيل / Applied ✅", "تم تفعيل المشية للجميع!\nAnimation applied for everyone!")
+            Notify("تفعيل / Applied ✅", "تم تفعيل المشية بنجاح!\nAnimation applied!")
         else
             if originalAnims then
                 ApplyAnimation(originalAnims, true)
