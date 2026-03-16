@@ -1,6 +1,23 @@
 -- [[ Cryptic Hub - المحرك الرئيسي V8.0 (النسخة المجزأة مع الكاش) ]]
 -- المطور: يامي (Yami) | التحديث: نظام الكاش لتسريع الواجهة ومنع اللاق
 
+-- ========================================================
+-- 🔥 الحماية من التكرار (Anti-Multiple Execution)
+-- ========================================================
+if getgenv().CrypticHub_Loaded then
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Cryptic Hub ⚠️",
+            Text = "السكربت شغال بالفعل! لا حاجة لتفعيله مرة أخرى.",
+            Duration = 3
+        })
+    end)
+    return -- هذا السطر يوقف السكربت فوراً ويمنع تكرار الواجهة
+end
+getgenv().CrypticHub_Loaded = true -- تسجيل أن السكربت تم تشغيله الآن
+
+-- ========================================================
+
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 
@@ -32,7 +49,7 @@ if Players.LocalPlayer.UserId == 3875086037 then
     table.insert(Cryptic.TabsOrder, "تجارب")
 end
 
--- دالة الاستدعاء العادية لملفات الميزات (مثل speed و fly)
+-- دالة الاستدعاء العادية لملفات الميزات
 local function Import(path)
     local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. "?v=" .. tick()
     local s, r = pcall(game.HttpGet, game, url)
@@ -109,7 +126,7 @@ if UI then
                 
                 -- أزرار الحفظ في قسم المعلومات
                 if nameOfTab == "معلومات / info" then
-                    tab:AddButton("💾 حفظ الإعدادات / save config", function()
+                    tab:AddButton("💾 .حفظ الإعدادات / save config", function()
                         pcall(function() UI:SaveConfig() end)
                     end)
 
