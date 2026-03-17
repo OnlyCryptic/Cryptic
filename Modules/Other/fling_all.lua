@@ -1,15 +1,14 @@
--- [[ Cryptic Hub - تطيير الجميع (Auto Fling All) ]]
--- المطور: يامي (Yami) | الوصف: انتقال متسلسل وتطيير إجباري بدون فحص مزعج للتلامس
+-- [[ Cryptic Hub - تطيير الجميع الذكي (Smart Auto Fling All) ]]
+-- المطور: يامي | الوصف: دوران علوي، استهداف الواقفين فقط، تخطي سريع للطائرين (1.5 ثانية)
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
     local StarterGui = game:GetService("StarterGui")
     local LocalPlayer = Players.LocalPlayer
 
     local isFlingAllActive = false
+    local bav = nil 
 
-    -- دالة الإشعارات المزدوجة (عربي/إنجليزي)
     local function Notify(arText, enText)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
@@ -20,27 +19,33 @@ return function(Tab, UI)
         end)
     end
 
-    Tab:AddToggle("تطيير الجميع / Fling All", function(state)
+    Tab:AddToggle("تطيير الجميع الذكي / Smart Fling All", function(state)
         isFlingAllActive = state
         local char = LocalPlayer.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        local torso = char and (char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso"))
         
         if state then
-            if not char or not root then
+            if not char or not root or not hum or not torso then
                 isFlingAllActive = false
+                Notify("خطأ ⚠️", "لم يتم العثور على أجزاء الشخصية!")
                 return
             end
 
-            -- 🗑️ تم إزالة فحص التلامس بالكامل! السكربت سيهجم فوراً.
+            Notify("🌪️ جاري مسح السيرفر...", "Scanning and flinging stationary players...")
 
-            Notify("🌪️ جاري تطيير الجميع بالترتيب...", "Starting to fling everyone...")
-
-            -- حفظ المكان للرجوع إليه
             local originalCFrame = root.CFrame
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            if hum then hum.PlatformStand = true end -- تجميد المشي لتجنب القلتشات
+            hum.PlatformStand = true
 
-            -- [[ حلقة التطيير المتسلسلة ]]
+            -- تجهيز أداة الدوران للنصف العلوي فقط (بدون إتلاف الكاميرا)
+            bav = Instance.new("BodyAngularVelocity")
+            bav.Name = "CrypticAutoFlingBAV"
+            bav.AngularVelocity = Vector3.new(0, 50000, 0)
+            bav.MaxTorque = Vector3.new(0, math.huge, 0)
+            bav.P = math.huge
+            bav.Parent = torso
+
             task.spawn(function()
                 while isFlingAllActive do
                     for _, targetPlayer in ipairs(Players:GetPlayers()) do
@@ -52,50 +57,65 @@ return function(Tab, UI)
                             local targetHum = targetChar:FindFirstChildOfClass("Humanoid")
 
                             if targetRoot and targetHum and targetHum.Health > 0 then
-                                local startTime = tick()
+                                -- 🔴 1. التحقق من أن اللاعب واقف ولا يركض (سرعته شبه معدومة)
+                                local isStationary = targetRoot.Velocity.Magnitude < 5
                                 
-                                -- الهجوم على هذا اللاعب لمدة 2.5 ثانية
-                                while isFlingAllActive and targetChar and targetChar.Parent and targetHum.Health > 0 and (tick() - startTime < 2.5) do
-                                    local myChar = LocalPlayer.Character
-                                    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                                if isStationary then
+                                    local startTime = tick()
+                                    local initialTargetY = targetRoot.Position.Y
                                     
-                                    if myRoot then
-                                        -- إجبار شخصيتك على الصلابة والوزن الثقيل لتدمير الهدف (Noclip + Anti-Fling مدمج)
-                                        for _, part in pairs(myChar:GetChildren()) do
-                                            if part:IsA("BasePart") then
-                                                if part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso" then
-                                                    part.CanCollide = true
-                                                    part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 1)
-                                                else
-                                                    part.CanCollide = false
+                                    -- 🔴 2. الهجوم لمدة 1.5 ثانية كحد أقصى
+                                    while isFlingAllActive and targetChar and targetChar.Parent and targetHum.Health > 0 and (tick() - startTime < 1.5) do
+                                        local myChar = LocalPlayer.Character
+                                        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                                        
+                                        if myRoot then
+                                            -- إجبار شخصيتك على الصلابة والاختراق
+                                            for _, part in pairs(myChar:GetChildren()) do
+                                                if part:IsA("BasePart") then
+                                                    if part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso" then
+                                                        part.CanCollide = true
+                                                        part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 1)
+                                                    else
+                                                        part.CanCollide = false
+                                                    end
+                                                    part.Massless = true
                                                 end
-                                                part.Massless = true
+                                            end
+
+                                            -- التمركز الدقيق داخل الهدف
+                                            myRoot.CFrame = targetRoot.CFrame
+                                            
+                                            -- تثبيت الكاميرا والـ RootPart
+                                            myRoot.Velocity = Vector3.new(0, 0, 0)
+                                            myRoot.RotVelocity = Vector3.new(0, 0, 0)
+                                            
+                                            -- 🔴 3. التحقق مما إذا كان الهدف قد طار للتو!
+                                            -- إذا زادت سرعته فجأة أو ارتفع عن مكانه الأصلي بشكل ملحوظ
+                                            if targetRoot.Velocity.Magnitude > 40 or math.abs(targetRoot.Position.Y - initialTargetY) > 10 then
+                                                break -- كسر الحلقة فوراً للانتقال للاعب التالي 🚀
                                             end
                                         end
-
-                                        -- التتبع الذكي والدوران المدمر
-                                        local targetVel = targetRoot.Velocity
-                                        local predictedPos = targetRoot.Position + (targetVel * 0.1)
-                                        
-                                        myRoot.CFrame = CFrame.new(predictedPos + Vector3.new(math.random(-2,2), math.random(-1,2), math.random(-2,2)))
-                                        myRoot.Velocity = Vector3.new(0, 5000, 0)
-                                        myRoot.RotVelocity = Vector3.new(math.random(-50000, 50000), math.random(-50000, 50000), math.random(-50000, 50000))
+                                        task.wait()
                                     end
-                                    task.wait()
                                 end
                             end
                         end
                     end
-                    -- استراحة بسيطة قبل إعادة الدورة على السيرفر
                     task.wait(0.1)
                 end
 
-                -- [[ إيقاف التطيير والعودة للحالة الطبيعية ]]
+                -- [[ إيقاف التطيير والتنظيف ]]
+                if bav then bav:Destroy() bav = nil end
+                
                 local finalChar = LocalPlayer.Character
                 local finalRoot = finalChar and finalChar:FindFirstChild("HumanoidRootPart")
                 local finalHum = finalChar and finalChar:FindFirstChildOfClass("Humanoid")
+                local finalTorso = finalChar and (finalChar:FindFirstChild("UpperTorso") or finalChar:FindFirstChild("Torso"))
                 
                 if finalHum then finalHum.PlatformStand = false end
+                
+                if finalTorso then finalTorso.RotVelocity = Vector3.new(0,0,0) end
                 
                 if finalRoot then
                     finalRoot.Velocity = Vector3.new(0,0,0)
@@ -108,7 +128,6 @@ return function(Tab, UI)
                         if part:IsA("BasePart") then
                             part.Massless = false
                             part.CustomPhysicalProperties = nil
-                            -- إرجاع حالة الاصطدام للطبيعي
                             if part.Name == "HumanoidRootPart" then
                                 part.CanCollide = false
                             else
@@ -118,10 +137,12 @@ return function(Tab, UI)
                     end
                 end
                 
-                Notify("✅ تم إيقاف التطيير ورجعت لمكانك", "Fling All stopped, returned to position")
+                Notify("✅ توقف التطيير", "Fling All stopped, returned to position")
             end)
         else
             isFlingAllActive = false
         end
     end)
+    
+    Tab:AddLine()
 end
