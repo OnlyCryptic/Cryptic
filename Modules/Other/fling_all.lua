@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - تطيير الجميع الذكي (Smart Auto Fling All V6) ]]
--- المطور: يامي | الميزات: استمرار بعد الموت، توازن مثالي، حماية من الانتحار، ودوران علوي
+-- [[ Cryptic Hub - تطيير الجميع الذكي (Classic Spin & Safe V7) ]]
+-- المطور: يامي | الميزات: الدوران الكلاسيكي الأصلي، حماية من الموت العشوائي، وتتبع ذكي
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -10,7 +10,8 @@ return function(Tab, UI)
     local isFlingAllActive = false
     local charAddedConnection = nil
     local flingTask = nil
-    local bav, bp, bg = nil, nil, nil
+    local steppedConn = nil
+    local bav, bp = nil, nil
 
     local function Notify(arText, enText)
         pcall(function()
@@ -22,14 +23,12 @@ return function(Tab, UI)
         end)
     end
 
-    -- دالة التنظيف وإيقاف المحركات
     local function CleanMovers()
         if bav then bav:Destroy() bav = nil end
         if bp then bp:Destroy() bp = nil end
-        if bg then bg:Destroy() bg = nil end
+        if steppedConn then steppedConn:Disconnect() steppedConn = nil end
     end
 
-    -- دالة التشغيل الأساسية (مفصولة لتعمل عند التفعيل وعند الترسبن)
     local function StartFlingProcess(char)
         if not isFlingAllActive then return end
         
@@ -41,49 +40,56 @@ return function(Tab, UI)
 
         CleanMovers()
         hum.PlatformStand = true
-
-        -- 🛡️ حماية من الموت العشوائي بسبب الفيزياء
+        
+        -- إغلاق حالات السقوط لمنع الموت العشوائي
         hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
         hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
 
-        -- 1. أداة الدوران (للنصف العلوي فقط)
+        -- 1. أداة الدوران الكلاسيكية (في الجذع العلوي فقط) نفس الـ Walk Fling!
         bav = Instance.new("BodyAngularVelocity")
-        bav.Name = "CrypticAutoFlingBAV"
-        bav.AngularVelocity = Vector3.new(0, 50000, 0)
+        bav.Name = "CrypticUpperFlingBAV"
+        bav.AngularVelocity = Vector3.new(0, 25000, 0) -- السرعة الكلاسيكية المجنونة
         bav.MaxTorque = Vector3.new(0, math.huge, 0)
         bav.P = math.huge
         bav.Parent = torso
 
-        -- 2. أداة التتبع المغناطيسي
+        -- 2. أداة السحب المغناطيسي
         bp = Instance.new("BodyPosition")
-        bp.Name = "CrypticAutoFlingBP"
+        bp.Name = "CrypticFlingBP"
         bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-        bp.P = 15000 
+        bp.P = 15000
         bp.D = 100
         bp.Parent = root
 
-        -- 3. 🔴 مثبت التوازن (يمنعك من الانقلاب على رأسك تماماً!)
-        bg = Instance.new("BodyGyro")
-        bg.Name = "CrypticAutoFlingBG"
-        bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-        bg.P = 50000
-        bg.D = 500
-        bg.CFrame = CFrame.new() -- يحافظ على استقامتك (واقف)
-        bg.Parent = root
-
-        -- تقليل وزن الجسم لتجنب القلتشات القاتلة
+        -- تخفيف وزن الشخصية ومنع التصادم المبدئي
         for _, part in pairs(char:GetDescendants()) do
             if part:IsA("BasePart") then
                 part.Massless = true
-                if part.Name ~= "HumanoidRootPart" then
-                    part.CanCollide = false
-                end
+                part.CanCollide = false
             end
         end
 
+        local currentTargetPos = nil
+
+        -- 🔴 درع الاستقرار المستمر: يمنعك من الانقلاب ويحمي الكاميرا طوال الوقت!
+        steppedConn = RunService.Stepped:Connect(function()
+            if root and hum.Health > 0 then
+                -- تصفير دوران الروت لتبقى واقفاً والكاميرا ثابتة
+                root.RotVelocity = Vector3.new(0, 0, 0)
+                
+                if currentTargetPos then
+                    bp.Position = currentTargetPos
+                    root.CanCollide = true
+                    root.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 1)
+                else
+                    root.CanCollide = false
+                end
+            end
+        end)
+
         if flingTask then task.cancel(flingTask) end
 
-        -- حلقة التتبع والضرب
+        -- حلقة التتبع والانتقال
         flingTask = task.spawn(function()
             while isFlingAllActive do
                 for _, targetPlayer in ipairs(Players:GetPlayers()) do
@@ -95,7 +101,7 @@ return function(Tab, UI)
                         local targetHum = targetChar:FindFirstChildOfClass("Humanoid")
 
                         if targetRoot and targetHum and targetHum.Health > 0 then
-                            -- 🛡️ حماية: تجاهل اللاعب إذا سقط في الفراغ (لكي لا تموت معه)
+                            -- تجاهل اللاعبين في الفراغ (لحمايتك من الانتحار)
                             if targetRoot.Position.Y > (workspace.FallenPartsDestroyHeight + 20) then
                                 local isStationary = targetRoot.Velocity.Magnitude < 5
                                 
@@ -103,29 +109,22 @@ return function(Tab, UI)
                                     local startTime = tick()
                                     local initialTargetY = targetRoot.Position.Y
                                     
-                                    -- انتقال أولي للهدف
-                                    root.CFrame = CFrame.new(targetRoot.Position)
+                                    -- انتقال آمن أعلى الهدف قليلاً لتجنب ضرب الأرض بقوة
+                                    root.Velocity = Vector3.new(0,0,0)
+                                    root.CFrame = CFrame.new(targetRoot.Position + Vector3.new(0, 1.5, 0))
 
                                     while isFlingAllActive and targetRoot and targetRoot.Parent and targetHum.Health > 0 and (tick() - startTime < 1.5) do
-                                        -- توجيه البوصلة مع الحفاظ على الاستقامة
-                                        bg.CFrame = CFrame.new(root.Position, root.Position + Vector3.new(targetRoot.CFrame.LookVector.X, 0, targetRoot.CFrame.LookVector.Z))
+                                        currentTargetPos = targetRoot.Position
                                         
-                                        bp.Position = targetRoot.Position
-                                        
-                                        root.Velocity = Vector3.new(0, 0, 0)
-                                        root.RotVelocity = Vector3.new(0, 0, 0)
-                                        torso.RotVelocity = Vector3.new(0, 50000, 0)
-                                        
-                                        root.CanCollide = true
-                                        root.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 1)
-
+                                        -- التخطي السريع لو طار الهدف
                                         if targetRoot.Velocity.Magnitude > 40 or math.abs(targetRoot.Position.Y - initialTargetY) > 10 then
                                             break 
                                         end
-                                        
-                                        RunService.Stepped:Wait()
+                                        task.wait()
                                     end
-                                    root.CanCollide = false
+                                    
+                                    currentTargetPos = nil -- إيقاف التصادم بين كل لاعب والآخر
+                                    root.Velocity = Vector3.new(0,0,0) -- إيقاف الزخم حتى لا تطير بعيداً
                                 end
                             end
                         end
@@ -152,6 +151,7 @@ return function(Tab, UI)
                 hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
                 hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
             end
+            
             if torso then torso.RotVelocity = Vector3.new(0,0,0) end
             
             if root then
@@ -163,9 +163,7 @@ return function(Tab, UI)
                 if part:IsA("BasePart") then
                     part.Massless = false
                     part.CustomPhysicalProperties = nil
-                    if part.Name == "HumanoidRootPart" then
-                        part.CanCollide = false
-                    else
+                    if part.Name ~= "HumanoidRootPart" then
                         part.CanCollide = true
                     end
                 end
@@ -173,7 +171,7 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddToggle("تطيير الجميع / Fling All", function(state)
+    Tab:AddToggle("تطيير الجميع الذكي / Smart Fling All", function(state)
         isFlingAllActive = state
         
         if state then
@@ -183,11 +181,11 @@ return function(Tab, UI)
                 StartFlingProcess(LocalPlayer.Character)
             end
             
-            -- 🔴 مراقب الموت: يعيد تشغيل الإعصار تلقائياً عند الترسبن
+            -- يعمل تلقائياً بعد الموت
             if not charAddedConnection then
                 charAddedConnection = LocalPlayer.CharacterAdded:Connect(function(newChar)
                     if isFlingAllActive then
-                        task.wait(1.5) -- انتظار قصير لتكتمل الشخصية
+                        task.wait(1.5) 
                         StartFlingProcess(newChar)
                     end
                 end)
