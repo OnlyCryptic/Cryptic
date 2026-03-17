@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - نظام البحث عن لاعب (محدث) ]]
--- المطور: يامي (Yami) | الميزات: قائمة احترافية، بحث ذكي، تحديث تلقائي
+-- [[ Cryptic Hub - نظام البحث عن لاعب V2.0 ]]
+-- المطور: arwa hope | الميزات: قائمة احترافية، بحث ذكي، وتجاهل النقرات الفارغة
 
 return function(Tab, UI)
     local players = game:GetService("Players")
@@ -18,6 +18,12 @@ return function(Tab, UI)
 
     -- استدعاء التصميم الاحترافي الجديد
     local PlayerSelector = Tab:AddPlayerSelector("تحديد لاعب الهدف / Target Player", "اكتب بداية اليوزر... / Type username start...", function(selectedValue)
+        
+        -- 🔴 الحل هنا: تجاهل الأمر إذا كان المربع فارغاً (أثناء الضغط عليه للبدء بالكتابة)
+        if type(selectedValue) == "string" and (selectedValue == "" or selectedValue:match("^%s*$")) then
+            return -- إيقاف السكربت هنا بدون إظهار أي إشعار خطأ
+        end
+
         local targetPlayer = nil
         
         -- إذا كان الإدخال نص (بحث يدوي)
