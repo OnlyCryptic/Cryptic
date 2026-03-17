@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - تطيير الجميع الذكي (Smart Auto Fling All) ]]
--- المطور: يامي | الوصف: دوران علوي، استهداف الواقفين فقط، تخطي سريع للطائرين (1.5 ثانية)
+-- [[ Cryptic Hub - تطيير الجميع الذكي (Smart Auto Fling All - Fixed Spin) ]]
+-- المطور: يامي | الوصف: دوران علوي مرعب، استهداف الواقفين، تخطي سريع للطائرين
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -38,7 +38,7 @@ return function(Tab, UI)
             local originalCFrame = root.CFrame
             hum.PlatformStand = true
 
-            -- تجهيز أداة الدوران للنصف العلوي فقط (بدون إتلاف الكاميرا)
+            -- تجهيز أداة الدوران للنصف العلوي
             bav = Instance.new("BodyAngularVelocity")
             bav.Name = "CrypticAutoFlingBAV"
             bav.AngularVelocity = Vector3.new(0, 50000, 0)
@@ -57,20 +57,21 @@ return function(Tab, UI)
                             local targetHum = targetChar:FindFirstChildOfClass("Humanoid")
 
                             if targetRoot and targetHum and targetHum.Health > 0 then
-                                -- 🔴 1. التحقق من أن اللاعب واقف ولا يركض (سرعته شبه معدومة)
+                                -- التحقق من أن اللاعب واقف ولا يركض
                                 local isStationary = targetRoot.Velocity.Magnitude < 5
                                 
                                 if isStationary then
                                     local startTime = tick()
                                     local initialTargetY = targetRoot.Position.Y
                                     
-                                    -- 🔴 2. الهجوم لمدة 1.5 ثانية كحد أقصى
+                                    -- الهجوم لمدة 1.5 ثانية كحد أقصى
                                     while isFlingAllActive and targetChar and targetChar.Parent and targetHum.Health > 0 and (tick() - startTime < 1.5) do
                                         local myChar = LocalPlayer.Character
                                         local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                                        local myTorso = myChar and (myChar:FindFirstChild("UpperTorso") or myChar:FindFirstChild("Torso"))
                                         
-                                        if myRoot then
-                                            -- إجبار شخصيتك على الصلابة والاختراق
+                                        if myRoot and myTorso then
+                                            -- إجبار شخصيتك على الصلابة 
                                             for _, part in pairs(myChar:GetChildren()) do
                                                 if part:IsA("BasePart") then
                                                     if part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso" then
@@ -86,14 +87,14 @@ return function(Tab, UI)
                                             -- التمركز الدقيق داخل الهدف
                                             myRoot.CFrame = targetRoot.CFrame
                                             
-                                            -- تثبيت الكاميرا والـ RootPart
+                                            -- 🔴 السر هنا: إجبار الجزء العلوي على الدوران المدمر، وتثبيت السفلي!
                                             myRoot.Velocity = Vector3.new(0, 0, 0)
-                                            myRoot.RotVelocity = Vector3.new(0, 0, 0)
+                                            myRoot.RotVelocity = Vector3.new(0, 0, 0) -- حماية الكاميرا
+                                            myTorso.RotVelocity = Vector3.new(0, 50000, 0) -- دوران النصف العلوي كالإعصار
                                             
-                                            -- 🔴 3. التحقق مما إذا كان الهدف قد طار للتو!
-                                            -- إذا زادت سرعته فجأة أو ارتفع عن مكانه الأصلي بشكل ملحوظ
+                                            -- تخطي اللاعب إذا طار
                                             if targetRoot.Velocity.Magnitude > 40 or math.abs(targetRoot.Position.Y - initialTargetY) > 10 then
-                                                break -- كسر الحلقة فوراً للانتقال للاعب التالي 🚀
+                                                break 
                                             end
                                         end
                                         task.wait()
