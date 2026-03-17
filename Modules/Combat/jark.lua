@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - رقص أمام الهدف (Target Jerk) ]]
--- المطور: يامي | الوصف: تتبع مستمر، وقوف أمام الوجه 180 درجة، أنميشن مدمج ولا يتوقف عند الموت
+-- [[ Cryptic Hub - رقص أمام الهدف السريع (Fast Target Jerk V2) ]]
+-- المطور: يامي | الوصف: أنميشن سريع مدمج (بدون أداة)، تتبع Face-to-Face، وتحديد من القائمة
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -12,25 +12,8 @@ return function(Tab, UI)
     local track = nil
     local lastMyChar = nil
 
-    -- 🔴 تنبيه: استخدمنا المتغير _G.CrypticTarget كمثال لاسم اللاعب المستهدف
-    -- إذا كان لديك مربع نص (TextBox) لتحديد الهدف، اجعله يحفظ الاسم في هذا المتغير!
-    _G.CrypticTarget = "" 
-
     local function Notify(title, text)
         pcall(function() StarterGui:SetCore("SendNotification", {Title=title, Text=text, Duration=3}) end)
-    end
-
-    -- دالة ذكية للبحث عن اللاعب المستهدف (تقبل كتابة جزء من اسمه)
-    local function GetTargetPlayer()
-        local targetName = _G.CrypticTarget 
-        if targetName and targetName ~= "" then
-            for _, p in ipairs(Players:GetPlayers()) do
-                if string.find(string.lower(p.Name), string.lower(targetName)) or string.find(string.lower(p.DisplayName), string.lower(targetName)) then
-                    return p
-                end
-            end
-        end
-        return nil
     end
 
     local function StopAction()
@@ -38,7 +21,7 @@ return function(Tab, UI)
         if loopConnection then loopConnection:Disconnect() loopConnection = nil end
         if track then track:Stop() track = nil end
         
-        -- إرجاع التصادم والفيزياء للطبيعة
+        -- إرجاع التصادم للطبيعة
         if lp.Character then
             for _, part in pairs(lp.Character:GetChildren()) do
                 if part:IsA("BasePart") then part.CanCollide = true end
@@ -48,31 +31,31 @@ return function(Tab, UI)
         end
     end
 
-    -- ==========================================
-    -- واجهة المستخدم (تحديد الهدف + التفعيل)
-    -- ==========================================
-    Tab:AddInput("اسم الهدف / Target Name", "اكتب اسم اللاعب هنا...", function(text)
-        _G.CrypticTarget = text
-    end)
-
     Tab:AddToggle("رقص أمام الهدف / Jerk at Target", function(state)
         isJerkingAtTarget = state
         
         if state then
-            local targetPlayer = GetTargetPlayer()
+            -- 🔴 الاعتماد على تحديد اللاعب من قائمة (Cryptic Hub) اللي برمجتها أنت
+            local targetPlayer = _G.ArwaTarget
+            
             if not targetPlayer then
-                Notify("خطأ ⚠️", "الرجاء كتابة اسم لاعب موجود في السيرفر!")
+                Notify("خطأ ⚠️", "الرجاء تحديد لاعب من القائمة في الأعلى أولاً!")
                 StopAction()
-                return -- يفضل أن يكون الزر مطفأ إذا لم يجد اللاعب
+                return
             end
 
-            Notify("🎯 استهداف", "تم قفل الهدف على: " .. targetPlayer.DisplayName)
+            Notify("🎯 استهداف", "جاري الرقص أمام: " .. targetPlayer.DisplayName)
 
             loopConnection = RunService.Stepped:Connect(function()
                 if not isJerkingAtTarget then return end
                 
-                targetPlayer = GetTargetPlayer() -- تحديث مستمر
-                if not targetPlayer then return end
+                -- تحديث الهدف باستمرار لضمان عدم خروجه
+                targetPlayer = _G.ArwaTarget
+                if not targetPlayer then 
+                    StopAction()
+                    Notify("⚠️ تنبيه", "اللاعب الهدف غير موجود أو غادر!")
+                    return 
+                end
 
                 local myChar = lp.Character
                 local targetChar = targetPlayer.Character
@@ -83,15 +66,14 @@ return function(Tab, UI)
                     local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
                     local targetHum = targetChar:FindFirstChildOfClass("Humanoid")
 
-                    -- التحقق من أن الاثنين أحياء وموجودين في الماب
                     if myRoot and myHum and myHum.Health > 0 and targetRoot and targetHum and targetHum.Health > 0 then
                         
-                        -- 1. إيقاف التصادم لشخصيتك عشان ما تدف الهدف ويخرب مكانه (Noclip)
+                        -- 1. Noclip لشخصيتك عشان ما تدف الهدف
                         for _, part in pairs(myChar:GetChildren()) do
                             if part:IsA("BasePart") then part.CanCollide = false end
                         end
 
-                        -- 2. التحقق من تحميل الأنميشن (يتحمل مرة واحدة لكل حياة جديدة)
+                        -- 2. التحميل الذكي للأنميشن (بدون Tool) كأنه أمر مباشر!
                         if lastMyChar ~= myChar then
                             lastMyChar = myChar
                             if track then track:Stop() track = nil end
@@ -103,21 +85,24 @@ return function(Tab, UI)
                             anim.AnimationId = not isR15 and "rbxassetid://72042024" or "rbxassetid://698251653"
                             track = myHum:LoadAnimation(anim)
                             track.Priority = Enum.AnimationPriority.Action
-                            track.Looped = true -- تكرار تلقائي
-                            track:Play()
-                            track:AdjustSpeed(isR15 and 0.7 or 0.65)
-                        elseif not track.IsPlaying then
-                            track:Play()
+                            track.Looped = true
                         end
 
-                        -- 3. هندسة الموقع:
-                        -- CFrame.new(0, 0, -2.5) = يضعك أمام وجه اللاعب بمسافة 2.5 خطوة
-                        -- CFrame.Angles(0, math.pi, 0) = يلف شخصيتك 180 درجة لتنظر في عينه مباشرة!
+                        -- 🔴 تسريع الأنميشن كما طلبت (نفس الكود اللي أرسلته)
+                        if not track.IsPlaying then
+                            track:Play()
+                            local isR15 = myHum.RigType == Enum.HumanoidRigType.R15
+                            track:AdjustSpeed(isR15 and 0.7 or 0.65)
+                        end
+                        -- وضع الحركة في الجزء السريع من الأنميشن
+                        track.TimePosition = 0.6 
+
+                        -- 3. هندسة الموقع: أمام الوجه بـ 2.5 خطوة والنظر في العين (180 درجة)
                         myRoot.Velocity = Vector3.new(0, 0, 0)
                         myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, -2.5) * CFrame.Angles(0, math.pi, 0)
                         
                     else
-                        -- لو أنت أو الهدف متّم، نوقف الأنميشن مؤقتاً لين ترسبنون
+                        -- لو أحد مات، نوقف الأنميشن مؤقتاً
                         if track then track:Stop() track = nil end
                     end
                 end
