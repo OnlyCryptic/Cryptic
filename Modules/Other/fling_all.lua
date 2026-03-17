@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - تطيير الجميع الذكي (Constant Spin V5) ]]
--- المطور: يامي | الوصف: دوران مستمر لا يتوقف، استهداف الواقفين، تخطي للطائرين
+-- [[ Cryptic Hub - تطيير الجميع الذكي (Smart Auto Fling All - Physics Fix) ]]
+-- المطور: يامي | الوصف: سحب مغناطيسي للسماح بالدوران، استهداف الواقفين، تخطي للطائرين
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -9,7 +9,7 @@ return function(Tab, UI)
 
     local isFlingAllActive = false
     local bav = nil 
-    local spinConnection = nil -- 🔴 فصلنا الدوران في اتصال مستقل
+    local bp = nil
 
     local function Notify(arText, enText)
         pcall(function()
@@ -21,7 +21,7 @@ return function(Tab, UI)
         end)
     end
 
-    Tab:AddToggle("تطيير الجميع / Fling All", function(state)
+    Tab:AddToggle("تطيير الجميع الذكي / Smart Fling All", function(state)
         isFlingAllActive = state
         local char = LocalPlayer.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -40,7 +40,7 @@ return function(Tab, UI)
             local originalCFrame = root.CFrame
             hum.PlatformStand = true
 
-            -- تجهيز أداة الدوران
+            -- 1. أداة الدوران (للنصف العلوي)
             bav = Instance.new("BodyAngularVelocity")
             bav.Name = "CrypticAutoFlingBAV"
             bav.AngularVelocity = Vector3.new(0, 50000, 0)
@@ -48,38 +48,19 @@ return function(Tab, UI)
             bav.P = math.huge
             bav.Parent = torso
 
-            -- 🔴 1. حلقة الفيزياء والدوران المستمر (لا تتوقف أبداً)
-            spinConnection = RunService.Heartbeat:Connect(function()
-                if not isFlingAllActive then return end
-                
-                local myChar = LocalPlayer.Character
-                local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-                local myTorso = myChar and (myChar:FindFirstChild("UpperTorso") or myChar:FindFirstChild("Torso"))
-                
-                if myRoot and myTorso then
-                    -- تثبيت جذري للكاميرا
-                    myRoot.Velocity = Vector3.new(0, 0, 0)
-                    myRoot.RotVelocity = Vector3.new(0, 0, 0)
-                    
-                    -- دوران مستمر للنصف العلوي كالإعصار
-                    myTorso.RotVelocity = Vector3.new(0, 50000, 0)
+            -- 2. أداة التتبع المغناطيسي (لجعل الفيزياء تعمل بحرية)
+            bp = Instance.new("BodyPosition")
+            bp.Name = "CrypticAutoFlingBP"
+            bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bp.P = 15000 -- قوة السحب
+            bp.D = 100
+            bp.Parent = root
 
-                    -- جعل الجسم صلب ومقاوم للجاذبية
-                    for _, part in pairs(myChar:GetChildren()) do
-                        if part:IsA("BasePart") then
-                            part.Massless = true
-                            if part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso" then
-                                part.CanCollide = true
-                                part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 1)
-                            else
-                                part.CanCollide = false
-                            end
-                        end
-                    end
-                end
-            end)
+            -- إيقاف التصادم المبدئي للطيران السلس
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = false end
+            end
 
-            -- 🔴 2. حلقة التتبع والانتقال (CFrame فقط)
             task.spawn(function()
                 while isFlingAllActive do
                     for _, targetPlayer in ipairs(Players:GetPlayers()) do
@@ -91,29 +72,39 @@ return function(Tab, UI)
                             local targetHum = targetChar:FindFirstChildOfClass("Humanoid")
 
                             if targetRoot and targetHum and targetHum.Health > 0 then
-                                -- التحقق من اللاعب الواقف
+                                -- التحقق من أن الضحية واقفة
                                 local isStationary = targetRoot.Velocity.Magnitude < 5
                                 
                                 if isStationary then
                                     local startTime = tick()
                                     local initialTargetY = targetRoot.Position.Y
                                     
-                                    -- الانتقال للضحية لـ 1.5 ثانية
-                                    while isFlingAllActive and targetChar and targetChar.Parent and targetHum.Health > 0 and (tick() - startTime < 1.5) do
-                                        local myChar = LocalPlayer.Character
-                                        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                                    -- انتقال فوري مرة واحدة لتسريع السحب المغناطيسي
+                                    root.CFrame = CFrame.new(targetRoot.Position)
+
+                                    -- 🔴 الهجوم لمدة 1.5 ثانية (باستخدام Stepped لتجاوز فيزياء اللعبة)
+                                    while isFlingAllActive and targetRoot and targetRoot.Parent and targetHum.Health > 0 and (tick() - startTime < 1.5) do
                                         
-                                        if myRoot then
-                                            -- التمركز الدقيق في الضحية (الدوران شغال أساساً من الـ Heartbeat)
-                                            myRoot.CFrame = targetRoot.CFrame
-                                            
-                                            -- التخطي لو الضحية طارت
-                                            if targetRoot.Velocity.Magnitude > 40 or math.abs(targetRoot.Position.Y - initialTargetY) > 10 then
-                                                break 
-                                            end
+                                        -- تحديث موقع المغناطيس ليتطابق مع الضحية
+                                        bp.Position = targetRoot.Position
+                                        
+                                        -- إجبار الجزء العلوي على الدوران، وتثبيت السفلي (الكاميرا)
+                                        root.RotVelocity = Vector3.new(0, 0, 0)
+                                        torso.RotVelocity = Vector3.new(0, 50000, 0)
+                                        
+                                        -- تفعيل الضرب المدمر
+                                        root.CanCollide = true
+                                        root.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 1)
+
+                                        -- تخطي سريع إذا طارت الضحية
+                                        if targetRoot.Velocity.Magnitude > 40 or math.abs(targetRoot.Position.Y - initialTargetY) > 10 then
+                                            break 
                                         end
-                                        task.wait()
+                                        
+                                        RunService.Stepped:Wait() -- أسرع وأقوى من task.wait فيزيائياً
                                     end
+                                    
+                                    root.CanCollide = false -- إيقاف التصادم قبل الانتقال للضحية التالية
                                 end
                             end
                         end
@@ -122,8 +113,8 @@ return function(Tab, UI)
                 end
 
                 -- [[ إيقاف التطيير والتنظيف ]]
-                if spinConnection then spinConnection:Disconnect() spinConnection = nil end
                 if bav then bav:Destroy() bav = nil end
+                if bp then bp:Destroy() bp = nil end
                 
                 local finalChar = LocalPlayer.Character
                 local finalRoot = finalChar and finalChar:FindFirstChild("HumanoidRootPart")
@@ -140,7 +131,7 @@ return function(Tab, UI)
                 end
 
                 if finalChar then
-                    for _, part in pairs(finalChar:GetChildren()) do
+                    for _, part in pairs(finalChar:GetDescendants()) do
                         if part:IsA("BasePart") then
                             part.Massless = false
                             part.CustomPhysicalProperties = nil
