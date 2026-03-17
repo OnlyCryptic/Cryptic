@@ -171,7 +171,7 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddToggle("تطيير الجميع الذكي / Smart Fling All", function(state)
+    Tab:AddToggle("تطيير الجميع / Fling All", function(state)
         isFlingAllActive = state
         
         if state then
