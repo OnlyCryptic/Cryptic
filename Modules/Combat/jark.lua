@@ -31,7 +31,7 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddToggle("رقص أمام الهدف / Jerk at Target", function(state)
+    Tab:AddToggle("تخليج أمام الهدف / Jerk at Target", function(state)
         isJerkingAtTarget = state
         
         if state then
