@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - جاذب الأشياء (Blackhole Parts V2.0) ]]
--- المطور: أروى هوب | الوصف: سحب القطع الحرة بأمان مع تنظيف المغناطيس عند الإيقاف
+-- [[ Cryptic Hub - جاذب الأشياء (Blackhole Parts V3.0 - Anti-Drift) ]]
+-- المطور: أروى هوب | الوصف: فلتر فيزيائي صارم يمنع انزلاق اللاعب أو سحب أدواته
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -53,25 +53,37 @@ return function(Tab, UI)
         end)
     end
 
-    -- دالة حماية للتأكد من أن القطعة لا تتبع لأي لاعب (لمنع سحب القبعات والأدوات)
-    local function isPartOfAnyCharacter(part)
-        for _, p in pairs(Players:GetPlayers()) do
-            if p.Character and part:IsDescendantOf(p.Character) then
-                return true
-            end
+    -- 🔴 الفلتر الفيزيائي الصارم: يمنع سحب أي شيء يخص اللاعبين
+    local function isSafeToGrab(part)
+        if not part:IsA("BasePart") then return false end
+        if part.Anchored then return false end
+        if part.Transparency == 1 then return false end -- تجاهل القطع المخفية (تكون غالباً Hitboxes)
+        
+        -- الفحص العميق عبر جذور الفيزياء (AssemblyRootPart)
+        local root = part.AssemblyRootPart
+        if root and root.Parent and root.Parent:FindFirstChildOfClass("Humanoid") then 
+            return false 
         end
-        return false
+        
+        -- تجاهل الإكسسوارات بشكل صريح
+        if part:FindFirstAncestorWhichIsA("Accessory") then return false end
+        
+        -- تجاهل الأدوات (Tools) الموجودة في يد أي لاعب
+        local tool = part:FindFirstAncestorWhichIsA("Tool")
+        if tool and tool.Parent and tool.Parent:FindFirstChildOfClass("Humanoid") then return false end
+
+        -- تجاهل قطع شخصيتك بشكل مباشر
+        if LocalPlayer.Character and part:IsDescendantOf(LocalPlayer.Character) then return false end
+
+        return true
     end
 
     local function ForcePart(v)
-        -- 🔴 فلتر الحماية الصارم: تجاهل أي شيء يخص اللاعبين
-        if v:IsA("BasePart") and not v.Anchored and not isPartOfAnyCharacter(v) and v.Name ~= "Handle" then
-            
+        if isSafeToGrab(v) then
             table.insert(getgenv().CrypticNetworkBypass.BaseParts, v)
             v.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
             v.CanCollide = false
 
-            -- تنظيف مسبق لأي محركات
             for _, x in ipairs(v:GetChildren()) do
                 if x:IsA("BodyMover") or x:IsA("RocketPropulsion") or x:IsA("AlignPosition") or x:IsA("Torque") or x:IsA("Attachment") then
                     x:Destroy()
@@ -96,7 +108,6 @@ return function(Tab, UI)
         end
     end
 
-    -- دالة تنظيف القطع عند إيقاف الزر لترجع الفيزياء طبيعية
     local function CleanUpParts()
         for _, Part in pairs(getgenv().CrypticNetworkBypass.BaseParts) do
             if Part and Part.Parent then
@@ -104,7 +115,7 @@ return function(Tab, UI)
                 if Part:FindFirstChild("CrypticTorque") then Part.CrypticTorque:Destroy() end
                 if Part:FindFirstChild("CrypticAtt") then Part.CrypticAtt:Destroy() end
                 Part.CanCollide = true
-                Part.CustomPhysicalProperties = nil -- إرجاع الوزن الطبيعي للقطعة
+                Part.CustomPhysicalProperties = nil 
             end
         end
         getgenv().CrypticNetworkBypass.BaseParts = {}
@@ -149,7 +160,7 @@ return function(Tab, UI)
     Players.PlayerAdded:Connect(RefreshDropdown)
     Players.PlayerRemoving:Connect(RefreshDropdown)
 
-    Tab:AddToggle("سحب الأشياء للهدف / Bring Parts to Target", function(state)
+    Tab:AddToggle("سحب الأشياء للهدف ./ Bring Parts to Target", function(state)
         blackHoleActive = state
         
         if state then
@@ -180,8 +191,6 @@ return function(Tab, UI)
             Notify("🛑 توقف", "تم إيقاف الثقب الأسود وإرجاع القطع.")
             if DescendantAddedConnection then DescendantAddedConnection:Disconnect() end
             if updateLoop then updateLoop:Disconnect() end
-            
-            -- 🔴 هنا السر: مسح المغناطيس من كل القطع عند الإيقاف
             CleanUpParts()
         end
     end)
