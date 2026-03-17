@@ -1,115 +1,255 @@
--- [[ Cryptic Hub - رقص أمام الهدف السريع (Fast Target Jerk V2) ]]
--- المطور: يامي | الوصف: أنميشن سريع مدمج (بدون أداة)، تتبع Face-to-Face، وتحديد من القائمة
+-- [[ Cryptic Hub - أداة الحركة السرية (Standalone Built-in V5) ]]
+-- المطور: يامي | الميزات: إصلاح الاهتزاز (Memory Leak)، حركة يد واضحة، وتنظيف تلقائي
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
     local StarterGui = game:GetService("StarterGui")
+    local UserInputService = game:GetService("UserInputService")
     local lp = Players.LocalPlayer
     
-    local isJerkingAtTarget = false
-    local loopConnection = nil
-    local track = nil
-    local lastMyChar = nil
+    local isActive = false
+    local isProcessing = false
+    local lastCharacter = nil
+    local hasSortedThisLife = false
 
-    local function Notify(title, text)
-        pcall(function() StarterGui:SetCore("SendNotification", {Title=title, Text=text, Duration=3}) end)
+    local function SendRobloxNotification(title, text)
+        pcall(function()
+            StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 3 })
+        end)
     end
 
-    local function StopAction()
-        isJerkingAtTarget = false
-        if loopConnection then loopConnection:Disconnect() loopConnection = nil end
-        if track then track:Stop() track = nil end
+    -- ==========================================
+    -- واجهة الزر العائم (UI)
+    -- ==========================================
+    local function EnsureCustomInventory()
+        if lp.PlayerGui:FindFirstChild("CrypticJerkUI") then return end
         
-        -- إرجاع التصادم للطبيعة
-        if lp.Character then
-            for _, part in pairs(lp.Character:GetChildren()) do
-                if part:IsA("BasePart") then part.CanCollide = true end
-            end
-            local root = lp.Character:FindFirstChild("HumanoidRootPart")
-            if root then root.Velocity = Vector3.new(0,0,0) end
-        end
-    end
-
-    Tab:AddToggle("تخليج أمام الهدف / Jerk at Target", function(state)
-        isJerkingAtTarget = state
+        local sg = Instance.new("ScreenGui")
+        sg.Name = "CrypticJerkUI"
+        sg.ResetOnSpawn = false
+        sg.Parent = lp.PlayerGui
         
-        if state then
-            -- 🔴 الاعتماد على تحديد اللاعب من قائمة (Cryptic Hub) اللي برمجتها أنت
-            local targetPlayer = _G.ArwaTarget
-            
-            if not targetPlayer then
-                Notify("خطأ ⚠️", "الرجاء تحديد لاعب من القائمة في الأعلى أولاً!")
-                StopAction()
-                return
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0, 55, 0, 18) 
+        btn.Position = UDim2.new(0.5, 30, 0, 15) 
+        btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        btn.BackgroundTransparency = 0.60 
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Text = "Jerk Tool" 
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 10 
+        btn.Active = true
+        btn.Parent = sg
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 4)
+        corner.Parent = btn
+
+        local dragging, dragInput, dragStart, startPos, hasMoved = false, nil, nil, nil, false
+
+        btn.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                hasMoved = false
+                dragStart = input.Position
+                startPos = btn.Position
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then dragging = false end
+                end)
             end
+        end)
 
-            Notify("🎯 استهداف", "جاري الرقص أمام: " .. targetPlayer.DisplayName)
+        btn.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                dragInput = input
+            end
+        end)
 
-            loopConnection = RunService.Stepped:Connect(function()
-                if not isJerkingAtTarget then return end
-                
-                -- تحديث الهدف باستمرار لضمان عدم خروجه
-                targetPlayer = _G.ArwaTarget
-                if not targetPlayer then 
-                    StopAction()
-                    Notify("⚠️ تنبيه", "اللاعب الهدف غير موجود أو غادر!")
-                    return 
+        UserInputService.InputChanged:Connect(function(input)
+            if input == dragInput and dragging then
+                local delta = input.Position - dragStart
+                if delta.Magnitude > 3 then 
+                    hasMoved = true
+                    btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
                 end
+            end
+        end)
 
-                local myChar = lp.Character
-                local targetChar = targetPlayer.Character
+        btn.MouseButton1Click:Connect(function()
+            if hasMoved then return end 
+            
+            local char = lp.Character
+            local hum = char and char:FindFirstChild("Humanoid")
+            if not hum then return end
+            
+            local toolInChar = char:FindFirstChild("Jerk Off")
+            local toolInBackpack = lp.Backpack:FindFirstChild("Jerk Off")
 
-                if myChar and targetChar then
-                    local myRoot = myChar:FindFirstChild("HumanoidRootPart")
-                    local myHum = myChar:FindFirstChildOfClass("Humanoid")
-                    local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
-                    local targetHum = targetChar:FindFirstChildOfClass("Humanoid")
+            if toolInChar then
+                hum:UnequipTools()
+            elseif toolInBackpack then
+                hum:EquipTool(toolInBackpack)
+            end
+        end)
+    end
 
-                    if myRoot and myHum and myHum.Health > 0 and targetRoot and targetHum and targetHum.Health > 0 then
-                        
-                        -- 1. Noclip لشخصيتك عشان ما تدف الهدف
-                        for _, part in pairs(myChar:GetChildren()) do
-                            if part:IsA("BasePart") then part.CanCollide = false end
-                        end
+    local function RemoveCustomInventory()
+        local ui = lp.PlayerGui:FindFirstChild("CrypticJerkUI")
+        if ui then ui:Destroy() end
+    end
 
-                        -- 2. التحميل الذكي للأنميشن (بدون Tool) كأنه أمر مباشر!
-                        if lastMyChar ~= myChar then
-                            lastMyChar = myChar
-                            if track then track:Stop() track = nil end
-                        end
+    -- ==========================================
+    -- صناعة الأداة برمجياً (إصلاح الأنميشن والاهتزاز)
+    -- ==========================================
+    local function CreateJerkTool(char)
+        local humanoid = char:FindFirstChildWhichIsA("Humanoid")
+        local backpack = lp:FindFirstChildWhichIsA("Backpack")
+        if not humanoid or not backpack then return nil end
 
-                        if not track then
-                            local isR15 = myHum.RigType == Enum.HumanoidRigType.R15
-                            local anim = Instance.new("Animation")
-                            anim.AnimationId = not isR15 and "rbxassetid://72042024" or "rbxassetid://698251653"
-                            track = myHum:LoadAnimation(anim)
-                            track.Priority = Enum.AnimationPriority.Action
-                            track.Looped = true
-                        end
+        local existingTool = backpack:FindFirstChild("Jerk Off") or char:FindFirstChild("Jerk Off")
+        if existingTool then return existingTool end
 
-                        -- 🔴 تسريع الأنميشن كما طلبت (نفس الكود اللي أرسلته)
-                        if not track.IsPlaying then
-                            track:Play()
-                            local isR15 = myHum.RigType == Enum.HumanoidRigType.R15
-                            track:AdjustSpeed(isR15 and 0.7 or 0.65)
-                        end
-                        -- وضع الحركة في الجزء السريع من الأنميشن
-                        track.TimePosition = 0.6 
+        local tool = Instance.new("Tool")
+        tool.Name = "Jerk Off"
+        tool.RequiresHandle = false
+        tool.Parent = backpack
 
-                        -- 3. هندسة الموقع: أمام الوجه بـ 2.5 خطوة والنظر في العين (180 درجة)
-                        myRoot.Velocity = Vector3.new(0, 0, 0)
-                        myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, -2.5) * CFrame.Angles(0, math.pi, 0)
-                        
-                    else
-                        -- لو أحد مات، نوقف الأنميشن مؤقتاً
-                        if track then track:Stop() track = nil end
+        local isR15 = humanoid.RigType == Enum.HumanoidRigType.R15
+        local jorkin = false
+        local track = nil
+
+        local function stopTomfoolery()
+            jorkin = false
+            if track then track:Stop() end
+        end
+
+        tool.Equipped:Connect(function() jorkin = true end)
+        tool.Unequipped:Connect(stopTomfoolery)
+        humanoid.Died:Connect(stopTomfoolery)
+
+        task.spawn(function()
+            -- 🔴 تحميل الأنميشن مرة واحدة فقط لمنع اللاقات والاهتزاز
+            local anim = Instance.new("Animation")
+            anim.AnimationId = isR15 and "rbxassetid://698251653" or "rbxassetid://72042024"
+            track = humanoid:LoadAnimation(anim)
+            track.Priority = Enum.AnimationPriority.Action -- 🔴 إجبار اليد على الحركة فوق المشي
+
+            while tool.Parent do 
+                task.wait()
+                if not jorkin then continue end
+
+                track:Play()
+                track:AdjustSpeed(isR15 and 0.7 or 0.65)
+                track.TimePosition = 0.6
+                
+                local targetTime = isR15 and 0.7 or 0.65
+                
+                while jorkin and track.TimePosition < targetTime do 
+                    task.wait() 
+                end
+                
+                track:Stop()
+            end
+            
+            -- تدمير الأنميشن عند مسح الأداة لتنظيف الذاكرة
+            if track then track:Stop() track:Destroy() end
+        end)
+
+        return tool
+    end
+
+    -- ==========================================
+    -- الترتيب وإدارة العملية
+    -- ==========================================
+    local function EnforceSlot2(targetTool)
+        local backpack = lp.Backpack
+        if not backpack then return false end
+        
+        local otherTools = {}
+        for _, t in pairs(backpack:GetChildren()) do
+            if t.Name ~= "Jerk Off" and t ~= targetTool then table.insert(otherTools, t) end
+        end
+
+        if #otherTools > 0 then
+            local firstTool = otherTools[1]
+            local tempFolder = Instance.new("Folder")
+            firstTool.Parent = tempFolder
+            targetTool.Parent = tempFolder
+            for i = 2, #otherTools do otherTools[i].Parent = tempFolder end
+
+            task.wait(0.05)
+
+            firstTool.Parent = backpack
+            targetTool.Parent = backpack
+            for i = 2, #otherTools do otherTools[i].Parent = backpack end
+            
+            tempFolder:Destroy()
+            return true
+        end
+        return false
+    end
+
+    local function ExecuteToolProcess()
+        if isProcessing then return end
+        isProcessing = true
+        
+        local char = lp.Character
+        if not char then isProcessing = false return end
+
+        if lastCharacter ~= char then
+            lastCharacter = char
+            hasSortedThisLife = false
+            task.wait(1)
+        end
+        
+        local foundTool = CreateJerkTool(char)
+
+        if foundTool and not hasSortedThisLife then
+            if foundTool.Parent == char then foundTool.Parent = lp.Backpack end
+            EnforceSlot2(foundTool)
+            EnsureCustomInventory()
+            hasSortedThisLife = true 
+        end
+        
+        task.wait(1)
+        isProcessing = false
+    end
+
+    -- ==========================================
+    -- زر التفعيل (Toggle)
+    -- ==========================================
+    Tab:AddToggle("أداة عاده سريه / Jerk tool ", function(state)
+        isActive = state
+        if state then
+            SendRobloxNotification("Cryptic Hub", "🔄 تفعيل | Activated")
+            lastCharacter = nil
+            hasSortedThisLife = false
+
+            task.spawn(function()
+                while isActive do
+                    if lp.Character and lp.Character:FindFirstChild("Humanoid") and lp.Character.Humanoid.Health > 0 then
+                        ExecuteToolProcess()
                     end
+                    task.wait(2)
                 end
             end)
         else
-            StopAction()
-            Notify("🛑 توقف", "تم إيقاف التتبع والرقص.")
+            RemoveCustomInventory()
+            
+            -- مسح الأداة برمجياً عند الإيقاف
+            if lp.Backpack:FindFirstChild("Jerk Off") then lp.Backpack:FindFirstChild("Jerk Off"):Destroy() end
+            if lp.Character and lp.Character:FindFirstChild("Jerk Off") then lp.Character:FindFirstChild("Jerk Off"):Destroy() end
+            
+            -- 🔴 منظف الأنميشن: يوقف أي حركة عالقة تعيق المشي!
+            if lp.Character and lp.Character:FindFirstChild("Humanoid") then
+                for _, animTrack in pairs(lp.Character.Humanoid:GetPlayingAnimationTracks()) do
+                    if animTrack.Animation.AnimationId == "rbxassetid://698251653" or animTrack.Animation.AnimationId == "rbxassetid://72042024" then
+                        animTrack:Stop()
+                    end
+                end
+            end
+            
+            SendRobloxNotification("Cryptic Hub", "🛑 تم الإيقاف | Deactivated")
         end
     end)
     
