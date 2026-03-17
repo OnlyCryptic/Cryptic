@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - جاذب الأشياء (Blackhole Parts V3.0 - Anti-Drift) ]]
--- المطور: أروى هوب | الوصف: فلتر فيزيائي صارم يمنع انزلاق اللاعب أو سحب أدواته
+-- [[ Cryptic Hub - جاذب الأشياء (Blackhole Parts V4.0) ]]
+-- المطور: arwa hope | الوصف: إصلاح شلل الحركة، إنهاء زلزال السيارات، وتنظيف فيزيائي كامل
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -11,6 +11,7 @@ return function(Tab, UI)
     local blackHoleActive = false
     local DescendantAddedConnection = nil
     local updateLoop = nil
+    local networkLoop = nil -- متغير جديد للتحكم بلوب الشبكة وإيقافه
 
     local function Notify(arText, enText)
         pcall(function() StarterGui:SetCore("SendNotification", {Title = "Cryptic Hub", Text = arText .. "\n" .. enText, Duration = 3}) end)
@@ -29,58 +30,37 @@ return function(Tab, UI)
     TargetPart.CanCollide = false
     TargetPart.Transparency = 1
 
-    -- ==========================================
-    -- اختراق حماية الشبكة (Network Ownership Bypass)
-    -- ==========================================
+    -- تهيئة جدول القطع
     if not getgenv().CrypticNetworkBypass then
-        getgenv().CrypticNetworkBypass = {
-            BaseParts = {},
-            Velocity = Vector3.new(14.46262424, 14.46262424, 14.46262424)
-        }
-
-        LocalPlayer.ReplicationFocus = Workspace
-        RunService.Heartbeat:Connect(function()
-            pcall(function()
-                if sethiddenproperty then
-                    sethiddenproperty(LocalPlayer, "SimulationRadius", math.huge)
-                end
-            end)
-            for _, Part in pairs(getgenv().CrypticNetworkBypass.BaseParts) do
-                if Part and Part.Parent and Part:IsDescendantOf(Workspace) then
-                    Part.Velocity = getgenv().CrypticNetworkBypass.Velocity
-                end
-            end
-        end)
+        getgenv().CrypticNetworkBypass = { BaseParts = {} }
     end
 
-    -- 🔴 الفلتر الفيزيائي الصارم: يمنع سحب أي شيء يخص اللاعبين
+    -- 🔴 الفلتر الفيزيائي الصارم: حماية شخصيتك واللاعبين
     local function isSafeToGrab(part)
         if not part:IsA("BasePart") then return false end
         if part.Anchored then return false end
-        if part.Transparency == 1 then return false end -- تجاهل القطع المخفية (تكون غالباً Hitboxes)
+        if part.Transparency == 1 then return false end 
         
-        -- الفحص العميق عبر جذور الفيزياء (AssemblyRootPart)
         local root = part.AssemblyRootPart
-        if root and root.Parent and root.Parent:FindFirstChildOfClass("Humanoid") then 
-            return false 
-        end
-        
-        -- تجاهل الإكسسوارات بشكل صريح
+        if root and root.Parent and root.Parent:FindFirstChildOfClass("Humanoid") then return false end
         if part:FindFirstAncestorWhichIsA("Accessory") then return false end
         
-        -- تجاهل الأدوات (Tools) الموجودة في يد أي لاعب
         local tool = part:FindFirstAncestorWhichIsA("Tool")
         if tool and tool.Parent and tool.Parent:FindFirstChildOfClass("Humanoid") then return false end
 
-        -- تجاهل قطع شخصيتك بشكل مباشر
         if LocalPlayer.Character and part:IsDescendantOf(LocalPlayer.Character) then return false end
 
         return true
     end
 
+    -- دالة زرع المغناطيس
     local function ForcePart(v)
         if isSafeToGrab(v) then
-            table.insert(getgenv().CrypticNetworkBypass.BaseParts, v)
+            -- التأكد من عدم تكرار القطعة
+            if not table.find(getgenv().CrypticNetworkBypass.BaseParts, v) then
+                table.insert(getgenv().CrypticNetworkBypass.BaseParts, v)
+            end
+            
             v.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
             v.CanCollide = false
 
@@ -108,12 +88,18 @@ return function(Tab, UI)
         end
     end
 
+    -- 🔴 دالة التنظيف (إنهاء الزلزال وتصفير السرعات)
     local function CleanUpParts()
         for _, Part in pairs(getgenv().CrypticNetworkBypass.BaseParts) do
             if Part and Part.Parent then
                 if Part:FindFirstChild("CrypticAlign") then Part.CrypticAlign:Destroy() end
                 if Part:FindFirstChild("CrypticTorque") then Part.CrypticTorque:Destroy() end
                 if Part:FindFirstChild("CrypticAtt") then Part.CrypticAtt:Destroy() end
+                
+                -- تصفير السرعة لمنع القطع والسيارات من الارتجاف
+                Part.Velocity = Vector3.new(0, 0, 0)
+                Part.RotVelocity = Vector3.new(0, 0, 0)
+                
                 Part.CanCollide = true
                 Part.CustomPhysicalProperties = nil 
             end
@@ -122,9 +108,9 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- واجهة المستخدم (تحديد اللاعب والتفعيل)
+    -- واجهة المستخدم
     -- ==========================================
-    local PlayerSelector = Tab:AddPlayerSelector("تحديد لاعب الهدف / Target Player", "اكتب بداية اليوزر... / Type username start...", function(selectedValue)
+    local PlayerSelector = Tab:AddPlayerSelector("تحديد لاعب الهدف / Target Player", "اكتب بداية اليوزر...", function(selectedValue)
         local targetPlayer = nil
         
         if type(selectedValue) == "string" then
@@ -160,7 +146,7 @@ return function(Tab, UI)
     Players.PlayerAdded:Connect(RefreshDropdown)
     Players.PlayerRemoving:Connect(RefreshDropdown)
 
-    Tab:AddToggle("سحب الأشياء للهدف ./ Bring Parts to Target", function(state)
+    Tab:AddToggle("سحب الأشياء للهدف / Bring Parts to Target", function(state)
         blackHoleActive = state
         
         if state then
@@ -171,7 +157,24 @@ return function(Tab, UI)
                 return
             end
 
-            Notify("🌪️ تفعيل الثقب الأسود", "جاري سحب الأشياء إلى: " .. targetPlayer.DisplayName)
+            Notify("🌪️ تفعيل الثقب الأسود", "جاري السحب إلى: " .. targetPlayer.DisplayName)
+
+            -- تشغيل لوب الشبكة بأمان
+            if not networkLoop then
+                networkLoop = RunService.Heartbeat:Connect(function()
+                    pcall(function()
+                        if sethiddenproperty then
+                            sethiddenproperty(LocalPlayer, "SimulationRadius", math.huge)
+                        end
+                    end)
+                    -- إعطاء سرعة خفيفة جداً لمنع نوم القطع فيزيائياً بدون التسبب بزلزال
+                    for _, Part in pairs(getgenv().CrypticNetworkBypass.BaseParts) do
+                        if Part and Part.Parent and Part.Velocity.Magnitude < 1 then
+                            Part.Velocity = Vector3.new(0, -1, 0)
+                        end
+                    end
+                end)
+            end
 
             for _, v in ipairs(Workspace:GetDescendants()) do ForcePart(v) end
 
@@ -188,9 +191,13 @@ return function(Tab, UI)
                 end
             end)
         else
-            Notify("🛑 توقف", "تم إيقاف الثقب الأسود وإرجاع القطع.")
-            if DescendantAddedConnection then DescendantAddedConnection:Disconnect() end
-            if updateLoop then updateLoop:Disconnect() end
+            Notify("🛑 توقف", "تم إرجاع القطع لطبيعتها.")
+            
+            -- إيقاف كل اللوبات فوراً
+            if DescendantAddedConnection then DescendantAddedConnection:Disconnect() DescendantAddedConnection = nil end
+            if updateLoop then updateLoop:Disconnect() updateLoop = nil end
+            if networkLoop then networkLoop:Disconnect() networkLoop = nil end
+            
             CleanUpParts()
         end
     end)
