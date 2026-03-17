@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - جاذب الأشياء (Blackhole Parts) ]]
--- المطور: يامي | الوصف: سحب كل القطع الحرة في الماب وقذفها نحو اللاعب المستهدف
+-- [[ Cryptic Hub - جاذب الأشياء (Blackhole Parts V2.0) ]]
+-- المطور: أروى هوب | الوصف: سحب القطع الحرة بأمان مع تنظيف المغناطيس عند الإيقاف
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -17,9 +17,9 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- تجهيز نقطة الجذب والمغناطيس
+    -- تجهيز نقطة الجذب
     -- ==========================================
-    local Folder = Instance.new("Folder")
+    local Folder = Workspace:FindFirstChild("CrypticBringFolder") or Instance.new("Folder")
     Folder.Name = "CrypticBringFolder"
     Folder.Parent = Workspace
     
@@ -46,35 +46,46 @@ return function(Tab, UI)
                 end
             end)
             for _, Part in pairs(getgenv().CrypticNetworkBypass.BaseParts) do
-                if Part:IsDescendantOf(Workspace) then
+                if Part and Part.Parent and Part:IsDescendantOf(Workspace) then
                     Part.Velocity = getgenv().CrypticNetworkBypass.Velocity
                 end
             end
         end)
     end
 
+    -- دالة حماية للتأكد من أن القطعة لا تتبع لأي لاعب (لمنع سحب القبعات والأدوات)
+    local function isPartOfAnyCharacter(part)
+        for _, p in pairs(Players:GetPlayers()) do
+            if p.Character and part:IsDescendantOf(p.Character) then
+                return true
+            end
+        end
+        return false
+    end
+
     local function ForcePart(v)
-        -- التأكد أن القطعة حرة (غير مثبتة) وليست جزءاً من لاعب أو خريطة ثابتة
-        if v:IsA("BasePart") and not v.Anchored and not v.Parent:FindFirstChildOfClass("Humanoid") and not v.Parent:FindFirstChild("Head") and v.Name ~= "Handle" then
+        -- 🔴 فلتر الحماية الصارم: تجاهل أي شيء يخص اللاعبين
+        if v:IsA("BasePart") and not v.Anchored and not isPartOfAnyCharacter(v) and v.Name ~= "Handle" then
             
-            -- تسجيل القطعة لتهكير الشبكة
             table.insert(getgenv().CrypticNetworkBypass.BaseParts, v)
             v.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
             v.CanCollide = false
 
-            -- تنظيف المحركات القديمة
+            -- تنظيف مسبق لأي محركات
             for _, x in ipairs(v:GetChildren()) do
                 if x:IsA("BodyMover") or x:IsA("RocketPropulsion") or x:IsA("AlignPosition") or x:IsA("Torque") or x:IsA("Attachment") then
                     x:Destroy()
                 end
             end
             
-            -- زرع المحركات الجديدة للتوجه للهدف
             local Torque = Instance.new("Torque", v)
+            Torque.Name = "CrypticTorque"
             Torque.Torque = Vector3.new(100000, 100000, 100000)
             
             local AlignPosition = Instance.new("AlignPosition", v)
+            AlignPosition.Name = "CrypticAlign"
             local Attachment2 = Instance.new("Attachment", v)
+            Attachment2.Name = "CrypticAtt"
             
             Torque.Attachment0 = Attachment2
             AlignPosition.MaxForce = math.huge
@@ -83,6 +94,20 @@ return function(Tab, UI)
             AlignPosition.Attachment0 = Attachment2
             AlignPosition.Attachment1 = Attachment1
         end
+    end
+
+    -- دالة تنظيف القطع عند إيقاف الزر لترجع الفيزياء طبيعية
+    local function CleanUpParts()
+        for _, Part in pairs(getgenv().CrypticNetworkBypass.BaseParts) do
+            if Part and Part.Parent then
+                if Part:FindFirstChild("CrypticAlign") then Part.CrypticAlign:Destroy() end
+                if Part:FindFirstChild("CrypticTorque") then Part.CrypticTorque:Destroy() end
+                if Part:FindFirstChild("CrypticAtt") then Part.CrypticAtt:Destroy() end
+                Part.CanCollide = true
+                Part.CustomPhysicalProperties = nil -- إرجاع الوزن الطبيعي للقطعة
+            end
+        end
+        getgenv().CrypticNetworkBypass.BaseParts = {}
     end
 
     -- ==========================================
@@ -113,7 +138,6 @@ return function(Tab, UI)
         end
     end)
 
-    -- تحديث قائمة اللاعبين
     local function RefreshDropdown()
         local list = {}
         for _, p in pairs(Players:GetPlayers()) do
@@ -125,7 +149,6 @@ return function(Tab, UI)
     Players.PlayerAdded:Connect(RefreshDropdown)
     Players.PlayerRemoving:Connect(RefreshDropdown)
 
-    -- زر التفعيل
     Tab:AddToggle("سحب الأشياء للهدف / Bring Parts to Target", function(state)
         blackHoleActive = state
         
@@ -139,15 +162,12 @@ return function(Tab, UI)
 
             Notify("🌪️ تفعيل الثقب الأسود", "جاري سحب الأشياء إلى: " .. targetPlayer.DisplayName)
 
-            -- سحب كل القطع الموجودة حالياً
             for _, v in ipairs(Workspace:GetDescendants()) do ForcePart(v) end
 
-            -- سحب أي قطعة جديدة تظهر في الماب
             DescendantAddedConnection = Workspace.DescendantAdded:Connect(function(v)
                 if blackHoleActive then ForcePart(v) end
             end)
 
-            -- تحديث المغناطيس ليكون دائماً عند اللاعب المستهدف
             updateLoop = RunService.RenderStepped:Connect(function()
                 if blackHoleActive and _G.CrypticExperimentTarget and _G.CrypticExperimentTarget.Character then
                     local root = _G.CrypticExperimentTarget.Character:FindFirstChild("HumanoidRootPart")
@@ -157,12 +177,12 @@ return function(Tab, UI)
                 end
             end)
         else
-            Notify("🛑 توقف", "تم إيقاف الثقب الأسود.")
+            Notify("🛑 توقف", "تم إيقاف الثقب الأسود وإرجاع القطع.")
             if DescendantAddedConnection then DescendantAddedConnection:Disconnect() end
             if updateLoop then updateLoop:Disconnect() end
             
-            -- تفريغ القطع من السيطرة
-            getgenv().CrypticNetworkBypass.BaseParts = {}
+            -- 🔴 هنا السر: مسح المغناطيس من كل القطع عند الإيقاف
+            CleanUpParts()
         end
     end)
     
