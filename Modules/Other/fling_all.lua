@@ -19,7 +19,7 @@ return function(Tab, UI)
         end)
     end
 
-    Tab:AddToggle("تطيير الجميع الذكي / Smart Fling All", function(state)
+    Tab:AddToggle("تطيير .الجميع الذكي / Smart Fling All", function(state)
         isFlingAllActive = state
         local char = LocalPlayer.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
