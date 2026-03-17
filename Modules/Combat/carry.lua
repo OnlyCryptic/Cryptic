@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - حمل اللاعب المطور (Carry Player) ]]
--- المطور: يامي (Yami) | الميزات: أزرار تحكم بالارتفاع للجوال، تثبيت تحت الهدف، إشعارات مزدوجة
+-- الميزات: تحكم جوال (ضغط مطول)، التقاط ذكي عند السقوط الطويل فقط لتجنب الموت
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -13,7 +13,12 @@ return function(Tab, UI)
     local liftHeight = -7
     local carryGui = nil
     
-    -- دالة الإشعارات المزدوجة (عربي/إنجليزي)
+    -- إعدادات السرعة والتحكم
+    local liftSpeed = 0.5 
+    local isHoldingUp = false
+    local isHoldingDown = false
+    local holdConnection = nil
+    
     local function Notify(arText, enText)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
@@ -24,7 +29,6 @@ return function(Tab, UI)
         end)
     end
 
-    -- دالة إنشاء أزرار التحكم بالارتفاع على الشاشة
     local function SetupHeightUI()
         if carryGui then carryGui:Destroy() end
         
@@ -35,8 +39,8 @@ return function(Tab, UI)
         if not carryGui.Parent then carryGui.Parent = lp:WaitForChild("PlayerGui") end
 
         local frame = Instance.new("Frame")
-        frame.Size = UDim2.new(0, 60, 0, 130)
-        frame.Position = UDim2.new(1, -80, 0.5, -65) -- على يمين الشاشة
+        frame.Size = UDim2.new(0, 65, 0, 140)
+        frame.Position = UDim2.new(1, -85, 0.5, -70)
         frame.BackgroundTransparency = 1
         frame.Parent = carryGui
 
@@ -45,8 +49,8 @@ return function(Tab, UI)
         upBtn.Position = UDim2.new(0, 0, 0, 0)
         upBtn.Text = "🔼"
         upBtn.TextScaled = true
-        upBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        upBtn.BackgroundTransparency = 0.3
+        upBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        upBtn.BackgroundTransparency = 0.2
         upBtn.TextColor3 = Color3.new(1, 1, 1)
         upBtn.Parent = frame
 
@@ -55,17 +59,37 @@ return function(Tab, UI)
         downBtn.Position = UDim2.new(0, 0, 0.5, 5)
         downBtn.Text = "🔽"
         downBtn.TextScaled = true
-        downBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        downBtn.BackgroundTransparency = 0.3
+        downBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        downBtn.BackgroundTransparency = 0.2
         downBtn.TextColor3 = Color3.new(1, 1, 1)
         downBtn.Parent = frame
 
-        -- برمجة الأزرار للتحكم بالارتفاع
-        upBtn.Activated:Connect(function() liftHeight = liftHeight + 1.5 end)
-        downBtn.Activated:Connect(function() liftHeight = liftHeight - 1.5 end)
+        -- نظام الضغط المطول
+        upBtn.MouseButton1Down:Connect(function() isHoldingUp = true end)
+        upBtn.MouseButton1Up:Connect(function() isHoldingUp = false end)
+        upBtn.MouseLeave:Connect(function() isHoldingUp = false end)
+
+        downBtn.MouseButton1Down:Connect(function() isHoldingDown = true end)
+        downBtn.MouseButton1Up:Connect(function() isHoldingDown = false end)
+        downBtn.MouseLeave:Connect(function() isHoldingDown = false end)
+
+        if holdConnection then holdConnection:Disconnect() end
+        holdConnection = runService.RenderStepped:Connect(function()
+            if isHoldingUp then
+                liftHeight = liftHeight + liftSpeed
+            elseif isHoldingDown then
+                liftHeight = liftHeight - liftSpeed
+            end
+        end)
     end
 
     local function RemoveHeightUI()
+        isHoldingUp = false
+        isHoldingDown = false
+        if holdConnection then 
+            holdConnection:Disconnect() 
+            holdConnection = nil 
+        end
         if carryGui then 
             carryGui:Destroy() 
             carryGui = nil 
@@ -81,13 +105,12 @@ return function(Tab, UI)
             if not _G.ArwaTarget or not _G.ArwaTarget.Character then
                 isCarrying = false
                 Notify(
-                    "⚠️ حدد لاعباً أولاً من مربع البحث أعلى القائمة!",
-                    "⚠️ Select a player first from the search box!"
+                    "⚠️ حدد لاعباً أولاً من مربع البحث!",
+                    "⚠️ Select a player first!"
                 )
                 return
             end
             
-            -- إرجاع فحص التلامس كما طلبت
             local targetChar = _G.ArwaTarget.Character
             local myTorso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or root
             local targetTorso = targetChar:FindFirstChild("Torso") or targetChar:FindFirstChild("UpperTorso") or targetChar:FindFirstChild("HumanoidRootPart")
@@ -100,8 +123,8 @@ return function(Tab, UI)
                 if success and not canCollide then
                     isCarrying = false
                     Notify(
-                        "🚫 هذا الماب يلغي تلامس اللاعبين (No-Collide)!",
-                        "🚫 Map disables player collision!"
+                        "🚫 هذا الماب يلغي تلامس اللاعبين!",
+                        "🚫 Map disables collision!"
                     )
                     return 
                 end
@@ -113,11 +136,11 @@ return function(Tab, UI)
             end
             
             liftHeight = -7
-            SetupHeightUI() -- إظهار أزرار التحكم
+            SetupHeightUI()
             
             Notify(
-                "🚀 جاري الرفع! (استخدم الأسهم على الشاشة للتحكم بالارتفاع)",
-                "🚀 Lifting! (Use on-screen arrows to control height)"
+                "🚀 جاري الرفع! (اضغط مطولاً للتحكم)",
+                "🚀 Lifting! (Hold to control)"
             )
         else
             if char then
@@ -137,15 +160,15 @@ return function(Tab, UI)
                     end
                 end
             end
-            RemoveHeightUI() -- إخفاء الأزرار
+            RemoveHeightUI()
             Notify(
                 "❌ تم إيقاف الحمل وعدت لطبيعتك.",
-                "❌ Carry stopped, returned to normal."
+                "❌ Carry stopped."
             )
         end
     end)
 
-    -- [[ المحرك الفيزيائي (تثبيت تحت الهدف مباشرة) ]]
+    -- [[ المحرك الفيزيائي + نظام الالتقاط الذكي ]]
     runService.Heartbeat:Connect(function()
         if not isCarrying or not _G.ArwaTarget then return end
         
@@ -168,17 +191,17 @@ return function(Tab, UI)
             end
 
             local tPos = targetRoot.Position
-            local tVel = targetRoot.Velocity
+            -- استخدام AssemblyLinearVelocity إذا كانت متوفرة أو Velocity كبديل
+            local tVel = targetRoot.AssemblyLinearVelocity or targetRoot.Velocity
 
-            -- نظام التقاط سريع إذا سقط الهدف
-            if tVel.Y < -15 and liftHeight > -6 then
-                liftHeight = -6 
+            -- [[ نظام الالتقاط الذكي (Smart Catch) ]]
+            -- إذا تعدت سرعة السقوط -40 (بمعنى أنه يسقط من مكان مرتفع أو خارج الماب وليس مجرد قفزة عادية)
+            if tVel.Y < -40 and liftHeight > -7 then
+                liftHeight = -7 -- انزل تحته فوراً لالتقاطه
             end
 
-            -- التثبيت المباشر تحت الهدف بدون حركة جانبية
             root.CFrame = CFrame.new(tPos.X, tPos.Y + liftHeight, tPos.Z) * CFrame.Angles(math.rad(90), 0, 0)
             
-            -- قوة دفع فيزيائية مستمرة للأعلى
             root.Velocity = Vector3.new(0, 15, 0)
             root.RotVelocity = Vector3.new(0, 0, 0)
         end
