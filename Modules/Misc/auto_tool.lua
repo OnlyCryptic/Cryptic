@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - أداة الحركة السرية (Smart Rig Tool V3.3) ]]
--- المطور: يامي (Yami) | الميزات: إخفاء صامت عند الإيقاف بدون إشعارات مزعجة
+-- [[ Cryptic Hub - أداة الحركة السرية (Standalone Built-in V4) ]]
+-- المطور: يامي (Yami) | الميزات: مستقلة تماماً بدون روابط خارجية، إخفاء صامت، وتحديد R15/R6 تلقائي
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -9,8 +9,6 @@ return function(Tab, UI)
     
     local isActive = false
     local isProcessing = false
-    local hasLoadedOnce = false 
-    local toolNames = {["Jerk Off"] = true, ["Jerk Off R15"] = true}
     
     local lastCharacter = nil
     local hasSortedThisLife = false
@@ -21,6 +19,9 @@ return function(Tab, UI)
         end)
     end
 
+    -- ==========================================
+    -- واجهة الزر العائم (UI)
+    -- ==========================================
     local function EnsureCustomInventory()
         if lp.PlayerGui:FindFirstChild("CrypticJerkUI") then return end
         
@@ -45,9 +46,7 @@ return function(Tab, UI)
         corner.CornerRadius = UDim.new(0, 4)
         corner.Parent = btn
 
-        local dragging = false
-        local dragInput, dragStart, startPos
-        local hasMoved = false
+        local dragging, dragInput, dragStart, startPos, hasMoved = false, nil, nil, nil, false
 
         btn.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -55,11 +54,8 @@ return function(Tab, UI)
                 hasMoved = false
                 dragStart = input.Position
                 startPos = btn.Position
-
                 input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then
-                        dragging = false
-                    end
+                    if input.UserInputState == Enum.UserInputState.End then dragging = false end
                 end)
             end
         end)
@@ -87,18 +83,13 @@ return function(Tab, UI)
             local hum = char and char:FindFirstChild("Humanoid")
             if not hum then return end
             
-            for _, t in pairs(char:GetChildren()) do
-                if toolNames[t.Name] then
-                    hum:UnequipTools()
-                    return
-                end
-            end
-            
-            for _, t in pairs(lp.Backpack:GetChildren()) do
-                if toolNames[t.Name] then
-                    hum:EquipTool(t)
-                    return
-                end
+            local toolInChar = char:FindFirstChild("Jerk Off")
+            local toolInBackpack = lp.Backpack:FindFirstChild("Jerk Off")
+
+            if toolInChar then
+                hum:UnequipTools()
+            elseif toolInBackpack then
+                hum:EquipTool(toolInBackpack)
             end
         end)
     end
@@ -108,33 +99,79 @@ return function(Tab, UI)
         if ui then ui:Destroy() end
     end
 
-    local function DetectRigType(char)
-        local hum = char:FindFirstChild("Humanoid")
-        if hum then
-            if hum.RigType == Enum.HumanoidRigType.R15 then return "R15" end
-            if hum.RigType == Enum.HumanoidRigType.R6 then return "R6" end
+    -- ==========================================
+    -- صناعة الأداة برمجياً (بدون روابط خارجية)
+    -- ==========================================
+    local function CreateJerkTool(char)
+        local humanoid = char:FindFirstChildWhichIsA("Humanoid")
+        local backpack = lp:FindFirstChildWhichIsA("Backpack")
+        if not humanoid or not backpack then return nil end
+
+        local existingTool = backpack:FindFirstChild("Jerk Off") or char:FindFirstChild("Jerk Off")
+        if existingTool then return existingTool end
+
+        local tool = Instance.new("Tool")
+        tool.Name = "Jerk Off"
+        tool.RequiresHandle = false
+        tool.Parent = backpack
+
+        local isR15 = humanoid.RigType == Enum.HumanoidRigType.R15
+        local jorkin = false
+        local track = nil
+
+        local function stopTomfoolery()
+            jorkin = false
+            if track then
+                track:Stop()
+                track = nil
+            end
         end
-        if char:FindFirstChild("UpperTorso") or char:FindFirstChild("LowerTorso") or char:FindFirstChild("RightFoot") then return "R15"
-        elseif char:FindFirstChild("Torso") and not char:FindFirstChild("UpperTorso") then return "R6" end
-        return "Unknown"
-    end
 
-    local function LoadBothScripts()
-        if hasLoadedOnce then return end 
-        pcall(function()
-            loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))() 
-            task.wait(0.5)
-            loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))() 
-            hasLoadedOnce = true
+        tool.Equipped:Connect(function() jorkin = true end)
+        tool.Unequipped:Connect(stopTomfoolery)
+        humanoid.Died:Connect(stopTomfoolery)
+
+        task.spawn(function()
+            while tool.Parent do -- طالما الأداة موجودة
+                task.wait()
+                if not jorkin then continue end
+
+                if not track then
+                    local anim = Instance.new("Animation")
+                    -- تحديد الأيدي المناسب حسب نوع الشخصية
+                    anim.AnimationId = not isR15 and "rbxassetid://72042024" or "rbxassetid://698251653"
+                    track = humanoid:LoadAnimation(anim)
+                end
+
+                track:Play()
+                track:AdjustSpeed(isR15 and 0.7 or 0.65)
+                track.TimePosition = 0.6
+                task.wait(0.1)
+                
+                while track and track.TimePosition < (not isR15 and 0.65 or 0.7) and jorkin do 
+                    task.wait(0.1) 
+                end
+                
+                if track then
+                    track:Stop()
+                    track = nil
+                end
+            end
         end)
+
+        return tool
     end
 
+    -- ==========================================
+    -- الترتيب وإدارة العملية
+    -- ==========================================
     local function EnforceSlot2(targetTool)
         local backpack = lp.Backpack
+        if not backpack then return false end
+        
         local otherTools = {}
-
         for _, t in pairs(backpack:GetChildren()) do
-            if not toolNames[t.Name] and t ~= targetTool then table.insert(otherTools, t) end
+            if t.Name ~= "Jerk Off" and t ~= targetTool then table.insert(otherTools, t) end
         end
 
         if #otherTools > 0 then
@@ -152,9 +189,8 @@ return function(Tab, UI)
             
             tempFolder:Destroy()
             return true
-        else
-            return false
         end
+        return false
     end
 
     local function ExecuteToolProcess()
@@ -170,38 +206,12 @@ return function(Tab, UI)
             task.wait(1)
         end
         
-        local foundTool = nil
-        for _, t in pairs(char:GetChildren()) do if toolNames[t.Name] then foundTool = t break end end
-        if not foundTool then 
-            for _, t in pairs(lp.Backpack:GetChildren()) do if toolNames[t.Name] then foundTool = t break end end 
-        end
-
-        local rigType = DetectRigType(char)
-
-        if not foundTool and not hasLoadedOnce then 
-            if rigType == "R15" then
-                pcall(function() loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))(); hasLoadedOnce = true end)
-            elseif rigType == "R6" then
-                pcall(function() loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))(); hasLoadedOnce = true end)
-            else
-                LoadBothScripts()
-                SendRobloxNotification("Cryptic Hub", "⚠️ لم نتمكن من كشف النوع! تم تفعيل الاثنين | Unknown rig, both loaded")
-                hasSortedThisLife = true
-            end
-
-            local tries = 0
-            repeat 
-                task.wait(0.5)
-                tries = tries + 1
-                foundTool = lp.Backpack:FindFirstChild("Jerk Off") or lp.Backpack:FindFirstChild("Jerk Off R15") or char:FindFirstChild("Jerk Off") or char:FindFirstChild("Jerk Off R15")
-            until foundTool or tries > 10
-        end
+        -- صناعة الأداة برمجياً فوراً
+        local foundTool = CreateJerkTool(char)
 
         if foundTool and not hasSortedThisLife then
             if foundTool.Parent == char then foundTool.Parent = lp.Backpack end
-            local success = EnforceSlot2(foundTool)
-            if not success and rigType ~= "Unknown" and not hasLoadedOnce then LoadBothScripts() end
-            
+            EnforceSlot2(foundTool)
             EnsureCustomInventory()
             hasSortedThisLife = true 
         end
@@ -210,6 +220,9 @@ return function(Tab, UI)
         isProcessing = false
     end
 
+    -- ==========================================
+    -- زر التفعيل (Toggle)
+    -- ==========================================
     Tab:AddToggle("أداة عاده سريه / Jerk tool ", function(state)
         isActive = state
         if state then
@@ -226,8 +239,17 @@ return function(Tab, UI)
                 end
             end)
         else
-            -- 🟢 تم إزالة إشعار "تم الإيقاف" من هنا
             RemoveCustomInventory()
+            
+            -- مسح الأداة برمجياً عند الإيقاف
+            if lp.Backpack:FindFirstChild("Jerk Off") then
+                lp.Backpack:FindFirstChild("Jerk Off"):Destroy()
+            end
+            if lp.Character and lp.Character:FindFirstChild("Jerk Off") then
+                lp.Character:FindFirstChild("Jerk Off"):Destroy()
+            end
         end
     end)
+    
+    Tab:AddLine()
 end
