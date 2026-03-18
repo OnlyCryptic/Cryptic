@@ -29,16 +29,16 @@ end
 
 -- ✅ الأيديات الصحيحة المؤكدة (Animation IDs وليست Bundle IDs)
 local AnimationPacks = {
-    ["toy / دمية"] = {
+    ["Toy / دمية"] = {
         idle="10921301576", walk="10921312010", run="10921306285", jump="10921308158", fall="10921307241", climb="10921300839", swim="10921309319"
     },
-    ["NFL / لاعب كرة القدم الأمريكية"] = {
+    ["NFL / لاعب أمريكي"] = {
         idle="92080889861410", walk="110358958299415", run="117333533048078", jump="119846112151352", fall="129773241321032", climb="134630013742019", swim="132697394189921"
     },
-    ["adidas community / تزحلق"] = {
+    ["Adidas Community / تزحلق"] = {
         idle="122257458498464", walk="122150855457006", run="82598234841035", jump="75290611992385", fall="98600215928904", climb="88763136693023", swim="133308483266208"
     },
-    ["vampire / مصاص دماء"] = {
+    ["Vampire / مصاص دماء"] = {
         idle="10921315373", walk="10921326949", run="10921320299", jump="10921322186", fall="10921321317", climb="10921314188", swim="10921324408"
     },
     ["Ninja / النينجا"] = {
@@ -65,7 +65,7 @@ local AnimationPacks = {
         idle="910004836", walk="910034870", run="910025107",
         jump="910016857", fall="910001910", climb="909997997", swim="910028158"
     },
-    ["adidas aura / اورى"] = {
+    ["Adidas Aura / أورا"] = {
         idle="110211186840347", walk="83842218823011", run="118320322718866", 
         jump="109996626521204", fall="95603166884636", climb="97824616490448", swim="134530128383903"
     },
@@ -90,7 +90,7 @@ return function(Tab, UI)
         if not hum then return end
 
         if hum.RigType == Enum.HumanoidRigType.R6 then
-            Notify("تنبيه ⚠️", "المشيات تعمل على R15 فقط!")
+            Notify("تنبيه / Warning ⚠️", "المشيات تعمل على R15 فقط!\nAnimations work on R15 only!")
             return
         end
 
@@ -260,7 +260,7 @@ return function(Tab, UI)
             })
 
             SelectBtn.MouseButton1Click:Connect(function()
-                MainBtn.Text = "▼ محدد: " .. optName
+                MainBtn.Text = "▼ محدد / Selected: " .. optName
                 isOpen = false
                 Container.Size = UDim2.new(0.95, 0, 0, 40)
                 callback(optName, data)
@@ -282,7 +282,7 @@ return function(Tab, UI)
         MainBtn.MouseButton1Click:Connect(function()
             isOpen = not isOpen
             Container.Size = isOpen and UDim2.new(0.95, 0, 0, 220) or UDim2.new(0.95, 0, 0, 40)
-            MainBtn.Text = (isOpen and "▲ " or "▼ ") .. (selectedAnimData and "محدد: " or title)
+            MainBtn.Text = (isOpen and "▲ " or "▼ ") .. (selectedAnimData and ("محدد / Selected: " .. title) or title)
         end)
 
         SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateListDisplay)
@@ -291,11 +291,11 @@ return function(Tab, UI)
     -- ==========================================
     -- ربط الأزرار والأحداث / Events
     -- ==========================================
-    AddAdvancedDropdown(Tab, "اخت.ر مشية / Select Animation", AnimationPacks, function(name, data)
+    AddAdvancedDropdown(Tab, "اختر مشية / Select Animation", AnimationPacks, function(name, data)
         selectedAnimData = data
         if isToggleOn then
             ApplyAnimation(data)
-            Notify("نجاح / Success 🏃‍♂️", "تم تغيير المشية إلى / Changed to:\n" .. name)
+            Notify("تم التغيير / Changed 🏃‍♂️", "المشية الحالية / Current:\n" .. name)
         end
     end)
 
@@ -303,14 +303,14 @@ return function(Tab, UI)
         isToggleOn = state
         if state then
             if not selectedAnimData then
-                Notify("تنبيه ⚠️", "يرجى اختيار مشية من القائمة أولاً!")
+                Notify("تنبيه / Warning ⚠️", "يرجى اختيار مشية أولاً!\nPlease select an animation first!")
                 return
             end
             ApplyAnimation(selectedAnimData)
-            Notify("تم التفعيل ✅", "استمتع بالمشية الجديدة!")
+            Notify("تم التفعيل / Applied ✅", "استمتع بالمشية الجديدة!\nEnjoy your new animation!")
         else
             RestoreOriginalAnims()
-            Notify("إيقاف 🔄", "تم استرجاع المشية الأصلية.")
+            Notify("إيقاف / Restored 🔄", "تم استرجاع المشية الأصلية.\nOriginal animation restored.")
         end
     end)
 
