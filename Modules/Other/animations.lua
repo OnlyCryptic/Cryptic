@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - Animation Changer (The Golden Fix - Final V5) ]]
--- المطور: يامي | الوصف: دعم متطور، إزالة المفضلات بنجاح، ومكتبة خالية من قلتش التمثال مع نظام تشغيل إجباري لـ idle2
+-- المطور: يامي | الوصف: دعم متطور، إزالة المفضلات بنجاح، ومكتبة خالية من قلتش التمثال مع نظام تشغيل إجباري لـ idle2 كل 12 ثانية
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -187,28 +187,32 @@ return function(Tab, UI)
                 pcall(function() track:Stop(0) end)
             end
             
-            -- 🔥 نظام التشغيل الإجباري لـ idle2
+            -- 🔥 نظام التشغيل الإجباري لـ idle2 كل 12 ثانية
             if animData.idle2 then
-                -- إنشاء أنيميشن وهمي عشان نشغله يدوي
                 local customIdleAnim = Instance.new("Animation")
                 customIdleAnim.AnimationId = "rbxassetid://" .. animData.idle2
                 loadedIdle2Track = animator:LoadAnimation(customIdleAnim)
                 
                 local lastMoveTime = tick()
                 
-                -- متابعة حركة اللاعب لتشغيل الوقفة الثانية
                 customIdleConnection = RunService.Heartbeat:Connect(function()
                     if hum.MoveDirection.Magnitude > 0 then
-                        -- إذا كان يتحرك، صفر العداد ووقف الأنيميشن
+                        -- إذا تحرك، يصفر الوقت ويوقف الحركة
                         lastMoveTime = tick()
                         if loadedIdle2Track.IsPlaying then
-                            loadedIdle2Track:Stop(0.5) -- 0.5 عشان يوقف بنعومة
+                            loadedIdle2Track:Stop(0.5)
                         end
                     else
-                        -- إذا كان واقف لأكثر من 5 ثواني والأنيميشن مو شغال
-                        if tick() - lastMoveTime > 5 and not loadedIdle2Track.IsPlaying then
-                            loadedIdle2Track:Play(0.5) -- يشغله بنعومة
-                            lastMoveTime = tick() -- عشان ما يكرره ورا بعض، يخليه يوقف ويرجع
+                        -- إذا كان واقف
+                        if loadedIdle2Track.IsPlaying then
+                            -- طول ما الأنيميشن شغال، نحدث الوقت عشان الـ 12 ثانية تبدأ بعد ما يخلص
+                            lastMoveTime = tick()
+                        else
+                            -- إذا مرت 12 ثانية وهو واقف والأنيميشن مو شغال، شغله
+                            if tick() - lastMoveTime >= 12 then
+                                loadedIdle2Track:Play(0.5)
+                                lastMoveTime = tick()
+                            end
                         end
                     end
                 end)
