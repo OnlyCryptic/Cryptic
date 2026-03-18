@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - Animation Changer (The Golden Fix) ]]
--- المطور: يامي | الوصف: تغيير الأيديات المباشر + أيديات أنيميشن أصلية 100%
+-- [[ Cryptic Hub - Animation Changer (The Golden Fix - Final V3) ]]
+-- المطور: يامي | الوصف: تغيير مباشر، أيديات أنيميشن أصلية، ومكتبة خالية من قلتش التمثال
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -65,6 +65,11 @@ local AnimationPacks = {
         idle="910004836", walk="910034870", run="910025107",
         jump="910016857", fall="910001910", climb="909997997", swim="910028158"
     },
+    -- 👇 الحزمة الجديدة التي قمت أنت باستخراجها بنجاح 👇
+    ["Custom Pack / حزمة مخصصة"] = {
+        idle="110211186840347", walk="83842218823011", run="118320322718866", 
+        jump="109996626521204", fall="95603166884636", climb="97824616490448", swim="134530128383903"
+    },
 }
 
 return function(Tab, UI)
@@ -106,7 +111,7 @@ return function(Tab, UI)
             }
         end
 
-        -- غيّر مباشرة
+        -- دالة التغيير المباشر
         local function set(parent, child, id)
             if parent and parent:FindFirstChild(child) then
                 if id and tostring(id) ~= "" then
@@ -124,7 +129,7 @@ return function(Tab, UI)
         set(animate:FindFirstChild("climb"), "ClimbAnim",  animData.climb)
         set(animate:FindFirstChild("swim"),  "Swim",       animData.swim)
 
-        -- أوقف الحركات الحالية فقط عشان يلتقط الجديدة
+        -- أوقف الحركات الحالية فقط عشان يلتقط الأنيميشن الجديد بدون ما نحذف السكربت
         local animator = hum:FindFirstChildOfClass("Animator")
         if animator then
             for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
@@ -280,9 +285,9 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- ربط الأزرار
+    -- ربط الأزرار والأحداث / Events
     -- ==========================================
-    AddAdvancedDropdown(Tab, "اختر مشية / Select Animation", AnimationPacks, function(name, data)
+    AddAdvancedDropdown(Tab, "اخت.ر مشية / Select Animation", AnimationPacks, function(name, data)
         selectedAnimData = data
         if isToggleOn then
             ApplyAnimation(data)
@@ -298,11 +303,14 @@ return function(Tab, UI)
                 return
             end
             ApplyAnimation(selectedAnimData)
+            Notify("تم التفعيل ✅", "استمتع بالمشية الجديدة!")
         else
             RestoreOriginalAnims()
+            Notify("إيقاف 🔄", "تم استرجاع المشية الأصلية.")
         end
     end)
 
+    -- إعادة التركيب التلقائي عند الموت والترسبن
     lp.CharacterAdded:Connect(function(char)
         originalAnims = nil 
         task.delay(1, function()
