@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - Animation Changer (Ultimate Fix v3) ]]
--- المطور: يامي | الوصف: مكتبة ضخمة، حفظ مفضلات، وإصلاح جذري لمشكلة تجمد الشخصية (التمثال)
+-- [[ Cryptic Hub - Animation Changer (The Perfect Method) ]]
+-- المطور: يامي | الوصف: مكتبة ضخمة، حفظ مفضلات، وتغيير الأيديات مباشرة بدون تجميد
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -84,19 +84,39 @@ return function(Tab, UI)
         if not hum then return end
 
         if hum.RigType == Enum.HumanoidRigType.R6 then
-            Notify("تنبيه / Warning ⚠️", "المشيات تشتغل على R15 فقط!")
+            Notify("تنبيه ⚠️", "المشيات تشتغل على R15 فقط!")
             return
         end
 
-        local oldAnimate = char:FindFirstChild("Animate")
-        if not oldAnimate then return end
+        local animate = char:FindFirstChild("Animate")
+        if not animate then return end
 
+        -- احفظ الأصلية أول مرة فقط
         if not originalAnims then
-            originalAnims = CaptureOriginalAnims(oldAnimate)
+            originalAnims = CaptureOriginalAnims(animate)
         end
 
         pcall(function()
-            -- ✅ إيقاف كل الحركات الشغالة أولاً
+            local function setAnim(parent, childName, id)
+                local child = parent:FindFirstChild(childName)
+                if child and child:IsA("Animation") and id and tostring(id) ~= "" then
+                    child.AnimationId = "rbxassetid://" .. tostring(id)
+                end
+            end
+
+            -- غيّر مباشرة بدون clone أو destroy
+            if animate:FindFirstChild("idle") then
+                setAnim(animate.idle, "Animation1", animData.idle)
+                setAnim(animate.idle, "Animation2", animData.idle)
+            end
+            if animate:FindFirstChild("walk")  then setAnim(animate.walk,  "WalkAnim",  animData.walk)  end
+            if animate:FindFirstChild("run")   then setAnim(animate.run,   "RunAnim",   animData.run)   end
+            if animate:FindFirstChild("jump")  then setAnim(animate.jump,  "JumpAnim",  animData.jump)  end
+            if animate:FindFirstChild("fall")  then setAnim(animate.fall,  "FallAnim",  animData.fall)  end
+            if animate:FindFirstChild("climb") then setAnim(animate.climb, "ClimbAnim", animData.climb) end
+            if animate:FindFirstChild("swim")  then setAnim(animate.swim,  "Swim",      animData.swim)  end
+
+            -- أوقف الـ tracks الشغالة فقط — بدون تدمير أي شي
             local animator = hum:FindFirstChildOfClass("Animator")
             if animator then
                 for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
@@ -104,46 +124,9 @@ return function(Tab, UI)
                 end
             end
 
-            -- ✅ استنساخ قبل الحذف
-            local newAnimate = oldAnimate:Clone()
-            newAnimate.Disabled = true  -- ← مهم! نعطله قبل ما نحطه
-
-            local function setAnim(parent, childName, id)
-                local child = parent:FindFirstChild(childName)
-                if child and child:IsA("Animation") then
-                    if id and tostring(id) ~= "" then
-                        child.AnimationId = "rbxassetid://" .. tostring(id)
-                    end
-                end
-            end
-
-            if newAnimate:FindFirstChild("idle") then
-                setAnim(newAnimate.idle, "Animation1", animData.idle)
-                setAnim(newAnimate.idle, "Animation2", animData.idle)
-            end
-            if newAnimate:FindFirstChild("walk")  then setAnim(newAnimate.walk,  "WalkAnim",  animData.walk)  end
-            if newAnimate:FindFirstChild("run")   then setAnim(newAnimate.run,   "RunAnim",   animData.run)   end
-            if newAnimate:FindFirstChild("jump")  then setAnim(newAnimate.jump,  "JumpAnim",  animData.jump)  end
-            if newAnimate:FindFirstChild("fall")  then setAnim(newAnimate.fall,  "FallAnim",  animData.fall)  end
-            if newAnimate:FindFirstChild("climb") then setAnim(newAnimate.climb, "ClimbAnim", animData.climb) end
-            if newAnimate:FindFirstChild("swim")  then setAnim(newAnimate.swim,  "Swim",      animData.swim)  end
-
-            -- ✅ الترتيب الصح: احذف القديم → حط الجديد → فعّله
-            oldAnimate:Destroy()
-            newAnimate.Parent = char
-            task.wait()  -- ← انتظر frame واحد ضروري جداً
-
-            newAnimate.Disabled = false  -- ← الآن فعّله ليشتغل من الصفر
-
-            -- ✅ أعد تشغيل الـ Animator لتجنب التجمد
-            if animator then
-                local rootPart = char:FindFirstChild("HumanoidRootPart")
-                if rootPart then
-                    -- اضغط على الـ humanoid لإيقاظه
-                    hum.Jump = false
-                    hum.WalkSpeed = hum.WalkSpeed
-                end
-            end
+            -- حرّك الـ humanoid قليلاً عشان يلتقط الأنيميشن الجديد
+            task.wait(0.1)
+            hum.WalkSpeed = hum.WalkSpeed + 0
         end)
     end
 
@@ -284,7 +267,7 @@ return function(Tab, UI)
         isToggleOn = state
         if state then
             if not selectedAnimData then
-                Notify("تنبيه / Warning ⚠️", "يرجى اختيار مشية من القائمة أولاً!")
+                Notify("تنبيه ⚠️", "يرجى اختيار مشية من القائمة أولاً!")
                 return
             end
             ApplyAnimation(selectedAnimData)
