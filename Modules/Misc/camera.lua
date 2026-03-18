@@ -12,8 +12,12 @@ return function(Tab, UI)
     local yaw, pitch = 0, 0
     local targetYaw, targetPitch = 0, 0
     local camPos
-    local sensitivity = 0.40
-    local smoothness = 0.18
+    
+    -- تم تعديل هذه القيم لتناسب شاشات الهواتف بشكل أفضل
+    local sensitivity = 0.25 
+    local smoothness = 0.35 
+
+    local touchConn -- متغير لحفظ اتصال اللمس لمنع تداخل الأوامر
 
     -- دالة الإشعارات المزدوجة (عربي/انجليزي)
     local function SendScreenNotify(arText, enText)
@@ -41,13 +45,26 @@ return function(Tab, UI)
 
             cam.CameraType = Enum.CameraType.Scriptable
             camPos = cam.CFrame.Position
+            
+            -- أخذ زاوية الكاميرا الحالية لمنع الالتفاف المفاجئ عند التفعيل
+            local cx, cy, cz = cam.CFrame:ToOrientation()
+            yaw = math.deg(cy)
+            pitch = math.deg(cx)
+            targetYaw = yaw
+            targetPitch = pitch
 
             -- إشعار التفعيل المزدوج
             SendScreenNotify("🎥 تم تفعيل الكاميرا الحرة V8", "🎥 FreeCam V8 Activated")
 
-            UIS.InputChanged:Connect(function(input)
+            -- تنظيف أي اتصال لمس قديم
+            if touchConn then touchConn:Disconnect() end
+
+            touchConn = UIS.InputChanged:Connect(function(input, gameProcessed)
                 if not isFreeCam then return end
-                if input.UserInputType == Enum.UserInputType.Touch then
+                -- تجاهل اللمس إذا كان على جويستيك الحركة أو أزرار الـ UI
+                if gameProcessed then return end 
+
+                if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
                     targetYaw = targetYaw - input.Delta.X * sensitivity
                     targetPitch = targetPitch - input.Delta.Y * sensitivity
                     targetPitch = math.clamp(targetPitch, -85, 85)
@@ -81,8 +98,13 @@ return function(Tab, UI)
                 cam.CFrame = CFrame.new(camPos) * rotation
             end)
         else
-            -- إيقاف الميزة بصمت (بدون إشعار)
+            -- إيقاف الميزة بصمت وإعادة الشخصية لطبيعتها
             RunService:UnbindFromRenderStep("FreeCamV8")
+            if touchConn then 
+                touchConn:Disconnect() 
+                touchConn = nil
+            end
+            
             if root then root.Anchored = false end
             if hum then
                 hum.PlatformStand = false
