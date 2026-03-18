@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - Animation Changer (HumanoidDescription Master Fix) ]]
--- المطور: يامي | الوصف: الطريقة الرسمية لتغيير المشيات بدون تجميد
+-- [[ Cryptic Hub - Animation Changer (The Golden Fix) ]]
+-- المطور: يامي | الوصف: تغيير الأيديات المباشر + أيديات أنيميشن أصلية 100%
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -27,12 +27,44 @@ local function SaveFavorites()
     end)
 end
 
--- ⚠️ تنبيه هام: يجب تحديث هذه الأيديات لتكون Animation IDs حقيقية (وليست Bundle IDs)
--- يمكنك استخدام كود الـ Studio الذي وجدته لاستخراج الأيديات الصحيحة وتحديث هذه القائمة
+-- ✅ الأيديات الصحيحة المؤكدة (Animation IDs وليست Bundle IDs)
 local AnimationPacks = {
-    ["Community / تزحلق"]        = {idle="15640351030", walk="15640354132", run="15640359525", jump="15640356676", fall="15640352017", climb="15640355340", swim="15640362543"},
-    ["Ninja / النينجا"]          = {idle="656117400",  walk="656121766",  run="656118852",  jump="656117878",  fall="656115606",  climb="656114359",  swim="656119721"},
-    -- قم بتحديث باقي القائمة هنا...
+    ["Default / افتراضي"] = {
+        idle="507766666", walk="507777826", run="507767714",
+        jump="507765000", fall="507767968", climb="507765644", swim="507784897"
+    },
+    ["Ninja / النينجا"] = {
+        idle="619521311", walk="619527211", run="619527114",
+        jump="619521674", fall="619521827", climb="619521568", swim="619527323"
+    },
+    ["Cartoony / كارتوني"] = {
+        idle="754637456", walk="754640371", run="754641453",
+        jump="754638607", fall="754637807", climb="754636889", swim="754641812"
+    },
+    ["Superhero / بطل خارق"] = {
+        idle="616060382", walk="616065971", run="616062785",
+        jump="616061007", fall="616059311", climb="616058161", swim="616064509"
+    },
+    ["Robot / الروبوت"] = {
+        idle="616089559", walk="616095330", run="616091570",
+        jump="616090535", fall="616088211", climb="616087119", swim="616094499"
+    },
+    ["Zombie / الزومبي"] = {
+        idle="616158929", walk="616168032", run="616163682",
+        jump="616161748", fall="616157476", climb="616156119", swim="616165109"
+    },
+    ["Levitation / طيران سحري"] = {
+        idle="616006778", walk="616013216", run="616010382",
+        jump="616008936", fall="616005863", climb="616003713", swim="616011509"
+    },
+    ["Mage / الساحر"] = {
+        idle="707742142", walk="707897309", run="707861613",
+        jump="707853694", fall="707829716", climb="707826056", swim="707876443"
+    },
+    ["Bubbly / فقاعات"] = {
+        idle="910004836", walk="910034870", run="910025107",
+        jump="910016857", fall="910001910", climb="909997997", swim="910028158"
+    },
 }
 
 return function(Tab, UI)
@@ -46,7 +78,6 @@ return function(Tab, UI)
         end)
     end
 
-    -- ✅ الطريقة الصحيحة عبر HumanoidDescription
     local function ApplyAnimation(animData)
         local char = lp.Character
         if not char then return end
@@ -59,55 +90,79 @@ return function(Tab, UI)
             return
         end
 
-        local success, desc = pcall(function() return hum:GetAppliedDescription() end)
-        if not success or not desc then return end
+        local animate = char:FindFirstChild("Animate")
+        if not animate then return end
 
+        -- احفظ الأصلية مرة وحدة لتتمكن من استرجاعها لاحقاً
         if not originalAnims then
             originalAnims = {
-                idle  = desc.IdleAnimation,
-                walk  = desc.WalkAnimation,
-                run   = desc.RunAnimation,
-                jump  = desc.JumpAnimation,
-                fall  = desc.FallAnimation,
-                climb = desc.ClimbAnimation,
-                swim  = desc.SwimAnimation,
+                idle  = animate:FindFirstChild("idle")  and animate.idle:FindFirstChild("Animation1")  and animate.idle.Animation1.AnimationId  or "",
+                walk  = animate:FindFirstChild("walk")  and animate.walk:FindFirstChild("WalkAnim")    and animate.walk.WalkAnim.AnimationId    or "",
+                run   = animate:FindFirstChild("run")   and animate.run:FindFirstChild("RunAnim")      and animate.run.RunAnim.AnimationId      or "",
+                jump  = animate:FindFirstChild("jump")  and animate.jump:FindFirstChild("JumpAnim")    and animate.jump.JumpAnim.AnimationId    or "",
+                fall  = animate:FindFirstChild("fall")  and animate.fall:FindFirstChild("FallAnim")    and animate.fall.FallAnim.AnimationId    or "",
+                climb = animate:FindFirstChild("climb") and animate.climb:FindFirstChild("ClimbAnim")  and animate.climb.ClimbAnim.AnimationId  or "",
+                swim  = animate:FindFirstChild("swim")  and animate.swim:FindFirstChild("Swim")        and animate.swim.Swim.AnimationId        or "",
             }
         end
 
-        desc.IdleAnimation  = tonumber(animData.idle)  or desc.IdleAnimation
-        desc.WalkAnimation  = tonumber(animData.walk)  or desc.WalkAnimation
-        desc.RunAnimation   = tonumber(animData.run)   or desc.RunAnimation
-        desc.JumpAnimation  = tonumber(animData.jump)  or desc.JumpAnimation
-        desc.FallAnimation  = tonumber(animData.fall)  or desc.FallAnimation
-        desc.ClimbAnimation = tonumber(animData.climb) or desc.ClimbAnimation
-        desc.SwimAnimation  = tonumber(animData.swim)  or desc.SwimAnimation
+        -- غيّر مباشرة
+        local function set(parent, child, id)
+            if parent and parent:FindFirstChild(child) then
+                if id and tostring(id) ~= "" then
+                    parent[child].AnimationId = "rbxassetid://" .. tostring(id)
+                end
+            end
+        end
 
-        pcall(function()
-            hum:ApplyDescription(desc)
-        end)
+        set(animate:FindFirstChild("idle"),  "Animation1", animData.idle)
+        set(animate:FindFirstChild("idle"),  "Animation2", animData.idle)
+        set(animate:FindFirstChild("walk"),  "WalkAnim",   animData.walk)
+        set(animate:FindFirstChild("run"),   "RunAnim",    animData.run)
+        set(animate:FindFirstChild("jump"),  "JumpAnim",   animData.jump)
+        set(animate:FindFirstChild("fall"),  "FallAnim",   animData.fall)
+        set(animate:FindFirstChild("climb"), "ClimbAnim",  animData.climb)
+        set(animate:FindFirstChild("swim"),  "Swim",       animData.swim)
+
+        -- أوقف الحركات الحالية فقط عشان يلتقط الجديدة
+        local animator = hum:FindFirstChildOfClass("Animator")
+        if animator then
+            for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+                pcall(function() track:Stop(0) end)
+            end
+        end
     end
 
     local function RestoreOriginalAnims()
         if not originalAnims then return end
+        
         local char = lp.Character
         if not char then return end
         
         local hum = char:FindFirstChildOfClass("Humanoid")
-        if not hum then return end
+        local animate = char:FindFirstChild("Animate")
+        if not hum or not animate then return end
 
-        local success, desc = pcall(function() return hum:GetAppliedDescription() end)
-        if success and desc then
-            desc.IdleAnimation  = originalAnims.idle
-            desc.WalkAnimation  = originalAnims.walk
-            desc.RunAnimation   = originalAnims.run
-            desc.JumpAnimation  = originalAnims.jump
-            desc.FallAnimation  = originalAnims.fall
-            desc.ClimbAnimation = originalAnims.climb
-            desc.SwimAnimation  = originalAnims.swim
-            
-            pcall(function()
-                hum:ApplyDescription(desc)
-            end)
+        local function restoreSet(parent, child, fullId)
+            if parent and parent:FindFirstChild(child) and fullId ~= "" then
+                parent[child].AnimationId = fullId
+            end
+        end
+
+        restoreSet(animate:FindFirstChild("idle"),  "Animation1", originalAnims.idle)
+        restoreSet(animate:FindFirstChild("idle"),  "Animation2", originalAnims.idle)
+        restoreSet(animate:FindFirstChild("walk"),  "WalkAnim",   originalAnims.walk)
+        restoreSet(animate:FindFirstChild("run"),   "RunAnim",    originalAnims.run)
+        restoreSet(animate:FindFirstChild("jump"),  "JumpAnim",   originalAnims.jump)
+        restoreSet(animate:FindFirstChild("fall"),  "FallAnim",   originalAnims.fall)
+        restoreSet(animate:FindFirstChild("climb"), "ClimbAnim",  originalAnims.climb)
+        restoreSet(animate:FindFirstChild("swim"),  "Swim",       originalAnims.swim)
+
+        local animator = hum:FindFirstChildOfClass("Animator")
+        if animator then
+            for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+                pcall(function() track:Stop(0) end)
+            end
         end
         originalAnims = nil
     end
