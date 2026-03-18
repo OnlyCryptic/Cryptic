@@ -1,4 +1,4 @@
--- [[ Cryptic Hub - Animation Changer (Anti-Statue Glitch) ]]
+-- [[ Cryptic Hub - Animation Changer (Ultimate Fix v3) ]]
 -- المطور: يامي | الوصف: مكتبة ضخمة، حفظ مفضلات، وإصلاح جذري لمشكلة تجمد الشخصية (التمثال)
 
 local Players = game:GetService("Players")
@@ -29,7 +29,7 @@ end
 
 -- 🟢 الأيديات الصحيحة من متجر Roblox الرسمي
 local AnimationPacks = {
-    ["Community / تزحل.ق"]        = {idle="15640351030", walk="15640354132", run="15640359525", jump="15640356676", fall="15640352017", climb="15640355340", swim="15640362543"},
+    ["Community / تزحلق"]        = {idle="15640351030", walk="15640354132", run="15640359525", jump="15640356676", fall="15640352017", climb="15640355340", swim="15640362543"},
     ["Ninja / النينجا"]          = {idle="656117400",  walk="656121766",  run="656118852",  jump="656117878",  fall="656115606",  climb="656114359",  swim="656119721"},
     ["Cartoony / كارتوني"]       = {idle="742637544",  walk="742640026",  run="742638842",  jump="742637942",  fall="742637151",  climb="742636889",  swim="742639220"},
     ["Superhero / بطل خارق"]     = {idle="782841498",  walk="782843345",  run="782842708",  jump="782842230",  fall="782842046",  climb="782841270",  swim="782843136"},
@@ -96,8 +96,17 @@ return function(Tab, UI)
         end
 
         pcall(function()
-            -- 🚀 استنساخ السكربت لتجنب مشكلة تجميد الشخصية
+            -- ✅ إيقاف كل الحركات الشغالة أولاً
+            local animator = hum:FindFirstChildOfClass("Animator")
+            if animator then
+                for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+                    pcall(function() track:Stop(0) end)
+                end
+            end
+
+            -- ✅ استنساخ قبل الحذف
             local newAnimate = oldAnimate:Clone()
+            newAnimate.Disabled = true  -- ← مهم! نعطله قبل ما نحطه
 
             local function setAnim(parent, childName, id)
                 local child = parent:FindFirstChild(childName)
@@ -119,17 +128,22 @@ return function(Tab, UI)
             if newAnimate:FindFirstChild("climb") then setAnim(newAnimate.climb, "ClimbAnim", animData.climb) end
             if newAnimate:FindFirstChild("swim")  then setAnim(newAnimate.swim,  "Swim",      animData.swim)  end
 
-            -- إيقاف الحركات القديمة المشتغلة حالياً
-            local animator = hum:FindFirstChildOfClass("Animator")
-            if animator then
-                for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
-                    track:Stop(0)
-                end
-            end
-
-            -- تدمير السكربت المعلق ووضع الجديد ليعمل من الصفر بنظافة
+            -- ✅ الترتيب الصح: احذف القديم → حط الجديد → فعّله
             oldAnimate:Destroy()
             newAnimate.Parent = char
+            task.wait()  -- ← انتظر frame واحد ضروري جداً
+
+            newAnimate.Disabled = false  -- ← الآن فعّله ليشتغل من الصفر
+
+            -- ✅ أعد تشغيل الـ Animator لتجنب التجمد
+            if animator then
+                local rootPart = char:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    -- اضغط على الـ humanoid لإيقاظه
+                    hum.Jump = false
+                    hum.WalkSpeed = hum.WalkSpeed
+                end
+            end
         end)
     end
 
