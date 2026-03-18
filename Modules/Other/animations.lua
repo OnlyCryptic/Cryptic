@@ -1,5 +1,5 @@
 -- [[ Cryptic Hub - Animation Changer (The Golden Fix - Final V3) ]]
--- المطور: يامي | الوصف: تغيير مباشر، أيديات أنيميشن أصلية، ومكتبة خالية من قلتش التمثال مع قفزة التحديث
+-- المطور: يامي | الوصف: تغيير مباشر، أيديات أنيميشن أصلية، إزالة المفضلات بنجاح، ومكتبة خالية من قلتش التمثال
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -40,10 +40,6 @@ local AnimationPacks = {
     },
     ["Vampire / مصاص دماء"] = {
         idle="10921315373", walk="10921326949", run="10921320299", jump="10921322186", fall="10921321317", climb="10921314188", swim="10921324408"
-    },
-    ["Ninja / النينجا"] = {
-        idle="656117400", walk="656121766", run="656118852",
-        jump="656117878", fall="656115606", climb="656114359", swim="656119721"
     },
     ["Robot / الروبوت"] = {
         idle="616089559", walk="616095330", run="616091570",
@@ -266,8 +262,13 @@ return function(Tab, UI)
                 callback(optName, data)
             end)
 
+            -- 🚀 تحسين منطق الإضافة والإزالة من المفضلة ليكون مضموناً
             StarBtn.MouseButton1Click:Connect(function()
-                FavoriteAnims[optName] = FavoriteAnims[optName] and nil or true
+                if FavoriteAnims[optName] then
+                    FavoriteAnims[optName] = nil -- إزالة من المفضلة إذا كانت موجودة
+                else
+                    FavoriteAnims[optName] = true -- إضافة للمفضلة إذا لم تكن موجودة
+                end
                 SaveFavorites()
                 UpdateListDisplay() 
             end)
