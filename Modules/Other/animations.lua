@@ -29,7 +29,7 @@ end
 
 -- ✅ الأيديات الصحيحة المؤكدة (Animation IDs وليست Bundle IDs)
 local AnimationPacks = {
-    ["wicked popular / شعبية شريرة"] = {
+    ["wicked popular / مشية بنات"] = {
         idle="118832222982049", walk="92072849924640", run="72301599441680", jump="104325245285198", fall="121152442762481", climb="131326830509784", swim="99384245425157"
     },
     ["glow motion / حركة متوهجة"] = {
