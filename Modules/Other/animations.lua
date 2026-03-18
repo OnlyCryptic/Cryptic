@@ -27,7 +27,7 @@ local function SaveFavorites()
     end)
 end
 
--- ✅ الأيديات الصحيحة المؤكدة (Animation IDs وليست Bundle IDs)
+-- ✅ الأيديات الصحيحة المؤكدة (تم إصلاح القوس المفقود هنا)
 local AnimationPacks = {
     ["glow motion / حركة متوهجة"] = {
         idle="137764781910579", walk="85809016093530", run="101925097435036", jump="74159004634379", fall="98070939608691", climb="108236155509584", swim="83003487432457"
@@ -93,7 +93,7 @@ return function(Tab, UI)
             return
         end
 
-        -- 🚀 إجبار الشخصية على القفز لتحديث الحركة فوراً
+        -- إجبار الشخصية على القفز لتحديث الحركة فوراً
         hum.Jump = true
         task.wait(0.1)
 
@@ -129,6 +129,11 @@ return function(Tab, UI)
         set(animate:FindFirstChild("climb"), "ClimbAnim",  animData.climb)
         set(animate:FindFirstChild("swim"),  "Swim",       animData.swim)
 
+        -- 🔥 إعادة تشغيل سكربت الأنيميشن الأساسي لتحديث الذاكرة وإصلاح الوقفة
+        animate.Disabled = true
+        task.wait(0.05)
+        animate.Disabled = false
+
         local animator = hum:FindFirstChildOfClass("Animator")
         if animator then
             for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
@@ -147,7 +152,7 @@ return function(Tab, UI)
         local animate = char:FindFirstChild("Animate")
         if not hum or not animate then return end
 
-        -- 🚀 إجبار الشخصية على القفز عند العودة للمشية الأصلية
+        -- إجبار الشخصية على القفز عند العودة للمشية الأصلية
         hum.Jump = true
         task.wait(0.1)
 
@@ -165,6 +170,11 @@ return function(Tab, UI)
         restoreSet(animate:FindFirstChild("fall"),  "FallAnim",   originalAnims.fall)
         restoreSet(animate:FindFirstChild("climb"), "ClimbAnim",  originalAnims.climb)
         restoreSet(animate:FindFirstChild("swim"),  "Swim",       originalAnims.swim)
+
+        -- 🔥 إعادة تشغيل سكربت الأنيميشن الأساسي عند الإلغاء
+        animate.Disabled = true
+        task.wait(0.05)
+        animate.Disabled = false
 
         local animator = hum:FindFirstChildOfClass("Animator")
         if animator then
@@ -265,7 +275,7 @@ return function(Tab, UI)
                 callback(optName, data)
             end)
 
-            -- 🚀 تحسين منطق الإضافة والإزالة من المفضلة ليكون مضموناً
+            -- تحسين منطق الإضافة والإزالة من المفضلة ليكون مضموناً
             StarBtn.MouseButton1Click:Connect(function()
                 if FavoriteAnims[optName] then
                     FavoriteAnims[optName] = nil -- إزالة من المفضلة إذا كانت موجودة
