@@ -1,12 +1,12 @@
--- [[ Cryptic Hub - Animation Changer (Fixed v2 & Final) ]]
--- المطور: يامي | الوصف: مكتبة ضخمة، حفظ مفضلات، بحث نظيف، وإصلاح جذري لجميع القلتشات
+-- [[ Cryptic Hub - Animation Changer (Anti-Statue Glitch) ]]
+-- المطور: يامي | الوصف: مكتبة ضخمة، حفظ مفضلات، وإصلاح جذري لمشكلة تجمد الشخصية (التمثال)
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local lp = Players.LocalPlayer
 local StarterGui = game:GetService("StarterGui")
 
--- 🟢 نظام حفظ المفضلات بشكل آمن
+-- 🟢 نظام حفظ المفضلات
 local FavFileName = "CrypticHub_FavoriteAnims.json"
 local FavoriteAnims = {}
 
@@ -29,7 +29,7 @@ end
 
 -- 🟢 الأيديات الصحيحة من متجر Roblox الرسمي
 local AnimationPacks = {
-        ["Community / تزحلق"]        = {idle="15481273931", walk="15481287955", run="15481295287", jump="15481300938", fall="15481304523", climb="15481311740", swim="15481316417"},
+    ["Community / تزحلق"]        = {idle="15640351030", walk="15640354132", run="15640359525", jump="15640356676", fall="15640352017", climb="15640355340", swim="15640362543"},
     ["Ninja / النينجا"]          = {idle="656117400",  walk="656121766",  run="656118852",  jump="656117878",  fall="656115606",  climb="656114359",  swim="656119721"},
     ["Cartoony / كارتوني"]       = {idle="742637544",  walk="742640026",  run="742638842",  jump="742637942",  fall="742637151",  climb="742636889",  swim="742639220"},
     ["Superhero / بطل خارق"]     = {idle="782841498",  walk="782843345",  run="782842708",  jump="782842230",  fall="782842046",  climb="782841270",  swim="782843136"},
@@ -84,26 +84,21 @@ return function(Tab, UI)
         if not hum then return end
 
         if hum.RigType == Enum.HumanoidRigType.R6 then
-            Notify("تنبيه / Warning ⚠️", "هذا الماب يستخدم R6!\nالمشيات تشتغل على R15 فقط!")
+            Notify("تنبيه / Warning ⚠️", "المشيات تشتغل على R15 فقط!")
             return
         end
 
-        local animate = char:FindFirstChild("Animate")
-        if not animate then return end
+        local oldAnimate = char:FindFirstChild("Animate")
+        if not oldAnimate then return end
 
         if not originalAnims then
-            originalAnims = CaptureOriginalAnims(animate)
+            originalAnims = CaptureOriginalAnims(oldAnimate)
         end
 
         pcall(function()
-            local animator = hum:FindFirstChildOfClass("Animator")
-            if animator then
-                for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
-                    track:Stop(0)
-                end
-            end
+            -- 🚀 استنساخ السكربت لتجنب مشكلة تجميد الشخصية
+            local newAnimate = oldAnimate:Clone()
 
-            -- تم إصلاح مشكلة الأيدي الفارغ هنا لتجنب أعطال الـ Animate
             local function setAnim(parent, childName, id)
                 local child = parent:FindFirstChild(childName)
                 if child and child:IsA("Animation") then
@@ -113,29 +108,33 @@ return function(Tab, UI)
                 end
             end
 
-            if animate:FindFirstChild("idle") then
-                setAnim(animate.idle, "Animation1", animData.idle)
-                setAnim(animate.idle, "Animation2", animData.idle)
+            if newAnimate:FindFirstChild("idle") then
+                setAnim(newAnimate.idle, "Animation1", animData.idle)
+                setAnim(newAnimate.idle, "Animation2", animData.idle)
             end
-            if animate:FindFirstChild("walk")  then setAnim(animate.walk,  "WalkAnim",  animData.walk)  end
-            if animate:FindFirstChild("run")   then setAnim(animate.run,   "RunAnim",   animData.run)   end
-            if animate:FindFirstChild("jump")  then setAnim(animate.jump,  "JumpAnim",  animData.jump)  end
-            if animate:FindFirstChild("fall")  then setAnim(animate.fall,  "FallAnim",  animData.fall)  end
-            if animate:FindFirstChild("climb") then setAnim(animate.climb, "ClimbAnim", animData.climb) end
-            if animate:FindFirstChild("swim")  then setAnim(animate.swim,  "Swim",      animData.swim)  end
+            if newAnimate:FindFirstChild("walk")  then setAnim(newAnimate.walk,  "WalkAnim",  animData.walk)  end
+            if newAnimate:FindFirstChild("run")   then setAnim(newAnimate.run,   "RunAnim",   animData.run)   end
+            if newAnimate:FindFirstChild("jump")  then setAnim(newAnimate.jump,  "JumpAnim",  animData.jump)  end
+            if newAnimate:FindFirstChild("fall")  then setAnim(newAnimate.fall,  "FallAnim",  animData.fall)  end
+            if newAnimate:FindFirstChild("climb") then setAnim(newAnimate.climb, "ClimbAnim", animData.climb) end
+            if newAnimate:FindFirstChild("swim")  then setAnim(newAnimate.swim,  "Swim",      animData.swim)  end
 
-            animate.Disabled = true
-            task.wait(0.1)
-            animate.Disabled = false
+            -- إيقاف الحركات القديمة المشتغلة حالياً
+            local animator = hum:FindFirstChildOfClass("Animator")
+            if animator then
+                for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+                    track:Stop(0)
+                end
+            end
+
+            -- تدمير السكربت المعلق ووضع الجديد ليعمل من الصفر بنظافة
+            oldAnimate:Destroy()
+            newAnimate.Parent = char
         end)
     end
 
     local function RestoreOriginalAnims()
-        if not originalAnims then
-            Notify("تنبيه / Warning ⚠️", "لا يوجد مشية أصلية محفوظة!")
-            return
-        end
-        
+        if not originalAnims then return end
         local restored = {}
         for k, v in pairs(originalAnims) do
             restored[k] = tostring(v):match("%d+") or v
@@ -228,7 +227,6 @@ return function(Tab, UI)
             })
 
             SelectBtn.MouseButton1Click:Connect(function()
-                -- تم إصلاح المسافة هنا
                 MainBtn.Text = "▼ محدد: " .. optName
                 isOpen = false
                 Container.Size = UDim2.new(0.95, 0, 0, 40)
@@ -258,7 +256,7 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- ربط الأزرار والأحداث / Events
+    -- ربط الأزرار
     -- ==========================================
     AddAdvancedDropdown(Tab, "اختر مشية / Select Animation", AnimationPacks, function(name, data)
         selectedAnimData = data
@@ -270,37 +268,28 @@ return function(Tab, UI)
 
     Tab:AddToggle("تفعيل المشية / Toggle Animation", function(state)
         isToggleOn = state
-
         if state then
             if not selectedAnimData then
-                Notify("تنبيه / Warning ⚠️", "يرجى اختيار مشية من القائمة أولاً!\nPlease select an animation first!")
+                Notify("تنبيه / Warning ⚠️", "يرجى اختيار مشية من القائمة أولاً!")
                 return
             end
             ApplyAnimation(selectedAnimData)
-            Notify("تفعيل / Applied ✅", "تم تفعيل المشية بنجاح!\nAnimation applied!")
         else
             RestoreOriginalAnims()
-            Notify("إيقاف / Restored 🔄", "تم استرجاع المشية الأصلية!\nOriginal animation restored!")
         end
     end)
 
     lp.CharacterAdded:Connect(function(char)
         originalAnims = nil 
         task.delay(2, function()
-            local animate = char:FindFirstChild("Animate")
-            if not animate then
-                animate = char:WaitForChild("Animate", 5)
-            end
+            local animate = char:WaitForChild("Animate", 5)
             if not animate then return end
-
             local hum = char:FindFirstChildOfClass("Humanoid")
             if not hum or hum.Health <= 0 then return end
-
             if isToggleOn and selectedAnimData then
                 ApplyAnimation(selectedAnimData)
             end
         end)
     end)
-
     Tab:AddLine()
 end
