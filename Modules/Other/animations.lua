@@ -6,13 +6,16 @@ local HttpService = game:GetService("HttpService")
 local lp = Players.LocalPlayer
 local StarterGui = game:GetService("StarterGui")
 
--- 🟢 نظام حفظ المفضلات
+-- 🟢 نظام حفظ المفضلات بشكل آمن
 local FavFileName = "CrypticHub_FavoriteAnims.json"
 local FavoriteAnims = {}
 
 pcall(function()
     if isfile and isfile(FavFileName) then
-        FavoriteAnims = HttpService:JSONDecode(readfile(FavFileName))
+        local decoded = HttpService:JSONDecode(readfile(FavFileName))
+        if type(decoded) == "table" then
+            FavoriteAnims = decoded
+        end
     end
 end)
 
@@ -26,6 +29,7 @@ end
 
 -- 🟢 الأيديات الصحيحة من متجر Roblox الرسمي
 local AnimationPacks = {
+    ["Community / تزحلق"]        = {idle="15640351030", walk="15640354132", run="15640359525", jump="15640356676", fall="15640352017", climb="15640355340", swim="15640362543"},
     ["Ninja / النينجا"]          = {idle="656117400",  walk="656121766",  run="656118852",  jump="656117878",  fall="656115606",  climb="656114359",  swim="656119721"},
     ["Cartoony / كارتوني"]       = {idle="742637544",  walk="742640026",  run="742638842",  jump="742637942",  fall="742637151",  climb="742636889",  swim="742639220"},
     ["Superhero / بطل خارق"]     = {idle="782841498",  walk="782843345",  run="782842708",  jump="782842230",  fall="782842046",  climb="782841270",  swim="782843136"},
@@ -48,7 +52,7 @@ local AnimationPacks = {
 return function(Tab, UI)
     local isToggleOn = false
     local selectedAnimData = nil
-    local originalAnims = nil  -- يتحفظ مرة واحدة فقط عند أول تفعيل
+    local originalAnims = nil
 
     local function Notify(title, text)
         pcall(function()
@@ -56,7 +60,6 @@ return function(Tab, UI)
         end)
     end
 
-    -- 🟢 قراءة الـ Animate script وحفظ الأيديات الأصلية
     local function CaptureOriginalAnims(animate)
         local ok, result = pcall(function()
             return {
@@ -73,7 +76,6 @@ return function(Tab, UI)
         return nil
     end
 
-    -- 🟢 تطبيق المشية
     local function ApplyAnimation(animData)
         local char = lp.Character
         if not char then return end
@@ -101,10 +103,13 @@ return function(Tab, UI)
                 end
             end
 
+            -- تم إصلاح مشكلة الأيدي الفارغ هنا لتجنب أعطال الـ Animate
             local function setAnim(parent, childName, id)
                 local child = parent:FindFirstChild(childName)
                 if child and child:IsA("Animation") then
-                    child.AnimationId = "rbxassetid://" .. tostring(id)
+                    if id and tostring(id) ~= "" then
+                        child.AnimationId = "rbxassetid://" .. tostring(id)
+                    end
                 end
             end
 
@@ -125,7 +130,6 @@ return function(Tab, UI)
         end)
     end
 
-    -- 🟢 استرجاع المشية الأصلية
     local function RestoreOriginalAnims()
         if not originalAnims then
             Notify("تنبيه / Warning ⚠️", "لا يوجد مشية أصلية محفوظة!")
@@ -224,7 +228,8 @@ return function(Tab, UI)
             })
 
             SelectBtn.MouseButton1Click:Connect(function()
-                MainBtn.Text = "▼ " .. optName
+                -- تم إصلاح المسافة هنا
+                MainBtn.Text = "▼ محدد: " .. optName
                 isOpen = false
                 Container.Size = UDim2.new(0.95, 0, 0, 40)
                 callback(optName, data)
@@ -246,7 +251,7 @@ return function(Tab, UI)
         MainBtn.MouseButton1Click:Connect(function()
             isOpen = not isOpen
             Container.Size = isOpen and UDim2.new(0.95, 0, 0, 220) or UDim2.new(0.95, 0, 0, 40)
-            MainBtn.Text = (isOpen and "▲ " or "▼ ") .. title
+            MainBtn.Text = (isOpen and "▲ " or "▼ ") .. (selectedAnimData and "محدد: " or title)
         end)
 
         SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateListDisplay)
@@ -279,7 +284,6 @@ return function(Tab, UI)
         end
     end)
 
-    -- إعادة التركيب عند الترسبن مع حماية التأخير
     lp.CharacterAdded:Connect(function(char)
         originalAnims = nil 
         task.delay(2, function()
