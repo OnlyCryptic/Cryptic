@@ -1,10 +1,11 @@
--- [[ Cryptic Hub - Animation Changer (The Golden Fix - Final V4) ]]
--- المطور: يامي | الوصف: دعم متطور للحركات الثانوية (idle2, walk2)، إزالة المفضلات بنجاح، ومكتبة خالية من قلتش التمثال
+-- [[ Cryptic Hub - Animation Changer (The Golden Fix - Final V5) ]]
+-- المطور: يامي | الوصف: دعم متطور، إزالة المفضلات بنجاح، ومكتبة خالية من قلتش التمثال مع نظام تشغيل إجباري لـ idle2
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local lp = Players.LocalPlayer
 local StarterGui = game:GetService("StarterGui")
+local RunService = game:GetService("RunService")
 
 -- 🟢 نظام حفظ المفضلات
 local FavFileName = "CrypticHub_FavoriteAnims.json"
@@ -27,7 +28,7 @@ local function SaveFavorites()
     end)
 end
 
--- ✅ الأيديات الصحيحة المؤكدة (يمكنك الآن إضافة idle2, walk2, run2 ... إلخ براحتك)
+-- ✅ الأيديات الصحيحة المؤكدة
 local AnimationPacks = {
     ["wicked popular / مشية بنات"] = {
         idle="118832222982049", walk="92072849924640", run="72301599441680", jump="104325245285198", fall="121152442762481", climb="131326830509784", swim="99384245425157"
@@ -75,11 +76,27 @@ return function(Tab, UI)
     local isToggleOn = false
     local selectedAnimData = nil
     local originalAnims = nil
+    
+    -- متغيرات نظام التشغيل الإجباري لـ idle2
+    local customIdleConnection = nil
+    local loadedIdle2Track = nil
 
     local function Notify(title, text)
         pcall(function()
             StarterGui:SetCore("SendNotification", {Title=title, Text=text, Duration=3})
         end)
+    end
+    
+    -- دالة إيقاف التشغيل الإجباري
+    local function StopCustomIdle()
+        if customIdleConnection then
+            customIdleConnection:Disconnect()
+            customIdleConnection = nil
+        end
+        if loadedIdle2Track then
+            loadedIdle2Track:Stop()
+            loadedIdle2Track = nil
+        end
     end
 
     local function ApplyAnimation(animData)
@@ -119,7 +136,6 @@ return function(Tab, UI)
             }
         end
 
-        -- 🚀 دالة ذكية تضيف الأيدي إذا كان موجود، وتمسح القديم إذا ما فيه عشان ما يسبب قلتش
         local function setAnim(parent, childName, id)
             if not parent then return end
             if id and tostring(id) ~= "" then
@@ -157,7 +173,10 @@ return function(Tab, UI)
         setAnim(animate:FindFirstChild("swim"),  "Swim",       animData.swim)
         setAnim(animate:FindFirstChild("swim"),  "Swim2",      animData.swim2)
 
-        -- 🔥 إعادة تشغيل سكربت الأنيميشن الأساسي لتحديث الذاكرة
+        -- إيقاف أي دورة شغالة قديمة
+        StopCustomIdle()
+
+        -- 🔥 إعادة تشغيل السكربت
         animate.Disabled = true
         task.wait(0.05)
         animate.Disabled = false
@@ -166,6 +185,33 @@ return function(Tab, UI)
         if animator then
             for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
                 pcall(function() track:Stop(0) end)
+            end
+            
+            -- 🔥 نظام التشغيل الإجباري لـ idle2
+            if animData.idle2 then
+                -- إنشاء أنيميشن وهمي عشان نشغله يدوي
+                local customIdleAnim = Instance.new("Animation")
+                customIdleAnim.AnimationId = "rbxassetid://" .. animData.idle2
+                loadedIdle2Track = animator:LoadAnimation(customIdleAnim)
+                
+                local lastMoveTime = tick()
+                
+                -- متابعة حركة اللاعب لتشغيل الوقفة الثانية
+                customIdleConnection = RunService.Heartbeat:Connect(function()
+                    if hum.MoveDirection.Magnitude > 0 then
+                        -- إذا كان يتحرك، صفر العداد ووقف الأنيميشن
+                        lastMoveTime = tick()
+                        if loadedIdle2Track.IsPlaying then
+                            loadedIdle2Track:Stop(0.5) -- 0.5 عشان يوقف بنعومة
+                        end
+                    else
+                        -- إذا كان واقف لأكثر من 5 ثواني والأنيميشن مو شغال
+                        if tick() - lastMoveTime > 5 and not loadedIdle2Track.IsPlaying then
+                            loadedIdle2Track:Play(0.5) -- يشغله بنعومة
+                            lastMoveTime = tick() -- عشان ما يكرره ورا بعض، يخليه يوقف ويرجع
+                        end
+                    end
+                end)
             end
         end
     end
@@ -178,6 +224,9 @@ return function(Tab, UI)
         
         local hum = char:FindFirstChildOfClass("Humanoid")
         local animate = char:FindFirstChild("Animate")
+        
+        StopCustomIdle() -- إيقاف النظام الإجباري
+
         if not hum or not animate then return end
 
         hum.Jump = true
@@ -220,7 +269,6 @@ return function(Tab, UI)
         restoreAnim(animate:FindFirstChild("swim"),  "Swim",       originalAnims.swim)
         restoreAnim(animate:FindFirstChild("swim"),  "Swim2",      originalAnims.swim2)
 
-        -- 🔥 إعادة تشغيل سكربت الأنيميشن الأساسي عند الإلغاء
         animate.Disabled = true
         task.wait(0.05)
         animate.Disabled = false
@@ -235,7 +283,7 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- واجهة المستخدم (UI)
+    -- واجهة المستخدم (UI) (نفسها بدون تغيير)
     -- ==========================================
     local function AddAdvancedDropdown(tabRef, title, options, callback)
         tabRef.Order = tabRef.Order + 1
@@ -378,6 +426,7 @@ return function(Tab, UI)
 
     lp.CharacterAdded:Connect(function(char)
         originalAnims = nil 
+        StopCustomIdle() -- نظف لو مات ورجع
         task.delay(1, function()
             local hum = char:WaitForChild("Humanoid", 5)
             if not hum or hum.Health <= 0 then return end
