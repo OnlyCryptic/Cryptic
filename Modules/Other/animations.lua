@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - Animation Changer (The Golden Fix - Final V3) ]]
--- المطور: يامي | الوصف: تغيير مباشر، أيديات أنيميشن أصلية، إزالة المفضلات بنجاح، ومكتبة خالية من قلتش التمثال
+-- [[ Cryptic Hub - Animation Changer (The Golden Fix - Final V4) ]]
+-- المطور: يامي | الوصف: دعم متطور للحركات الثانوية (idle2, walk2)، إزالة المفضلات بنجاح، ومكتبة خالية من قلتش التمثال
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -27,7 +27,7 @@ local function SaveFavorites()
     end)
 end
 
--- ✅ الأيديات الصحيحة المؤكدة (Animation IDs وليست Bundle IDs)
+-- ✅ الأيديات الصحيحة المؤكدة (يمكنك الآن إضافة idle2, walk2, run2 ... إلخ براحتك)
 local AnimationPacks = {
     ["wicked popular / مشية بنات"] = {
         idle="118832222982049", walk="92072849924640", run="72301599441680", jump="104325245285198", fall="121152442762481", climb="131326830509784", swim="99384245425157"
@@ -95,7 +95,6 @@ return function(Tab, UI)
             return
         end
 
-        -- 🚀 إجبار الشخصية على القفز لتحديث الحركة فوراً
         hum.Jump = true
         task.wait(0.1)
 
@@ -104,32 +103,65 @@ return function(Tab, UI)
 
         if not originalAnims then
             originalAnims = {
-                idle  = animate:FindFirstChild("idle")  and animate.idle:FindFirstChild("Animation1")  and animate.idle.Animation1.AnimationId  or "",
-                walk  = animate:FindFirstChild("walk")  and animate.walk:FindFirstChild("WalkAnim")    and animate.walk.WalkAnim.AnimationId    or "",
-                run   = animate:FindFirstChild("run")   and animate.run:FindFirstChild("RunAnim")      and animate.run.RunAnim.AnimationId      or "",
-                jump  = animate:FindFirstChild("jump")  and animate.jump:FindFirstChild("JumpAnim")    and animate.jump.JumpAnim.AnimationId    or "",
-                fall  = animate:FindFirstChild("fall")  and animate.fall:FindFirstChild("FallAnim")    and animate.fall.FallAnim.AnimationId    or "",
-                climb = animate:FindFirstChild("climb") and animate.climb:FindFirstChild("ClimbAnim")  and animate.climb.ClimbAnim.AnimationId  or "",
-                swim  = animate:FindFirstChild("swim")  and animate.swim:FindFirstChild("Swim")        and animate.swim.Swim.AnimationId        or "",
+                idle   = animate:FindFirstChild("idle")  and animate.idle:FindFirstChild("Animation1")  and animate.idle.Animation1.AnimationId  or "",
+                idle2  = animate:FindFirstChild("idle")  and animate.idle:FindFirstChild("Animation2")  and animate.idle.Animation2.AnimationId  or "",
+                walk   = animate:FindFirstChild("walk")  and animate.walk:FindFirstChild("WalkAnim")    and animate.walk.WalkAnim.AnimationId    or "",
+                walk2  = animate:FindFirstChild("walk")  and animate.walk:FindFirstChild("WalkAnim2")   and animate.walk.WalkAnim2.AnimationId   or "",
+                run    = animate:FindFirstChild("run")   and animate.run:FindFirstChild("RunAnim")      and animate.run.RunAnim.AnimationId      or "",
+                run2   = animate:FindFirstChild("run")   and animate.run:FindFirstChild("RunAnim2")     and animate.run.RunAnim2.AnimationId     or "",
+                jump   = animate:FindFirstChild("jump")  and animate.jump:FindFirstChild("JumpAnim")    and animate.jump.JumpAnim.AnimationId    or "",
+                jump2  = animate:FindFirstChild("jump")  and animate.jump:FindFirstChild("JumpAnim2")   and animate.jump.JumpAnim2.AnimationId   or "",
+                fall   = animate:FindFirstChild("fall")  and animate.fall:FindFirstChild("FallAnim")    and animate.fall.FallAnim.AnimationId    or "",
+                fall2  = animate:FindFirstChild("fall")  and animate.fall:FindFirstChild("FallAnim2")   and animate.fall.FallAnim2.AnimationId   or "",
+                climb  = animate:FindFirstChild("climb") and animate.climb:FindFirstChild("ClimbAnim")  and animate.climb.ClimbAnim.AnimationId  or "",
+                climb2 = animate:FindFirstChild("climb") and animate.climb:FindFirstChild("ClimbAnim2") and animate.climb.ClimbAnim2.AnimationId or "",
+                swim   = animate:FindFirstChild("swim")  and animate.swim:FindFirstChild("Swim")        and animate.swim.Swim.AnimationId        or "",
+                swim2  = animate:FindFirstChild("swim")  and animate.swim:FindFirstChild("Swim2")       and animate.swim.Swim2.AnimationId       or "",
             }
         end
 
-        local function set(parent, child, id)
-            if parent and parent:FindFirstChild(child) then
-                if id and tostring(id) ~= "" then
-                    parent[child].AnimationId = "rbxassetid://" .. tostring(id)
+        -- 🚀 دالة ذكية تضيف الأيدي إذا كان موجود، وتمسح القديم إذا ما فيه عشان ما يسبب قلتش
+        local function setAnim(parent, childName, id)
+            if not parent then return end
+            if id and tostring(id) ~= "" then
+                local animObj = parent:FindFirstChild(childName)
+                if not animObj then
+                    animObj = Instance.new("Animation")
+                    animObj.Name = childName
+                    animObj.Parent = parent
                 end
+                animObj.AnimationId = "rbxassetid://" .. tostring(id)
+            else
+                local animObj = parent:FindFirstChild(childName)
+                if animObj then animObj:Destroy() end
             end
         end
 
-        set(animate:FindFirstChild("idle"),  "Animation1", animData.idle)
-        set(animate:FindFirstChild("idle"),  "Animation2", animData.idle)
-        set(animate:FindFirstChild("walk"),  "WalkAnim",   animData.walk)
-        set(animate:FindFirstChild("run"),   "RunAnim",    animData.run)
-        set(animate:FindFirstChild("jump"),  "JumpAnim",   animData.jump)
-        set(animate:FindFirstChild("fall"),  "FallAnim",   animData.fall)
-        set(animate:FindFirstChild("climb"), "ClimbAnim",  animData.climb)
-        set(animate:FindFirstChild("swim"),  "Swim",       animData.swim)
+        setAnim(animate:FindFirstChild("idle"),  "Animation1", animData.idle)
+        setAnim(animate:FindFirstChild("idle"),  "Animation2", animData.idle2)
+
+        setAnim(animate:FindFirstChild("walk"),  "WalkAnim",   animData.walk)
+        setAnim(animate:FindFirstChild("walk"),  "WalkAnim2",  animData.walk2)
+
+        setAnim(animate:FindFirstChild("run"),   "RunAnim",    animData.run)
+        setAnim(animate:FindFirstChild("run"),   "RunAnim2",   animData.run2)
+
+        setAnim(animate:FindFirstChild("jump"),  "JumpAnim",   animData.jump)
+        setAnim(animate:FindFirstChild("jump"),  "JumpAnim2",  animData.jump2)
+
+        setAnim(animate:FindFirstChild("fall"),  "FallAnim",   animData.fall)
+        setAnim(animate:FindFirstChild("fall"),  "FallAnim2",  animData.fall2)
+
+        setAnim(animate:FindFirstChild("climb"), "ClimbAnim",  animData.climb)
+        setAnim(animate:FindFirstChild("climb"), "ClimbAnim2", animData.climb2)
+
+        setAnim(animate:FindFirstChild("swim"),  "Swim",       animData.swim)
+        setAnim(animate:FindFirstChild("swim"),  "Swim2",      animData.swim2)
+
+        -- 🔥 إعادة تشغيل سكربت الأنيميشن الأساسي لتحديث الذاكرة
+        animate.Disabled = true
+        task.wait(0.05)
+        animate.Disabled = false
 
         local animator = hum:FindFirstChildOfClass("Animator")
         if animator then
@@ -149,24 +181,50 @@ return function(Tab, UI)
         local animate = char:FindFirstChild("Animate")
         if not hum or not animate then return end
 
-        -- 🚀 إجبار الشخصية على القفز عند العودة للمشية الأصلية
         hum.Jump = true
         task.wait(0.1)
 
-        local function restoreSet(parent, child, fullId)
-            if parent and parent:FindFirstChild(child) and fullId ~= "" then
-                parent[child].AnimationId = fullId
+        local function restoreAnim(parent, childName, fullId)
+            if not parent then return end
+            if fullId and fullId ~= "" then
+                local animObj = parent:FindFirstChild(childName)
+                if not animObj then
+                    animObj = Instance.new("Animation")
+                    animObj.Name = childName
+                    animObj.Parent = parent
+                end
+                animObj.AnimationId = fullId
+            else
+                local animObj = parent:FindFirstChild(childName)
+                if animObj then animObj:Destroy() end
             end
         end
 
-        restoreSet(animate:FindFirstChild("idle"),  "Animation1", originalAnims.idle)
-        restoreSet(animate:FindFirstChild("idle"),  "Animation2", originalAnims.idle)
-        restoreSet(animate:FindFirstChild("walk"),  "WalkAnim",   originalAnims.walk)
-        restoreSet(animate:FindFirstChild("run"),   "RunAnim",    originalAnims.run)
-        restoreSet(animate:FindFirstChild("jump"),  "JumpAnim",   originalAnims.jump)
-        restoreSet(animate:FindFirstChild("fall"),  "FallAnim",   originalAnims.fall)
-        restoreSet(animate:FindFirstChild("climb"), "ClimbAnim",  originalAnims.climb)
-        restoreSet(animate:FindFirstChild("swim"),  "Swim",       originalAnims.swim)
+        restoreAnim(animate:FindFirstChild("idle"),  "Animation1", originalAnims.idle)
+        restoreAnim(animate:FindFirstChild("idle"),  "Animation2", originalAnims.idle2)
+
+        restoreAnim(animate:FindFirstChild("walk"),  "WalkAnim",   originalAnims.walk)
+        restoreAnim(animate:FindFirstChild("walk"),  "WalkAnim2",  originalAnims.walk2)
+
+        restoreAnim(animate:FindFirstChild("run"),   "RunAnim",    originalAnims.run)
+        restoreAnim(animate:FindFirstChild("run"),   "RunAnim2",   originalAnims.run2)
+
+        restoreAnim(animate:FindFirstChild("jump"),  "JumpAnim",   originalAnims.jump)
+        restoreAnim(animate:FindFirstChild("jump"),  "JumpAnim2",  originalAnims.jump2)
+
+        restoreAnim(animate:FindFirstChild("fall"),  "FallAnim",   originalAnims.fall)
+        restoreAnim(animate:FindFirstChild("fall"),  "FallAnim2",  originalAnims.fall2)
+
+        restoreAnim(animate:FindFirstChild("climb"), "ClimbAnim",  originalAnims.climb)
+        restoreAnim(animate:FindFirstChild("climb"), "ClimbAnim2", originalAnims.climb2)
+
+        restoreAnim(animate:FindFirstChild("swim"),  "Swim",       originalAnims.swim)
+        restoreAnim(animate:FindFirstChild("swim"),  "Swim2",      originalAnims.swim2)
+
+        -- 🔥 إعادة تشغيل سكربت الأنيميشن الأساسي عند الإلغاء
+        animate.Disabled = true
+        task.wait(0.05)
+        animate.Disabled = false
 
         local animator = hum:FindFirstChildOfClass("Animator")
         if animator then
@@ -267,12 +325,11 @@ return function(Tab, UI)
                 callback(optName, data)
             end)
 
-            -- 🚀 تحسين منطق الإضافة والإزالة من المفضلة ليكون مضموناً
             StarBtn.MouseButton1Click:Connect(function()
                 if FavoriteAnims[optName] then
-                    FavoriteAnims[optName] = nil -- إزالة من المفضلة إذا كانت موجودة
+                    FavoriteAnims[optName] = nil
                 else
-                    FavoriteAnims[optName] = true -- إضافة للمفضلة إذا لم تكن موجودة
+                    FavoriteAnims[optName] = true
                 end
                 SaveFavorites()
                 UpdateListDisplay() 
