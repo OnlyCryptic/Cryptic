@@ -14,8 +14,8 @@ return function(Tab, UI)
     local camPos
     
     -- تم تعديل هذه القيم لتناسب شاشات الهواتف بشكل أفضل
-    local sensitivity = 0.33 
-    local smoothness = 0.35 
+    local sensitivity = 0.45 
+    local smoothness = 0.40 
 
     local touchConn -- متغير لحفظ اتصال اللمس لمنع تداخل الأوامر
 
