@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - Ultimate Auto Clicker V3 ]]
--- المطور: arwa hope | الوصف: أوتو كليكر متطور، وضع الأداة (يمنع ضغط الـ UI)، وحفظ مخصص لكل ماب
+-- [[ Cryptic Hub - Ultimate Auto Clicker PRO V4 ]]
+-- المطور: arwa hope | الوصف: أوتو كليكر برو، تخطيط أقسام منسدلة، نظام ضرب ذكي (أداة/شاشة)، ومحفظة حفظ احترافية لكل ماب
 
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
@@ -13,7 +13,7 @@ return function(Tab, UI)
     -- ==========================================
     -- 🟢 نظام الحفظ المخصص للماب (PlaceId)
     -- ==========================================
-    local SaveFileName = "CrypticAC_Saves_" .. tostring(game.PlaceId) .. ".json"
+    local SaveFileName = "CrypticAC_ProSaves_" .. tostring(game.PlaceId) .. ".json"
     local SavedProfiles = {}
 
     pcall(function()
@@ -31,8 +31,14 @@ return function(Tab, UI)
         end)
     end
 
-    local function Notify(title, text)
-        pcall(function() game:GetService("StarterGui"):SetCore("SendNotification", {Title=title, Text=text, Duration=4}) end)
+    local function Notify(title, arText, enText, duration)
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = title,
+                Text = arText .. "\n" .. enText,
+                Duration = duration or 4
+            })
+        end)
     end
 
     -- ==========================================
@@ -41,7 +47,7 @@ return function(Tab, UI)
     local clickerCount = 0
     local ActivePoints = {} -- جدول يحفظ كل النقاط الشغالة
 
-    -- حلقة تكرار مركزية (واحدة فقط) تمنع اللاق وتشغل كل النقاط
+    -- حلقة تكرار مركزية واحدة للأداء العالي تمنع اللاق وتشغل كل النقاط
     task.spawn(function()
         while true do
             for _, point in pairs(ActivePoints) do
@@ -49,14 +55,14 @@ return function(Tab, UI)
                     if tick() - point.lastClick >= (point.speed / 1000) then
                         point.lastClick = tick()
                         
-                        -- إذا كان وضع الأداة (بدون ضغط شاشة، كأنه كليكر داخلي)
+                        -- وضع الأداة (يضرب الأداة داخلياً، لا يتداخل مع الـ UI)
                         if point.mode == "Tool" then
                             local char = lp.Character
                             if char then
                                 local tool = char:FindFirstChildOfClass("Tool")
                                 if tool then tool:Activate() end
                             end
-                        -- إذا كان وضع الشاشة (يضغط مكان النقطة)
+                        -- وضع الشاشة (يضغط إحداثيات النقطة)
                         elseif point.mode == "Screen" and point.gui and point.gui.Parent then
                             local frame = point.frame
                             local cx = frame.AbsolutePosition.X + (frame.AbsoluteSize.X / 2)
@@ -74,21 +80,26 @@ return function(Tab, UI)
     end)
 
     -- ==========================================
-    -- 🟢 دالة إنشاء النقطة (المؤشر)
+    -- 🟢 إنشاء الحاوية الرئيسية للكليكر المتطور (برو)
     -- ==========================================
-    local function CreateTarget(id, startX, startY)
+    -- إنشاء صفحة Tab وهمية داخل مجلد منسدل
+    local ACMasterTab = Tab:AddFolder("🖱️ أوتو كليكر برو / Adv Auto Clicker PRO")
+
+    -- ==========================================
+    -- 🟢 دالة إنشاء المؤشر (التصميم الأنيق)
+    -- ==========================================
+    local function CreateDraggableTarget(id, startX, startY)
         local ScreenGui = Instance.new("ScreenGui")
         ScreenGui.Name = "CrypticClicker_" .. id
         ScreenGui.Parent = (gethui and gethui()) or CoreGui
         ScreenGui.IgnoreGuiInset = true 
         ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-        -- الحاوية الأساسية المخفية (مساحة السحب)
         local DragContainer = Instance.new("Frame", ScreenGui)
         DragContainer.Size = UDim2.new(0, 45, 0, 45)
         DragContainer.Position = UDim2.new(startX or 0.5, 0, startY or 0.5, 0)
         DragContainer.BackgroundColor3 = Color3.new(0, 0, 0)
-        DragContainer.BackgroundTransparency = 0.99 -- 🔥 سر حركة الجوال: شبه مخفي بس يلمس!
+        DragContainer.BackgroundTransparency = 0.99 -- 🔥 شفاف للجوال
         DragContainer.Active = true
 
         -- تصميم التصويب (Crosshair)
@@ -98,7 +109,7 @@ return function(Tab, UI)
         OuterRing.AnchorPoint = Vector2.new(0.5, 0.5)
         OuterRing.BackgroundTransparency = 1
         local RingStroke = Instance.new("UIStroke", OuterRing)
-        RingStroke.Color = Color3.fromRGB(0, 255, 150) -- لون مميز
+        RingStroke.Color = Color3.fromRGB(255, 60, 60)
         RingStroke.Thickness = 2
         Instance.new("UICorner", OuterRing).CornerRadius = UDim.new(1, 0)
 
@@ -153,10 +164,10 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- 🟢 دالة بناء نقطة وتحكمها في الواجهة
+    -- 🟢 دالة بناء واجهة نقطة مستقلة في Tab فرعي
     -- ==========================================
     local function BuildPointUI(id, startX, startY, speedVal, modeVal)
-        local gui, frame = CreateTarget(id, startX, startY)
+        local gui, frame = CreateDraggableTarget(id, startX, startY)
         
         -- تسجيل النقطة في النظام
         ActivePoints[id] = {
@@ -169,68 +180,77 @@ return function(Tab, UI)
             lastClick = 0
         }
 
-        -- إنشاء مجلد مستقل للنقطة مباشرة في الـ Tab (عشان ما تختفي الأزرار)
-        local PointFolder = Tab:AddFolder("🎯 إعدادات نقطة / Point #" .. id)
+        -- 🔥 بناء صفحة Tab وهمية منفصلة تماماً للنقطة
+        -- هذا يتطلب تعديل دالة AddFolder لتكون أكثر مرونة (استخدام InnerPage مباشرة)
+        local PointTab = ACMasterTab:AddFolder("🎯 إعدادات نقطة / Point #" .. id)
         
-        PointFolder:AddToggle("تفعيل الضغط / Enable Click", function(state)
+        PointTab:AddToggle("تفعيل الضغط / Enable Click", function(state)
             if ActivePoints[id] then ActivePoints[id].enabled = state end
         end)
 
-        PointFolder:AddInput("السرعة (ms) | 1000ms=1s", function(val)
+        PointTab:AddInput("السرعة (ms) | 1000ms=1s", function(val)
             local num = tonumber(val)
             if num and num > 0 and ActivePoints[id] then
                 ActivePoints[id].speed = num
             else
-                Notify("خطأ", "أدخل رقم صحيح للسرعة!")
+                Notify("خطأ / Error", "أدخل رقم صحيح للسرعة!", "Enter valid number!", 3)
             end
         end)
 
-        PointFolder:AddToggle("وضع الشاشة (إطفاء = أداة) / Screen Mode", function(state)
+        PointTab:AddToggle("وضع الشاشة (إطفاء=أداة) / Screen Mode", function(state)
             if ActivePoints[id] then
                 ActivePoints[id].mode = state and "Screen" or "Tool"
                 if state then
-                    Notify("وضع الشاشة", "سيضغط على إحداثيات الدائرة.")
+                    Notify("وضع الشاشة", "سيضغط على إحداثيات الدائرة.", "Will click circle coords.", 4)
                 else
-                    Notify("وضع الأداة", "سيضرب السلاح تلقائياً (لا يتداخل مع الواجهة).")
+                    Notify("وضع الأداة", "سيضرب السلاح تلقائياً (لا يتداخل).", "Will auto-swing weapon (no conflict).", 4)
                 end
             end
         end)
 
-        PointFolder:AddButton("👁️ إخفاء النقطة / Toggle Vis", function()
+        PointTab:AddButton("👁️ إخفاء النقطة / Toggle Vis", function()
             if gui then gui.Enabled = not gui.Enabled end
         end)
         
-        PointFolder:AddButton("🗑️ حذف النقطة / Delete", function()
+        PointTab:AddButton("🗑️ حذف النقطة / Delete Point", function()
             if ActivePoints[id] then
                 ActivePoints[id].enabled = false
                 if ActivePoints[id].gui then ActivePoints[id].gui:Destroy() end
                 ActivePoints[id] = nil
-                Notify("حذف", "تم حذف النقطة #" .. id)
+                -- ملاحظة: ملف المجلد (Folder) لا يزال موجوداً في الواجهة لكن تم تعطيل وظائفه.
+                Notify("حذف", "تم حذف النقطة #" .. id .. " بنجاح!", "Point Deleted!", 4)
             end
         end)
     end
 
     -- ==========================================
-    -- 🟢 واجهة الكليكر الرئيسية
+    -- 🟢 قسم أدوات التحكم الرئيسية
     -- ==========================================
-    Tab:AddButton("➕ إضافة نقطة جديدة / Add Point", function()
+    ACMasterTab:AddButton("➕ إضافة نقطة جديدة / Add Point", function()
         clickerCount = clickerCount + 1
         BuildPointUI(clickerCount)
     end)
     
-    Tab:AddLine()
+    ACMasterTab:AddButton("💡 ملاحظة حول الـ UI / Note about UI", function()
+        Notify("Cryptic Hub", 
+               "لتجنب ضغط القائمة بالخطأ، ضع مؤشر التصويب خارج واجهة السكربت أو استخدم وضع الأداة.", 
+               "To avoid UI conflicts, place the crosshair target outside the hub or use Tool Mode.", 
+               6)
+    end)
+    
+    ACMasterTab:AddLine()
 
     -- ==========================================
-    -- 🟢 واجهة نظام الحفظ والمحفظة (احترافية)
+    -- 🟢 قسم المحفظة (الحفظ والمقترحات)
     -- ==========================================
-    local SaveFolder = Tab:AddFolder("💾 محفظة الكليكر (لهذا الماب) / Saves")
-    local currentSaveName = "Default"
+    local SavesTab = ACMasterTab:AddFolder("💾 محفظة الكليكر لهذا الماب / PRO Saves Wallet")
+    local currentProfileName = "Default"
 
-    SaveFolder:AddInput("اسم التشكيلة / Profile Name", function(val)
-        if val ~= "" then currentSaveName = val end
+    SavesTab:AddInput("اسم الملف الشخصي / Profile Name", function(val)
+        if val ~= "" then currentProfileName = val end
     end)
 
-    SaveFolder:AddButton("📥 حفظ النقاط الحالية / Save Config", function()
+    SavesTab:AddButton("📥 حفظ التشكيلة الحالية / Save Config", function()
         local saveArray = {}
         for _, p in pairs(ActivePoints) do
             if p.gui and p.frame then
@@ -243,38 +263,49 @@ return function(Tab, UI)
                 })
             end
         end
-        SavedProfiles[currentSaveName] = saveArray
+        SavedProfiles[currentProfileName] = saveArray
         SaveToFile()
-        Notify("Cryptic Hub", "تم حفظ التشكيلة باسم: " .. currentSaveName)
+        Notify("حفظ التشكيلة / Saved", 
+               "تم حفظ تشكيلتك باسم: " .. currentProfileName, 
+               "Profile saved as: " .. currentProfileName, 
+               4)
     end)
 
-    SaveFolder:AddButton("📂 تشغيل التشكيلة / Load Config", function()
-        if SavedProfiles[currentSaveName] then
-            -- تنظيف النقاط القديمة قبل التشغيل
-            for k, p in pairs(ActivePoints) do
+    SavesTab:AddButton("📂 تشغيل تشكيلة / Load Config", function()
+        if SavedProfiles[currentProfileName] then
+            -- تنظيف النقاط النشطة القديمة قبل التحميل
+            for _, p in pairs(ActivePoints) do
                 p.enabled = false
                 if p.gui then p.gui:Destroy() end
             end
             table.clear(ActivePoints)
             
-            -- تشغيل النقاط المحفوظة
-            for _, pData in ipairs(SavedProfiles[currentSaveName]) do
+            -- تشغيل النقاط المحفوظة في ملفات Tab فرعية
+            for _, pData in ipairs(SavedProfiles[currentProfileName]) do
                 clickerCount = math.max(clickerCount, pData.id)
                 BuildPointUI(pData.id, pData.xScale, pData.yScale, pData.speed, pData.mode)
             end
-            Notify("Cryptic Hub", "تم تحميل التشكيلة: " .. currentSaveName)
+            Notify("تم تحميل / Loaded", 
+                   "تم تحميل التشكيلة: " .. currentProfileName, 
+                   "Profile loaded: " .. currentProfileName, 
+                   4)
         else
-            Notify("خطأ", "لا يوجد حفظ بهذا الاسم!")
+            Notify("خطأ / Error", "الملف الشخصي غير موجود!", "Profile non-existent!", 3)
         end
     end)
 
-    SaveFolder:AddButton("🗑️ حذف التشكيلة / Delete Save", function()
-        if SavedProfiles[currentSaveName] then
-            SavedProfiles[currentSaveName] = nil
+    SavesTab:AddButton("🗑️ حذف تشكيلة / Delete Save", function()
+        if SavedProfiles[currentProfileName] then
+            SavedProfiles[currentProfileName] = nil
             SaveToFile()
-            Notify("Cryptic Hub", "تم حذف التشكيلة: " .. currentSaveName)
+            Notify("تم الحذف / Deleted", 
+                   "تم حذف ملف التشكيلة: " .. currentProfileName, 
+                   "Profile deleted: " .. currentProfileName, 
+                   4)
         else
-            Notify("خطأ", "التشكيلة غير موجودة أصلاً!")
+            Notify("خطأ / Error", "الملف الشخصي غير موجود!", "Profile non-existent!", 3)
         end
     end)
+    
+    ACMasterTab:AddLine()
 end
