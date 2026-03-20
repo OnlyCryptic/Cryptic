@@ -1,81 +1,97 @@
+-- [[ Cryptic Hub - Auto Heal Apple / أكل التفاح التلقائي ]]
+-- المطور: يامي (Yami) | الميزة: مسك، أكل (بانتظار مناسب)، إخفاء، وكول داون 8.1 ثواني
+
 return function(Tab, UI)
     local Players = game:GetService("Players")
     local lp = Players.LocalPlayer
+    
     local isActive = false
     local isHealing = false
 
     local function HealCycle()
         if isHealing then return end
         isHealing = true
+
         local char = lp.Character
         local hum = char and char:FindFirstChild("Humanoid")
 
-        -- التأكد أن اللاعب حي ودمه ناقص
         if hum and hum.Health > 0 and hum.Health < hum.MaxHealth then
+            -- 1. البحث عن التفاحة
             local apple = nil
-
-            -- البحث عن التفاحة في الشخصية (إذا كانت في اليد)
             for _, tool in pairs(char:GetChildren()) do
                 if tool:IsA("Tool") and (string.find(string.lower(tool.Name), "apple") or tool:FindFirstChild("Event")) then
-                    apple = tool
-                    break
+                    apple = tool; break
                 end
             end
-
-            -- البحث عن التفاحة في الحقيبة (Backpack) إذا لم تكن في اليد
             if not apple then
                 for _, tool in pairs(lp.Backpack:GetChildren()) do
                     if tool:IsA("Tool") and (string.find(string.lower(tool.Name), "apple") or tool:FindFirstChild("Event")) then
-                        apple = tool
-                        break
+                        apple = tool; break
                     end
                 end
             end
 
             if apple then
-                -- حفظ الأداة المجهزة حالياً عشان نرجعها بعد الأكل
+                -- 2. حفظ سلاحك الحالي
                 local currentEquipped = nil
                 for _, tool in pairs(char:GetChildren()) do
                     if tool:IsA("Tool") and tool ~= apple then 
-                        currentEquipped = tool
-                        break 
+                        currentEquipped = tool; break 
                     end
                 end
 
-                -- مسك التفاحة
+                -- 3. مسك التفاحة
                 if apple.Parent ~= char then
                     hum:EquipTool(apple)
-                    task.wait(0.5)
+                    task.wait(0.5) -- زدت الوقت شوي عشان السيرفر يؤكد المسكة
                 end
 
-                -- تفعيل التفاحة (أكل)
+                -- 4. الضغط للأكل
                 apple:Activate()
-                task.wait(1.5) -- انتظار حتى يكتمل الأكل
+                
+                -- السر هنا: لازم ننتظر التفاحة بيدك شوي عشان يكتمل الأكل وما ينلغي
+                task.wait(1.5) 
 
-                -- إرجاع الأداة اللي كانت بيدك أو إخفاء التفاحة
+                -- 5. إخفاء التفاحة وإرجاع سلاحك
                 if currentEquipped and currentEquipped.Parent == lp.Backpack then
                     hum:EquipTool(currentEquipped)
                 else
                     hum:UnequipTools()
                 end
 
-                -- كول داون قبل ما يقدر يأكل تفاحة ثانية
+                -- 6. الكول داون الدقيق بعد ما خلصنا (8.1 ثواني)
                 task.wait(8.1)
             end
         end
+        
         isHealing = false
     end
 
-    -- مثال لربط الكود مع الـ Toggle في واجهتك (تقدر تعدله حسب مكتبتك):
-    -- Tab:CreateToggle({
-    --    Name = "Auto Eat Apple",
-    --    CurrentValue = false,
-    --    Callback = function(Value)
-    --        isActive = Value
-    --        while isActive do
-    --            task.wait(0.1)
-    --            HealCycle()
-    --        end
-    --    end
-    -- })
+    Tab:AddToggle("علاج تلقائي (تفاح) | Auto Heal Apple", function(state)
+        isActive = state
+        
+        if state then
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Cryptic Hub", Text = "🍎 تم تفعيل العلاج", Duration = 3
+            })
+            
+            task.spawn(function()
+                while isActive do
+                    local char = lp.Character
+                    local hum = char and char:FindFirstChild("Humanoid")
+                    
+                    if hum and hum.Health > 0 and hum.Health < hum.MaxHealth and not isHealing then
+                        HealCycle()
+                    end
+                    task.wait(0.1)
+                end
+            end)
+        else
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Cryptic Hub", Text = "❌ تم الإيقاف", Duration = 3
+            })
+        end
+    end)
+    
+    Tab:AddLine()
 end
