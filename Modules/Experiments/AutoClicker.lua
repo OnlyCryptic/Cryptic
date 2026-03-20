@@ -1,31 +1,35 @@
--- [[ Cryptic Hub - Simple & Pro Auto Clicker ]]
--- المطور: arwa hope | الوصف: أوتو كليكر بسيط واحترافي، مع قفل ذكي للسحب وتصميم خفيف
+-- [[ Cryptic Hub - Perfect Auto Clicker (Mobile Fix) ]]
+-- المطور: arwa hope | الوصف: أوتو كليكر نظيف داخل Folder، مع حل مشكلة الماوس في الجوال ووزن الضغطة
 
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
+local GuiService = game:GetService("GuiService")
 
 return function(Tab, UI)
-    -- متغيرات التحكم
+    -- 🔥 نحط كل شيء داخل المجلد عشان الزحمة
+    local ACFolder = Tab:AddFolder("🖱️ أوتو كليكر / Auto Clicker")
+
     local isEnabled = false
-    local isVisible = true
-    local speedMs = 100 -- السرعة الافتراضية 100 أجزاء من الثانية
+    local isVisible = false
+    local speedMs = 100 -- السرعة الافتراضية
 
     -- ==========================================
     -- 🟢 تصميم مؤشر التصويب (الدائرة)
     -- ==========================================
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "CrypticSimpleAC"
+    ScreenGui.Name = "CrypticProAC"
     ScreenGui.Parent = (gethui and gethui()) or CoreGui
     ScreenGui.IgnoreGuiInset = true 
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.Enabled = false -- 💡 مخفية في البداية زي ما طلبتي!
 
     local TargetFrame = Instance.new("Frame", ScreenGui)
     TargetFrame.Size = UDim2.new(0, 45, 0, 45)
     TargetFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
     TargetFrame.BackgroundColor3 = Color3.new(0, 0, 0)
-    TargetFrame.BackgroundTransparency = 0.99 -- شفاف عشان الجوال يلقطه بدون ما يغطي الشاشة
+    TargetFrame.BackgroundTransparency = 0.99 
     TargetFrame.Active = true
 
     local OuterRing = Instance.new("Frame", TargetFrame)
@@ -34,7 +38,7 @@ return function(Tab, UI)
     OuterRing.AnchorPoint = Vector2.new(0.5, 0.5)
     OuterRing.BackgroundTransparency = 1
     local RingStroke = Instance.new("UIStroke", OuterRing)
-    RingStroke.Color = Color3.fromRGB(0, 255, 150) -- لون أخضر (جاهز للسحب)
+    RingStroke.Color = Color3.fromRGB(0, 255, 150)
     RingStroke.Thickness = 2
     Instance.new("UICorner", OuterRing).CornerRadius = UDim.new(1, 0)
 
@@ -46,13 +50,12 @@ return function(Tab, UI)
     Instance.new("UICorner", CenterDot).CornerRadius = UDim.new(1, 0)
 
     -- ==========================================
-    -- 🟢 نظام السحب الذكي (مع القفل)
+    -- 🟢 نظام السحب مع القفل
     -- ==========================================
     local dragging, dragInput, dragStart, startPos
     TargetFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            -- 🔥 هنا السر: يمنع السحب نهائياً إذا الكليكر شغال أو الدائرة مخفية!
-            if isEnabled or not isVisible then return end 
+            if isEnabled or not isVisible then return end -- يمنع السحب لو الكليكر شغال
             
             dragging = true
             dragStart = input.Position
@@ -77,18 +80,26 @@ return function(Tab, UI)
     end)
 
     -- ==========================================
-    -- 🟢 حلقة الضغط (Auto Clicker Loop)
+    -- 🟢 حلقة الضغط (مع حل مشكلة الجوال والوزنية)
     -- ==========================================
     task.spawn(function()
         while true do
             if isEnabled and TargetFrame and ScreenGui.Parent then
+                -- 💡 حساب الإحداثيات الدقيقة (تعويض شريط روبلوكس العلوي عشان تضبط بالنص)
+                local inset = GuiService:GetGuiInset()
                 local cx = TargetFrame.AbsolutePosition.X + (TargetFrame.AbsoluteSize.X / 2)
-                local cy = TargetFrame.AbsolutePosition.Y + (TargetFrame.AbsoluteSize.Y / 2)
+                local cy = TargetFrame.AbsolutePosition.Y + (TargetFrame.AbsoluteSize.Y / 2) + inset.Y
                 
-                -- إرسال ضغطة وهمية في مكان الدائرة بدون إزعاج شاشة اللاعب
-                VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, true, game, 1)
-                task.wait(0.01)
-                VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, false, game, 1)
+                -- 💡 الذكاء هنا: إذا تلعبين من جوال يسوي "لمس" بدل "كليك ماوس"
+                if UserInputService.TouchEnabled then
+                    VirtualInputManager:SendTouchEvent(1, 0, cx, cy) -- لمس الشاشة (Touch Down)
+                    task.wait(0.01)
+                    VirtualInputManager:SendTouchEvent(1, 2, cx, cy) -- رفع الإصبع (Touch Up)
+                else
+                    VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, true, game, 1)
+                    task.wait(0.01)
+                    VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, false, game, 1)
+                end
                 
                 task.wait(speedMs / 1000)
             else
@@ -98,32 +109,29 @@ return function(Tab, UI)
     end)
 
     -- ==========================================
-    -- 🟢 واجهة التحكم في الـ Hub (أزرار نظيفة)
+    -- 🟢 أزرار التحكم داخل المجلد (نظيفة وبسيطة)
     -- ==========================================
     
-    Tab:AddToggle("تفعيل الكليكر / Enable Clicker", function(state)
-        isEnabled = state
-        if isEnabled then
-            RingStroke.Color = Color3.fromRGB(255, 50, 50) -- يتغير أحمر وقت الضرب (يعني مقفول)
-        else
-            RingStroke.Color = Color3.fromRGB(0, 255, 150) -- يرجع أخضر إذا طافي (جاهز للسحب)
-        end
-    end)
-
-    Tab:AddToggle("إخفاء الدائرة / Hide Target", function(state)
-        -- إذا كان مفعل (true)، نخفي الدائرة (isVisible = false)
-        isVisible = not state
+    ACFolder:AddToggle("👁️ إظهار الدائرة / Show Target", function(state)
+        isVisible = state
         ScreenGui.Enabled = isVisible
     end)
 
-    Tab:AddInput("السرعة (ms) / Speed", function(val)
-        local num = tonumber(val)
-        if num and num > 0 then
-            speedMs = num
+    ACFolder:AddToggle("⚡ تفعيل الكليكر / Enable Clicker", function(state)
+        isEnabled = state
+        if isEnabled then
+            RingStroke.Color = Color3.fromRGB(255, 50, 50) -- يصير أحمر = مقفول ويضرب
         else
-            pcall(function() game:GetService("StarterGui"):SetCore("SendNotification", {Title="Cryptic Hub", Text="أدخل رقم صحيح!\nValid number please!", Duration=3}) end)
+            RingStroke.Color = Color3.fromRGB(0, 255, 150) -- يصير أخضر = جاهز للسحب
         end
     end)
 
-    Tab:AddLine()
+    -- إدخال بسيط جداً ومباشر للسرعة
+    ACFolder:AddInput("السرعة | Speed (ms)", function(val)
+        local num = tonumber(val)
+        if num and num > 0 then
+            speedMs = num
+        end
+    end)
+
 end
