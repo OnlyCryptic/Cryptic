@@ -73,7 +73,7 @@ local function StartCrypticHub()
                 local elementsList = {
                     "Button", "Toggle", "TimedToggle", "Input", "LargeInput", 
                     "SpeedControl", "Dropdown", "PlayerSelector", "ProfileCard", 
-                    "Line", "Label", "Paragraph"
+                    "Line", "Label", "Paragraph", "Folder"
                 }
                 
                 for _, el in ipairs(elementsList) do
