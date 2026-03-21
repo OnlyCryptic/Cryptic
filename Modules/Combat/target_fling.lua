@@ -1,326 +1,247 @@
--- [[ Cryptic Hub - هجمات الاستهداف (Fling + Aimbot + Fling Parts) ]]
--- المطور: يامي | داخل سكشن واحد في تاب استهداف لاعب
+-- [[ Cryptic Hub - Element: Section (Collapsible) ]]
+-- الاستخدام: tab:AddSection("اسم السكشن", function(section) section:AddButton(...) end)
+-- يشتغل مع Core.lua V8.5 بدون أي تعديل
 
-return function(Tab, UI)
-    local runService    = game:GetService("RunService")
-    local Players       = game:GetService("Players")
-    local PhysicsService = game:GetService("PhysicsService")
-    local StarterGui    = game:GetService("StarterGui")
-    local TweenService  = game:GetService("TweenService")
-    local Workspace     = game:GetService("Workspace")
-    local lp            = Players.LocalPlayer
-    local camera        = workspace.CurrentCamera
+return function(TabOps, label, buildFunc)
 
-    -- =============================================
-    -- دالة الإشعارات المشتركة
-    -- =============================================
-    local function Notify(arText, enText)
+    local TweenService = game:GetService("TweenService")
+    local function CreateTween(instance, properties, duration)
+        local tween = TweenService:Create(instance, TweenInfo.new(duration or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), properties)
+        tween:Play()
+        return tween
+    end
+
+    local Page = TabOps.Page
+
+    -- الـ Container الرئيسي للسكشن كله
+    local SectionContainer = Instance.new("Frame")
+    SectionContainer.Name = "Section_" .. label
+    SectionContainer.Size = UDim2.new(1, 0, 0, 40) -- الحجم الافتراضي (مغلق)
+    SectionContainer.BackgroundTransparency = 1
+    SectionContainer.ClipsDescendants = true
+    SectionContainer.LayoutOrder = TabOps.Order or 0
+    TabOps.Order = (TabOps.Order or 0) + 1
+    SectionContainer.Parent = Page
+
+    -- زر الهيدر (اللي تضغط عليه)
+    local Header = Instance.new("TextButton")
+    Header.Name = "Header"
+    Header.Size = UDim2.new(1, 0, 0, 38)
+    Header.Position = UDim2.new(0, 0, 0, 0)
+    Header.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+    Header.BackgroundTransparency = 0.1
+    Header.BorderSizePixel = 0
+    Header.Text = ""
+    Header.AutoButtonColor = false
+    Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 9)
+
+    -- بوردر (خفي بالبداية، يضيء عند الفتح)
+    local HeaderStroke = Instance.new("UIStroke", Header)
+    HeaderStroke.Thickness = 1.2
+    HeaderStroke.Transparency = 0.85
+    local HeaderGradient = Instance.new("UIGradient", HeaderStroke)
+    HeaderGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 150)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 255))
+    }
+
+    -- دائرة مؤشر على اليسار (رمادية مغلق، خضراء مفتوح)
+    local Dot = Instance.new("Frame", Header)
+    Dot.Size = UDim2.new(0, 7, 0, 7)
+    Dot.Position = UDim2.new(0, 12, 0.5, -3)
+    Dot.BorderSizePixel = 0
+    Dot.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
+    Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
+
+    -- نص العنوان (منتصف)
+    local TitleLabel = Instance.new("TextLabel", Header)
+    TitleLabel.Text = label
+    TitleLabel.Size = UDim2.new(1, -60, 1, 0)
+    TitleLabel.Position = UDim2.new(0, 26, 0, 0)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.TextColor3 = Color3.fromRGB(165, 165, 180)
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Center
+    TitleLabel.Font = Enum.Font.GothamSemibold
+    TitleLabel.TextSize = 12
+
+    -- خلفية السهم
+    local ArrowBg = Instance.new("Frame", Header)
+    ArrowBg.Size = UDim2.new(0, 22, 0, 22)
+    ArrowBg.Position = UDim2.new(1, -32, 0.5, -11)
+    ArrowBg.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+    ArrowBg.BackgroundTransparency = 0.2
+    ArrowBg.BorderSizePixel = 0
+    Instance.new("UICorner", ArrowBg).CornerRadius = UDim.new(0, 6)
+
+    -- السهم نفسه (› أوضح من ▶)
+    local Arrow = Instance.new("TextLabel", ArrowBg)
+    Arrow.Text = "›"
+    Arrow.Size = UDim2.new(1, 0, 1, 2)
+    Arrow.Position = UDim2.new(0, 0, 0, 0)
+    Arrow.BackgroundTransparency = 1
+    Arrow.TextColor3 = Color3.fromRGB(120, 120, 145)
+    Arrow.Font = Enum.Font.GothamBlack
+    Arrow.TextSize = 20
+    Arrow.TextXAlignment = Enum.TextXAlignment.Center
+
+    -- خط تحتي يظهر فقط عند الفتح
+    local BottomLine = Instance.new("Frame", Header)
+    BottomLine.Size = UDim2.new(0.65, 0, 0, 1.5)
+    BottomLine.Position = UDim2.new(0.175, 0, 1, -1)
+    BottomLine.BorderSizePixel = 0
+    BottomLine.BackgroundTransparency = 1
+    local BLGradient = Instance.new("UIGradient", BottomLine)
+    BLGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0,   Color3.fromRGB(0, 0, 0)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 150)),
+        ColorSequenceKeypoint.new(1,   Color3.fromRGB(0, 0, 0))
+    }
+
+    Header.Parent = SectionContainer
+
+    -- الـ Body (المحتوى الداخلي)
+    local Body = Instance.new("Frame", SectionContainer)
+    Body.Name = "Body"
+    Body.Size = UDim2.new(1, 0, 0, 0) -- يتحسب لاحقاً
+    Body.Position = UDim2.new(0, 0, 0, 42)
+    Body.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
+    Body.BackgroundTransparency = 0.4
+    Body.BorderSizePixel = 0
+    Body.ClipsDescendants = true
+    Body.Visible = false
+    Instance.new("UICorner", Body).CornerRadius = UDim.new(0, 8)
+
+    -- بوردر للبودي
+    local BodyStroke = Instance.new("UIStroke", Body)
+    BodyStroke.Thickness = 1
+    BodyStroke.Transparency = 0.7
+    local BodyGradient = Instance.new("UIGradient", BodyStroke)
+    BodyGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 150)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 255))
+    }
+
+    local BodyLayout = Instance.new("UIListLayout", Body)
+    BodyLayout.Padding = UDim.new(0, 8)
+    BodyLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    BodyLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+    local BodyPadding = Instance.new("UIPadding", Body)
+    BodyPadding.PaddingTop = UDim.new(0, 8)
+    BodyPadding.PaddingBottom = UDim.new(0, 8)
+    BodyPadding.PaddingLeft = UDim.new(0, 6)
+    BodyPadding.PaddingRight = UDim.new(0, 6)
+
+    -- حساب الحجم الديناميكي للبودي
+    local function UpdateBodySize()
+        local contentH = BodyLayout.AbsoluteContentSize.Y + 16
+        Body.Size = UDim2.new(1, 0, 0, contentH)
+        return contentH
+    end
+
+    BodyLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        if Body.Visible then
+            local h = UpdateBodySize()
+            SectionContainer.Size = UDim2.new(1, 0, 0, 42 + h + 6)
+        end
+    end)
+
+    -- حالة الفتح/الإغلاق
+    local isOpen = false
+
+    Header.MouseButton1Click:Connect(function()
+        isOpen = not isOpen
+        if isOpen then
+            Body.Visible = true
+            local h = UpdateBodySize()
+            CreateTween(SectionContainer, {Size = UDim2.new(1, 0, 0, 42 + h + 6)}, 0.28)
+            CreateTween(Arrow, {Rotation = 90, TextColor3 = Color3.fromRGB(0, 255, 150)}, 0.2)
+            CreateTween(ArrowBg, {BackgroundColor3 = Color3.fromRGB(0, 40, 25)}, 0.2)
+            CreateTween(TitleLabel, {TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.2)
+            CreateTween(Header, {BackgroundColor3 = Color3.fromRGB(14, 22, 18), BackgroundTransparency = 0}, 0.2)
+            CreateTween(HeaderStroke, {Transparency = 0.2}, 0.2)
+            CreateTween(Dot, {BackgroundColor3 = Color3.fromRGB(0, 255, 150)}, 0.2)
+            CreateTween(BottomLine, {BackgroundTransparency = 0}, 0.3)
+        else
+            CreateTween(SectionContainer, {Size = UDim2.new(1, 0, 0, 40)}, 0.25)
+            CreateTween(Arrow, {Rotation = 0, TextColor3 = Color3.fromRGB(120, 120, 145)}, 0.2)
+            CreateTween(ArrowBg, {BackgroundColor3 = Color3.fromRGB(28, 28, 38)}, 0.2)
+            CreateTween(TitleLabel, {TextColor3 = Color3.fromRGB(165, 165, 180)}, 0.2)
+            CreateTween(Header, {BackgroundColor3 = Color3.fromRGB(18, 18, 24), BackgroundTransparency = 0.1}, 0.2)
+            CreateTween(HeaderStroke, {Transparency = 0.85}, 0.2)
+            CreateTween(Dot, {BackgroundColor3 = Color3.fromRGB(70, 70, 90)}, 0.2)
+            CreateTween(BottomLine, {BackgroundTransparency = 1}, 0.15)
+            task.delay(0.26, function() if not isOpen then Body.Visible = false end end)
+        end
+    end)
+
+    Header.MouseEnter:Connect(function()
+        if not isOpen then
+            CreateTween(Header, {BackgroundTransparency = 0, BackgroundColor3 = Color3.fromRGB(22, 22, 30)}, 0.15)
+            CreateTween(TitleLabel, {TextColor3 = Color3.fromRGB(210, 210, 220)}, 0.15)
+        end
+    end)
+    Header.MouseLeave:Connect(function()
+        if not isOpen then
+            CreateTween(Header, {BackgroundTransparency = 0.1, BackgroundColor3 = Color3.fromRGB(18, 18, 24)}, 0.15)
+            CreateTween(TitleLabel, {TextColor3 = Color3.fromRGB(165, 165, 180)}, 0.15)
+        end
+    end)
+
+    -- ======================================================
+    -- SectionOps: نفس دوال TabOps بس تضيف داخل البودي
+    -- ======================================================
+    local SectionOps = {
+        Order = 0,
+        Page = Body,           -- العناصر تتضاف للبودي مباشرة
+        TabName = TabOps.TabName,
+        LogAction = TabOps.LogAction,
+        UI = TabOps.UI
+    }
+
+    -- نسخ كل الدوال الموجودة في TabOps للسكشن
+    -- (Button, Toggle, TimedToggle, Input, etc.)
+    local elementNames = {
+        "Button", "Toggle", "TimedToggle", "Input", "LargeInput",
+        "SpeedControl", "Dropdown", "PlayerSelector", "ProfileCard",
+        "Line", "Label", "Paragraph"
+    }
+
+    for _, elName in ipairs(elementNames) do
+        -- نسخ الدالة من TabOps لو موجودة
+        if TabOps["Add" .. elName] then
+            SectionOps["Add" .. elName] = function(self, ...)
+                -- تبديل مؤقت للـ Page عشان العنصر يتضاف للبودي
+                local originalPage = TabOps.Page
+                local originalOrder = TabOps.Order
+                TabOps.Page = Body
+                TabOps.Order = self.Order
+                local result = TabOps["Add" .. elName](TabOps, ...)
+                self.Order = TabOps.Order
+                TabOps.Page = originalPage
+                TabOps.Order = originalOrder
+                return result
+            end
+        end
+    end
+
+    -- دالة AddLine مخصصة للسكشن
+    function SectionOps:AddLine()
+        local Line = Instance.new("Frame")
+        Line.Size = UDim2.new(0.95, 0, 0, 1)
+        Line.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+        Line.BorderSizePixel = 0
+        Line.LayoutOrder = self.Order
+        self.Order = self.Order + 1
+        Line.Parent = Body
+    end
+
+    -- تشغيل الـ buildFunc اللي يضيف العناصر
+    if type(buildFunc) == "function" then
         pcall(function()
-            StarterGui:SetCore("SendNotification", {
-                Title    = "Cryptic Hub",
-                Text     = arText .. "\n" .. enText,
-                Duration = 10,
-            })
+            buildFunc(SectionOps)
         end)
     end
 
-    -- =============================================
-    -- متغيرات Fling
-    -- =============================================
-    local isFlinging     = false
-    local originalCFrame = nil
-
-    -- =============================================
-    -- متغيرات Aimbot
-    -- =============================================
-    local isAimbotting    = false
-    local shiftLockOffset = Vector3.new(1.7, 0.5, 0)
-
-    -- =============================================
-    -- متغيرات Fling with Parts
-    -- =============================================
-    local blackHoleActive           = false
-    local DescendantAddedConnection = nil
-    local updateLoop                = nil
-    local networkLoop               = nil
-
-    -- تجهيز نقطة الجذب
-    local Folder = Workspace:FindFirstChild("CrypticBringFolder") or Instance.new("Folder")
-    Folder.Name   = "CrypticBringFolder"
-    Folder.Parent = Workspace
-
-    local TargetPart = Workspace:FindFirstChild("CrypticTargetPart") or Instance.new("Part")
-    TargetPart.Name        = "CrypticTargetPart"
-    TargetPart.Parent      = Folder
-    TargetPart.Anchored    = true
-    TargetPart.CanCollide  = false
-    TargetPart.Transparency = 1
-
-    local Attachment1 = TargetPart:FindFirstChild("Attachment1") or Instance.new("Attachment", TargetPart)
-    Attachment1.Name  = "Attachment1"
-
-    if not getgenv().CrypticNetworkBypass then
-        getgenv().CrypticNetworkBypass = { BaseParts = {} }
-    end
-
-    -- =============================================
-    -- helpers لـ Fling with Parts
-    -- =============================================
-    local function isSafeToGrab(part)
-        if not part:IsA("BasePart") then return false end
-        if part.Anchored then return false end
-        if part.Transparency == 1 then return false end
-        local root = part.AssemblyRootPart
-        if root and root.Parent and root.Parent:FindFirstChildOfClass("Humanoid") then return false end
-        if part:FindFirstAncestorWhichIsA("Accessory") then return false end
-        local tool = part:FindFirstAncestorWhichIsA("Tool")
-        if tool and tool.Parent and tool.Parent:FindFirstChildOfClass("Humanoid") then return false end
-        if lp.Character and part:IsDescendantOf(lp.Character) then return false end
-        return true
-    end
-
-    local function ForcePart(v)
-        if not isSafeToGrab(v) then return end
-        if not table.find(getgenv().CrypticNetworkBypass.BaseParts, v) then
-            table.insert(getgenv().CrypticNetworkBypass.BaseParts, v)
-        end
-        v.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
-        v.CanCollide = false
-        for _, x in ipairs(v:GetChildren()) do
-            if x:IsA("BodyMover") or x:IsA("RocketPropulsion") or x:IsA("AlignPosition") or x:IsA("Torque") or x:IsA("Attachment") then
-                x:Destroy()
-            end
-        end
-        local Torque = Instance.new("Torque", v)
-        Torque.Name   = "CrypticTorque"
-        Torque.Torque = Vector3.new(100000, 100000, 100000)
-        local AlignPosition = Instance.new("AlignPosition", v)
-        AlignPosition.Name         = "CrypticAlign"
-        AlignPosition.MaxForce     = math.huge
-        AlignPosition.MaxVelocity  = math.huge
-        AlignPosition.Responsiveness = 200
-        local Attachment2 = Instance.new("Attachment", v)
-        Attachment2.Name            = "CrypticAtt"
-        Torque.Attachment0          = Attachment2
-        AlignPosition.Attachment0   = Attachment2
-        AlignPosition.Attachment1   = Attachment1
-    end
-
-    local function CleanUpParts()
-        for _, Part in pairs(getgenv().CrypticNetworkBypass.BaseParts) do
-            if Part and Part.Parent then
-                if Part:FindFirstChild("CrypticAlign")  then Part.CrypticAlign:Destroy()  end
-                if Part:FindFirstChild("CrypticTorque") then Part.CrypticTorque:Destroy() end
-                if Part:FindFirstChild("CrypticAtt")    then Part.CrypticAtt:Destroy()    end
-                Part.Velocity    = Vector3.new(0, 0, 0)
-                Part.RotVelocity = Vector3.new(0, 0, 0)
-                Part.CanCollide  = true
-                Part.CustomPhysicalProperties = nil
-            end
-        end
-        getgenv().CrypticNetworkBypass.BaseParts = {}
-    end
-
-    -- =============================================
-    -- السكشن الرئيسي
-    -- =============================================
-    Tab:AddSection("⚔️ هجمات الاستهداف / Attack Features", function(S)
-
-        -- ----------------------------------------
-        -- 1. تطيير الهدف / Fling
-        -- ----------------------------------------
-        S:AddToggle("🔥 تطيير الهدف / Fling", function(active)
-            isFlinging = active
-            local char = lp.Character
-            local root = char and char:FindFirstChild("HumanoidRootPart")
-
-            if active then
-                if not _G.ArwaTarget or not _G.ArwaTarget.Character then
-                    isFlinging = false
-                    Notify("⚠️ حدد لاعباً أولاً من مربع البحث!", "Select a player first!")
-                    return
-                end
-                local targetChar  = _G.ArwaTarget.Character
-                local myTorso     = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or root
-                local targetTorso = targetChar:FindFirstChild("Torso") or targetChar:FindFirstChild("UpperTorso") or targetChar:FindFirstChild("HumanoidRootPart")
-                if myTorso and targetTorso then
-                    local ok, canCollide = pcall(function()
-                        return PhysicsService:CollisionGroupsAreCollidable(myTorso.CollisionGroup, targetTorso.CollisionGroup)
-                    end)
-                    if ok and not canCollide then
-                        isFlinging = false
-                        Notify("🚫 الماب يلغي التلامس (No-Collide)!", "Map disables collision, won't work here!")
-                        return
-                    end
-                end
-                if root then originalCFrame = root.CFrame end
-                local hum = char:FindFirstChildOfClass("Humanoid")
-                if hum then hum.PlatformStand = true end
-                Notify("🔥 جاري تطيير: " .. _G.ArwaTarget.DisplayName, "Flinging: " .. _G.ArwaTarget.DisplayName)
-            else
-                local hum = char and char:FindFirstChildOfClass("Humanoid")
-                if hum then hum.PlatformStand = false end
-                if root then
-                    root.Velocity    = Vector3.new(0, 0, 0)
-                    root.RotVelocity = Vector3.new(0, 0, 0)
-                    if originalCFrame then root.CFrame = originalCFrame; originalCFrame = nil end
-                end
-                if char then
-                    for _, part in pairs(char:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            part.Massless = false
-                            part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
-                        end
-                    end
-                end
-                Notify("❌ توقف التطيير وعدت بأمان.", "Fling stopped, returned safely.")
-            end
-        end)
-
-        S:AddLine()
-
-        -- ----------------------------------------
-        -- 2. ايم بوت / Aimbot
-        -- ----------------------------------------
-        S:AddToggle("🎯 ايم بوت / Aim Bot", function(active)
-            isAimbotting = active
-            local char = lp.Character
-            local hum  = char and char:FindFirstChildOfClass("Humanoid")
-            local root = char and char:FindFirstChild("HumanoidRootPart")
-
-            if active then
-                if not _G.ArwaTarget or not _G.ArwaTarget.Character then
-                    isAimbotting = false
-                    Notify("⚠️ حدد لاعباً أولاً من مربع البحث!", "Select a player first!")
-                    return
-                end
-                if hum then hum.CameraOffset = shiftLockOffset end
-                Notify("🎯 قفل على: " .. _G.ArwaTarget.DisplayName, "Locked on: " .. _G.ArwaTarget.DisplayName)
-            else
-                if hum then hum.CameraOffset = Vector3.new(0, 0, 0) end
-                if root then
-                    local gyro = root:FindFirstChild("CrypticGyro")
-                    if gyro then gyro:Destroy() end
-                end
-                Notify("❌ تم إيقاف الايم بوت.", "Aimbot deactivated.")
-            end
-        end)
-
-        S:AddLine()
-
-        -- ----------------------------------------
-        -- 3. تطيره بالبلوكات / Fling with Parts
-        -- ----------------------------------------
-        S:AddToggle("🌪️ تطيره بالبلوكات / Fling Parts", function(state)
-            blackHoleActive = state
-
-            if state then
-                local targetPlayer = _G.ArwaTarget
-                if not targetPlayer then
-                    Notify("⚠️ تنبيه", "حدد لاعباً أولاً! / Select a player first!")
-                    blackHoleActive = false
-                    return
-                end
-                Notify("🌪️ هجوم القطع", "جاري تطير: " .. targetPlayer.DisplayName .. "\nFlinging: " .. targetPlayer.DisplayName)
-
-                if not networkLoop then
-                    networkLoop = runService.Heartbeat:Connect(function()
-                        pcall(function()
-                            if sethiddenproperty then
-                                sethiddenproperty(lp, "SimulationRadius", math.huge)
-                            end
-                        end)
-                        for _, Part in pairs(getgenv().CrypticNetworkBypass.BaseParts) do
-                            if Part and Part.Parent and Part.Velocity.Magnitude < 1 then
-                                Part.Velocity = Vector3.new(0, -1, 0)
-                            end
-                        end
-                    end)
-                end
-
-                for _, v in ipairs(Workspace:GetDescendants()) do ForcePart(v) end
-                DescendantAddedConnection = Workspace.DescendantAdded:Connect(function(v)
-                    if blackHoleActive then ForcePart(v) end
-                end)
-
-                updateLoop = runService.RenderStepped:Connect(function()
-                    if blackHoleActive and _G.ArwaTarget and _G.ArwaTarget.Character then
-                        local root = _G.ArwaTarget.Character:FindFirstChild("HumanoidRootPart")
-                        if root then Attachment1.WorldCFrame = root.CFrame end
-                    end
-                end)
-            else
-                Notify("🛑 توقف", "تم إرجاع القطع.\nParts returned.")
-                if DescendantAddedConnection then DescendantAddedConnection:Disconnect(); DescendantAddedConnection = nil end
-                if updateLoop then updateLoop:Disconnect(); updateLoop = nil end
-                if networkLoop then networkLoop:Disconnect(); networkLoop = nil end
-                CleanUpParts()
-            end
-        end)
-
-    end)
-
-    -- =============================================
-    -- محركات RenderStepped و Heartbeat (تشتغل دايماً)
-    -- =============================================
-
-    -- محرك Fling
-    runService.Heartbeat:Connect(function()
-        if not isFlinging or not _G.ArwaTarget then return end
-        local char       = lp.Character
-        local root       = char and char:FindFirstChild("HumanoidRootPart")
-        local targetChar = _G.ArwaTarget.Character
-        local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
-        if root and targetRoot then
-            for _, part in pairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    if part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso" then
-                        part.CanCollide = true
-                        part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 1)
-                    else
-                        part.CanCollide = false
-                    end
-                    part.Massless = true
-                end
-            end
-            local targetVel  = targetRoot.Velocity
-            local predictedPos = targetRoot.Position + (targetVel * 0.1)
-            local randomOffset = Vector3.new(math.random(-3,3), math.random(-2,3), math.random(-3,3))
-            root.CFrame    = CFrame.new(predictedPos + randomOffset)
-            root.Velocity  = Vector3.new(math.random(-1000,1000), 5000, math.random(-1000,1000))
-            root.RotVelocity = Vector3.new(math.random(-50000,50000), math.random(-50000,50000), math.random(-50000,50000))
-        end
-    end)
-
-    -- محرك Aimbot
-    runService.RenderStepped:Connect(function()
-        if not isAimbotting then return end
-        local target = _G.ArwaTarget
-        if not target or not target.Character then return end
-        local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
-        if not targetRoot then return end
-
-        local char = lp.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-        local hum  = char and char:FindFirstChildOfClass("Humanoid")
-
-        camera.CFrame = CFrame.lookAt(camera.CFrame.Position, targetRoot.Position)
-
-        if root then
-            local gyro = root:FindFirstChild("CrypticGyro") or Instance.new("BodyGyro", root)
-            gyro.Name      = "CrypticGyro"
-            gyro.MaxTorque = Vector3.new(0, math.huge, 0)
-            gyro.P         = 100000
-            gyro.D         = 100
-            gyro.CFrame    = CFrame.lookAt(
-                root.Position,
-                Vector3.new(targetRoot.Position.X, root.Position.Y, targetRoot.Position.Z)
-            )
-        end
-
-        if hum and hum.CameraOffset ~= shiftLockOffset then
-            hum.CameraOffset = shiftLockOffset
-        end
-    end)
-
+    return SectionOps
 end
