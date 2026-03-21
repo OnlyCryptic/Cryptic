@@ -129,7 +129,7 @@ return function(Tab, UI)
         -- ----------------------------------------
         -- 1. تطيير الهدف / Fling
         -- ----------------------------------------
-        S:AddToggle("🔥 تطيير الهدف / Fling", false, function(active)
+        S:AddToggle("🔥 تطيير الهدف / Fling", function(active)
             isFlinging = active
             local char = lp.Character
             local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -182,7 +182,7 @@ return function(Tab, UI)
         -- ----------------------------------------
         -- 2. ايم بوت / Aimbot
         -- ----------------------------------------
-        S:AddToggle("🎯 ايم بوت / Aim Bot", false, function(active)
+        S:AddToggle("🎯 ايم بوت / Aim Bot", function(active)
             isAimbotting = active
             local char = lp.Character
             local hum  = char and char:FindFirstChildOfClass("Humanoid")
@@ -211,7 +211,7 @@ return function(Tab, UI)
         -- ----------------------------------------
         -- 3. تطيره بالبلوكات / Fling with Parts
         -- ----------------------------------------
-        S:AddToggle("🌪️ تطيره بالبلوكات / Fling Parts", false, function(state)
+        S:AddToggle("🌪️ تطيره بالبلوكات / Fling Parts", function(state)
             blackHoleActive = state
 
             if state then
@@ -294,24 +294,32 @@ return function(Tab, UI)
 
     -- محرك Aimbot
     runService.RenderStepped:Connect(function()
+        if not isAimbotting then return end
         local target = _G.ArwaTarget
-        local char   = lp.Character
-        local root   = char and char:FindFirstChild("HumanoidRootPart")
-        local hum    = char and char:FindFirstChildOfClass("Humanoid")
-        if isAimbotting and target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-            local targetChest = target.Character.HumanoidRootPart
-            camera.CFrame = CFrame.lookAt(camera.CFrame.Position, targetChest.Position)
-            if root then
-                local gyro = root:FindFirstChild("CrypticGyro") or Instance.new("BodyGyro", root)
-                gyro.Name      = "CrypticGyro"
-                gyro.MaxTorque = Vector3.new(0, math.huge, 0)
-                gyro.P         = 100000
-                gyro.D         = 100
-                gyro.CFrame    = CFrame.lookAt(root.Position, Vector3.new(targetChest.Position.X, root.Position.Y, targetChest.Position.Z))
-            end
-            if hum and hum.CameraOffset ~= shiftLockOffset then
-                hum.CameraOffset = shiftLockOffset
-            end
+        if not target or not target.Character then return end
+        local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
+        if not targetRoot then return end
+
+        local char = lp.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        local hum  = char and char:FindFirstChildOfClass("Humanoid")
+
+        camera.CFrame = CFrame.lookAt(camera.CFrame.Position, targetRoot.Position)
+
+        if root then
+            local gyro = root:FindFirstChild("CrypticGyro") or Instance.new("BodyGyro", root)
+            gyro.Name      = "CrypticGyro"
+            gyro.MaxTorque = Vector3.new(0, math.huge, 0)
+            gyro.P         = 100000
+            gyro.D         = 100
+            gyro.CFrame    = CFrame.lookAt(
+                root.Position,
+                Vector3.new(targetRoot.Position.X, root.Position.Y, targetRoot.Position.Z)
+            )
+        end
+
+        if hum and hum.CameraOffset ~= shiftLockOffset then
+            hum.CameraOffset = shiftLockOffset
         end
     end)
 
