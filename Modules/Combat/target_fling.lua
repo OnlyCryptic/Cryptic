@@ -1,15 +1,17 @@
--- [[ Cryptic Hub - ميزة تطيير الهدف (Fling) المطور ]]
--- المطور: يامي (Yami) | الميزات: ضرب عشوائي، تتبع، عودة آمنة، إشعار مزدوج 25 ثانية
+-- [[ Cryptic Hub - تطيير الهدف المطور (Classic Spin Target V7) ]]
+-- المطور: يامي | الميزات: دوران كلاسيكي قوي، تتبع مغناطيسي للهدف، كاميرا ثابتة، وعودة آمنة
 
 return function(Tab, UI)
-    local runService = game:GetService("RunService")
-    local players = game:GetService("Players")
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
     local PhysicsService = game:GetService("PhysicsService")
     local StarterGui = game:GetService("StarterGui")
-    local lp = players.LocalPlayer
+    local LocalPlayer = Players.LocalPlayer
     
     local isFlinging = false
-    local originalCFrame = nil -- لحفظ مكانك للرجوع الآمن
+    local originalCFrame = nil
+    local bav, bp = nil, nil
+    local steppedConn = nil
 
     -- دالة إشعارات روبلوكس (مزدوجة اللغة)
     local function Notify(arText, enText)
@@ -17,19 +19,27 @@ return function(Tab, UI)
             StarterGui:SetCore("SendNotification", {
                 Title = "Cryptic Hub",
                 Text = arText .. "\n" .. enText,
-                Duration = 10, 
+                Duration = 5, 
             })
         end)
     end
 
+    local function CleanMovers()
+        if bav then bav:Destroy() bav = nil end
+        if bp then bp:Destroy() bp = nil end
+        if steppedConn then steppedConn:Disconnect() steppedConn = nil end
+    end
+
     -- [[ زر التفعيل ]]
-    Tab:AddToggle("تطيير الهدف / Fling", function(active)
+    Tab:AddToggle("تطيير الهدف / Fling Target", function(active)
         isFlinging = active
-        local char = lp.Character
+        local char = LocalPlayer.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        local torso = char and (char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso"))
 
         if active then
-            -- استخدام المتغير المرتبط بملف البحث الخاص بك
+            -- 1. فحص وجود الهدف
             if not _G.ArwaTarget or not _G.ArwaTarget.Character then
                 isFlinging = false
                 Notify(
@@ -39,14 +49,13 @@ return function(Tab, UI)
                 return
             end
 
-            -- فحص نظام التصادم في الماب (No-Collide Check)
+            -- 2. فحص نظام التصادم (No-Collide Check)
             local targetChar = _G.ArwaTarget.Character
-            local myTorso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or root
-            local targetTorso = targetChar:FindFirstChild("Torso") or targetChar:FindFirstChild("UpperTorso") or targetChar:FindFirstChild("HumanoidRootPart")
+            local targetTorso = targetChar:FindFirstChild("UpperTorso") or targetChar:FindFirstChild("Torso") or targetChar:FindFirstChild("HumanoidRootPart")
             
-            if myTorso and targetTorso then
+            if torso and targetTorso then
                 local success, canCollide = pcall(function()
-                    return PhysicsService:CollisionGroupsAreCollidable(myTorso.CollisionGroup, targetTorso.CollisionGroup)
+                    return PhysicsService:CollisionGroupsAreCollidable(torso.CollisionGroup, targetTorso.CollisionGroup)
                 end)
                 
                 if success and not canCollide then
@@ -59,97 +68,100 @@ return function(Tab, UI)
                 end
             end
 
-            -- حفظ مكانك الحالي للرجوع إليه بسلام
-            if root then
-                originalCFrame = root.CFrame
-            end
+            if not root or not hum or not torso then return end
 
-            -- تجميد شخصيتك للتحضير للدوران الحر
-            if char then
-                local hum = char:FindFirstChildOfClass("Humanoid")
-                if hum then hum.PlatformStand = true end
+            -- 3. حفظ المكان للعودة الآمنة
+            originalCFrame = root.CFrame
+
+            -- 4. تجهيز الشخصية للطيران والدوران
+            CleanMovers()
+            hum.PlatformStand = true
+            hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+            hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+
+            -- أداة الدوران الكلاسيكية (في الجذع لضمان عدم تخريب الكاميرا)
+            bav = Instance.new("BodyAngularVelocity")
+            bav.Name = "CrypticTargetFlingBAV"
+            bav.AngularVelocity = Vector3.new(0, 25000, 0) -- سرعة دوران مجنونة أفقية
+            bav.MaxTorque = Vector3.new(0, math.huge, 0)
+            bav.P = math.huge
+            bav.Parent = torso
+
+            -- أداة التتبع المغناطيسي
+            bp = Instance.new("BodyPosition")
+            bp.Name = "CrypticTargetFlingBP"
+            bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bp.P = 15000
+            bp.D = 100
+            bp.Parent = root
+
+            -- تخفيف وزن الشخصية
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.Massless = true
+                    part.CanCollide = false
+                end
             end
 
             Notify(
-                "🔥 جاري تطيير وملاحقة: " .. _G.ArwaTarget.DisplayName,
-                "Flinging and tracking: " .. _G.ArwaTarget.DisplayName
+                "🌪️ جاري الدوران وتطيير: " .. _G.ArwaTarget.DisplayName,
+                "Spinning and flinging: " .. _G.ArwaTarget.DisplayName
             )
-        else
-            -- [[ الإيقاف والعودة الآمنة لمكانك ]]
-            if char then
-                local hum = char:FindFirstChildOfClass("Humanoid")
-                if hum then hum.PlatformStand = false end
-                
-                if root then
-                    -- تصفير الدوران والسرعة لمنع القلتشات
-                    root.Velocity = Vector3.new(0, 0, 0)
-                    root.RotVelocity = Vector3.new(0, 0, 0)
-                    
-                    -- العودة للمكان الأصلي بسلام
-                    if originalCFrame then
-                        root.CFrame = originalCFrame
-                        originalCFrame = nil
+
+            -- 5. المحرك: تتبع الهدف باستمرار والحفاظ على ثبات الكاميرا
+            steppedConn = RunService.Stepped:Connect(function()
+                if root and hum.Health > 0 and _G.ArwaTarget and _G.ArwaTarget.Character then
+                    local targetRoot = _G.ArwaTarget.Character:FindFirstChild("HumanoidRootPart")
+                    if targetRoot then
+                        -- تصفير دوران الروت لتبقى واقفاً والكاميرا ثابتة أثناء الدوران
+                        root.RotVelocity = Vector3.new(0, 0, 0)
+                        
+                        -- تحديث موقع السحب ليكون مكان الهدف
+                        bp.Position = targetRoot.Position
+                        
+                        -- تفعيل التصادم للروت فقط لضرب الهدف بقوة
+                        root.CanCollide = true
+                        root.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 1)
                     end
                 end
+            end)
 
-                -- إرجاع الأوزان والخصائص الفيزيائية الطبيعية
+        else
+            -- [[ الإيقاف والعودة الآمنة لمكانك ]]
+            CleanMovers()
+            
+            if char and root and hum then
+                hum.PlatformStand = false 
+                hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
+                
+                -- إيقاف الحركة
+                root.Velocity = Vector3.new(0, 0, 0)
+                root.RotVelocity = Vector3.new(0, 0, 0)
+                if torso then torso.RotVelocity = Vector3.new(0, 0, 0) end
+                
+                -- العودة للمكان الأصلي بسلام
+                if originalCFrame then
+                    root.CFrame = originalCFrame
+                    originalCFrame = nil
+                end
+
+                -- إرجاع الأوزان والخصائص الطبيعية
                 for _, part in pairs(char:GetDescendants()) do
                     if part:IsA("BasePart") then
                         part.Massless = false 
-                        part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
+                        part.CustomPhysicalProperties = nil
+                        if part.Name ~= "HumanoidRootPart" then
+                            part.CanCollide = true
+                        end
                     end
                 end
             end
+
             Notify(
                 "❌ توقف التطيير وعدت لمكانك بأمان.",
                 "Fling stopped, returned safely."
             )
-        end
-    end)
-
-    -- [[ المحرك الفيزيائي للتطيير والملاحقة العشوائية ]]
-    runService.Heartbeat:Connect(function()
-        if not isFlinging or not _G.ArwaTarget then return end
-        
-        local char = lp.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-        local targetChar = _G.ArwaTarget.Character
-        local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
-
-        if root and targetRoot then
-            for _, part in pairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    if part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso" then
-                        part.CanCollide = true
-                        -- رفع كثافة شخصيتك لتصبح مثل الجدار المتحرك وتقليل الاحتكاك
-                        part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 1)
-                    else
-                        part.CanCollide = false
-                    end
-                    part.Massless = true
-                end
-            end
-
-            -- تتبع الهدف مع حساب سرعته الحالية (Predictive Tracking)
-            local targetVel = targetRoot.Velocity
-            local predictedPos = targetRoot.Position + (targetVel * 0.1)
-
-            -- ضرب عشوائي من جميع الأنحاء لتدمير فيزياء الهدف
-            local randX = math.random(-3, 3)
-            local randY = math.random(-2, 3)
-            local randZ = math.random(-3, 3)
-            local randomOffset = Vector3.new(randX, randY, randZ)
-            
-            root.CFrame = CFrame.new(predictedPos + randomOffset)
-
-            -- دوران عشوائي بسرعات جنونية في جميع المحاور
-            local rotX = math.random(-50000, 50000)
-            local rotY = math.random(-50000, 50000)
-            local rotZ = math.random(-50000, 50000)
-            
-            -- قوة دفع للأعلى ולلجوانب لضمان الطيران
-            root.Velocity = Vector3.new(math.random(-1000, 1000), 5000, math.random(-1000, 1000))
-            root.RotVelocity = Vector3.new(rotX, rotY, rotZ)
         end
     end)
 end
