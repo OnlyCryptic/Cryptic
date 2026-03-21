@@ -7,7 +7,7 @@ local lp = Players.LocalPlayer
 
 local Cryptic = {
     Config = {
-        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "تست", 
+        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "test", 
         Discord = "https://discord.gg/QSvQJs7BdP"
     },
 
@@ -15,7 +15,7 @@ local Cryptic = {
         ["معلومات / info"] = { Folder = "", Files = {"info"} },   
         ["قسم اللاعب / player"] = { Folder = "Player", Files = {"speed", "fly", "noclip", "walkfling", "antifling", "wallwalk", "nofall", "infinitejump"} },  
         ["أدوات / tools"] = { Folder = "Misc", Files = {"tptool", "auto_tool", "esp", "shiftlock", "emotes", "x-ray", "fullbright", "camera"} },  
-        ["استهداف لاعب / players"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "bring_parts", "carry", "jark"} },  
+        ["استهداف لاعب / players"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "carry"} },  
         ["قسم السيرفر / server"] = { Folder = "Server", Files = {"server", "rejoin", "join_id"} },  
         ["الانتقال / Teleport"] = { Folder = "Teleport", Files = {"tp_locations"} },
         ["اخرى / Other"] = { Folder = "Other", Files = {"animations", "vfly", "zero_gravity", "anti_block", "fling_all"} },
@@ -25,7 +25,7 @@ local Cryptic = {
 }
 
 if lp.UserId == 3875086037 then
-    Cryptic.Structure["تجارب"] = { Folder = "Experiments", Files = {"hm", "auto_apple"} }
+    Cryptic.Structure["تجارب"] = { Folder = "Experiments", Files = {"hm", "auto_apple", "dances"} }
     table.insert(Cryptic.TabsOrder, "تجارب")
 end
 
@@ -60,6 +60,9 @@ end
 -- 🔥 دالة التشغيل الرئيسية (مغلفة لتشتغل وقت الحاجة فقط)
 -- ========================================================
 local function StartCrypticHub()
+    -- نحفظ الإعدادات في getgenv عشان Section.lua يقدر يوصلها
+    getgenv().CrypticConfig = Cryptic.Config
+
     local UI = Import("UI/Core.lua")
 
     if UI then
@@ -73,7 +76,7 @@ local function StartCrypticHub()
                 local elementsList = {
                     "Button", "Toggle", "TimedToggle", "Input", "LargeInput", 
                     "SpeedControl", "Dropdown", "PlayerSelector", "ProfileCard", 
-                    "Line", "Label", "Paragraph", "Section", "Folder"
+                    "Line", "Label", "Paragraph", "Section"
                 }
                 
                 for _, el in ipairs(elementsList) do
@@ -96,7 +99,7 @@ local function StartCrypticHub()
                     end  
                     
                     if nameOfTab == "معلومات / info" then
-                        tab:AddButton("💾 ..حفظ الإعدادات / save config", function()
+                        tab:AddButton("💾 حفظ الإعدادات / save config", function()
                             pcall(function() UI:SaveConfig() end)
                         end)
 
