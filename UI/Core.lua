@@ -268,74 +268,142 @@ function UI:CreateWindow(title)
                 return ""
             end
 
+            self.Order = self.Order + 1
+
             -- ==============================
-            -- منطقة الرسائل داخل Page مباشرة
+            -- شرح مختصر
+            -- ==============================
+            local HintFrame = Instance.new("Frame", self.Page)
+            HintFrame.LayoutOrder = self.Order
+            HintFrame.Size = UDim2.new(0.98, 0, 0, 38)
+            HintFrame.BackgroundColor3 = Color3.fromRGB(0, 40, 28)
+            HintFrame.BackgroundTransparency = 0.3
+            Instance.new("UICorner", HintFrame).CornerRadius = UDim.new(0, 8)
+
+            local HintLbl = Instance.new("TextLabel", HintFrame)
+            HintLbl.Size = UDim2.new(1, -12, 1, 0)
+            HintLbl.Position = UDim2.new(0, 6, 0, 0)
+            HintLbl.BackgroundTransparency = 1
+            HintLbl.Text = "💡 اكتب اقتراحك أو مشكلة واجهتها وسيرد عليك المطور\nWrite your suggestion or bug and the dev will reply"
+            HintLbl.TextColor3 = Color3.fromRGB(0, 220, 130)
+            HintLbl.Font = Enum.Font.Gotham
+            HintLbl.TextSize = 9
+            HintLbl.TextWrapped = true
+            HintLbl.TextXAlignment = Enum.TextXAlignment.Left
+
+            -- ==============================
+            -- إطار الرسائل (قابل للسحب)
             -- ==============================
             self.Order = self.Order + 1
 
-            -- إطار الشات الكامل
             local ChatFrame = Instance.new("Frame", self.Page)
             ChatFrame.LayoutOrder = self.Order
-            ChatFrame.Size = UDim2.new(0.98, 0, 0, 180)
-            ChatFrame.BackgroundColor3 = Color3.fromRGB(16, 16, 20)
-            ChatFrame.BackgroundTransparency = 0.2
-            Instance.new("UICorner", ChatFrame).CornerRadius = UDim.new(0, 8)
+            ChatFrame.Size = UDim2.new(0.98, 0, 0, 200)
+            ChatFrame.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
+            ChatFrame.BackgroundTransparency = 0.1
+            Instance.new("UICorner", ChatFrame).CornerRadius = UDim.new(0, 10)
             local cfStroke = Instance.new("UIStroke", ChatFrame)
-            cfStroke.Thickness = 1
-            cfStroke.Transparency = 0.5
+            cfStroke.Thickness = 1.2
+            cfStroke.Transparency = 0.4
             local cfGrad = Instance.new("UIGradient", cfStroke)
             cfGrad.Color = ColorSequence.new{
                 ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 150)),
                 ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 255))
             }
 
-            -- منطقة عرض الرسائل
+            -- هيدر صغير
+            local ChatHeader = Instance.new("Frame", ChatFrame)
+            ChatHeader.Size = UDim2.new(1, 0, 0, 28)
+            ChatHeader.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+            ChatHeader.BackgroundTransparency = 0.2
+            ChatHeader.BorderSizePixel = 0
+            Instance.new("UICorner", ChatHeader).CornerRadius = UDim.new(0, 10)
+
+            local ChatTitle = Instance.new("TextLabel", ChatHeader)
+            ChatTitle.Size = UDim2.new(1, -10, 1, 0)
+            ChatTitle.Position = UDim2.new(0, 10, 0, 0)
+            ChatTitle.BackgroundTransparency = 1
+            ChatTitle.Text = "💬 المحادثة مع المطور / Chat with Dev"
+            ChatTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+            ChatTitle.Font = Enum.Font.GothamBold
+            ChatTitle.TextSize = 10
+            ChatTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+            -- منطقة الرسائل قابلة للسكرول
             local MsgArea = Instance.new("ScrollingFrame", ChatFrame)
-            MsgArea.Position = UDim2.new(0, 6, 0, 6)
-            MsgArea.Size = UDim2.new(1, -12, 1, -50)
+            MsgArea.Position = UDim2.new(0, 6, 0, 32)
+            MsgArea.Size = UDim2.new(1, -12, 1, -80)
             MsgArea.BackgroundTransparency = 1
-            MsgArea.ScrollBarThickness = 2
-            MsgArea.ScrollBarImageColor3 = Color3.fromRGB(0, 255, 150)
+            MsgArea.ScrollBarThickness = 3
+            MsgArea.ScrollBarImageColor3 = Color3.fromRGB(0, 200, 120)
             MsgArea.CanvasSize = UDim2.new(0, 0, 0, 0)
+            MsgArea.ScrollingDirection = Enum.ScrollingDirection.Y
             local MsgLayout = Instance.new("UIListLayout", MsgArea)
-            MsgLayout.Padding = UDim.new(0, 5)
+            MsgLayout.Padding = UDim.new(0, 6)
             MsgLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            local MsgPad = Instance.new("UIPadding", MsgArea)
+            MsgPad.PaddingTop = UDim.new(0, 4)
+            MsgPad.PaddingBottom = UDim.new(0, 4)
             MsgLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                MsgArea.CanvasSize = UDim2.new(0, 0, 0, MsgLayout.AbsoluteContentSize.Y + 10)
+                MsgArea.CanvasSize = UDim2.new(0, 0, 0, MsgLayout.AbsoluteContentSize.Y + 12)
                 MsgArea.CanvasPosition = Vector2.new(0, math.huge)
             end)
 
-            -- منطقة الكتابة
+            -- فاصل
+            local Divider = Instance.new("Frame", ChatFrame)
+            Divider.Size = UDim2.new(0.95, 0, 0, 1)
+            Divider.Position = UDim2.new(0.025, 0, 1, -46)
+            Divider.BackgroundTransparency = 0.6
+            local DivGrad = Instance.new("UIGradient", Divider)
+            DivGrad.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 150)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 255))
+            }
+
+            -- منطقة الكتابة في الأسفل
             local InputFrame = Instance.new("Frame", ChatFrame)
             InputFrame.Size = UDim2.new(1, -12, 0, 36)
             InputFrame.Position = UDim2.new(0, 6, 1, -42)
-            InputFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
-            InputFrame.BackgroundTransparency = 0.3
-            Instance.new("UICorner", InputFrame).CornerRadius = UDim.new(0, 6)
+            InputFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+            InputFrame.BackgroundTransparency = 0.2
+            Instance.new("UICorner", InputFrame).CornerRadius = UDim.new(0, 8)
+            local InputStroke = Instance.new("UIStroke", InputFrame)
+            InputStroke.Thickness = 1
+            InputStroke.Transparency = 0.7
+            InputStroke.Color = Color3.fromRGB(0, 255, 150)
 
             local TxtBox = Instance.new("TextBox", InputFrame)
-            TxtBox.Size = UDim2.new(1, -48, 1, -8)
-            TxtBox.Position = UDim2.new(0, 8, 0, 4)
+            TxtBox.Size = UDim2.new(1, -46, 1, -8)
+            TxtBox.Position = UDim2.new(0, 10, 0, 4)
             TxtBox.BackgroundTransparency = 1
             TxtBox.TextColor3 = Color3.new(1, 1, 1)
-            TxtBox.PlaceholderText = "اكتب رسالتك... / Type here..."
-            TxtBox.PlaceholderColor3 = Color3.fromRGB(80, 80, 80)
+            TxtBox.PlaceholderText = "✏️ اكتب هنا... / Type here..."
+            TxtBox.PlaceholderColor3 = Color3.fromRGB(70, 70, 80)
             TxtBox.Font = Enum.Font.Gotham
             TxtBox.TextSize = 11
             TxtBox.TextXAlignment = Enum.TextXAlignment.Left
-            TxtBox.TextWrapped = true
+            TxtBox.TextWrapped = false
             TxtBox.ClearTextOnFocus = false
             TxtBox.Text = ""
+            -- هايلايت عند الفوكس
+            TxtBox.Focused:Connect(function()
+                CreateTween(InputStroke, {Transparency = 0, Thickness = 1.2}, 0.15)
+            end)
+            TxtBox.FocusLost:Connect(function()
+                CreateTween(InputStroke, {Transparency = 0.7, Thickness = 1}, 0.15)
+            end)
 
             local SendBtn = Instance.new("TextButton", InputFrame)
-            SendBtn.Size = UDim2.new(0, 36, 0, 26)
-            SendBtn.Position = UDim2.new(1, -42, 0.5, -13)
+            SendBtn.Size = UDim2.new(0, 32, 0, 26)
+            SendBtn.Position = UDim2.new(1, -38, 0.5, -13)
             SendBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 110)
             SendBtn.Text = "↑"
             SendBtn.TextColor3 = Color3.new(1, 1, 1)
             SendBtn.Font = Enum.Font.GothamBold
-            SendBtn.TextSize = 16
+            SendBtn.TextSize = 15
             Instance.new("UICorner", SendBtn).CornerRadius = UDim.new(0, 6)
+            SendBtn.MouseEnter:Connect(function() CreateTween(SendBtn, {BackgroundColor3 = Color3.fromRGB(0, 220, 130)}, 0.15) end)
+            SendBtn.MouseLeave:Connect(function() CreateTween(SendBtn, {BackgroundColor3 = Color3.fromRGB(0, 180, 110)}, 0.15) end)
 
             -- ==============================
             -- إضافة رسالة للواجهة
@@ -344,71 +412,107 @@ function UI:CreateWindow(title)
             local function AddMsgRow(msgData)
                 msgOrder = msgOrder + 1
                 local isDev = msgData.type == "dev"
+                local msgText = msgData.message or ""
+                local extraH = math.max(0, math.floor(string.len(msgText) / 28)) * 13
 
                 local row = Instance.new("Frame", MsgArea)
                 row.LayoutOrder = msgOrder
                 row.BackgroundTransparency = 1
-                row.Size = UDim2.new(1, 0, 0, 48)
+                row.Size = UDim2.new(1, 0, 0, 46 + extraH)
 
-                -- صورة اللاعب
-                if not isDev then
+                if isDev then
+                    -- رسالة المطور: أيقونة + اسم أخضر يسار
+                    local devIcon = Instance.new("TextLabel", row)
+                    devIcon.Size = UDim2.new(0, 22, 0, 22)
+                    devIcon.Position = UDim2.new(0, 0, 0, 2)
+                    devIcon.BackgroundColor3 = Color3.fromRGB(0, 60, 40)
+                    devIcon.BackgroundTransparency = 0.2
+                    devIcon.Text = "👑"
+                    devIcon.TextSize = 12
+                    devIcon.Font = Enum.Font.Gotham
+                    devIcon.TextXAlignment = Enum.TextXAlignment.Center
+                    Instance.new("UICorner", devIcon).CornerRadius = UDim.new(1, 0)
+
+                    local nameL = Instance.new("TextLabel", row)
+                    nameL.Position = UDim2.new(0, 26, 0, 2)
+                    nameL.Size = UDim2.new(0.5, 0, 0, 13)
+                    nameL.BackgroundTransparency = 1
+                    nameL.Text = "المطور / Dev"
+                    nameL.TextColor3 = Color3.fromRGB(0, 220, 130)
+                    nameL.Font = Enum.Font.GothamBold
+                    nameL.TextSize = 10
+                    nameL.TextXAlignment = Enum.TextXAlignment.Left
+
+                    local bubble = Instance.new("Frame", row)
+                    bubble.Position = UDim2.new(0, 26, 0, 17)
+                    bubble.Size = UDim2.new(0.88, 0, 0, 24 + extraH)
+                    bubble.BackgroundColor3 = Color3.fromRGB(0, 55, 38)
+                    bubble.BackgroundTransparency = 0.2
+                    Instance.new("UICorner", bubble).CornerRadius = UDim.new(0, 7)
+
+                    local msgL = Instance.new("TextLabel", bubble)
+                    msgL.Size = UDim2.new(1, -10, 1, 0)
+                    msgL.Position = UDim2.new(0, 6, 0, 0)
+                    msgL.BackgroundTransparency = 1
+                    msgL.Text = msgText
+                    msgL.TextColor3 = Color3.fromRGB(220, 255, 240)
+                    msgL.Font = Enum.Font.Gotham
+                    msgL.TextSize = 10
+                    msgL.TextXAlignment = Enum.TextXAlignment.Left
+                    msgL.TextWrapped = true
+
+                else
+                    -- رسالة اللاعب: صورة + اسم أزرق
                     local avatarBg = Instance.new("Frame", row)
-                    avatarBg.Size = UDim2.new(0, 28, 0, 28)
-                    avatarBg.Position = UDim2.new(0, 0, 0, 4)
-                    avatarBg.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+                    avatarBg.Size = UDim2.new(0, 26, 0, 26)
+                    avatarBg.Position = UDim2.new(0, 0, 0, 2)
+                    avatarBg.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
                     Instance.new("UICorner", avatarBg).CornerRadius = UDim.new(1, 0)
                     local img = Instance.new("ImageLabel", avatarBg)
                     img.Size = UDim2.new(1, 0, 1, 0)
                     img.BackgroundTransparency = 1
                     img.Image = msgData.avatar or ""
                     Instance.new("UICorner", img).CornerRadius = UDim.new(1, 0)
+
+                    local nameL = Instance.new("TextLabel", row)
+                    nameL.Position = UDim2.new(0, 30, 0, 2)
+                    nameL.Size = UDim2.new(0.6, 0, 0, 13)
+                    nameL.BackgroundTransparency = 1
+                    nameL.Text = msgData.displayName or msgData.playerName or ""
+                    nameL.TextColor3 = Color3.fromRGB(100, 170, 255)
+                    nameL.Font = Enum.Font.GothamBold
+                    nameL.TextSize = 10
+                    nameL.TextXAlignment = Enum.TextXAlignment.Left
+
+                    local bubble = Instance.new("Frame", row)
+                    bubble.Position = UDim2.new(0, 30, 0, 17)
+                    bubble.Size = UDim2.new(0.88, 0, 0, 24 + extraH)
+                    bubble.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+                    bubble.BackgroundTransparency = 0.2
+                    Instance.new("UICorner", bubble).CornerRadius = UDim.new(0, 7)
+
+                    local msgL = Instance.new("TextLabel", bubble)
+                    msgL.Size = UDim2.new(1, -10, 1, 0)
+                    msgL.Position = UDim2.new(0, 6, 0, 0)
+                    msgL.BackgroundTransparency = 1
+                    msgL.Text = msgText
+                    msgL.TextColor3 = Color3.new(1, 1, 1)
+                    msgL.Font = Enum.Font.Gotham
+                    msgL.TextSize = 10
+                    msgL.TextXAlignment = Enum.TextXAlignment.Left
+                    msgL.TextWrapped = true
                 end
 
-                -- اسم المرسل
-                local nameL = Instance.new("TextLabel", row)
-                nameL.Position = isDev and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 34, 0, 0)
-                nameL.Size = UDim2.new(1, -34, 0, 14)
-                nameL.BackgroundTransparency = 1
-                nameL.Text = isDev and "👑 المطور" or (msgData.displayName or msgData.playerName or "")
-                nameL.TextColor3 = isDev and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(100, 180, 255)
-                nameL.Font = Enum.Font.GothamBold
-                nameL.TextSize = 10
-                nameL.TextXAlignment = Enum.TextXAlignment.Left
-
-                -- فقاعة الرسالة
-                local bubble = Instance.new("Frame", row)
-                bubble.Position = isDev and UDim2.new(0, 0, 0, 16) or UDim2.new(0, 34, 0, 16)
-                bubble.Size = UDim2.new(0.82, 0, 0, 26)
-                bubble.BackgroundColor3 = isDev and Color3.fromRGB(0, 50, 35) or Color3.fromRGB(22, 22, 30)
-                bubble.BackgroundTransparency = 0.2
-                Instance.new("UICorner", bubble).CornerRadius = UDim.new(0, 6)
-
-                local msgL = Instance.new("TextLabel", bubble)
-                msgL.Size = UDim2.new(1, -8, 1, 0)
-                msgL.Position = UDim2.new(0, 6, 0, 0)
-                msgL.BackgroundTransparency = 1
-                msgL.Text = msgData.message or ""
-                msgL.TextColor3 = Color3.new(1, 1, 1)
-                msgL.Font = Enum.Font.Gotham
-                msgL.TextSize = 10
-                msgL.TextXAlignment = Enum.TextXAlignment.Left
-                msgL.TextWrapped = true
-
-                -- الوقت
+                -- الوقت يمين
                 local timeL = Instance.new("TextLabel", row)
-                timeL.Position = UDim2.new(1, -42, 0, 0)
-                timeL.Size = UDim2.new(0, 42, 0, 14)
+                timeL.Position = UDim2.new(1, -38, 0, 3)
+                timeL.Size = UDim2.new(0, 38, 0, 13)
                 timeL.BackgroundTransparency = 1
                 timeL.Text = FormatTime(msgData.timestamp)
-                timeL.TextColor3 = Color3.fromRGB(80, 80, 80)
+                timeL.TextColor3 = Color3.fromRGB(70, 70, 80)
                 timeL.Font = Enum.Font.Gotham
                 timeL.TextSize = 9
                 timeL.TextXAlignment = Enum.TextXAlignment.Right
-
-                -- ضبط الحجم حسب طول الرسالة
-                local extra = math.floor(string.len(msgData.message or "") / 30) * 12
-                row.Size = UDim2.new(1, 0, 0, 50 + extra)
-                bubble.Size = UDim2.new(0.82, 0, 0, 26 + extra)
             end
 
             -- ==============================
@@ -419,35 +523,20 @@ function UI:CreateWindow(title)
                     if c:IsA("Frame") then c:Destroy() end
                 end
                 msgOrder = 0
-
                 task.spawn(function()
                     local playerMsgs = HttpReq("GET", "/messages") or {}
                     local devReplies = FetchReplies()
                     local all = {}
-
                     for _, m in ipairs(playerMsgs) do
-                        if m.playerName == lp.Name then
-                            table.insert(all, m)
-                        end
+                        if m.playerName == lp.Name then table.insert(all, m) end
                     end
                     for _, r in ipairs(devReplies) do
                         if r.to == lp.Name then
-                            table.insert(all, {
-                                type = "dev",
-                                message = r.msg,
-                                timestamp = r.timestamp or "",
-                            })
+                            table.insert(all, { type = "dev", message = r.msg, timestamp = r.timestamp or "" })
                         end
                     end
-
-                    table.sort(all, function(a, b)
-                        return (a.timestamp or "") < (b.timestamp or "")
-                    end)
-
-                    for _, m in ipairs(all) do
-                        AddMsgRow(m)
-                    end
-
+                    table.sort(all, function(a, b) return (a.timestamp or "") < (b.timestamp or "") end)
+                    for _, m in ipairs(all) do AddMsgRow(m) end
                     HttpReq("POST", "/markread", { playerName = lp.Name })
                 end)
             end
@@ -459,8 +548,7 @@ function UI:CreateWindow(title)
                 local msg = TxtBox.Text
                 if not msg or string.len(msg) < 2 then return end
                 TxtBox.Text = ""
-                CreateTween(SendBtn, {BackgroundColor3 = Color3.fromRGB(40, 40, 50)}, 0.1)
-
+                CreateTween(SendBtn, {BackgroundColor3 = Color3.fromRGB(30, 30, 40)}, 0.1)
                 task.spawn(function()
                     local res = HttpReq("POST", "/send", {
                         playerName = lp.Name,
@@ -479,7 +567,7 @@ function UI:CreateWindow(title)
                             timestamp = DateTime.now():ToIsoDate()
                         })
                         if getgenv().CrypticLog then
-                            getgenv().CrypticLog("OnSuggestion", "💬 رسالة جديدة من " .. lp.DisplayName, 16766720, {
+                            getgenv().CrypticLog("OnSuggestion", "💬 رسالة من " .. lp.DisplayName, 16766720, {
                                 {name = "📝 الرسالة:", value = msg, inline = false}
                             })
                         end
@@ -495,30 +583,21 @@ function UI:CreateWindow(title)
 
             SendBtn.MouseButton1Click:Connect(DoSend)
             TxtBox.FocusLost:Connect(function(enter) if enter then DoSend() end end)
-
-            -- تحميل أول مرة
             LoadMessages()
 
-            -- ==============================
             -- فحص رسائل جديدة كل 30 ثانية
-            -- ==============================
-            local tabBtn = self._TabBtn
             task.spawn(function()
                 while task.wait(30) do
                     if Window.CurrentTab ~= name then
                         local replies = FetchReplies()
                         local hasNew = false
                         for _, r in ipairs(replies) do
-                            if r.to == lp.Name and not r.read then
-                                hasNew = true
-                                break
-                            end
+                            if r.to == lp.Name and not r.read then hasNew = true; break end
                         end
                         if hasNew and self._NotifDot then
                             self._NotifDot.BackgroundTransparency = 0
                         end
                     else
-                        -- لما يكون في التاب يحدث الرسائل
                         LoadMessages()
                     end
                 end
