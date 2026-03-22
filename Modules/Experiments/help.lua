@@ -1,20 +1,14 @@
--- [[ Cryptic Hub - حماية من التطيير المتقدمة (Anti-Fling V2.0) ]]
--- الوصف: رادار لحظي يلقط القطع السريعة والتي تدور بشدة وينفيها قبل الاصطدام
+-- [[ Cryptic Hub - حماية شاملة للجميع (Global Anti-Fling V4.0) ]]
+-- الوصف: مظلة أمان حول كل اللاعبين، تدفن أي بلوكة متحركة تقترب منهم
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
     local Workspace = game:GetService("Workspace")
     local StarterGui = game:GetService("StarterGui")
-    local LocalPlayer = Players.LocalPlayer
 
     local protectionActive = false
     local protectionLoop = nil
-    local addedConnection = nil
-    local removingConnection = nil
-    
-    -- جدول لتتبع القطع غير المثبتة لحظياً
-    local trackedParts = {}
 
     -- دالة الإشعارات
     local function Notify(arText, enText)
@@ -22,24 +16,19 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- فلتر الأمان: دقيق جداً لالتقاط الدوران والسرعة الوهمية
+    -- الفلتر: هل البلوكة تشكل خطراً؟
     -- ==========================================
     local function isDangerousPart(part)
-        if not part or not part.Parent then return false end
-        if not part:IsA("BasePart") or part.Anchored or part.Transparency == 1 then return false end
+        if not part or not part.Parent or not part:IsA("BasePart") then return false end
+        if part.Anchored or part.Transparency == 1 then return false end
         
-        -- تجاهل أجزاء اللاعبين والأدوات
+        -- استثناء شخصيات اللاعبين والأدوات
         local root = part.AssemblyRootPart
         if root and root.Parent and root.Parent:FindFirstChildOfClass("Humanoid") then return false end
         if part:FindFirstAncestorWhichIsA("Accessory") or part:FindFirstAncestorWhichIsA("Tool") then return false end
 
-        -- 🔴 1. حماية من السرعات الوهمية (NaN) التي تستخدم لعمل كراش أو تطيير
-        if part.Velocity.X ~= part.Velocity.X or part.RotVelocity.X ~= part.RotVelocity.X then 
-            return true 
-        end
-
-        -- 🔴 2. حد الخطر للسرعة والدوران (دوران > 50، سرعة > 100)
-        if part.Velocity.Magnitude > 100 or part.RotVelocity.Magnitude > 50 then
+        -- شرط الحركة: تتحرك ولو قليلاً
+        if part.Velocity.Magnitude > 1 or part.RotVelocity.Magnitude > 1 then
             return true
         end
 
@@ -47,72 +36,74 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- دالة النفي: تدمير حركي ورمي في الفراغ
+    -- دالة النفي الجذري تحت الأرض
     -- ==========================================
     local function BanishPart(part)
         pcall(function()
+            -- تدمير محركات الهاك
+            for _, v in ipairs(part:GetChildren()) do
+                if v:IsA("BodyMover") or v:IsA("AlignPosition") or v:IsA("Torque") or v:IsA("RocketPropulsion") then
+                    v:Destroy()
+                end
+            end
+
+            part.CanCollide = false
+            part.CanTouch = false
+            part.CanQuery = false
             part.Velocity = Vector3.new(0, 0, 0)
             part.RotVelocity = Vector3.new(0, 0, 0)
-            part.CanCollide = false
-            part.Massless = true -- جعلها بلا وزن حتى لو اصطدمت بالخطأ
-            -- رميها للفراغ السفلي لكي يقوم محرك روبلوكس بمسحها تلقائياً
-            part.CFrame = CFrame.new(0, -99999, 0) 
+            
+            -- النفي والتثبيت
+            part.CFrame = CFrame.new(0, -5000, 0)
+            part.Anchored = true 
         end)
     end
 
     -- ==========================================
     -- زر التفعيل
     -- ==========================================
-    Tab:AddToggle("حماية من التطيير (متقدم) / Anti-Fling", function(state)
+    Tab:AddToggle("درع السيرفر (حماية للكل) / Global Anti-Fling", function(state)
         protectionActive = state
         
         if state then
-            Notify("🛡️ حماية متقدمة / Adv. Protection ON", "تم تفعيل الرادار اللحظي.\nReal-time radar activated.")
-            trackedParts = {}
+            Notify("🛡️ درع السيرفر مفعل / Global Shield ON", "تم تشغيل مظلة الأمان لكل اللاعبين.\nProtecting all players.")
 
-            -- 1. فحص مبدئي لجميع القطع الموجودة حالياً
-            for _, v in ipairs(Workspace:GetDescendants()) do
-                if v:IsA("BasePart") and not v.Anchored then
-                    trackedParts[v] = true
-                end
-            end
-
-            -- 2. تتبع لحظي (بدون لاق) لأي قطعة جديدة تظهر في الماب
-            addedConnection = Workspace.DescendantAdded:Connect(function(v)
-                if v:IsA("BasePart") then
-                    -- استخدام defer لضمان تحميل القطعة بالكامل قبل الفحص
-                    task.defer(function()
-                        if v and v.Parent and not v.Anchored then
-                            trackedParts[v] = true
+            protectionLoop = RunService.Heartbeat:Connect(function()
+                -- 1. جمع قائمة بكل البلوكات الخطيرة في الماب
+                local dangerousParts = {}
+                for _, part in ipairs(Workspace:GetDescendants()) do
+                    if part:IsA("BasePart") and not part.Anchored then
+                        if isDangerousPart(part) then
+                            table.insert(dangerousParts, part)
                         end
-                    end)
+                    end
                 end
-            end)
 
-            -- إزالة القطع المحذوفة من الجدول لتوفير الرام
-            removingConnection = Workspace.DescendantRemoving:Connect(function(v)
-                if trackedParts[v] then
-                    trackedParts[v] = nil
-                end
-            end)
-
-            -- 3. لوب الفيزياء السريع (يشتغل قبل اصطدام الأشياء)
-            protectionLoop = RunService.Stepped:Connect(function()
-                for part, _ in pairs(trackedParts) do
-                    if isDangerousPart(part) then
-                        BanishPart(part)
+                -- 2. التحقق من مسافة هذه البلوكات عن *أي لاعب* في السيرفر
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                        local playerPos = player.Character.HumanoidRootPart.Position
+                        
+                        for _, part in ipairs(dangerousParts) do
+                            if part and part.Parent and not part.Anchored then
+                                local distance = (part.Position - playerPos).Magnitude
+                                -- إذا اقتربت البلوكة مسافة 30 خطوة من أي لاعب، يتم نفيها
+                                if distance < 30 then
+                                    BanishPart(part)
+                                end
+                            end
+                        end
                     end
                 end
             end)
 
         else
-            Notify("🛑 حماية متوقفة / Protection OFF", "تم إيقاف نظام الحماية.\nProtection disabled.")
+            Notify("🛑 إيقاف الدرع / Global Shield OFF", "تم إيقاف حماية السيرفر.\nServer protection disabled.")
             
-            -- تنظيف وتوقيف اللوبات
-            if protectionLoop then protectionLoop:Disconnect() protectionLoop = nil end
-            if addedConnection then addedConnection:Disconnect() addedConnection = nil end
-            if removingConnection then removingConnection:Disconnect() removingConnection = nil end
-            trackedParts = {}
+            if protectionLoop then 
+                protectionLoop:Disconnect() 
+                protectionLoop = nil 
+            end
         end
     end)
     
