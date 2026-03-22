@@ -183,7 +183,7 @@ function UI:CreateWindow(title)
         NotifDot.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
         NotifDot.BackgroundTransparency = 1
         Instance.new("UICorner", NotifDot).CornerRadius = UDim.new(1, 0)
-        TabBtn._NotifDot = NotifDot
+
 
         local ActiveLine = Instance.new("Frame", TabBtn); ActiveLine.Size = UDim2.new(0, 3, 0.6, 0); ActiveLine.Position = UDim2.new(0, 0, 0.2, 0); ActiveLine.BackgroundColor3 = Color3.fromRGB(0, 255, 150); ActiveLine.BorderSizePixel = 0; ActiveLine.BackgroundTransparency = 1; Instance.new("UICorner", ActiveLine)
 
@@ -213,7 +213,7 @@ function UI:CreateWindow(title)
             NotifDot.BackgroundTransparency = 1
         end)
 
-        local TabOps = { Order = 0, Page = Page, TabName = name, LogAction = LogAction, UI = UI, _TabBtn = TabBtn }
+        local TabOps = { Order = 0, Page = Page, TabName = name, LogAction = LogAction, UI = UI, _TabBtn = TabBtn, _NotifDot = NotifDot }
 
         function TabOps:AddElement(moduleUrl, ...)
             local success, elementFunc = pcall(function() return loadstring(game:HttpGet(moduleUrl))() end)
@@ -514,8 +514,8 @@ function UI:CreateWindow(title)
                                 break
                             end
                         end
-                        if hasNew and tabBtn and tabBtn._NotifDot then
-                            tabBtn._NotifDot.BackgroundTransparency = 0
+                        if hasNew and self._NotifDot then
+                            self._NotifDot.BackgroundTransparency = 0
                         end
                     else
                         -- لما يكون في التاب يحدث الرسائل
