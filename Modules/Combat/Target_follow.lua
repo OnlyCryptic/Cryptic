@@ -1,5 +1,4 @@
 -- [[ Cryptic Hub - تتبع لاعب (Target Follow) ]]
--- يمشي خلف الهدف بشكل طبيعي واحترافي مع noclip + antifling + nofall + تعديل المسافة
 
 return function(Tab, UI)
     local RunService = game:GetService("RunService")
@@ -10,9 +9,7 @@ return function(Tab, UI)
     local isFollowing = false
     local followConn = nil
     local physicsConn = nil
-
-    -- إعدادات التتبع
-    local followDistance = 4 -- المسافة الافتراضية خلف الهدف
+    local FOLLOW_DISTANCE = 4
 
     local function Notify(ar, en)
         pcall(function()
@@ -33,14 +30,11 @@ return function(Tab, UI)
         if not char then return end
         local hum = char:FindFirstChildOfClass("Humanoid")
         local root = char:FindFirstChild("HumanoidRootPart")
-        if hum then
-            hum:MoveTo(root and root.Position or Vector3.new(0,0,0))
+        if hum and root then
+            hum:MoveTo(root.Position)
         end
     end
 
-    -- ==============================
-    -- زر التتبع الرئيسي
-    -- ==============================
     Tab:AddToggle("تتبع الهدف / Follow Target", function(active)
         if active then
             local target = _G.ArwaTarget
@@ -52,8 +46,8 @@ return function(Tab, UI)
 
             isFollowing = true
             Notify(
-                "🚶 يتتبع: " .. target.DisplayName .. " | مسافة: " .. followDistance,
-                "🚶 Following: " .. target.DisplayName .. " | Distance: " .. followDistance
+                "🚶 يتتبع: " .. target.DisplayName,
+                "🚶 Following: " .. target.DisplayName
             )
 
             -- لوب الفيزياء: noclip + antifling + nofall
@@ -61,18 +55,14 @@ return function(Tab, UI)
                 if not isFollowing then return end
                 local char = lp.Character
                 if not char then return end
-
                 local root = char:FindFirstChild("HumanoidRootPart")
-                local hum = char:FindFirstChildOfClass("Humanoid")
 
-                -- NoClip: إلغاء تصادم شخصيتي
+                -- NoClip
                 for _, p in pairs(char:GetDescendants()) do
-                    if p:IsA("BasePart") then
-                        p.CanCollide = false
-                    end
+                    if p:IsA("BasePart") then p.CanCollide = false end
                 end
 
-                -- AntiFling: إلغاء تصادم اللاعبين الثانيين
+                -- AntiFling
                 for _, pl in pairs(Players:GetPlayers()) do
                     if pl ~= lp and pl.Character then
                         for _, p in pairs(pl.Character:GetChildren()) do
@@ -81,7 +71,7 @@ return function(Tab, UI)
                     end
                 end
 
-                -- NoFall: تثبيت سرعة السقوط
+                -- NoFall
                 if root then
                     local vel = root.AssemblyLinearVelocity
                     if vel.Y < -40 then
@@ -90,7 +80,7 @@ return function(Tab, UI)
                 end
             end)
 
-            -- لوب التتبع الذكي
+            -- لوب التتبع مع تتبع الارتفاع
             followConn = RunService.Heartbeat:Connect(function()
                 if not isFollowing then return end
 
@@ -105,16 +95,22 @@ return function(Tab, UI)
                 if not root or not hum or not tgtRoot then return end
                 if hum.Health <= 0 then return end
 
-                -- حساب نقطة خلف الهدف بالمسافة المحددة
+                -- نقطة خلف الهدف + نفس ارتفاعه
                 local tgtCF = tgtRoot.CFrame
-                local targetPos = tgtCF * CFrame.new(0, 0, followDistance)
+                local behindPos = tgtCF * CFrame.new(0, 0, FOLLOW_DISTANCE)
+
+                -- نأخذ X,Z من النقطة خلفه، Y من الهدف نفسه
+                local targetPos = Vector3.new(
+                    behindPos.X,
+                    tgtRoot.Position.Y, -- نفس ارتفاع الهدف
+                    behindPos.Z
+                )
+
                 local distance = (root.Position - tgtRoot.Position).Magnitude
 
-                if distance > followDistance + 0.5 then
-                    -- تحريك طبيعي بـ MoveTo
-                    hum:MoveTo(targetPos.Position)
+                if distance > FOLLOW_DISTANCE + 0.5 then
+                    hum:MoveTo(targetPos)
                 else
-                    -- وصلنا، استنى في مكانك
                     hum:MoveTo(root.Position)
                 end
             end)
@@ -123,13 +119,6 @@ return function(Tab, UI)
             StopFollow()
             Notify("❌ توقف التتبع.", "❌ Follow stopped.")
         end
-    end)
-
-    -- ==============================
-    -- تحكم في المسافة
-    -- ==============================
-    Tab:AddSpeedControl("مسافة التتبع / Follow Distance", 1, 20, followDistance, function(val)
-        followDistance = val
     end)
 
     Tab:AddLine()
