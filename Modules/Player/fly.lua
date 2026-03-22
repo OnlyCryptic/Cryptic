@@ -1,5 +1,4 @@
 -- [[ Cryptic Hub - الطيران المطور / Advanced Fly ]]
--- يدعم جوال + حاسوب + تابلت + إعادة تشغيل تلقائي بعد الموت
 
 return function(Tab, UI)
     local player = game.Players.LocalPlayer
@@ -12,9 +11,8 @@ return function(Tab, UI)
     local isFlying = false
     local flySpeed = 50
     local bodyVel, bodyGyro, connection, deathConn
-    local verticalVel = 0 -- للارتفاع والنزول
+    local verticalVel = 0
 
-    -- كشف نوع الجهاز
     local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
     local isPC = UserInputService.KeyboardEnabled
 
@@ -25,13 +23,13 @@ return function(Tab, UI)
     end
 
     -- ==============================
-    -- أزرار الارتفاع/النزول للجوال والتابلت
+    -- أزرار جوال/تابلت
     -- ==============================
     local mobileGui = nil
 
     local function CreateMobileButtons()
         if mobileGui then mobileGui:Destroy() end
-        if isPC then return end -- PC يستخدم الكيبورد
+        if isPC then return end
 
         mobileGui = Instance.new("ScreenGui")
         mobileGui.Name = "CrypticFlyButtons"
@@ -54,24 +52,19 @@ return function(Tab, UI)
             local stroke = Instance.new("UIStroke", btn)
             stroke.Color = Color3.fromRGB(0, 255, 150)
             stroke.Thickness = 1.5
-
             btn.MouseButton1Down:Connect(onDown)
             btn.MouseButton1Up:Connect(onUp)
             btn.TouchLongPress:Connect(onDown)
             return btn
         end
 
-        -- زر الارتفاع ▲
         MakeBtn("▲", UDim2.new(1, -70, 0.5, -110),
             function() verticalVel = 1 end,
-            function() verticalVel = 0 end
-        )
+            function() verticalVel = 0 end)
 
-        -- زر النزول ▼
         MakeBtn("▼", UDim2.new(1, -70, 0.5, -50),
             function() verticalVel = -1 end,
-            function() verticalVel = 0 end
-        )
+            function() verticalVel = 0 end)
     end
 
     local function RemoveMobileButtons()
@@ -80,7 +73,7 @@ return function(Tab, UI)
     end
 
     -- ==============================
-    -- منطق الطيران
+    -- منطق الطيران (نفس الأصلي + تصليحات)
     -- ==============================
     local function StartFly()
         local char = player.Character
@@ -94,7 +87,6 @@ return function(Tab, UI)
 
         bodyVel = Instance.new("BodyVelocity", root)
         bodyVel.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-        bodyVel.Velocity = Vector3.new(0, 0, 0)
 
         bodyGyro = Instance.new("BodyGyro", root)
         bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
@@ -109,39 +101,42 @@ return function(Tab, UI)
             local look = cam.CFrame.LookVector
             local right = cam.CFrame.RightVector
 
-            local flatLook = Vector3.new(look.X, 0, look.Z)
-            if flatLook.Magnitude > 0 then flatLook = flatLook.Unit end
-            local flatRight = Vector3.new(right.X, 0, right.Z)
-            if flatRight.Magnitude > 0 then flatRight = flatRight.Unit end
-
-            local zInput = moveDir:Dot(flatLook)
-            local xInput = moveDir:Dot(flatRight)
-            local flyDir = (look * zInput) + (right * xInput)
-
-            -- الارتفاع/النزول
+            -- ارتفاع/نزول
             local yVel = 0
-
-            -- جوال/تابلت: من الأزرار
             if not isPC then
                 yVel = verticalVel * flySpeed
             else
-                -- حاسوب: E للارتفاع، Q للنزول
-                if UserInputService:IsKeyDown(Enum.KeyCode.E) then
-                    yVel = flySpeed
-                elseif UserInputService:IsKeyDown(Enum.KeyCode.Q) then
-                    yVel = -flySpeed
-                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.E) then yVel = flySpeed
+                elseif UserInputService:IsKeyDown(Enum.KeyCode.Q) then yVel = -flySpeed end
             end
 
-            if flyDir.Magnitude > 0 then
-                local vel = Vector3.new(flyDir.Unit.X * flySpeed, yVel, flyDir.Unit.Z * flySpeed)
-                bodyVel.Velocity = vel
-                -- يواجه اتجاه الحركة الأفقي (مناسب مع ShiftLock)
-                bodyGyro.CFrame = CFrame.lookAt(root.Position, root.Position + Vector3.new(flyDir.Unit.X, 0, flyDir.Unit.Z))
+            if moveDir.Magnitude > 0 then
+                local flatLook = Vector3.new(look.X, 0, look.Z)
+                if flatLook.Magnitude > 0 then flatLook = flatLook.Unit end
+                local flatRight = Vector3.new(right.X, 0, right.Z)
+                if flatRight.Magnitude > 0 then flatRight = flatRight.Unit end
+
+                local zInput = moveDir:Dot(flatLook)
+                local xInput = moveDir:Dot(flatRight)
+                local flyDir = (look * zInput) + (right * xInput)
+
+                if flyDir.Magnitude > 0 then
+                    bodyVel.Velocity = Vector3.new(flyDir.Unit.X * flySpeed, yVel, flyDir.Unit.Z * flySpeed)
+                    bodyGyro.CFrame = CFrame.lookAt(root.Position, root.Position + Vector3.new(flyDir.Unit.X, 0, flyDir.Unit.Z))
+                else
+                    bodyVel.Velocity = Vector3.new(0, yVel, 0)
+                    local flatLook = Vector3.new(look.X, 0, look.Z)
+                    if flatLook.Magnitude > 0 then
+                        bodyGyro.CFrame = CFrame.lookAt(root.Position, root.Position + flatLook)
+                    end
+                end
             else
                 bodyVel.Velocity = Vector3.new(0, yVel, 0)
-                -- لو واقف يواجه الكاميرا
-                bodyGyro.CFrame = CFrame.lookAt(root.Position, root.Position + Vector3.new(look.X, 0, look.Z))
+                -- واقف: يواجه الكاميرا أفقياً بدون ميل
+                local flatLook = Vector3.new(look.X, 0, look.Z)
+                if flatLook.Magnitude > 0 then
+                    bodyGyro.CFrame = CFrame.lookAt(root.Position, root.Position + flatLook)
+                end
             end
         end)
 
@@ -153,40 +148,30 @@ return function(Tab, UI)
         if bodyVel then bodyVel:Destroy() bodyVel = nil end
         if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
         RemoveMobileButtons()
-
         local char = player.Character
         local hum = char and char:FindFirstChildOfClass("Humanoid")
         if hum then hum.PlatformStand = false end
     end
 
     -- ==============================
-    -- إعادة تشغيل تلقائي بعد الموت
+    -- إعادة تشغيل بعد الموت
     -- ==============================
     local function WatchDeath()
         if deathConn then deathConn:Disconnect() end
         local char = player.Character
         local hum = char and char:FindFirstChildOfClass("Humanoid")
         if not hum then return end
-
         deathConn = hum.Died:Connect(function()
             if not isFlying then return end
-            -- انتظر ريسبون الشخصية
             player.CharacterAdded:Wait()
             task.wait(0.5)
-            if isFlying then
-                StartFly()
-                WatchDeath() -- نراقب الموت مرة ثانية
-            end
+            if isFlying then StartFly(); WatchDeath() end
         end)
     end
 
-    -- راقب لما تتغير الشخصية
     player.CharacterAdded:Connect(function()
         task.wait(0.5)
-        if isFlying then
-            StartFly()
-            WatchDeath()
-        end
+        if isFlying then StartFly(); WatchDeath() end
     end)
 
     -- ==============================
@@ -200,8 +185,8 @@ return function(Tab, UI)
             StartFly()
             WatchDeath()
             local hint = isPC
-                and "✈️ تفعيل الطيران!\nE = ارتفاع | Q = نزول"
-                or "✈️ تفعيل الطيران!\n▲▼ للارتفاع والنزول"
+                and "✈️ تم تفعيل الطيران!\nE = ارتفاع | Q = نزول"
+                or "✈️ تم تفعيل الطيران!\n▲▼ للارتفاع والنزول"
             Notify("Cryptic Hub", hint)
         else
             StopFly()
