@@ -50,7 +50,7 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddToggle("حقيبة ظهر / Backpack", function(active)
+    Tab:AddToggle("حقيبة الظهر / Backpack", function(active)
         if active then
             local target = _G.ArwaTarget
             if not target or not target.Character then
