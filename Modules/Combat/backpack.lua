@@ -1,5 +1,4 @@
 -- [[ Cryptic Hub - حقيبة ظهر (Backpack) ]]
--- الوصف: تثبت شخصيتك جالس على ظهر الهدف ويشوفك الكل
 
 return function(Tab, UI)
     local runService = game:GetService("RunService")
@@ -26,8 +25,7 @@ return function(Tab, UI)
         if loopConn then loopConn:Disconnect() loopConn = nil end
 
         if animTrack then
-            animTrack:Stop()
-            animTrack:Destroy()
+            pcall(function() animTrack:Stop() animTrack:Destroy() end)
             animTrack = nil
         end
 
@@ -67,19 +65,25 @@ return function(Tab, UI)
             local hum = char and char:FindFirstChildOfClass("Humanoid")
             local animator = hum and hum:FindFirstChildOfClass("Animator")
 
+            -- كشف نوع الريق
+            local isR6 = hum and hum.RigType == Enum.HumanoidRigType.R6
+
             if hum then
                 hum.PlatformStand = true
                 hum.AutoRotate = false
             end
 
-            -- تشغيل أنيميشن جلوس يشوفه الكل
+            -- أنيميشن جلوس حسب الريق
             if animator then
-                local anim = Instance.new("Animation")
-                anim.AnimationId = "rbxassetid://2506281703"
-                animTrack = animator:LoadAnimation(anim)
-                animTrack.Priority = Enum.AnimationPriority.Action4
-                animTrack.Looped = true
-                animTrack:Play()
+                pcall(function()
+                    local anim = Instance.new("Animation")
+                    -- R6: 178037313 | R15: 2506281703
+                    anim.AnimationId = isR6 and "rbxassetid://178037313" or "rbxassetid://2506281703"
+                    animTrack = animator:LoadAnimation(anim)
+                    animTrack.Priority = Enum.AnimationPriority.Action4
+                    animTrack.Looped = true
+                    animTrack:Play()
+                end)
             end
 
             Notify(
@@ -93,7 +97,6 @@ return function(Tab, UI)
                 local myChar = lp.Character
                 local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
                 local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
-
                 local tgt = _G.ArwaTarget
                 local tgtChar = tgt and tgt.Character
                 local tgtTorso = tgtChar and (
@@ -117,9 +120,11 @@ return function(Tab, UI)
                     myHum.AutoRotate = false
                 end
 
+                -- ضبط الموقع حسب نوع الريق
+                local yOffset = isR6 and 0.0 or 0.2
                 myRoot.Velocity = Vector3.new(0, 0, 0)
                 myRoot.CFrame = tgtTorso.CFrame
-                    * CFrame.new(0, 0.2, 1.2)
+                    * CFrame.new(0, yOffset, 1.2)
                     * CFrame.Angles(0, math.pi, 0)
             end)
 
