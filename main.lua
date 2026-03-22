@@ -7,7 +7,7 @@ local lp = Players.LocalPlayer
 
 local Cryptic = {
     Config = {
-        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "تست", 
+        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "test", 
         Discord = "https://discord.gg/QSvQJs7BdP"
     },
 
