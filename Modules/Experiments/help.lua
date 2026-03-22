@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - حماية من التطيير (Anti-Fling Protection) ]]
--- الوصف: اكتشاف القطع السريعة التي تستخدم للتطيير ونفيها بعيداً لحماية اللاعبين
+-- [[ Cryptic Hub - حماية من التطيير المتقدمة (Anti-Fling V2.0) ]]
+-- الوصف: رادار لحظي يلقط القطع السريعة والتي تدور بشدة وينفيها قبل الاصطدام
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
@@ -10,8 +10,11 @@ return function(Tab, UI)
 
     local protectionActive = false
     local protectionLoop = nil
-    local cacheLoop = nil
-    local unanchoredParts = {}
+    local addedConnection = nil
+    local removingConnection = nil
+    
+    -- جدول لتتبع القطع غير المثبتة لحظياً
+    local trackedParts = {}
 
     -- دالة الإشعارات
     local function Notify(arText, enText)
@@ -19,22 +22,24 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- فلتر الأمان: التأكد أن القطعة ليست جزءاً من لاعب أو أداة طبيعية
+    -- فلتر الأمان: دقيق جداً لالتقاط الدوران والسرعة الوهمية
     -- ==========================================
     local function isDangerousPart(part)
-        -- تجاهل القطع المثبتة أو غير المرئية
+        if not part or not part.Parent then return false end
         if not part:IsA("BasePart") or part.Anchored or part.Transparency == 1 then return false end
         
-        -- تجاهل القطع المرتبطة بشخصيات اللاعبين
+        -- تجاهل أجزاء اللاعبين والأدوات
         local root = part.AssemblyRootPart
         if root and root.Parent and root.Parent:FindFirstChildOfClass("Humanoid") then return false end
-        
-        -- تجاهل الإكسسوارات والأدوات
         if part:FindFirstAncestorWhichIsA("Accessory") or part:FindFirstAncestorWhichIsA("Tool") then return false end
 
-        -- 🔴 شرط الخطر: إذا كانت سرعة القطعة غير طبيعية (تتحرك بسرعة جنونية)
-        -- السرعة العادية للسقوط نادراً ما تتجاوز 100، لذلك 150 رقم ممتاز لفلترة التطيير
-        if part.Velocity.Magnitude > 150 or part.RotVelocity.Magnitude > 100 then
+        -- 🔴 1. حماية من السرعات الوهمية (NaN) التي تستخدم لعمل كراش أو تطيير
+        if part.Velocity.X ~= part.Velocity.X or part.RotVelocity.X ~= part.RotVelocity.X then 
+            return true 
+        end
+
+        -- 🔴 2. حد الخطر للسرعة والدوران (دوران > 50، سرعة > 100)
+        if part.Velocity.Magnitude > 100 or part.RotVelocity.Magnitude > 50 then
             return true
         end
 
@@ -42,72 +47,72 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- دالة النفي: تصفير السرعة ورمي القطعة بعيداً
+    -- دالة النفي: تدمير حركي ورمي في الفراغ
     -- ==========================================
     local function BanishPart(part)
         pcall(function()
-            -- تصفير السرعة
             part.Velocity = Vector3.new(0, 0, 0)
             part.RotVelocity = Vector3.new(0, 0, 0)
             part.CanCollide = false
-            
-            -- رميها في مكان بعيد جداً (الفراغ)
-            part.CFrame = CFrame.new(99999, 99999, 99999)
+            part.Massless = true -- جعلها بلا وزن حتى لو اصطدمت بالخطأ
+            -- رميها للفراغ السفلي لكي يقوم محرك روبلوكس بمسحها تلقائياً
+            part.CFrame = CFrame.new(0, -99999, 0) 
         end)
     end
 
     -- ==========================================
     -- زر التفعيل
     -- ==========================================
-    Tab:AddToggle("حماية من التطيير / Anti-Fling", function(state)
+    Tab:AddToggle("حماية من التطيير (متقدم) / Anti-Fling", function(state)
         protectionActive = state
         
         if state then
-            Notify("🛡️ حماية مفعلة / Protection ON", "تم تشغيل رادار حماية اللاعبين.\nAnti-Fling radar activated.")
+            Notify("🛡️ حماية متقدمة / Adv. Protection ON", "تم تفعيل الرادار اللحظي.\nReal-time radar activated.")
+            trackedParts = {}
 
-            -- 1. لوب لتحديث قائمة القطع غير المثبتة كل ثانيتين (لمنع اللاق)
-            if not cacheLoop then
-                cacheLoop = task.spawn(function()
-                    while protectionActive do
-                        local tempTable = {}
-                        for _, v in ipairs(Workspace:GetDescendants()) do
-                            if v:IsA("BasePart") and not v.Anchored then
-                                table.insert(tempTable, v)
-                            end
-                        end
-                        unanchoredParts = tempTable
-                        task.wait(2) -- تحديث كل ثانيتين لتقليل الضغط على اللعبة
-                    end
-                end)
+            -- 1. فحص مبدئي لجميع القطع الموجودة حالياً
+            for _, v in ipairs(Workspace:GetDescendants()) do
+                if v:IsA("BasePart") and not v.Anchored then
+                    trackedParts[v] = true
+                end
             end
 
-            -- 2. لوب سريع جداً للتحقق من سرعة القطع المحفوظة
-            if not protectionLoop then
-                protectionLoop = RunService.Heartbeat:Connect(function()
-                    for _, part in ipairs(unanchoredParts) do
-                        if part and part.Parent then
-                            if isDangerousPart(part) then
-                                BanishPart(part)
-                            end
+            -- 2. تتبع لحظي (بدون لاق) لأي قطعة جديدة تظهر في الماب
+            addedConnection = Workspace.DescendantAdded:Connect(function(v)
+                if v:IsA("BasePart") then
+                    -- استخدام defer لضمان تحميل القطعة بالكامل قبل الفحص
+                    task.defer(function()
+                        if v and v.Parent and not v.Anchored then
+                            trackedParts[v] = true
                         end
+                    end)
+                end
+            end)
+
+            -- إزالة القطع المحذوفة من الجدول لتوفير الرام
+            removingConnection = Workspace.DescendantRemoving:Connect(function(v)
+                if trackedParts[v] then
+                    trackedParts[v] = nil
+                end
+            end)
+
+            -- 3. لوب الفيزياء السريع (يشتغل قبل اصطدام الأشياء)
+            protectionLoop = RunService.Stepped:Connect(function()
+                for part, _ in pairs(trackedParts) do
+                    if isDangerousPart(part) then
+                        BanishPart(part)
                     end
-                end)
-            end
+                end
+            end)
 
         else
             Notify("🛑 حماية متوقفة / Protection OFF", "تم إيقاف نظام الحماية.\nProtection disabled.")
             
-            -- إيقاف اللوبات عند إطفاء الزر
-            protectionActive = false
-            if protectionLoop then 
-                protectionLoop:Disconnect() 
-                protectionLoop = nil 
-            end
-            if cacheLoop then
-                task.cancel(cacheLoop)
-                cacheLoop = nil
-            end
-            unanchoredParts = {}
+            -- تنظيف وتوقيف اللوبات
+            if protectionLoop then protectionLoop:Disconnect() protectionLoop = nil end
+            if addedConnection then addedConnection:Disconnect() addedConnection = nil end
+            if removingConnection then removingConnection:Disconnect() removingConnection = nil end
+            trackedParts = {}
         end
     end)
     
