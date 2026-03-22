@@ -22,9 +22,7 @@ return function(Tab, UI)
         end)
     end
 
-    -- ==============================
-    -- أزرار جوال/تابلت
-    -- ==============================
+    -- أزرار جوال
     local mobileGui = nil
 
     local function CreateMobileButtons()
@@ -55,13 +53,11 @@ return function(Tab, UI)
             btn.MouseButton1Down:Connect(onDown)
             btn.MouseButton1Up:Connect(onUp)
             btn.TouchLongPress:Connect(onDown)
-            return btn
         end
 
         MakeBtn("▲", UDim2.new(1, -70, 0.5, -110),
             function() verticalVel = 1 end,
             function() verticalVel = 0 end)
-
         MakeBtn("▼", UDim2.new(1, -70, 0.5, -50),
             function() verticalVel = -1 end,
             function() verticalVel = 0 end)
@@ -72,9 +68,6 @@ return function(Tab, UI)
         verticalVel = 0
     end
 
-    -- ==============================
-    -- منطق الطيران (نفس الأصلي + تصليحات)
-    -- ==============================
     local function StartFly()
         local char = player.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -122,17 +115,18 @@ return function(Tab, UI)
 
                 if flyDir.Magnitude > 0 then
                     bodyVel.Velocity = Vector3.new(flyDir.Unit.X * flySpeed, yVel, flyDir.Unit.Z * flySpeed)
-                    bodyGyro.CFrame = CFrame.lookAt(root.Position, root.Position + Vector3.new(flyDir.Unit.X, 0, flyDir.Unit.Z))
                 else
                     bodyVel.Velocity = Vector3.new(0, yVel, 0)
-                    local flatLook = Vector3.new(look.X, 0, look.Z)
-                    if flatLook.Magnitude > 0 then
-                        bodyGyro.CFrame = CFrame.lookAt(root.Position, root.Position + flatLook)
-                    end
                 end
             else
                 bodyVel.Velocity = Vector3.new(0, yVel, 0)
-                -- واقف: يواجه الكاميرا أفقياً بدون ميل
+            end
+
+            -- PC: نفس الأصلي يميل مع الكاميرا
+            -- هاتف: أفقي فقط بدون ميل
+            if isPC then
+                bodyGyro.CFrame = cam.CFrame
+            else
                 local flatLook = Vector3.new(look.X, 0, look.Z)
                 if flatLook.Magnitude > 0 then
                     bodyGyro.CFrame = CFrame.lookAt(root.Position, root.Position + flatLook)
@@ -153,9 +147,7 @@ return function(Tab, UI)
         if hum then hum.PlatformStand = false end
     end
 
-    -- ==============================
     -- إعادة تشغيل بعد الموت
-    -- ==============================
     local function WatchDeath()
         if deathConn then deathConn:Disconnect() end
         local char = player.Character
@@ -174,10 +166,7 @@ return function(Tab, UI)
         if isFlying then StartFly(); WatchDeath() end
     end)
 
-    -- ==============================
-    -- الزر الرئيسي
-    -- ==============================
-    Tab:AddSpeedControl("طيران / Fly", function(active, value)
+    Tab:AddSpeedControl(".طيران / Fly", function(active, value)
         isFlying = active
         flySpeed = value
 
