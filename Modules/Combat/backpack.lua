@@ -25,7 +25,6 @@ return function(Tab, UI)
         isBackpacking = false
         if loopConn then loopConn:Disconnect() loopConn = nil end
 
-        -- إيقاف أنيميشن الجلوس
         if animTrack then
             animTrack:Stop()
             animTrack:Destroy()
@@ -73,8 +72,7 @@ return function(Tab, UI)
                 hum.AutoRotate = false
             end
 
-            -- تشغيل أنيميشن جلوس (يشوفه الكل لأنه على الشخصية)
-            -- rbxassetid://2506281703 = sit animation عالمي
+            -- تشغيل أنيميشن جلوس يشوفه الكل
             if animator then
                 local anim = Instance.new("Animation")
                 anim.AnimationId = "rbxassetid://2506281703"
@@ -105,7 +103,6 @@ return function(Tab, UI)
 
                 if not myRoot or not tgtTorso then return end
 
-                -- تجميد فيزياء شخصيتي
                 for _, p in pairs(myChar:GetDescendants()) do
                     if p:IsA("BasePart") then
                         p.Massless = true
@@ -120,128 +117,10 @@ return function(Tab, UI)
                     myHum.AutoRotate = false
                 end
 
-                -- تثبيت على الظهر
                 myRoot.Velocity = Vector3.new(0, 0, 0)
                 myRoot.CFrame = tgtTorso.CFrame
                     * CFrame.new(0, 0.2, 1.2)
                     * CFrame.Angles(0, math.pi, 0)
-            end)
-
-        else
-            StopBackpack()
-            Notify("❌ نزلت من الظهر.", "❌ Got off the back.")
-        end
-    end)
-
-    Tab:AddLine()
-end
-
-
-return function(Tab, UI)
-    local runService = game:GetService("RunService")
-    local players = game:GetService("Players")
-    local StarterGui = game:GetService("StarterGui")
-    local lp = players.LocalPlayer
-
-    local isBackpacking = false
-    local loopConn = nil
-    local fakeSeat = nil
-
-    local function Notify(ar, en)
-        pcall(function()
-            StarterGui:SetCore("SendNotification", {
-                Title = "Cryptic Hub",
-                Text = ar .. "\n" .. en,
-                Duration = 4,
-            })
-        end)
-    end
-
-    local function StopBackpack()
-        isBackpacking = false
-        if loopConn then loopConn:Disconnect() loopConn = nil end
-
-        -- إزالة الكرسي الوهمي
-        if fakeSeat then fakeSeat:Destroy() fakeSeat = nil end
-
-        local char = lp.Character
-        if char then
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            local root = char:FindFirstChild("HumanoidRootPart")
-            if hum then hum.Sit = false end
-            if root then
-                root.Velocity = Vector3.new(0, 0, 0)
-                root.RotVelocity = Vector3.new(0, 0, 0)
-            end
-            for _, p in pairs(char:GetDescendants()) do
-                if p:IsA("BasePart") then
-                    p.Massless = false
-                    p.CanCollide = true
-                end
-            end
-        end
-    end
-
-    Tab:AddToggle("حقيبة ظهر / Backpack", function(active)
-        if active then
-            local target = _G.ArwaTarget
-            if not target or not target.Character then
-                Notify("⚠️ حدد لاعباً أولاً!", "⚠️ Select a player first!")
-                StopBackpack()
-                return
-            end
-
-            isBackpacking = true
-
-            local tgtChar = target.Character
-            local tgtTorso = tgtChar and (
-                tgtChar:FindFirstChild("UpperTorso") or
-                tgtChar:FindFirstChild("Torso")
-            )
-
-            if not tgtTorso then
-                Notify("⚠️ ما لقيت جسم الهدف!", "⚠️ Target body not found!")
-                StopBackpack()
-                return
-            end
-
-            -- إنشاء Seat وهمي على ظهر الهدف
-            fakeSeat = Instance.new("Seat")
-            fakeSeat.Size = Vector3.new(1, 0.1, 1)
-            fakeSeat.Transparency = 1
-            fakeSeat.CanCollide = false
-            fakeSeat.Anchored = false
-            -- نثبته على الـ Torso بـ Weld
-            fakeSeat.CFrame = tgtTorso.CFrame * CFrame.new(0, 0.6, 1.2) * CFrame.Angles(0, math.pi, 0)
-            fakeSeat.Parent = tgtChar
-
-            local weld = Instance.new("WeldConstraint")
-            weld.Part0 = fakeSeat
-            weld.Part1 = tgtTorso
-            weld.Parent = fakeSeat
-
-            -- أجلسه على الكرسي الوهمي
-            task.wait(0.1)
-            fakeSeat:Sit(lp.Character:FindFirstChildOfClass("Humanoid"))
-
-            Notify(
-                "🎒 أنت الآن حقيبة ظهر لـ: " .. target.DisplayName,
-                "🎒 You are now a backpack for: " .. target.DisplayName
-            )
-
-            -- لوب للحفاظ على الجلوس وتجميد الفيزياء
-            loopConn = runService.Heartbeat:Connect(function()
-                if not isBackpacking then return end
-
-                local myChar = lp.Character
-                if not myChar then return end
-
-                for _, p in pairs(myChar:GetDescendants()) do
-                    if p:IsA("BasePart") then
-                        p.Massless = true
-                        p.CanCollide = false
-                    end
-                end
             end)
 
         else
