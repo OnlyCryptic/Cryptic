@@ -7,7 +7,7 @@ local lp = Players.LocalPlayer
 
 local Cryptic = {
     Config = {
-        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "test", 
+        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "تست", 
         Discord = "https://discord.gg/QSvQJs7BdP"
     },
 
@@ -83,7 +83,64 @@ local function StartCrypticHub()
                     end
                 end
 
-                task.spawn(function(data, tab, nameOfTab)  
+                task.spawn(function(data, tab, nameOfTab)
+
+                    -- ==========================================
+                    -- تاب استهداف لاعب: target_select مباشر، باقي في 3 أقسام Open
+                    -- ==========================================
+                    if nameOfTab == "استهداف لاعب / players" then
+
+                        -- 1. تحديد اللاعب مباشر بدون Open
+                        local tsInit = Import("Modules/Combat/target_select.lua")
+                        if type(tsInit) == "function" then
+                            pcall(function() tsInit(tab, UI) end)
+                        end
+                        tab:AddLine()
+
+                        -- دالة مساعدة تنشئ Open وتربط العناصر فيه
+                        local function MakeOpen(title, icon)
+                            local openFunc = LoadElement("Open")
+                            if not openFunc then return tab end
+                            local openTab = openFunc(tab, title, icon)
+                            local els = {
+                                "Button", "Toggle", "TimedToggle", "Input", "LargeInput",
+                                "SpeedControl", "Dropdown", "PlayerSelector", "ProfileCard",
+                                "Line", "Label", "Paragraph", "Folder"
+                            }
+                            for _, el in ipairs(els) do
+                                openTab["Add" .. el] = function(self, ...)
+                                    local f = LoadElement(el)
+                                    if f then return f(self, ...) end
+                                end
+                            end
+                            return openTab
+                        end
+
+                        -- 2. قسم الهجوم
+                        local attackTab = MakeOpen("هجوم / Attack", "⚔️")
+                        for _, fname in ipairs({"target_fling", "bring_parts", "target_aimbot"}) do
+                            local init = Import("Modules/Combat/" .. fname .. ".lua")
+                            if type(init) == "function" then pcall(function() init(attackTab, UI) end) end
+                        end
+
+                        -- 3. قسم المزح
+                        local funTab = MakeOpen("مزح / Fun", "😂")
+                        for _, fname in ipairs({"target_sit", "target_mimic", "carry", "jark"}) do
+                            local init = Import("Modules/Combat/" .. fname .. ".lua")
+                            if type(init) == "function" then pcall(function() init(funTab, UI) end) end
+                        end
+
+                        -- 4. قسم المراقبة (+ target_tp)
+                        local spyTab = MakeOpen("مراقبة / Spy", "👁️")
+                        for _, fname in ipairs({"target_spectate", "target_tp"}) do
+                            local init = Import("Modules/Combat/" .. fname .. ".lua")
+                            if type(init) == "function" then pcall(function() init(spyTab, UI) end) end
+                        end
+
+                        return -- تخطي الكود الافتراضي
+                    end
+                    -- ==========================================
+
                     for _, fileName in ipairs(data.Files) do  
                         local filePath = (data.Folder == "") and (fileName .. ".lua") or ("Modules/" .. data.Folder .. "/" .. fileName .. ".lua")  
                         local init = Import(filePath)  
@@ -119,10 +176,8 @@ if getgenv().CrypticHub_Loaded then
     
     Bindable.OnInvoke = function(buttonText)
         if buttonText == "نعم / Yes" then
-            -- إذا وافق اللاعب، يتم استدعاء دالة التشغيل من جديد
             StartCrypticHub()
         end
-        -- إذا ضغط "الغاء / Cancel" لن يحدث شيء وسيتوقف التنفيذ
     end
 
     pcall(function()
@@ -136,7 +191,6 @@ if getgenv().CrypticHub_Loaded then
         })
     end)
 else
-    -- إذا كانت هذه أول مرة يشتغل فيها السكربت
     getgenv().CrypticHub_Loaded = true
     StartCrypticHub()
 end
