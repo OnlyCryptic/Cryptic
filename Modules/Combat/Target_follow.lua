@@ -109,9 +109,10 @@ return function(Tab, UI)
                 local distance = (root.Position - tgtRoot.Position).Magnitude
 
                 if distance > FOLLOW_DISTANCE + 0.5 then
-                    hum:MoveTo(targetPos)
-                else
-                    hum:MoveTo(root.Position)
+                    -- نحرك بـ CFrame عشان يشتغل مع ShiftLock
+                    local dir = (targetPos - root.Position).Unit
+                    local speed = math.min(distance * 0.3, hum.WalkSpeed)
+                    root.CFrame = root.CFrame + dir * speed * 0.05
                 end
             end)
 
