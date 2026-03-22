@@ -31,6 +31,7 @@ return function(Tab, UI)
             if hum then
                 hum.PlatformStand = false
                 hum.AutoRotate = true
+                hum.Sit = false
             end
             if root then
                 root.Velocity = Vector3.new(0, 0, 0)
@@ -98,14 +99,15 @@ return function(Tab, UI)
                 if myHum then
                     myHum.PlatformStand = true
                     myHum.AutoRotate = false
+                    myHum.Sit = true -- وضعية جالس
                 end
 
-                -- اللصق على الظهر:
-                -- CFrame.new(0, 0, 1.2) = خطوة للخلف (ظهر الجسم)
-                -- CFrame.new(0, -0.5, 0) = نزلت شوي لتبدو طبيعية
+                -- جالس على الظهر:
+                -- Z = 1.1 للخلف، Y = 0.5 ارتفاع مناسب للجلوس
+                -- Angles: مائل للأمام عشان يبدو جالس طبيعي على الظهر
                 myRoot.CFrame = tgtTorso.CFrame
-                    * CFrame.new(0, -0.5, 1.2)
-                    * CFrame.Angles(0, math.pi, 0) -- وجهي للخلف (نفس اتجاه الظهر)
+                    * CFrame.new(0, 0.5, 1.1)
+                    * CFrame.Angles(math.rad(15), math.pi, 0)
             end)
 
         else
