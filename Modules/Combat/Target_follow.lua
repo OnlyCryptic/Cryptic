@@ -109,10 +109,11 @@ return function(Tab, UI)
                 local distance = (root.Position - tgtRoot.Position).Magnitude
 
                 if distance > FOLLOW_DISTANCE + 0.5 then
-                    -- نحرك بـ CFrame عشان يشتغل مع ShiftLock
-                    local dir = (targetPos - root.Position).Unit
+                    -- نحرك بـ CFrame في الاتجاهات الثلاث X,Y,Z
+                    local fullTarget = Vector3.new(targetPos.X, tgtRoot.Position.Y, targetPos.Z)
+                    local dir = (fullTarget - root.Position).Unit
                     local speed = math.min(distance * 0.3, hum.WalkSpeed)
-                    root.CFrame = root.CFrame + dir * speed * 0.05
+                    root.CFrame = CFrame.new(root.Position + dir * speed * 0.05) * (root.CFrame - root.CFrame.Position)
                 end
             end)
 
