@@ -29,8 +29,6 @@ return function(Tab, UI)
             local hum = char:FindFirstChildOfClass("Humanoid")
             local root = char:FindFirstChild("HumanoidRootPart")
             if hum then
-                hum.PlatformStand = false
-                hum.AutoRotate = true
                 hum.Sit = false
             end
             if root then
@@ -57,13 +55,6 @@ return function(Tab, UI)
 
             isBackpacking = true
 
-            local char = lp.Character
-            local hum = char and char:FindFirstChildOfClass("Humanoid")
-            if hum then
-                hum.PlatformStand = true
-                hum.AutoRotate = false
-            end
-
             Notify(
                 "🎒 أنت الآن حقيبة ظهر لـ: " .. target.DisplayName,
                 "🎒 You are now a backpack for: " .. target.DisplayName
@@ -86,6 +77,9 @@ return function(Tab, UI)
 
                 if not myRoot or not tgtTorso then return end
 
+                -- نفس أسلوب target_sit
+                myHum.Sit = true
+
                 -- تجميد فيزياء شخصيتي
                 for _, p in pairs(myChar:GetDescendants()) do
                     if p:IsA("BasePart") then
@@ -96,18 +90,11 @@ return function(Tab, UI)
                     end
                 end
 
-                if myHum then
-                    myHum.PlatformStand = true
-                    myHum.AutoRotate = false
-                    myHum.Sit = true -- وضعية جالس
-                end
-
-                -- جالس على الظهر:
-                -- Z = 1.1 للخلف، Y = 0.5 ارتفاع مناسب للجلوس
-                -- Angles: مائل للأمام عشان يبدو جالس طبيعي على الظهر
+                -- جالس على الظهر مباشرة
+                myRoot.Velocity = Vector3.new(0, 0, 0)
                 myRoot.CFrame = tgtTorso.CFrame
                     * CFrame.new(0, 0.5, 1.1)
-                    * CFrame.Angles(math.rad(15), math.pi, 0)
+                    * CFrame.Angles(0, math.pi, 0)
             end)
 
         else
