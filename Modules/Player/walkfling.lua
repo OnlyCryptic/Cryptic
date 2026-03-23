@@ -48,15 +48,6 @@ return function(Tab, UI)
     end
 
     local function StartWalkFling()
-        if not CheckCollisionAllowed() then
-            Notify(
-                "🚫 الماب لا يدعم تلامس اللاعبين، لن تعمل!",
-                "🚫 Map doesn't support player collision!"
-            )
-            walkflinging = false
-            return
-        end
-
         -- تنظيف أي اتصالات قديمة قبل البدء من جديد
         StopAll()
 
@@ -136,15 +127,32 @@ return function(Tab, UI)
         end)
     end
 
-    Tab:AddToggle("تطير ناس بلمسهم / WalkFling", function(active)
-        walkflinging = active
+    Tab:AddToggle("ووك فلينج / WalkFling", function(active)
         if active then
+            -- الفحص يتم هنا أولاً!
+            if not CheckCollisionAllowed() then
+                Notify(
+                    "🚫 الماب لا يدعم تلامس اللاعبين، لن تعمل!",
+                    "🚫 Map doesn't support P-fling"
+                )
+                walkflinging = false
+                -- إطفاء الزر تلقائياً إذا كانت المكتبة تدعمها
+                task.defer(function()
+                    if Tab.SetToggleState then
+                        Tab:SetToggleState("ووك فلينج / WalkFling", false)
+                    end
+                end)
+                return -- هذا الأمر يمنع الكود من إكمال العمل وإظهار الإشعار الأخضر
+            end
+
+            walkflinging = true
             StartWalkFling()
             Notify(
                 "✅ تم التفعيل! تطير بتمشي وتلمس ناس",
                 "✅ Walk into players to fling them"
             )
         else
+            walkflinging = false
             -- إيقاف كل شيء عند إطفاء الزر
             StopAll()
         end
