@@ -132,7 +132,7 @@ return function(Tab, UI)
         end)
     end
 
-    Tab:AddToggle("ووك فلينج / WalkFling", function(active)
+    Tab:AddToggle("وك فلينج / WalkFling", function(active)
         walkflinging = active
         if active then
             StartWalkFling()
