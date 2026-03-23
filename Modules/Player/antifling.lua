@@ -1,197 +1,67 @@
--- [[ Cryptic Hub - WalkFling ]]
+-- [[ Cryptic Hub - ميزة مضاد الطيران (Anti-Fling) ]]
+-- المطور: يامي (Yami) | تجعلك تخترق اللاعبين لمنع التخريب
 
 return function(Tab, UI)
-    local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
-    local PhysicsService = game:GetService("PhysicsService")
-    local StarterGui = game:GetService("StarterGui")
+    local Players = game:GetService("Players")
     local lp = Players.LocalPlayer
-
-    local isActive = false
-    local noclipConn = nil
-    local antiflingConn = nil
-    local deathConn = nil
-    local flingConn = nil
-
-    local function Notify(ar, en)
+    
+    -- [[ دالة إرسال الإشعارات المزدوجة (عربي/إنجليزي) ]]
+    local function Notify(arText, enText)
         pcall(function()
-            StarterGui:SetCore("SendNotification", {
+            game:GetService("StarterGui"):SetCore("SendNotification", {
                 Title = "Cryptic Hub",
-                Text = ar .. "\n" .. en,
-                Duration = 3
+                Text = arText .. "\n" .. enText,
+                Duration = 3 -- مدة بقاء الإشعار على الشاشة (3 ثواني)
             })
         end)
     end
+    
+    local isAntiFling = false
+    local connection
 
-    -- ==============================
-    -- AntiFling مخفي (يلغي تصادم اللاعبين الثانيين عشان ما يطيروك)
-    -- ==============================
-    local function StartAntiFling()
-        if antiflingConn then antiflingConn:Disconnect() end
-        antiflingConn = RunService.Stepped:Connect(function()
-            if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then return end
-            for _, otherPlayer in pairs(Players:GetPlayers()) do
-                if otherPlayer ~= lp and otherPlayer.Character then
-                    for _, part in pairs(otherPlayer.Character:GetChildren()) do
-                        if part:IsA("BasePart") and part.CanCollide then
-                            part.CanCollide = false
+    local function toggleAntiFling(active)
+        isAntiFling = active
+        
+        if isAntiFling then
+            -- نستخدم Stepped لأنه ينفذ قبل حساب الفيزياء في اللعبة
+            connection = RunService.Stepped:Connect(function()
+                if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then return end
+                
+                -- المرور على كل اللاعبين في السيرفر
+                for _, otherPlayer in pairs(Players:GetPlayers()) do
+                    -- التأكد أنه ليس أنت، وأن لديه شخصية
+                    if otherPlayer ~= lp and otherPlayer.Character then
+                        -- نستخدم GetChildren بدلاً من GetDescendants لتخفيف الضغط
+                        for _, part in pairs(otherPlayer.Character:GetChildren()) do
+                            if part:IsA("BasePart") and part.CanCollide then
+                                -- إغلاق التصادم محلياً (على شاشتك فقط)
+                                part.CanCollide = false
+                            end
                         end
                     end
                 end
-            end
-        end)
-    end
-
-    local function StopAntiFling()
-        if antiflingConn then antiflingConn:Disconnect() antiflingConn = nil end
-    end
-
-    -- ==============================
-    -- NoClip لشخصيتك
-    -- ==============================
-    local function StartNoclip()
-        if noclipConn then noclipConn:Disconnect() end
-        noclipConn = RunService.Stepped:Connect(function()
-            local char = lp.Character
-            if not char then return end
-            for _, p in pairs(char:GetDescendants()) do
-                if p:IsA("BasePart") then p.CanCollide = false end
-            end
-        end)
-    end
-
-    local function StopNoclip()
-        if noclipConn then noclipConn:Disconnect() noclipConn = nil end
-        local char = lp.Character
-        if char then
-            for _, p in pairs(char:GetDescendants()) do
-                if p:IsA("BasePart") then p.CanCollide = true end
-            end
-        end
-    end
-
-    local function StopFlingLoop()
-        if flingConn then flingConn:Disconnect() flingConn = nil end
-    end
-
-    local function Stop()
-        isActive = false
-        StopFlingLoop()
-        StopNoclip()
-        StopAntiFling()
-        if deathConn then deathConn:Disconnect() deathConn = nil end
-    end
-
-    local function CheckCollisionAllowed()
-        local otherPlayer = nil
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= lp and p.Character then otherPlayer = p; break end
-        end
-        if not otherPlayer then return true end
-
-        local myChar = lp.Character
-        local myTorso = myChar and (myChar:FindFirstChild("UpperTorso") or myChar:FindFirstChild("Torso"))
-        local tgtTorso = otherPlayer.Character and (
-            otherPlayer.Character:FindFirstChild("UpperTorso") or
-            otherPlayer.Character:FindFirstChild("Torso")
-        )
-        if not myTorso or not tgtTorso then return true end
-
-        local ok, canCollide = pcall(function()
-            return PhysicsService:CollisionGroupsAreCollidable(myTorso.CollisionGroup, tgtTorso.CollisionGroup)
-        end)
-        return ok and canCollide
-    end
-
-    local function StartFlingLoop()
-        StopFlingLoop()
-        local loopRunning = true
-        flingConn = { Disconnect = function() loopRunning = false end }
-
-        task.spawn(function()
-            while loopRunning and isActive do
-                RunService.Heartbeat:Wait()
-
-                local character = lp.Character
-                local root = character and character:FindFirstChild("HumanoidRootPart")
-                local hum = character and character:FindFirstChildOfClass("Humanoid")
-
-                if not character or not root or not hum or hum.Health <= 0 then
-                    task.wait(0.1)
-                    continue
-                end
-
-                local vel = root.Velocity
-
-                -- تحقق لو السرعة كبيرة جداً (بعد انتقال) ما تطبق الفلينج
-                if vel.Magnitude > 500 then
-                    -- صفّر السرعة عشان ما تموت
-                    root.Velocity = Vector3.new(0, 0, 0)
-                    task.wait(0.1)
-                    continue
-                end
-
-                local movel = 0.1
-                root.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
-
-                RunService.RenderStepped:Wait()
-                if character and character.Parent and root and root.Parent then
-                    root.Velocity = vel
-                end
-
-                RunService.Stepped:Wait()
-                if character and character.Parent and root and root.Parent then
-                    root.Velocity = vel + Vector3.new(0, movel, 0)
-                end
-            end
-        end)
-    end
-
-    local function StartWalkFling()
-        if not CheckCollisionAllowed() then
-            Notify("🚫 الماب يلغي تصادم اللاعبين!", "🚫 Map disables player collision!")
-            isActive = false
-            return
-        end
-
-        StartNoclip()
-        StartAntiFling() -- يشتغل بخفاء
-        StartFlingLoop()
-
-        if deathConn then deathConn:Disconnect() end
-        local char = lp.Character
-        local hum = char and char:FindFirstChildWhichIsA("Humanoid")
-        if hum then
-            deathConn = hum.Died:Connect(function()
-                if not isActive then return end
-                StopFlingLoop()
-                StopNoclip()
-                StopAntiFling()
-
-                local newChar = lp.CharacterAdded:Wait()
-                local newHum = newChar:WaitForChild("Humanoid", 10)
-                if newHum then
-                    repeat task.wait(0.1) until newHum.Health >= newHum.MaxHealth or not isActive
-                end
-                task.wait(0.5)
-
-                if isActive then StartWalkFling() end
             end)
+        else
+            -- إيقاف الميزة لتوفير موارد الهاتف
+            if connection then
+                connection:Disconnect()
+                connection = nil
+            end
         end
     end
 
-    Tab:AddToggle("ووك فلينج / WalkFling", function(active)
+    -- إضافة زر التبديل للواجهة
+    Tab:AddToggle("مضاد التطيير / Anti-Fling", function(active)
+        toggleAntiFling(active)
+        
+        -- إظهار الإشعار المزدوج على الشاشة عند التفعيل فقط
         if active then
-            isActive = true
-            StartWalkFling()
             Notify(
-                "✅ تم التفعيل! تطير بتمشي وتلمس ناس",
-                "✅ Enabled! Walk into players to fling them"
+                "🛡️ تم تفعيل حماية الشبح (Anti-Fling)",
+                "🛡️ Anti-Fling activated"
             )
-        else
-            Stop()
         end
+        -- إذا تم إيقاف الميزة (active = false) لن يظهر أي إشعار وتنطفئ بصمت
     end)
-
-    Tab:AddLine()
 end
