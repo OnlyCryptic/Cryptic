@@ -125,7 +125,7 @@ local function StartCrypticHub()
 
                         -- 3. قسم المزح
                         local funTab = MakeOpen("مزح / Fun", "😂")
-                        for _, fname in ipairs({"backpack", "target_sit", "target_mimic", "carry", "jark"}) do
+                        for _, fname in ipairs({"backpack", "target_sit", "target_mimic", "carry", "jark", "copy_skin"}) do
                             local init = Import("Modules/Combat/" .. fname .. ".lua")
                             if type(init) == "function" then pcall(function() init(funTab, UI) end) end
                         end
