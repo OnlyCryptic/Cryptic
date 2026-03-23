@@ -129,9 +129,11 @@ return function(Tab, UI)
                     continue
                 end
 
-                -- فقط لما تكون فعلاً تمشي
-                if hum2.MoveDirection.Magnitude > 0 then
-                    local vel = root.Velocity
+                -- فقط لما تكون فعلاً تمشي والـ velocity معقولة
+                local vel = root.Velocity
+                local flatSpeed = Vector3.new(vel.X, 0, vel.Z).Magnitude
+
+                if hum2.MoveDirection.Magnitude > 0 and flatSpeed > 1 and flatSpeed < 100 then
                     root.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
                     RunService.RenderStepped:Wait()
                     if root and root.Parent then root.Velocity = vel end
