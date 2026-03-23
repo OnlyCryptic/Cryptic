@@ -129,7 +129,7 @@ return function(Tab, UI)
         end)
     end
 
-    Tab:AddToggle("ووك فلينج / WalkFling", function(active)
+    Tab:AddToggle("ووك ..فلينج / WalkFling", function(active)
         if active then
             -- فحص التلامس أولاً
             if not CheckCollisionAllowed() then
