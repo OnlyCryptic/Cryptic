@@ -9,8 +9,9 @@ return function(Tab, UI)
 
     local isActive = false
     local noclipConn = nil
+    local antiflingConn = nil
     local deathConn = nil
-    local flingConn = nil -- كونيكشن منفصل للفلينج
+    local flingConn = nil
 
     local function Notify(ar, en)
         pcall(function()
@@ -22,6 +23,32 @@ return function(Tab, UI)
         end)
     end
 
+    -- ==============================
+    -- AntiFling مخفي (يلغي تصادم اللاعبين الثانيين عشان ما يطيروك)
+    -- ==============================
+    local function StartAntiFling()
+        if antiflingConn then antiflingConn:Disconnect() end
+        antiflingConn = RunService.Stepped:Connect(function()
+            if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then return end
+            for _, otherPlayer in pairs(Players:GetPlayers()) do
+                if otherPlayer ~= lp and otherPlayer.Character then
+                    for _, part in pairs(otherPlayer.Character:GetChildren()) do
+                        if part:IsA("BasePart") and part.CanCollide then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end
+        end)
+    end
+
+    local function StopAntiFling()
+        if antiflingConn then antiflingConn:Disconnect() antiflingConn = nil end
+    end
+
+    -- ==============================
+    -- NoClip لشخصيتك
+    -- ==============================
     local function StartNoclip()
         if noclipConn then noclipConn:Disconnect() end
         noclipConn = RunService.Stepped:Connect(function()
@@ -51,6 +78,7 @@ return function(Tab, UI)
         isActive = false
         StopFlingLoop()
         StopNoclip()
+        StopAntiFling()
         if deathConn then deathConn:Disconnect() deathConn = nil end
     end
 
@@ -77,9 +105,8 @@ return function(Tab, UI)
 
     local function StartFlingLoop()
         StopFlingLoop()
-
         local loopRunning = true
-        flingConn = {Disconnect = function() loopRunning = false end}
+        flingConn = { Disconnect = function() loopRunning = false end }
 
         task.spawn(function()
             while loopRunning and isActive do
@@ -89,21 +116,22 @@ return function(Tab, UI)
                 local root = character and character:FindFirstChild("HumanoidRootPart")
                 local hum = character and character:FindFirstChildOfClass("Humanoid")
 
-                if not character or not root or not hum then
-                    task.wait(0.1)
-                    continue
-                end
-
-                -- تجاهل لو الشخصية طازجة (الـ Health ما اكتملت بعد)
-                if hum.Health <= 0 then
+                if not character or not root or not hum or hum.Health <= 0 then
                     task.wait(0.1)
                     continue
                 end
 
                 local vel = root.Velocity
-                local movel = 0.1
 
-                -- نفس منطق IY
+                -- تحقق لو السرعة كبيرة جداً (بعد انتقال) ما تطبق الفلينج
+                if vel.Magnitude > 500 then
+                    -- صفّر السرعة عشان ما تموت
+                    root.Velocity = Vector3.new(0, 0, 0)
+                    task.wait(0.1)
+                    continue
+                end
+
+                local movel = 0.1
                 root.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
 
                 RunService.RenderStepped:Wait()
@@ -127,39 +155,32 @@ return function(Tab, UI)
         end
 
         StartNoclip()
+        StartAntiFling() -- يشتغل بخفاء
         StartFlingLoop()
 
-        -- مراقبة الموت
         if deathConn then deathConn:Disconnect() end
         local char = lp.Character
         local hum = char and char:FindFirstChildWhichIsA("Humanoid")
         if hum then
             deathConn = hum.Died:Connect(function()
                 if not isActive then return end
-
-                -- أوقف اللوب والنوكليب فوراً
                 StopFlingLoop()
                 StopNoclip()
+                StopAntiFling()
 
-                -- انتظر ريسبون كامل
                 local newChar = lp.CharacterAdded:Wait()
-                -- انتظر حتى الـ HumanoidRootPart موجود وصحة كاملة
-                local newRoot = newChar:WaitForChild("HumanoidRootPart", 10)
                 local newHum = newChar:WaitForChild("Humanoid", 10)
                 if newHum then
-                    -- انتظر الصحة تكتمل
                     repeat task.wait(0.1) until newHum.Health >= newHum.MaxHealth or not isActive
                 end
-                task.wait(0.5) -- تأمين إضافي
+                task.wait(0.5)
 
-                if isActive then
-                    StartWalkFling()
-                end
+                if isActive then StartWalkFling() end
             end)
         end
     end
 
-    Tab:AddToggle("ووك فلينك. / WalkFling", function(active)
+    Tab:AddToggle("ووك فلينج / WalkFling", function(active)
         if active then
             isActive = true
             StartWalkFling()
