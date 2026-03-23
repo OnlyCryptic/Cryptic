@@ -129,22 +129,32 @@ return function(Tab, UI)
                     continue
                 end
 
-                -- فقط لما تكون فعلاً تمشي والـ velocity معقولة
-                local vel = root.Velocity
-                local flatSpeed = Vector3.new(vel.X, 0, vel.Z).Magnitude
+                local moveDir = hum2.MoveDirection
 
-                if hum2.MoveDirection.Magnitude > 0 and flatSpeed > 1 and flatSpeed < 100 then
-                    root.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
-                    RunService.RenderStepped:Wait()
-                    if root and root.Parent then root.Velocity = vel end
-                    RunService.Stepped:Wait()
-                    if root and root.Parent then root.Velocity = vel + Vector3.new(0, 0.1, 0) end
+                if moveDir.Magnitude > 0 then
+                    -- انتظر الـ velocity تستقر أول
+                    task.wait(0.05)
+                    
+                    local vel = root.Velocity
+                    local flatSpeed = Vector3.new(vel.X, 0, vel.Z).Magnitude
+
+                    -- شرط مشدد: سرعة معقولة بس
+                    if flatSpeed > 2 and flatSpeed < 80 then
+                        root.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+                        RunService.RenderStepped:Wait()
+                        if root and root.Parent then root.Velocity = vel end
+                        RunService.Stepped:Wait()
+                        if root and root.Parent then root.Velocity = vel + Vector3.new(0, 0.1, 0) end
+                    end
+                else
+                    -- واقف: صفّر السرعة الأفقية عشان ما يطبق شي غلط
+                    task.wait(0.05)
                 end
             end
         end)
     end
 
-    Tab:AddToggle(".ووك فلينج / WalkFling", function(active)
+    Tab:AddToggle("ووك فلينج / WalkFling", function(active)
         if active then
             isActive = true
             StartWalkFling()
