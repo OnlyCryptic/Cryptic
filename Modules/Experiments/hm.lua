@@ -11,7 +11,7 @@ return function(Tab, UI)
     local deathConn = nil
     local noclipConn = nil
     local antiflingConn = nil
-    local flingThread = nil -- أضفنا هذا المتغير للتحكم في اللوب وإيقافه
+    local flingThread = nil
 
     local function Notify(ar, en)
         pcall(function()
@@ -39,7 +39,6 @@ return function(Tab, UI)
         return true
     end
 
-    -- دالة لتنظيف كل اللوبات والاتصالات لتجنب أي تعليق
     local function StopAll()
         if noclipConn then noclipConn:Disconnect() noclipConn = nil end
         if antiflingConn then antiflingConn:Disconnect() antiflingConn = nil end
@@ -48,16 +47,6 @@ return function(Tab, UI)
     end
 
     local function StartWalkFling()
-        if not CheckCollisionAllowed() then
-            Notify(
-                "🚫 الماب لا يدعم تلامس اللاعبين، لن تعمل!",
-                "🚫 Map doesn't support player collision!"
-            )
-            walkflinging = false
-            return
-        end
-
-        -- تنظيف أي اتصالات قديمة قبل البدء من جديد
         StopAll()
 
         -- نوكليب
@@ -91,15 +80,12 @@ return function(Tab, UI)
             deathConn = hum.Died:Connect(function()
                 if not walkflinging then return end
                 
-                -- نوقف اللوب الحالي فورا عشان ما يتراكم اللوب بعد الريسبون
                 if flingThread then task.cancel(flingThread) flingThread = nil end
 
-                -- انتظر ريسبون
                 local newChar = lp.CharacterAdded:Wait()
                 local newHum = newChar:WaitForChild("Humanoid", 10)
                 if not newHum then return end
 
-                -- انتظر حتى اللاعب يتحرك بنفسه
                 repeat RunService.Heartbeat:Wait()
                 until newHum.MoveDirection.Magnitude > 0 or not walkflinging
 
@@ -108,7 +94,7 @@ return function(Tab, UI)
             end)
         end
 
-        -- اللوب الأصلي من IY بعد تنظيفه وترتيبه
+        -- اللوب الخاص بالفيزياء
         flingThread = task.spawn(function()
             local movel = 0.1
             while walkflinging do
@@ -116,7 +102,6 @@ return function(Tab, UI)
                 local character = lp.Character
                 local root = character and character:FindFirstChild("HumanoidRootPart")
 
-                -- لا ننفذ الأوامر إلا إذا كانت الشخصية والـ Root موجودين
                 if character and character.Parent and root and root.Parent then
                     local vel = root.AssemblyLinearVelocity
                     root.AssemblyLinearVelocity = vel * 10000 + Vector3.new(0, 10000, 0)
@@ -136,16 +121,33 @@ return function(Tab, UI)
         end)
     end
 
-    Tab:AddToggle("ووك فلينج / WalkFling", function(active)
-        walkflinging = active
+    Tab:AddToggle("ووك فلينج. / WalkFling", function(active)
         if active then
+            -- تحقق من التصادم أولاً وقبل كل شيء
+            if not CheckCollisionAllowed() then
+                Notify(
+                    "🚫 الماب لا يدعم تلامس اللاعبين، لن تعمل!",
+                    "🚫 Map doesn't support player collision!"
+                )
+                walkflinging = false
+                -- تأخير بسيط لإعادة حالة الزر لوضعية الإيقاف في الواجهة
+                task.defer(function()
+                    if Tab.SetToggleState then
+                        Tab:SetToggleState("ووك فلينج / WalkFling", false)
+                    end
+                end)
+                return
+            end
+
+            -- إذا نجح التحقق، يتم التفعيل وإظهار إشعار النجاح
+            walkflinging = true
             StartWalkFling()
             Notify(
                 "✅ تم التفعيل! تطير بتمشي وتلمس ناس",
                 "✅ Walk into players to fling them"
             )
         else
-            -- إيقاف كل شيء عند إطفاء الزر
+            walkflinging = false
             StopAll()
         end
     end)
