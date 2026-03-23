@@ -1,134 +1,156 @@
--- [[ Cryptic Hub - التحكم التخاطري المطور (Telekinesis Tower FE) ]]
--- المطور: أروى (Arwa) | الوصف: رفع البلوكات وتستيفها فوق بعضها بشكل مرتب ومنع السقوط
+-- [[ Cryptic Hub - WalkFling ]]
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
+    local PhysicsService = game:GetService("PhysicsService")
     local StarterGui = game:GetService("StarterGui")
     local lp = Players.LocalPlayer
 
     local isActive = false
-    local connection = nil
-    local capturedParts = {} 
-    local capturedOrder = {} 
-    
-    local START_HEIGHT = 15
-    local SCAN_RADIUS = 60
+    local noclipConn = nil
+    local antiflingConn = nil
+    local deathConn = nil
+    local loopRunning = false
 
-    local function SendRobloxNotification(title, text)
+    local function Notify(ar, en)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
-                Title = title,
-                Text = text,
-                Duration = 4
+                Title = "Cryptic Hub",
+                Text = ar .. "\n" .. en,
+                Duration = 3
             })
         end)
     end
 
-    local function releaseAllParts()
-        for part, data in pairs(capturedParts) do
-            if part and part.Parent then
-                if data.bp then data.bp:Destroy() end
-                if data.bg then data.bg:Destroy() end
-                pcall(function() 
-                    part.Massless = false 
-                    part.CanCollide = data.origCollide
-                    part.AssemblyLinearVelocity = Vector3.new(0,0,0)
-                    part.AssemblyAngularVelocity = Vector3.new(0,0,0)
-                end)
+    local function StartNoclip()
+        if noclipConn then noclipConn:Disconnect() end
+        noclipConn = RunService.Stepped:Connect(function()
+            local char = lp.Character
+            if not char then return end
+            for _, p in pairs(char:GetDescendants()) do
+                if p:IsA("BasePart") then p.CanCollide = false end
+            end
+        end)
+    end
+
+    local function StopNoclip()
+        if noclipConn then noclipConn:Disconnect() noclipConn = nil end
+        local char = lp.Character
+        if char then
+            for _, p in pairs(char:GetDescendants()) do
+                if p:IsA("BasePart") then p.CanCollide = true end
             end
         end
-        capturedParts = {}
-        capturedOrder = {}
     end
 
-    local function isValidPart(part)
-        if not part or not part:IsA("BasePart") then return false end
-        if part.Anchored then return false end 
-        if part:FindFirstAncestorOfClass("Model") and part:FindFirstAncestorOfClass("Model"):FindFirstChildOfClass("Humanoid") then return false end
-        if part:FindFirstAncestorOfClass("Tool") or part:FindFirstAncestorOfClass("Accessory") then return false end
-        return true
-    end
-
-    Tab:AddToggle("رفع وتستيف البلوكات / Telekinesis Tower", function(state)
-        isActive = state
-        
-        if isActive then
-            SendRobloxNotification("Cryptic Hub", "🏗️ تم تفعيل البرج! (البلوكات ستترتب فوق بعضها)")
-            
-            connection = RunService.Heartbeat:Connect(function()
-                local char = lp.Character
-                local root = char and char:FindFirstChild("HumanoidRootPart")
-                if not root then return end
-
-                -- البحث عن بلوكات جديدة
-                for _, obj in pairs(workspace:GetDescendants()) do
-                    if isValidPart(obj) and not capturedParts[obj] then
-                        local distance = (obj.Position - root.Position).Magnitude
-                        if distance <= SCAN_RADIUS then
-                            
-                            local origCollide = obj.CanCollide
-                            obj.CanCollide = false 
-                            obj.Massless = true
-                            
-                            local bp = Instance.new("BodyPosition")
-                            bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                            bp.P = 200000
-                            bp.D = 1500 
-                            bp.Parent = obj
-
-                            local bg = Instance.new("BodyGyro")
-                            bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-                            bg.P = 50000
-                            bg.Parent = obj
-
-                            -- إعطاء السرعة مرة واحدة فقط للبلوك الجديد
-                            pcall(function()
-                                obj.AssemblyLinearVelocity = Vector3.new(0, 25, 0)
-                                obj.AssemblyAngularVelocity = Vector3.new(0,0,0)
-                            end)
-
-                            capturedParts[obj] = {
-                                bp = bp, 
-                                bg = bg, 
-                                origCollide = origCollide
-                            }
-
-                            table.insert(capturedOrder, obj)
+    local function StartAntiFling()
+        if antiflingConn then antiflingConn:Disconnect() end
+        antiflingConn = RunService.Stepped:Connect(function()
+            if not lp.Character then return end
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= lp and p.Character then
+                    for _, part in pairs(p.Character:GetChildren()) do
+                        if part:IsA("BasePart") and part.CanCollide then
+                            part.CanCollide = false
                         end
                     end
                 end
-
-                -- تحريك البلوكات بنظام البرج
-                local currentStackHeight = START_HEIGHT
-                for i, part in ipairs(capturedOrder) do
-                    local data = capturedParts[part]
-                    if part and part.Parent and data and not part.Anchored then
-                        
-                        local targetPos = root.Position + Vector3.new(0, currentStackHeight, 0)
-                        data.bp.Position = targetPos
-                        data.bg.CFrame = root.CFrame
-                        
-                        pcall(function()
-                            part.CanCollide = false
-                        end)
-
-                        currentStackHeight = currentStackHeight + (part.Size.Y + 0.5)
-                    else
-                        capturedParts[part] = nil
-                        table.remove(capturedOrder, i)
-                    end
-                end
-            end)
-        else
-            if connection then
-                connection:Disconnect()
-                connection = nil
             end
-            releaseAllParts()
-            SendRobloxNotification("Cryptic Hub", "⬇️ تم إسقاط البرج.")
+        end)
+    end
+
+    local function StopAntiFling()
+        if antiflingConn then antiflingConn:Disconnect() antiflingConn = nil end
+    end
+
+    local function StopAll()
+        isActive = false
+        loopRunning = false
+        StopNoclip()
+        StopAntiFling()
+        if deathConn then deathConn:Disconnect() deathConn = nil end
+    end
+
+    local function CheckCollisionAllowed()
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= lp and p.Character then
+                local myTorso = lp.Character and (lp.Character:FindFirstChild("UpperTorso") or lp.Character:FindFirstChild("Torso"))
+                local tgtTorso = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso")
+                if myTorso and tgtTorso then
+                    local ok, can = pcall(function()
+                        return PhysicsService:CollisionGroupsAreCollidable(myTorso.CollisionGroup, tgtTorso.CollisionGroup)
+                    end)
+                    return ok and can
+                end
+            end
+        end
+        return true
+    end
+
+    local function StartWalkFling()
+        if not CheckCollisionAllowed() then
+            Notify("🚫 الماب يلغي تصادم اللاعبين!", "🚫 Map disables collision!")
+            isActive = false
+            return
+        end
+
+        StartNoclip()
+        StartAntiFling()
+
+        -- مراقبة الموت
+        if deathConn then deathConn:Disconnect() end
+        local char = lp.Character
+        local hum = char and char:FindFirstChildWhichIsA("Humanoid")
+        if hum then
+            deathConn = hum.Died:Connect(function()
+                if not isActive then return end
+                loopRunning = false
+                StopNoclip()
+                StopAntiFling()
+                lp.CharacterAdded:Wait()
+                task.wait(1.5)
+                if isActive then StartWalkFling() end
+            end)
+        end
+
+        -- اللوب الرئيسي
+        loopRunning = true
+        task.spawn(function()
+            while loopRunning and isActive do
+                RunService.Heartbeat:Wait()
+
+                local character = lp.Character
+                local root = character and character:FindFirstChild("HumanoidRootPart")
+                local hum2 = character and character:FindFirstChildOfClass("Humanoid")
+
+                if not root or not hum2 or hum2.Health <= 0 then
+                    task.wait(0.1)
+                    continue
+                end
+
+                -- فقط لما تكون فعلاً تمشي
+                if hum2.MoveDirection.Magnitude > 0 then
+                    local vel = root.Velocity
+                    root.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+                    RunService.RenderStepped:Wait()
+                    if root and root.Parent then root.Velocity = vel end
+                    RunService.Stepped:Wait()
+                    if root and root.Parent then root.Velocity = vel + Vector3.new(0, 0.1, 0) end
+                end
+            end
+        end)
+    end
+
+    Tab:AddToggle("ووك فلينج / WalkFling", function(active)
+        if active then
+            isActive = true
+            StartWalkFling()
+            Notify("✅ تم التفعيل! تطير بتمشي وتلمس ناس", "✅ Walk into players to fling them")
+        else
+            StopAll()
         end
     end)
-    
+
     Tab:AddLine()
 end
