@@ -70,8 +70,13 @@ return function(Tab, UI)
             if deathConn then deathConn:Disconnect() end
             deathConn = hum.Died:Connect(function()
                 if not isFlying then return end
+                -- تنظيف القديم
+                if connection then connection:Disconnect() connection = nil end
+                if bodyVel then bodyVel:Destroy() bodyVel = nil end
+                if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
+                -- انتظر الريسبون
                 player.CharacterAdded:Wait()
-                task.wait(0.5)
+                task.wait(0.8)
                 if isFlying then toggleFly(true, flySpeed) end
             end)
 
@@ -84,7 +89,7 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddSpeedControl("طيران / Fly", function(active, value)
+    Tab:AddSpeedControl("طيران ./ Fly", function(active, value)
         toggleFly(active, value)
         if active then
             Notify("Cryptic Hub", "✈️ تم تفعيل الطيران!\n✈️ Fly activated!")
