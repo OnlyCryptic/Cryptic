@@ -89,7 +89,7 @@ return function(Tab, UI)
         end
     end
 
-    Tab:AddSpeedControl("طيران ./ Fly", function(active, value)
+    Tab:AddSpeedControl("طيران / Fly", function(active, value)
         toggleFly(active, value)
         if active then
             Notify("Cryptic Hub", "✈️ تم تفعيل الطيران!\n✈️ Fly activated!")
