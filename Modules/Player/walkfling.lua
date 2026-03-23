@@ -122,26 +122,34 @@ return function(Tab, UI)
                 end
 
                 local vel = root.Velocity
+                local horizontalSpeed = Vector3.new(vel.X, 0, vel.Z).Magnitude
 
-                -- تحقق لو السرعة كبيرة جداً (بعد انتقال) ما تطبق الفلينج
-                if vel.Magnitude > 500 then
-                    -- صفّر السرعة عشان ما تموت
-                    root.Velocity = Vector3.new(0, 0, 0)
+                -- تجاهل لو ما في حركة أفقية (واقف أو بس قافز)
+                if horizontalSpeed < 0.5 then
+                    task.wait(0.05)
+                    continue
+                end
+
+                -- تجاهل لو السرعة كبيرة جداً (بعد انتقال أو قفز لانهائي)
+                if horizontalSpeed > 200 or math.abs(vel.Y) > 100 then
+                    root.Velocity = Vector3.new(0, math.min(vel.Y, 50), 0)
                     task.wait(0.1)
                     continue
                 end
 
+                -- طبق الفلينج على الحركة الأفقية فقط
+                local flatVel = Vector3.new(vel.X, 0, vel.Z)
                 local movel = 0.1
-                root.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+                root.Velocity = flatVel * 10000 + Vector3.new(0, 10000, 0)
 
                 RunService.RenderStepped:Wait()
                 if character and character.Parent and root and root.Parent then
-                    root.Velocity = vel
+                    root.Velocity = flatVel
                 end
 
                 RunService.Stepped:Wait()
                 if character and character.Parent and root and root.Parent then
-                    root.Velocity = vel + Vector3.new(0, movel, 0)
+                    root.Velocity = flatVel + Vector3.new(0, movel, 0)
                 end
             end
         end)
