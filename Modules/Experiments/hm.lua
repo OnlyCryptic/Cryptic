@@ -9,6 +9,9 @@ return function(Tab, UI)
 
     local walkflinging = false
     local deathConn = nil
+    local noclipConn = nil
+    local antiflingConn = nil
+    local flingThread = nil -- أضفنا هذا المتغير للتحكم في اللوب وإيقافه
 
     local function Notify(ar, en)
         pcall(function()
@@ -36,6 +39,14 @@ return function(Tab, UI)
         return true
     end
 
+    -- دالة لتنظيف كل اللوبات والاتصالات لتجنب أي تعليق
+    local function StopAll()
+        if noclipConn then noclipConn:Disconnect() noclipConn = nil end
+        if antiflingConn then antiflingConn:Disconnect() antiflingConn = nil end
+        if deathConn then deathConn:Disconnect() deathConn = nil end
+        if flingThread then task.cancel(flingThread) flingThread = nil end
+    end
+
     local function StartWalkFling()
         if not CheckCollisionAllowed() then
             Notify(
@@ -46,8 +57,11 @@ return function(Tab, UI)
             return
         end
 
+        -- تنظيف أي اتصالات قديمة قبل البدء من جديد
+        StopAll()
+
         -- نوكليب
-        local noclipConn = RunService.Stepped:Connect(function()
+        noclipConn = RunService.Stepped:Connect(function()
             if not walkflinging then return end
             local char = lp.Character
             if not char then return end
@@ -57,7 +71,7 @@ return function(Tab, UI)
         end)
 
         -- antifling مخفي
-        local antiflingConn = RunService.Stepped:Connect(function()
+        antiflingConn = RunService.Stepped:Connect(function()
             if not walkflinging then return end
             for _, pl in pairs(Players:GetPlayers()) do
                 if pl ~= lp and pl.Character then
@@ -71,14 +85,14 @@ return function(Tab, UI)
         end)
 
         -- مراقبة الموت
-        if deathConn then deathConn:Disconnect() end
         local char = lp.Character
         local hum = char and char:FindFirstChildWhichIsA("Humanoid")
         if hum then
             deathConn = hum.Died:Connect(function()
                 if not walkflinging then return end
-                noclipConn:Disconnect()
-                antiflingConn:Disconnect()
+                
+                -- نوقف اللوب الحالي فورا عشان ما يتراكم اللوب بعد الريسبون
+                if flingThread then task.cancel(flingThread) flingThread = nil end
 
                 -- انتظر ريسبون
                 local newChar = lp.CharacterAdded:Wait()
@@ -94,37 +108,31 @@ return function(Tab, UI)
             end)
         end
 
-        -- اللوب الأصلي من IY بالضبط
-        task.spawn(function()
-            repeat
+        -- اللوب الأصلي من IY بعد تنظيفه وترتيبه
+        flingThread = task.spawn(function()
+            local movel = 0.1
+            while walkflinging do
                 RunService.Heartbeat:Wait()
                 local character = lp.Character
                 local root = character and character:FindFirstChild("HumanoidRootPart")
 
-                while not (character and character.Parent and root and root.Parent) do
-                    RunService.Heartbeat:Wait()
-                    character = lp.Character
-                    root = character and character:FindFirstChild("HumanoidRootPart")
-                end
-
-                local vel = root.Velocity
-                local movel = 0.1
-                root.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
-
-                RunService.RenderStepped:Wait()
+                -- لا ننفذ الأوامر إلا إذا كانت الشخصية والـ Root موجودين
                 if character and character.Parent and root and root.Parent then
-                    root.Velocity = vel
-                end
+                    local vel = root.AssemblyLinearVelocity
+                    root.AssemblyLinearVelocity = vel * 10000 + Vector3.new(0, 10000, 0)
 
-                RunService.Stepped:Wait()
-                if character and character.Parent and root and root.Parent then
-                    root.Velocity = vel + Vector3.new(0, movel, 0)
-                    movel = movel * -1
-                end
-            until walkflinging == false
+                    RunService.RenderStepped:Wait()
+                    if character and character.Parent and root and root.Parent then
+                        root.AssemblyLinearVelocity = vel
+                    end
 
-            noclipConn:Disconnect()
-            antiflingConn:Disconnect()
+                    RunService.Stepped:Wait()
+                    if character and character.Parent and root and root.Parent then
+                        root.AssemblyLinearVelocity = vel + Vector3.new(0, movel, 0)
+                        movel = movel * -1
+                    end
+                end
+            end
         end)
     end
 
@@ -137,8 +145,8 @@ return function(Tab, UI)
                 "✅ Walk into players to fling them"
             )
         else
-            walkflinging = false
-            if deathConn then deathConn:Disconnect() deathConn = nil end
+            -- إيقاف كل شيء عند إطفاء الزر
+            StopAll()
         end
     end)
 
