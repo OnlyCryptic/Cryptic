@@ -79,27 +79,23 @@ return function(Tab, UI)
                 if not walkflinging then return end
                 noclipConn:Disconnect()
                 antiflingConn:Disconnect()
-                lp.CharacterAdded:Wait()
-                task.wait(1)
+
+                -- انتظر ريسبون
+                local newChar = lp.CharacterAdded:Wait()
+                local newHum = newChar:WaitForChild("Humanoid", 10)
+                if not newHum then return end
+
+                -- انتظر حتى اللاعب يتحرك بنفسه
+                repeat RunService.Heartbeat:Wait()
+                until newHum.MoveDirection.Magnitude > 0 or not walkflinging
+
+                task.wait(0.2)
                 if walkflinging then StartWalkFling() end
             end)
         end
 
         -- اللوب الأصلي من IY بالضبط
         task.spawn(function()
-            -- انتظر الشخصية تستقر على الأرض أول
-            task.wait(0.5)
-            local waitChar = lp.Character
-            local waitHum = waitChar and waitChar:FindFirstChildOfClass("Humanoid")
-            if waitHum then
-                -- انتظر حتى تلمس الأرض
-                local t = 0
-                while waitHum.FloorMaterial == Enum.Material.Air and t < 3 do
-                    RunService.Heartbeat:Wait()
-                    t = t + 0.016
-                end
-            end
-
             repeat
                 RunService.Heartbeat:Wait()
                 local character = lp.Character
@@ -132,7 +128,7 @@ return function(Tab, UI)
         end)
     end
 
-    Tab:AddToggle("وك فلينج / WalkFling", function(active)
+    Tab:AddToggle("ووك فلينج / WalkFling", function(active)
         walkflinging = active
         if active then
             StartWalkFling()
