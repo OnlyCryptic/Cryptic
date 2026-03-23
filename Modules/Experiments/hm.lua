@@ -37,7 +37,6 @@ return function(Tab, UI)
     end
 
     local function StartWalkFling()
-        -- فحص الماب
         if not CheckCollisionAllowed() then
             Notify(
                 "🚫 الماب لا يدعم تلامس اللاعبين، لن تعمل!",
@@ -88,6 +87,19 @@ return function(Tab, UI)
 
         -- اللوب الأصلي من IY بالضبط
         task.spawn(function()
+            -- انتظر الشخصية تستقر على الأرض أول
+            task.wait(0.5)
+            local waitChar = lp.Character
+            local waitHum = waitChar and waitChar:FindFirstChildOfClass("Humanoid")
+            if waitHum then
+                -- انتظر حتى تلمس الأرض
+                local t = 0
+                while waitHum.FloorMaterial == Enum.Material.Air and t < 3 do
+                    RunService.Heartbeat:Wait()
+                    t = t + 0.016
+                end
+            end
+
             repeat
                 RunService.Heartbeat:Wait()
                 local character = lp.Character
@@ -115,7 +127,6 @@ return function(Tab, UI)
                 end
             until walkflinging == false
 
-            -- تنظيف
             noclipConn:Disconnect()
             antiflingConn:Disconnect()
         end)
