@@ -49,17 +49,22 @@ return function(Tab, UI)
     local function StartWalkFling()
         StopAll()
 
-        -- نوكليب
+        -- نوكليب معدل: يمنع سقوطك تحت الأرض عبر استثناء الأرجل والـ RootPart
         noclipConn = RunService.Stepped:Connect(function()
             if not walkflinging then return end
             local char = lp.Character
             if not char then return end
             for _, p in pairs(char:GetDescendants()) do
-                if p:IsA("BasePart") then p.CanCollide = false end
+                if p:IsA("BasePart") then
+                    local pName = p.Name:lower()
+                    if not string.find(pName, "leg") and not string.find(pName, "foot") and pName ~= "humanoidrootpart" then
+                        p.CanCollide = false
+                    end
+                end
             end
         end)
 
-        -- antifling مخفي
+        -- antifling مخفي: يمنع اللاعبين الآخرين من التأثير عليك
         antiflingConn = RunService.Stepped:Connect(function()
             if not walkflinging then return end
             for _, pl in pairs(Players:GetPlayers()) do
@@ -94,7 +99,7 @@ return function(Tab, UI)
             end)
         end
 
-        -- اللوب الخاص بالفيزياء
+        -- اللوب الخاص بالفيزياء معدل لمنع الاختفاء تحت الماب
         flingThread = task.spawn(function()
             local movel = 0.1
             while walkflinging do
@@ -104,7 +109,10 @@ return function(Tab, UI)
 
                 if character and character.Parent and root and root.Parent then
                     local vel = root.AssemblyLinearVelocity
-                    root.AssemblyLinearVelocity = vel * 10000 + Vector3.new(0, 10000, 0)
+                    
+                    -- إجبار السرعة العمودية Y لتكون موجبة دائماً (10000 للأعلى)
+                    -- هذا هو السر الذي سيمنعك من السقوط للأسفل تماماً
+                    root.AssemblyLinearVelocity = Vector3.new(vel.X * 10000, 10000, vel.Z * 10000)
 
                     RunService.RenderStepped:Wait()
                     if character and character.Parent and root and root.Parent then
@@ -121,16 +129,15 @@ return function(Tab, UI)
         end)
     end
 
-    Tab:AddToggle("ووك فلينج. / WalkFling", function(active)
+    Tab:AddToggle("ووك فلينج / WalkFling", function(active)
         if active then
-            -- تحقق من التصادم أولاً وقبل كل شيء
+            -- فحص التلامس أولاً
             if not CheckCollisionAllowed() then
                 Notify(
                     "🚫 الماب لا يدعم تلامس اللاعبين، لن تعمل!",
                     "🚫 Map doesn't support player collision!"
                 )
                 walkflinging = false
-                -- تأخير بسيط لإعادة حالة الزر لوضعية الإيقاف في الواجهة
                 task.defer(function()
                     if Tab.SetToggleState then
                         Tab:SetToggleState("ووك فلينج / WalkFling", false)
@@ -139,7 +146,6 @@ return function(Tab, UI)
                 return
             end
 
-            -- إذا نجح التحقق، يتم التفعيل وإظهار إشعار النجاح
             walkflinging = true
             StartWalkFling()
             Notify(
