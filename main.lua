@@ -72,7 +72,7 @@ local function StartCrypticHub()
 
                 local elementsList = {
                     "Button", "Toggle", "TimedToggle", "Input", "LargeInput", 
-                    "SpeedControl", "Dropdown", "PlayerSelector", "ProfileCard", 
+                    "SpeedControl", "Dropdown", "PlayerSelector", "AddAutoOffToggle", "ProfileCard", 
                     "Line", "Label", "Paragraph", "Folder"
                 }
                 
