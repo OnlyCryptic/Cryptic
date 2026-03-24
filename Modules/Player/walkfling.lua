@@ -50,7 +50,7 @@ return function(Tab, UI)
     local function StartWalkFling()
         if not CheckCollisionAllowed() then
             Notify(
-                "🚫 الماب لا يدعم تلامس اللاعبين، لن تعمل!",
+                "🚫 الماب لا يدعم تلامس اللاعبين",
                 "🚫 Map doesn't support player collision!"
             )
             walkflinging = false
@@ -149,6 +149,4 @@ return function(Tab, UI)
             StopAll()
         end
     end)
-
-    Tab:AddLine()
 end
