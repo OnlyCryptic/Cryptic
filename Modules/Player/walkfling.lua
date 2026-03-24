@@ -117,7 +117,7 @@ return function(Tab, UI)
 
     -- 🟢 إنشاء الزر والتحكم في الوظائف
     local walkFlingToggle
-    walkFlingToggle = AddAutoOffToggle("تطير ناس بلمسهم/ WalkFling", function(active, isManual)
+    walkFlingToggle = AddAutoOffToggle("تطير ناس بلمسهم / WalkFling", function(active, isManual)
         if active then
             walkflinging = true
             Notify("✅ تم التفعيل!", "✅ Walk into players to fling them")
