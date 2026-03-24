@@ -5,6 +5,10 @@ return function(Tab, UI)
     local player = game.Players.LocalPlayer
     local StarterGui = game:GetService("StarterGui") -- إضافة خدمة الإشعارات
     
+    -- متغيرات لحفظ حالة الزر والسرعة لتطبيقها بعد الموت
+    local isSpeedActive = false
+    local currentSpeed = 50
+    
     -- دالة إرسال الإشعارات المزدوجة / Dual notification function
     local function Notify(title, text)
         pcall(function()
@@ -18,6 +22,10 @@ return function(Tab, UI)
 
     -- أضفنا الرقم 50 في نهاية الدالة ليكون القيمة الافتراضية في الخانة / Added 50 as the default value in the input field
     Tab:AddSpeedControl("سرعة المشي / WalkSpeed", function(active, value)
+        -- تحديث المتغيرات الخارجية
+        isSpeedActive = active
+        currentSpeed = value
+
         local char = player.Character
         local hum = char and char:FindFirstChild("Humanoid")
         
@@ -34,4 +42,15 @@ return function(Tab, UI)
         -- إذا تم إيقاف الميزة (active = false) لن يظهر أي إشعار وتنطفئ بصمت
         
     end, 50)
+
+    -- إرجاع السرعة تلقائياً عند ترسبن (respawn) اللاعب إذا كان الزر مفعل
+    player.CharacterAdded:Connect(function(newChar)
+        if isSpeedActive then
+            -- ننتظر حتى يحمل الـ Humanoid الخاص بالشخصية الجديدة
+            local hum = newChar:WaitForChild("Humanoid", 5)
+            if hum then
+                hum.WalkSpeed = currentSpeed
+            end
+        end
+    end)
 end
