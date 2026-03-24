@@ -1,152 +1,78 @@
--- [[ Cryptic Hub - WalkFling ]]
+-- [[ Cryptic Hub - Element: Toggle (Auto-Off On Death) ]]
 
-return function(Tab, UI)
-    local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
-    local PhysicsService = game:GetService("PhysicsService")
-    local StarterGui = game:GetService("StarterGui")
-    local lp = Players.LocalPlayer
-
-    local walkflinging = false
-    local deathConn = nil
-    local noclipConn = nil
-    local antiflingConn = nil
-    local flingThread = nil -- أضفنا هذا المتغير للتحكم في اللوب وإيقافه
-
-    local function Notify(ar, en)
-        pcall(function()
-            StarterGui:SetCore("SendNotification", {
-                Title = "Cryptic Hub",
-                Text = ar .. "\n" .. en,
-                Duration = 4
-            })
-        end)
+return function(TabOps, label, callback)
+    TabOps.Order = TabOps.Order + 1
+    
+    local R = Instance.new("Frame", TabOps.Page)
+    R.LayoutOrder = TabOps.Order
+    R.Size = UDim2.new(0.98, 0, 0, 45)
+    R.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    Instance.new("UICorner", R)
+    
+    local B = Instance.new("TextButton", R)
+    B.Size = UDim2.new(0, 45, 0, 22)
+    B.Position = UDim2.new(1, -55, 0.5, -11)
+    B.Text = ""
+    B.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
+    
+    local Lbl = Instance.new("TextLabel", R)
+    Lbl.Text = label
+    Lbl.Size = UDim2.new(1, -65, 1, 0) -- مساحة آمنة جداً
+    Lbl.Position = UDim2.new(0, 5, 0, 0)
+    Lbl.TextColor3 = Color3.new(1, 1, 1)
+    Lbl.BackgroundTransparency = 1
+    Lbl.TextXAlignment = Enum.TextXAlignment.Right
+    Lbl.Font = Enum.Font.GothamSemibold
+    Lbl.TextSize = 11 -- 🟢 الحجم الصغير والموحد
+    Lbl.TextWrapped = false 
+    
+    local isActive = false
+    local configKey = TabOps.TabName .. "_" .. label
+    
+    if TabOps.UI.ConfigData[configKey] ~= nil then isActive = TabOps.UI.ConfigData[configKey] end
+    
+    local function setState(state, isClick)
+        isActive = state
+        B.BackgroundColor3 = isActive and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(60, 60, 60)
+        TabOps.UI.ConfigData[configKey] = isActive
+        pcall(callback, isActive)
+        if isClick and TabOps.LogAction then TabOps.LogAction("⚙️ تفعيل/إيقاف ميزة", label, isActive and "مفعل ✅" or "معطل ❌", isActive and 5763719 or 15548997) end
     end
+    
+    B.BackgroundColor3 = isActive and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(60, 60, 60)
+    if isActive then task.spawn(function() task.wait(1.5); pcall(callback, isActive) end) end
+    
+    B.MouseButton1Click:Connect(function() setState(not isActive, true) end)
 
-    local function CheckCollisionAllowed()
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= lp and p.Character then
-                local myTorso = lp.Character and (lp.Character:FindFirstChild("UpperTorso") or lp.Character:FindFirstChild("Torso"))
-                local tgtTorso = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso")
-                if myTorso and tgtTorso then
-                    local ok, can = pcall(function()
-                        return PhysicsService:CollisionGroupsAreCollidable(myTorso.CollisionGroup, tgtTorso.CollisionGroup)
-                    end)
-                    if ok then return can end
-                end
-            end
-        end
-        return true
-    end
-
-    -- دالة لتنظيف كل اللوبات والاتصالات لتجنب أي تعليق
-    local function StopAll()
-        if noclipConn then noclipConn:Disconnect() noclipConn = nil end
-        if antiflingConn then antiflingConn:Disconnect() antiflingConn = nil end
-        if deathConn then deathConn:Disconnect() deathConn = nil end
-        if flingThread then task.cancel(flingThread) flingThread = nil end
-    end
-
-    local function StartWalkFling()
-        if not CheckCollisionAllowed() then
-            Notify(
-                "🚫 الماب لا يدعم تلامس اللاعبين",
-                "🚫 Map doesn't support player collision!"
-            )
-            walkflinging = false
-            return
-        end
-
-        -- تنظيف أي اتصالات قديمة قبل البدء من جديد
-        StopAll()
-
-        -- نوكليب
-        noclipConn = RunService.Stepped:Connect(function()
-            if not walkflinging then return end
-            local char = lp.Character
-            if not char then return end
-            for _, p in pairs(char:GetDescendants()) do
-                if p:IsA("BasePart") then p.CanCollide = false end
-            end
-        end)
-
-        -- antifling مخفي
-        antiflingConn = RunService.Stepped:Connect(function()
-            if not walkflinging then return end
-            for _, pl in pairs(Players:GetPlayers()) do
-                if pl ~= lp and pl.Character then
-                    for _, part in pairs(pl.Character:GetChildren()) do
-                        if part:IsA("BasePart") and part.CanCollide then
-                            part.CanCollide = false
-                        end
-                    end
-                end
-            end
-        end)
-
-        -- مراقبة الموت
-        local char = lp.Character
-        local hum = char and char:FindFirstChildWhichIsA("Humanoid")
+    -- ==============================================================
+    -- ++ نظام الإطفاء التلقائي عند الموت / Auto-Off on Death System ++
+    local player = game.Players.LocalPlayer
+    
+    local function setupDeathEvent(char)
+        -- ننتظر تحميل الهيومانويد الخاص بالشخصية
+        local hum = char:WaitForChild("Humanoid", 5)
         if hum then
-            deathConn = hum.Died:Connect(function()
-                if not walkflinging then return end
-                
-                -- نوقف اللوب الحالي فورا عشان ما يتراكم اللوب بعد الريسبون
-                if flingThread then task.cancel(flingThread) flingThread = nil end
-
-                -- انتظر ريسبون
-                local newChar = lp.CharacterAdded:Wait()
-                local newHum = newChar:WaitForChild("Humanoid", 10)
-                if not newHum then return end
-
-                -- انتظر حتى اللاعب يتحرك بنفسه
-                repeat RunService.Heartbeat:Wait()
-                until newHum.MoveDirection.Magnitude > 0 or not walkflinging
-
-                task.wait(0.2)
-                if walkflinging then StartWalkFling() end
+            -- عند موت اللاعب
+            hum.Died:Connect(function()
+                if isActive then
+                    -- نطفئ الزر ونرسل 'false' كقيمة isClick حتى لا تتسجل كضغطة يدوية في اللوج
+                    setState(false, false) 
+                end
             end)
         end
-
-        -- اللوب الأصلي من IY بعد تنظيفه وترتيبه
-        flingThread = task.spawn(function()
-            local movel = 0.1
-            while walkflinging do
-                RunService.Heartbeat:Wait()
-                local character = lp.Character
-                local root = character and character:FindFirstChild("HumanoidRootPart")
-
-                -- لا ننفذ الأوامر إلا إذا كانت الشخصية والـ Root موجودين
-                if character and character.Parent and root and root.Parent then
-                    local vel = root.AssemblyLinearVelocity
-                    root.AssemblyLinearVelocity = vel * 10000 + Vector3.new(0, 10000, 0)
-
-                    RunService.RenderStepped:Wait()
-                    if character and character.Parent and root and root.Parent then
-                        root.AssemblyLinearVelocity = vel
-                    end
-
-                    RunService.Stepped:Wait()
-                    if character and character.Parent and root and root.Parent then
-                        root.AssemblyLinearVelocity = vel + Vector3.new(0, movel, 0)
-                        movel = movel * -1
-                    end
-                end
-            end
-        end)
     end
 
-    Tab:AddToggle("تطير ناس بلمسهم/ WalkFling", function(active)
-        walkflinging = active
-        if active then
-            StartWalkFling()
-            Notify(
-                "✅ تم التفعيل! تطير بتمشي وتلمس ناس",
-                "✅ Walk into players to fling them"
-            )
-        else
-            -- إيقاف كل شيء عند إطفاء الزر
-            StopAll()
-        end
+    -- 1. تشغيل الحدث على الشخصية الحالية (إذا كانت موجودة)
+    if player.Character then
+        task.spawn(function() setupDeathEvent(player.Character) end)
+    end
+
+    -- 2. تشغيل الحدث في كل مرة يترسبن فيها اللاعب من جديد
+    player.CharacterAdded:Connect(function(char)
+        setupDeathEvent(char)
     end)
+    -- ==============================================================
+
+    return { SetState = function(self, state) setState(state, false) end }
 end
