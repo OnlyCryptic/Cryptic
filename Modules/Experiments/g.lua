@@ -1,7 +1,8 @@
--- [[ Cryptic Hub - Shrink Size (Ant Size) Only ]]
+-- [[ Cryptic Hub - Shrink Size (Aggressive Version) ]]
 
 return function(Tab, UI)
     local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
     local StarterGui = game:GetService("StarterGui")
     local lp = Players.LocalPlayer
 
@@ -57,7 +58,6 @@ return function(Tab, UI)
         
         B.MouseButton1Click:Connect(function() setState(not isActive, true) end)
 
-        -- إطفاء تلقائي عند الموت
         local function setupDeathEvent(char)
             local hum = char:WaitForChild("Humanoid", 5)
             if hum then
@@ -77,73 +77,88 @@ return function(Tab, UI)
     end
 
     -- ==============================================================
-    -- 🐜 ميزة التصغير (Shrink Size)
+    -- 🐜 ميزة التصغير (Shrink Size) الإجبارية
     -- ==============================================================
     local originalScales = {}
     local isShrunk = false
+    local shrinkLoop = nil
 
-    local function SetCharacterScale(scaleMultiplier)
+    -- دالة لتصغير الحجم وحفظ الحجم الأصلي
+    local function ForceScale(multiplier)
         local char = lp.Character
         local hum = char and char:FindFirstChild("Humanoid")
         if not hum then return false end
 
-        -- القيم المسؤولة عن حجم الشخصية في R15
+        -- إذا كانت الشخصية R6، نوقف العملية فوراً
+        if hum.RigType == Enum.HumanoidRigType.R6 then
+            return false
+        end
+
         local scaleNames = {"BodyHeightScale", "BodyWidthScale", "BodyDepthScale", "HeadScale"}
-        local isR15 = false
 
         for _, name in ipairs(scaleNames) do
             local scaleValue = hum:FindFirstChild(name)
             if scaleValue and scaleValue:IsA("NumberValue") then
-                isR15 = true
-                -- نحفظ حجمك الأصلي عشان نرجعك له بعدين
+                -- حفظ الحجم الأساسي أول مرة فقط
                 if not originalScales[name] then
                     originalScales[name] = scaleValue.Value
                 end
 
-                if scaleMultiplier == 1 then
-                    -- استرجاع الحجم الأصلي
-                    scaleValue.Value = originalScales[name] or 1
-                else
-                    -- تطبيق التصغير
-                    scaleValue.Value = (originalScales[name] or 1) * scaleMultiplier
-                end
+                local targetValue = (originalScales[name] or 1) * multiplier
+                -- فرض الحجم الجديد
+                scaleValue.Value = targetValue
             end
-        end
-
-        -- إذا كانت الشخصية R6 ما راح نقدر نصغرها
-        if not isR15 and scaleMultiplier ~= 1 then
-            Notify("⚠️ شخصيتك R6 - الماب لا يدعم تغيير الحجم", "⚠️ R6 Character - Cannot change size")
-            return false
         end
         return true
     end
 
-    -- إنشاء زر التصغير
     local shrinkToggle
     shrinkToggle = AddAutoOffToggle("حجم النملة / Shrink Size", function(active, isManual)
         if active then
             isShrunk = true
-            -- 0.3 يعني 30% من حجمك الطبيعي (تقدر تخليها 0.2 أو 0.5 براحتك)
-            local success = SetCharacterScale(0.3) 
-            if success then
-                Notify("🐜 تم تصغير الحجم!", "🐜 Shrunk to ant size!")
-            else
-                -- إذا الشخصية R6 يطفي الزر من نفسه
-                shrinkToggle:SetState(false) 
+            
+            -- فحص إذا كانت الشخصية تدعم التصغير (R15)
+            local checkR15 = ForceScale(0.3)
+            if not checkR15 then
+                Notify("🚫 الماب لا يدعم التصغير (R6)", "🚫 Map doesn't support shrinking (R6)")
+                shrinkToggle:SetState(false)
+                return
             end
+
+            Notify("🐜 تم تصغير الحجم بالقوة!", "🐜 Forced ant size!")
+
+            -- لوب إجباري لتثبيت الحجم (يمنع الماب من إرجاع حجمك الطبيعي)
+            if shrinkLoop then shrinkLoop:Disconnect() end
+            shrinkLoop = RunService.Stepped:Connect(function()
+                if isShrunk then
+                    ForceScale(0.3) -- 0.3 هو نسبة التصغير
+                end
+            end)
+
         else
+            -- إيقاف التصغير
             isShrunk = false
-            -- يرجعك لحجمك 100%
-            SetCharacterScale(1) 
+            if shrinkLoop then 
+                shrinkLoop:Disconnect() 
+                shrinkLoop = nil 
+            end
+            
+            -- استرجاع الحجم الطبيعي (1.0)
+            ForceScale(1)
             Notify("🧍 تم استرجاع الحجم الطبيعي", "🧍 Size restored")
         end
     end)
 
-    -- لو متت ورسبنت والزر لسه شغال، يصغرك تلقائياً
+    -- إعادة تفعيل اللوب إذا رسبن اللاعب والزر شغال
     lp.CharacterAdded:Connect(function(char)
         if isShrunk then
-            task.wait(0.5) -- ننتظر الشخصية تحمل
-            SetCharacterScale(0.3)
+            task.wait(0.5)
+            if ForceScale(0.3) then
+                if shrinkLoop then shrinkLoop:Disconnect() end
+                shrinkLoop = RunService.Stepped:Connect(function()
+                    if isShrunk then ForceScale(0.3) end
+                end)
+            end
         end
     end)
 end
