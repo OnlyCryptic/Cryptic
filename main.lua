@@ -25,7 +25,7 @@ local Cryptic = {
 }
 
 if lp.UserId == 3875086037 then
-    Cryptic.Structure["تجارب"] = { Folder = "Experiments", Files = {"hm", "auto_apple", "help", "g"} }
+    Cryptic.Structure["تجارب"] = { Folder = "Experiments", Files = {"hm", "auto_apple", "help", "g", "respawn"} }
     table.insert(Cryptic.TabsOrder, "تجارب")
 end
 
