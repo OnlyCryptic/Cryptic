@@ -72,11 +72,17 @@ return function(Tab, UI)
                 if not isFlying then return end
                 -- تنظيف القديم
                 if connection then connection:Disconnect() connection = nil end
-                if bodyVel then bodyVel:Destroy() bodyVel = nil end
-                if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
-                -- انتظر الريسبون
-                player.CharacterAdded:Wait()
-                task.wait(0.8)
+                if bodyVel then pcall(function() bodyVel:Destroy() end) bodyVel = nil end
+                if bodyGyro then pcall(function() bodyGyro:Destroy() end) bodyGyro = nil end
+                -- انتظر الشخصية الجديدة — إذا تحملت مسبقاً نستخدمها مباشرة
+                local newChar = player.Character
+                if not newChar or not newChar:FindFirstChild("HumanoidRootPart") then
+                    newChar = player.CharacterAdded:Wait()
+                end
+                -- تأكد من تحميل كامل الأجزاء المطلوبة
+                newChar:WaitForChild("HumanoidRootPart", 10)
+                newChar:WaitForChild("Humanoid", 10)
+                task.wait(0.5)
                 if isFlying then toggleFly(true, flySpeed) end
             end)
 
