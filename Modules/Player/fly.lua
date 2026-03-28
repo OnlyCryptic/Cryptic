@@ -74,15 +74,18 @@ return function(Tab, UI)
                 if connection then connection:Disconnect() connection = nil end
                 if bodyVel then pcall(function() bodyVel:Destroy() end) bodyVel = nil end
                 if bodyGyro then pcall(function() bodyGyro:Destroy() end) bodyGyro = nil end
-                -- انتظر الشخصية الجديدة — إذا تحملت مسبقاً نستخدمها مباشرة
+                -- انتظر إزالة الشخصية الميتة أولاً
+                task.wait(0.2)
+                -- الآن انتظر الشخصية الجديدة الحية
                 local newChar = player.Character
-                if not newChar or not newChar:FindFirstChild("HumanoidRootPart") then
+                local newHum = newChar and newChar:FindFirstChild("Humanoid")
+                if not newChar or not newHum or newHum.Health <= 0 then
                     newChar = player.CharacterAdded:Wait()
                 end
-                -- تأكد من تحميل كامل الأجزاء المطلوبة
+                -- تأكد من تحميل الأجزاء
                 newChar:WaitForChild("HumanoidRootPart", 10)
                 newChar:WaitForChild("Humanoid", 10)
-                task.wait(0.5)
+                task.wait(0.3)
                 if isFlying then toggleFly(true, flySpeed) end
             end)
 
