@@ -1,5 +1,5 @@
--- [[ Cryptic Hub - المحرك الرئيسي V8.1 (نظام التأكيد الذكي) ]]
--- المطور: يامي | الوصف: حماية من التكرار مع رسالة تأكيد (نعم/إلغاء)
+-- [[ Cryptic Hub - المحرك الرئيسي V8.2 (نظام سكربتات المابات) ]]
+-- المطور: يامي | الإضافة: قسم ماب مخصص يظهر فقط عند الدخول للماب المسجّل
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -9,6 +9,14 @@ local Cryptic = {
     Config = {
         UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "test", 
         Discord = "https://discord.gg/QSvQJs7BdP"
+    },
+
+    -- ========================================================
+    -- 🗺️ سجل المابات: PlaceId => مسار ملف الماب (بدون .lua)
+    -- أضف ماب جديد بإضافة سطر هنا وإنشاء ملفه في Maps/
+    -- ========================================================
+    Maps = {
+        [120920474420629] = "Maps/120920474420629"
     },
 
     Structure = {  
@@ -57,9 +65,33 @@ local function LoadElement(elementName)
 end
 
 -- ========================================================
--- 🔥 دالة التشغيل الرئيسية (مغلفة لتشتغل وقت الحاجة فقط)
+-- 🗺️ كشف الماب الحالي وحقن تاب مخصص بعد معلومات
+-- ========================================================
+local function InjectMapTab()
+    local currentPlaceId = game.PlaceId
+    local mapFilePath = Cryptic.Maps[currentPlaceId]
+    if not mapFilePath then return end
+
+    -- تحميل بيانات الماب
+    local mapData = Import(mapFilePath .. ".lua")
+    if type(mapData) ~= "table" then return end
+
+    local tabName = "🗺️ " .. mapData.Name
+
+    -- تسجيل التاب في البنية
+    Cryptic.Structure[tabName] = { _isMapTab = true, _mapData = mapData }
+
+    -- حقن التاب في الموضع الثاني (بعد معلومات / info مباشرة)
+    table.insert(Cryptic.TabsOrder, 2, tabName)
+end
+
+-- ========================================================
+-- 🔥 دالة التشغيل الرئيسية
 -- ========================================================
 local function StartCrypticHub()
+    -- كشف الماب وحقن التاب قبل بناء الواجهة
+    InjectMapTab()
+
     local UI = Import("UI/Core.lua")
 
     if UI then
@@ -84,6 +116,24 @@ local function StartCrypticHub()
                 end
 
                 task.spawn(function(data, tab, nameOfTab)
+
+                    -- ==========================================
+                    -- 🗺️ تاب الماب المخصص
+                    -- ==========================================
+                    if data._isMapTab and data._mapData then
+                        local mapData = data._mapData
+
+                        -- عنوان القسم
+                        tab:AddLabel("🗺️ سكربتات الماب الحالي / Map Scripts")
+                        tab:AddLine()
+
+                        -- تحميل بطاقة الماب
+                        local MapCardFunc = LoadElement("MapCard")
+                        if MapCardFunc then
+                            pcall(function() MapCardFunc(tab, mapData) end)
+                        end
+                        return
+                    end
 
                     -- ==========================================
                     -- تاب استهداف لاعب: target_select مباشر، باقي في 3 أقسام Open
