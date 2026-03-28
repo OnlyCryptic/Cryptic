@@ -1,164 +1,207 @@
--- [[ Cryptic Hub - Shrink Size (Aggressive Version) ]]
+-- [[ Cryptic Hub - الطيران / Fly ]]
 
 return function(Tab, UI)
-    local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
-    local StarterGui = game:GetService("StarterGui")
-    local lp = Players.LocalPlayer
+    local player         = game.Players.LocalPlayer
+    local RunService     = game:GetService("RunService")
+    local StarterGui     = game:GetService("StarterGui")
+    local UIS            = game:GetService("UserInputService")
+    local cam            = workspace.CurrentCamera
 
-    -- 📢 دالة الإشعارات
-    local function Notify(ar, en)
+    local isFlying       = false
+    local flySpeed       = 50
+    local verticalInput  = 0        -- 1 = صعود، -1 = نزول، 0 = لا شيء
+    local bodyVel, bodyGyro, flyConn, deathConn
+    local screenGui      = nil
+    local flyDropRef     = nil      -- مرجع لـ ToggleDropdown لتحديث حالته من الشاشة
+    local updateScreenBtnColor = nil
+
+    local function Notify(text)
         pcall(function()
-            StarterGui:SetCore("SendNotification", {
-                Title = "Cryptic Hub",
-                Text = ar .. "\n" .. en,
-                Duration = 4
-            })
+            StarterGui:SetCore("SendNotification", {Title = "Cryptic Hub", Text = text, Duration = 3})
         end)
     end
 
-    -- 🛠️ دالة إنشاء الزر الأساسية
-    local function AddAutoOffToggle(label, callback)
-        Tab.Order = Tab.Order or 0
-        Tab.Order = Tab.Order + 1
-        local ParentPage = Tab.Page or Tab.Container or Tab
-        
-        local R = Instance.new("Frame", ParentPage)
-        R.LayoutOrder = Tab.Order
-        R.Size = UDim2.new(0.98, 0, 0, 45)
-        R.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-        Instance.new("UICorner", R)
-        
-        local B = Instance.new("TextButton", R)
-        B.Size = UDim2.new(0, 45, 0, 22)
-        B.Position = UDim2.new(1, -55, 0.5, -11)
-        B.Text = ""
-        B.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
-        
-        local Lbl = Instance.new("TextLabel", R)
-        Lbl.Text = label
-        Lbl.Size = UDim2.new(1, -65, 1, 0)
-        Lbl.Position = UDim2.new(0, 5, 0, 0)
-        Lbl.TextColor3 = Color3.new(1, 1, 1)
-        Lbl.BackgroundTransparency = 1
-        Lbl.TextXAlignment = Enum.TextXAlignment.Right
-        Lbl.Font = Enum.Font.GothamSemibold
-        Lbl.TextSize = 11
-        
-        local isActive = false
-        local configKey = (Tab.TabName or "Tab") .. "_" .. label
-        
-        local function setState(state, isManual)
-            isActive = state
-            B.BackgroundColor3 = isActive and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(60, 60, 60)
-            if UI and UI.ConfigData then UI.ConfigData[configKey] = isActive end
-            pcall(callback, isActive, isManual)
-        end
-        
-        B.MouseButton1Click:Connect(function() setState(not isActive, true) end)
-
-        local function setupDeathEvent(char)
-            local hum = char:WaitForChild("Humanoid", 5)
-            if hum then
-                hum.Died:Connect(function()
-                    if isActive then
-                        setState(false, false)
-                        Notify("⚠️ تم إرجاع حجمك بسبب موتك", "⚠️ Size reset due to death")
-                    end
-                end)
-            end
-        end
-
-        if lp.Character then task.spawn(function() setupDeathEvent(lp.Character) end) end
-        lp.CharacterAdded:Connect(setupDeathEvent)
-
-        return { SetState = function(self, state) setState(state, false) end }
+    -- ── تحديث زر الشاشة بعد تغيير الحالة ────────────────────────
+    local function syncScreenBtn()
+        if updateScreenBtnColor then updateScreenBtnColor(isFlying) end
     end
 
-    -- ==============================================================
-    -- 🐜 ميزة التصغير (Shrink Size) الإجبارية
-    -- ==============================================================
-    local originalScales = {}
-    local isShrunk = false
-    local shrinkLoop = nil
-
-    -- دالة لتصغير الحجم وحفظ الحجم الأصلي
-    local function ForceScale(multiplier)
-        local char = lp.Character
-        local hum = char and char:FindFirstChild("Humanoid")
-        if not hum then return false end
-
-        -- إذا كانت الشخصية R6، نوقف العملية فوراً
-        if hum.RigType == Enum.HumanoidRigType.R6 then
-            return false
-        end
-
-        local scaleNames = {"BodyHeightScale", "BodyWidthScale", "BodyDepthScale", "HeadScale"}
-
-        for _, name in ipairs(scaleNames) do
-            local scaleValue = hum:FindFirstChild(name)
-            if scaleValue and scaleValue:IsA("NumberValue") then
-                -- حفظ الحجم الأساسي أول مرة فقط
-                if not originalScales[name] then
-                    originalScales[name] = scaleValue.Value
-                end
-
-                local targetValue = (originalScales[name] or 1) * multiplier
-                -- فرض الحجم الجديد
-                scaleValue.Value = targetValue
-            end
-        end
-        return true
+    -- ── دالة إنشاء زر ────────────────────────────────────────────
+    local function makeBtn(parent, text, size, pos, bg)
+        local b = Instance.new("TextButton", parent)
+        b.Size = size; b.Position = pos
+        b.Text = text
+        b.BackgroundColor3 = bg
+        b.BackgroundTransparency = 0.25
+        b.TextColor3 = Color3.new(1, 1, 1)
+        b.Font = Enum.Font.GothamBold
+        b.TextSize = 15
+        b.BorderSizePixel = 0
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 10)
+        return b
     end
 
-    local shrinkToggle
-    shrinkToggle = AddAutoOffToggle("حجم النملة / Shrink Size", function(active, isManual)
-        if active then
-            isShrunk = true
-            
-            -- فحص إذا كانت الشخصية تدعم التصغير (R15)
-            local checkR15 = ForceScale(0.3)
-            if not checkR15 then
-                Notify("🚫 الماب لا يدعم التصغير (R6)", "🚫 Map doesn't support shrinking (R6)")
-                shrinkToggle:SetState(false)
-                return
+    -- ── واجهة الشاشة ──────────────────────────────────────────────
+    local function setScreenGui(enabled)
+        if screenGui then screenGui:Destroy(); screenGui = nil end
+        updateScreenBtnColor = nil
+        if not enabled then return end
+
+        local gui = Instance.new("ScreenGui", player.PlayerGui)
+        gui.Name = "CrypticFlyUI"
+        gui.ResetOnSpawn = false
+        gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        screenGui = gui
+
+        -- حاوية الأزرار (يسار الشاشة وسط)
+        local frame = Instance.new("Frame", gui)
+        frame.Size = UDim2.new(0, 70, 0, 175)
+        frame.Position = UDim2.new(0, 14, 0.5, -87)
+        frame.BackgroundTransparency = 1
+
+        -- زر التشغيل/الإيقاف
+        local toggleBtn = makeBtn(frame, "✈️",
+            UDim2.new(1, 0, 0, 55),
+            UDim2.new(0, 0, 0, 0),
+            Color3.fromRGB(50, 50, 70))
+
+        updateScreenBtnColor = function(active)
+            toggleBtn.BackgroundColor3 = active
+                and Color3.fromRGB(0, 170, 85)
+                or  Color3.fromRGB(50, 50, 70)
+        end
+        updateScreenBtnColor(isFlying)
+
+        toggleBtn.MouseButton1Click:Connect(function()
+            if flyDropRef then
+                flyDropRef:SetActive(not isFlying)
             end
+        end)
 
-            Notify("🐜 تم تصغير الحجم بالقوة!", "🐜 Forced ant size!")
+        -- زر الصعود ▲
+        local upBtn = makeBtn(frame, "▲",
+            UDim2.new(1, 0, 0, 55),
+            UDim2.new(0, 0, 0, 62),
+            Color3.fromRGB(30, 90, 200))
 
-            -- لوب إجباري لتثبيت الحجم (يمنع الماب من إرجاع حجمك الطبيعي)
-            if shrinkLoop then shrinkLoop:Disconnect() end
-            shrinkLoop = RunService.Stepped:Connect(function()
-                if isShrunk then
-                    ForceScale(0.3) -- 0.3 هو نسبة التصغير
+        upBtn.MouseButton1Down:Connect(function() verticalInput = 1 end)
+        upBtn.MouseButton1Up:Connect(function()
+            if verticalInput == 1 then verticalInput = 0 end
+        end)
+
+        -- زر النزول ▼
+        local downBtn = makeBtn(frame, "▼",
+            UDim2.new(1, 0, 0, 55),
+            UDim2.new(0, 0, 0, 120),
+            Color3.fromRGB(180, 50, 50))
+
+        downBtn.MouseButton1Down:Connect(function() verticalInput = -1 end)
+        downBtn.MouseButton1Up:Connect(function()
+            if verticalInput == -1 then verticalInput = 0 end
+        end)
+    end
+
+    -- ── دالة الطيران ──────────────────────────────────────────────
+    local function toggleFly(active, speedValue)
+        isFlying = active
+        flySpeed = speedValue or flySpeed
+        local char = player.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        local hum  = char and char:FindFirstChild("Humanoid")
+
+        if isFlying and root and hum then
+            if bodyVel  then bodyVel:Destroy()  end
+            if bodyGyro then bodyGyro:Destroy() end
+
+            bodyVel = Instance.new("BodyVelocity", root)
+            bodyVel.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+
+            bodyGyro = Instance.new("BodyGyro", root)
+            bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            bodyGyro.P = 5000
+
+            hum.PlatformStand = true
+
+            if flyConn then flyConn:Disconnect() end
+            flyConn = RunService.RenderStepped:Connect(function()
+                if not (isFlying and root and bodyVel) then return end
+
+                local moveDir = hum.MoveDirection
+
+                -- صعود/نزول: أزرار الشاشة أو الكيبورد (Space / LeftCtrl أو C)
+                local vInput = verticalInput
+                if UIS:IsKeyDown(Enum.KeyCode.Space)       then vInput =  1 end
+                if UIS:IsKeyDown(Enum.KeyCode.LeftControl)
+                or UIS:IsKeyDown(Enum.KeyCode.C)           then vInput = -1 end
+
+                if moveDir.Magnitude > 0 or vInput ~= 0 then
+                    local look  = cam.CFrame.LookVector
+                    local right = cam.CFrame.RightVector
+
+                    local fLook  = Vector3.new(look.X,  0, look.Z)
+                    if fLook.Magnitude  > 0 then fLook  = fLook.Unit  end
+                    local fRight = Vector3.new(right.X, 0, right.Z)
+                    if fRight.Magnitude > 0 then fRight = fRight.Unit end
+
+                    local zIn = moveDir:Dot(fLook)
+                    local xIn = moveDir:Dot(fRight)
+                    local dir = (fLook * zIn) + (fRight * xIn) + Vector3.new(0, vInput, 0)
+
+                    bodyVel.Velocity = dir.Magnitude > 0
+                        and dir.Unit * flySpeed
+                        or  Vector3.new(0, 0, 0)
+                else
+                    bodyVel.Velocity = Vector3.new(0, 0, 0)
                 end
+
+                bodyGyro.CFrame = cam.CFrame
+            end)
+
+            -- مراقبة الموت → إعادة التشغيل بعد الريسبون
+            if deathConn then deathConn:Disconnect() end
+            deathConn = hum.Died:Connect(function()
+                if not isFlying then return end
+                if flyConn  then flyConn:Disconnect();                   flyConn  = nil end
+                if bodyVel  then pcall(function() bodyVel:Destroy()  end); bodyVel  = nil end
+                if bodyGyro then pcall(function() bodyGyro:Destroy() end); bodyGyro = nil end
+                task.wait(0.2)
+                local newChar = player.Character
+                local newHum  = newChar and newChar:FindFirstChild("Humanoid")
+                if not newChar or not newHum or newHum.Health <= 0 then
+                    newChar = player.CharacterAdded:Wait()
+                end
+                newChar:WaitForChild("HumanoidRootPart", 10)
+                newChar:WaitForChild("Humanoid", 10)
+                task.wait(0.3)
+                if isFlying then toggleFly(true, flySpeed) end
             end)
 
         else
-            -- إيقاف التصغير
-            isShrunk = false
-            if shrinkLoop then 
-                shrinkLoop:Disconnect() 
-                shrinkLoop = nil 
-            end
-            
-            -- استرجاع الحجم الطبيعي (1.0)
-            ForceScale(1)
-            Notify("🧍 تم استرجاع الحجم الطبيعي", "🧍 Size restored")
+            if flyConn  then flyConn:Disconnect();  flyConn  = nil end
+            if bodyVel  then pcall(function() bodyVel:Destroy()  end); bodyVel  = nil end
+            if bodyGyro then pcall(function() bodyGyro:Destroy() end); bodyGyro = nil end
+            if deathConn then deathConn:Disconnect(); deathConn = nil end
+            if hum then hum.PlatformStand = false end
+            verticalInput = 0
         end
-    end)
 
-    -- إعادة تفعيل اللوب إذا رسبن اللاعب والزر شغال
-    lp.CharacterAdded:Connect(function(char)
-        if isShrunk then
-            task.wait(0.5)
-            if ForceScale(0.3) then
-                if shrinkLoop then shrinkLoop:Disconnect() end
-                shrinkLoop = RunService.Stepped:Connect(function()
-                    if isShrunk then ForceScale(0.3) end
-                end)
-            end
-        end
+        syncScreenBtn()
+    end
+
+    -- ── واجهة Hub ─────────────────────────────────────────────────
+    local flyDrop = Tab:AddToggleDropdown("طيران / Fly", function(active)
+        toggleFly(active, flySpeed)
+        if active then Notify("✈️ تم تفعيل الطيران!") end
+    end)
+    flyDropRef = flyDrop
+
+    -- التحكم في السرعة
+    flyDrop:AddSpeedControl("السرعة / Speed", function(_, value)
+        flySpeed = value
+    end, flySpeed)
+
+    -- أزرار على الشاشة (زر طيران + صعود + نزول)
+    flyDrop:AddToggle("أزرار الشاشة / Screen Buttons", function(enabled)
+        setScreenGui(enabled)
     end)
 end
