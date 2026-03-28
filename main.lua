@@ -13,7 +13,7 @@ local Cryptic = {
 
     -- ========================================================
     -- 🗺️ سجل المابات: PlaceId => مسار ملف الماب (بدون .lua)
-    -- لإضافة ماب جديد: أنشئ Maps/PLACEID.lua ثم أضف سطر هنا
+    -- أضف ماب جديد بإضافة سطر هنا وإنشاء ملفه في Maps/
     -- ========================================================
     Maps = {
         [2753915549]      = "Maps/bloxfruits",
@@ -76,12 +76,16 @@ local function InjectMapTab()
     local mapFilePath = Cryptic.Maps[currentPlaceId]
     if not mapFilePath then return end
 
+    -- تحميل بيانات الماب
     local mapData = Import(mapFilePath .. ".lua")
     if type(mapData) ~= "table" then return end
 
     local tabName = "🗺️ " .. mapData.Name
 
+    -- تسجيل التاب في البنية
     Cryptic.Structure[tabName] = { _isMapTab = true, _mapData = mapData }
+
+    -- حقن التاب في الموضع الثاني (بعد معلومات / info مباشرة)
     table.insert(Cryptic.TabsOrder, 2, tabName)
 end
 
@@ -89,6 +93,7 @@ end
 -- 🔥 دالة التشغيل الرئيسية
 -- ========================================================
 local function StartCrypticHub()
+    -- كشف الماب وحقن التاب قبل بناء الواجهة
     InjectMapTab()
 
     local UI = Import("UI/Core.lua")
@@ -104,7 +109,7 @@ local function StartCrypticHub()
                 local elementsList = {
                     "Button", "Toggle", "TimedToggle", "Input", "LargeInput", 
                     "SpeedControl", "Dropdown", "PlayerSelector", "AddAutoOffToggle", "ProfileCard", 
-                    "Line", "Label", "Paragraph", "Folder", "ToggleDropdown"
+                    "Line", "Label", "Paragraph", "Folder"
                 }
                 
                 for _, el in ipairs(elementsList) do
@@ -120,24 +125,33 @@ local function StartCrypticHub()
                     -- 🗺️ تاب الماب المخصص
                     -- ==========================================
                     if data._isMapTab and data._mapData then
+                        local mapData = data._mapData
+
+                        -- عنوان القسم
+                        tab:AddLabel("🗺️ سكربتات الماب الحالي / Map Scripts")
+                        tab:AddLine()
+
+                        -- تحميل بطاقة الماب
                         local MapCardFunc = LoadElement("MapCard")
                         if MapCardFunc then
-                            pcall(function() MapCardFunc(tab, data._mapData) end)
+                            pcall(function() MapCardFunc(tab, mapData) end)
                         end
                         return
                     end
 
                     -- ==========================================
-                    -- تاب استهداف لاعب
+                    -- تاب استهداف لاعب: target_select مباشر، باقي في 3 أقسام Open
                     -- ==========================================
                     if nameOfTab == "استهداف لاعب / players" then
 
+                        -- 1. تحديد اللاعب مباشر بدون Open
                         local tsInit = Import("Modules/Combat/target_select.lua")
                         if type(tsInit) == "function" then
                             pcall(function() tsInit(tab, UI) end)
                         end
                         tab:AddLine()
 
+                        -- دالة مساعدة تنشئ Open وتربط العناصر فيه
                         local function MakeOpen(title, icon)
                             local openFunc = LoadElement("Open")
                             if not openFunc then return tab end
@@ -145,7 +159,7 @@ local function StartCrypticHub()
                             local els = {
                                 "Button", "Toggle", "TimedToggle", "Input", "LargeInput",
                                 "SpeedControl", "Dropdown", "PlayerSelector", "ProfileCard",
-                                "Line", "Label", "Paragraph", "Folder", "ToggleDropdown"
+                                "Line", "Label", "Paragraph", "Folder"
                             }
                             for _, el in ipairs(els) do
                                 openTab["Add" .. el] = function(self, ...)
@@ -156,25 +170,28 @@ local function StartCrypticHub()
                             return openTab
                         end
 
+                        -- 2. قسم الهجوم
                         local attackTab = MakeOpen("هجوم / Attack", "⚔️")
                         for _, fname in ipairs({"target_fling", "bring_parts", "target_aimbot"}) do
                             local init = Import("Modules/Combat/" .. fname .. ".lua")
                             if type(init) == "function" then pcall(function() init(attackTab, UI) end) end
                         end
 
+                        -- 3. قسم المزح
                         local funTab = MakeOpen("مزح / Fun", "😂")
                         for _, fname in ipairs({"backpack", "target_sit", "target_mimic", "carry", "jark"}) do
                             local init = Import("Modules/Combat/" .. fname .. ".lua")
                             if type(init) == "function" then pcall(function() init(funTab, UI) end) end
                         end
 
+                        -- 4. قسم المراقبة (+ target_tp)
                         local spyTab = MakeOpen("مراقبة / Spy", "👁️")
                         for _, fname in ipairs({"target_spectate", "target_tp", "Target_follow"}) do
                             local init = Import("Modules/Combat/" .. fname .. ".lua")
                             if type(init) == "function" then pcall(function() init(spyTab, UI) end) end
                         end
 
-                        return
+                        return -- تخطي الكود الافتراضي
                     end
                     -- ==========================================
 
@@ -189,14 +206,6 @@ local function StartCrypticHub()
                         end  
                     end  
                     
-                    if nameOfTab == "معلومات / info" then
-                        tab:AddButton("💾 حفظ الإعدادات / save config", function()
-                            pcall(function() UI:SaveConfig() end)
-                        end)
-                        tab:AddButton("🔄 مسح اعدادات محفوضه / restart config", function()
-                            pcall(function() UI:ResetConfig() end)
-                        end)
-                    end
                     
                 end, tabData, CurrentTab, tabName)  
             end  
@@ -205,15 +214,17 @@ local function StartCrypticHub()
 end
 
 -- ========================================================
--- 🔥 نظام التأكيد الذكي
+-- 🔥 نظام التأكيد الذكي (التشغيل مرة أخرى)
 -- ========================================================
 if getgenv().CrypticHub_Loaded then
     local Bindable = Instance.new("BindableFunction")
+    
     Bindable.OnInvoke = function(buttonText)
         if buttonText == "نعم / Yes" then
             StartCrypticHub()
         end
     end
+
     pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Cryptic Hub ⚠️",
