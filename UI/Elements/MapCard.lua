@@ -47,7 +47,7 @@ return function(TabOps, mapData)
         RunBtn.Size = UDim2.new(0, 88, 0, 28)
         RunBtn.Position = UDim2.new(1, -96, 0.5, -14)
         RunBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 78)
-        RunBtn.Text = "▶  تشغيل"
+        RunBtn.Text = "▶  تشغيل/run"
         RunBtn.TextColor3 = Color3.new(1, 1, 1)
         RunBtn.Font = Enum.Font.GothamBold
         RunBtn.TextSize = 12
