@@ -18,6 +18,7 @@ local Cryptic = {
     Maps = {
         [2753915549]      = "Maps/bloxfruits",
         [100117331123089] = "Maps/bloxfruits",
+        [73902483975735]  = "Maps/bloxfruits",
         [85211729168715]  = "Maps/bloxfruits",
         [79091703265657]  = "Maps/bloxfruits"
     },
