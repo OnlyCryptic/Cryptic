@@ -9,6 +9,10 @@ return {
             Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/aloaloalo322/sssdas/refs/heads/main/cc"))()]]
         },
         {
+            Name = "MeoXHub (no key)",
+            Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/VanHoangIOS/MeoXHub/refs/heads/main/Main.lua"))()]]
+        },
+        {
             Name = "Cokka Hub",
             Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/UserDevEthical/Loadstring/main/CokkaHub.lua"))()]]
         },
