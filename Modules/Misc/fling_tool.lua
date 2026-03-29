@@ -5,11 +5,14 @@ return function(Tab, UI)
     local Players          = game:GetService("Players")
     local UserInputService = game:GetService("UserInputService")
     local StarterGui       = game:GetService("StarterGui")
+    local RunService       = game:GetService("RunService")
+    local PhysicsService   = game:GetService("PhysicsService")
     local lp               = Players.LocalPlayer
 
     local isActive   = false
     local bav        = nil
     local noclipConn = nil   -- لوب مستمر يمنع CanCollide من الرجوع
+    local isEquipped = false -- تتبع حالة التجهيز لتجنب إزالة مبكرة
 
     local function Notify(text)
         pcall(function()
@@ -21,7 +24,31 @@ return function(Tab, UI)
         return char and char:FindFirstChild("HumanoidRootPart")
     end
 
-    local RunService = game:GetService("RunService")
+    -- ==========================================
+    -- فحص دعم الماب لتلامس اللاعبين
+    -- ==========================================
+    local function CheckCollisionAllowed()
+        local char = lp.Character
+        if not char then return true end
+        local myTorso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso")
+        if not myTorso then return true end
+
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= lp and p.Character then
+                local tgtTorso = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso")
+                if tgtTorso then
+                    local ok, can = pcall(function()
+                        return PhysicsService:CollisionGroupsAreCollidable(
+                            myTorso.CollisionGroup,
+                            tgtTorso.CollisionGroup
+                        )
+                    end)
+                    if ok and not can then return false end
+                end
+            end
+        end
+        return true
+    end
 
     -- ==========================================
     -- تفعيل فيزياء الفلينج
@@ -74,7 +101,6 @@ return function(Tab, UI)
         end)
 
         -- 5. لوب NoClip مستمر — يمنع الـ Humanoid من إعادة تشغيل التصادم
-        --    هذا هو الإصلاح الأساسي: بدله تطير عند الحوائط/الدرج
         if noclipConn then noclipConn:Disconnect() end
         noclipConn = RunService.Stepped:Connect(function()
             local c = lp.Character
@@ -116,6 +142,39 @@ return function(Tab, UI)
     end
 
     -- ==========================================
+    -- إزالة تدريجية عند الخلع (بدون صدمة)
+    -- ==========================================
+    local function GradualUnequip(char)
+        isEquipped = false
+
+        task.spawn(function()
+            -- المرحلة 1: تراجع السرعة تدريجياً في 0.4 ثانية
+            local steps    = 20
+            local stepTime = 0.4 / steps
+
+            for i = steps, 0, -1 do
+                if isEquipped then return end  -- أعاد التجهيز? وقف
+                if bav and bav.Parent then
+                    pcall(function()
+                        local scale = i / steps
+                        bav.AngularVelocity = Vector3.new(0, 99999 * scale, 0)
+                    end)
+                end
+                task.wait(stepTime)
+            end
+
+            -- المرحلة 2: انتظار 0.3 ثانية إضافية (إجمالي = 0.7 ثانية)
+            -- النوكليب لا يزال نشطاً خلال هذه الفترة لتفادي الصدمة
+            task.wait(0.3)
+
+            -- المرحلة 3: إزالة كاملة (نوكليب + باقي الفيزياء)
+            if not isEquipped then
+                RemoveFling(char)
+            end
+        end)
+    end
+
+    -- ==========================================
     -- صناعة الأداة
     -- ==========================================
     local function CreateFlingTool(char)
@@ -133,12 +192,13 @@ return function(Tab, UI)
         tool.Parent         = backpack
 
         tool.Equipped:Connect(function()
+            isEquipped = true
             local c = lp.Character
             if c then ApplyFling(c) end
         end)
 
         tool.Unequipped:Connect(function()
-            RemoveFling(lp.Character)
+            GradualUnequip(lp.Character)
         end)
 
         return tool
@@ -211,6 +271,7 @@ return function(Tab, UI)
 
     local function Cleanup()
         local char=lp.Character
+        isEquipped = false
         RemoveFling(char)
         local ui=lp.PlayerGui:FindFirstChild("CrypticFlingUI"); if ui then ui:Destroy() end
         local inB=lp.Backpack:FindFirstChild("Cryptic Fling"); local inC=char and char:FindFirstChild("Cryptic Fling")
@@ -219,17 +280,25 @@ return function(Tab, UI)
 
     lp.CharacterAdded:Connect(function(newChar)
         if isActive then
+            isEquipped = false
             task.wait(1.5)
             local t=CreateFlingTool(newChar); if t then EnforceSlot(t) end
         end
     end)
 
     -- ==========================================
-    -- Toggle بسيط (بدون SpeedControl)
+    -- Toggle مع فحص دعم الماب
     -- ==========================================
     Tab:AddToggle("أداة الفلينج / Fling Tool", function(active)
         isActive = active
         if active then
+            -- 🔍 فحص إذا كان الماب يدعم التلامس بين اللاعبين
+            if not CheckCollisionAllowed() then
+                isActive = false
+                Notify("🚫 الماب لا يدعم التلامس بين اللاعبين\n🚫 Map doesn't support player collision")
+                return
+            end
+
             local char=lp.Character
             local t=CreateFlingTool(char); if t then EnforceSlot(t) end
             EnsureFloatingUI()
