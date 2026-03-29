@@ -29,7 +29,7 @@ local Cryptic = {
         ["أدوات / tools"] = { Folder = "Misc", Files = {"lol", "tptool", "auto_tool", "esp", "shiftlock", "emotes", "x-ray", "fullbright", "camera"} },  
         ["استهداف لاعب / players"] = { Folder = "Combat", Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "bring_parts", "carry", "jark", "backpack", "Target_follow"} },  
         ["قسم السيرفر / server"] = { Folder = "Server", Files = {"server", "rejoin", "join_id", "players"} },  
-        ["الانتقال / Teleport"] = { Folder = "Teleport", Files = {"tp_locations"} },
+        ["الانتقال / Teleport"] = { Folder = "Teleport", Files = {"lol", "tp_locations"} },
         ["اخرى / Other"] = { Folder = "Other", Files = {"lol", "animations", "vfly", "zero_gravity", "anti_block", "fling_all"} },
         ["اقتراحات / Suggestions"] = { Folder = "", Files = {"suggestion"} }
     },  
