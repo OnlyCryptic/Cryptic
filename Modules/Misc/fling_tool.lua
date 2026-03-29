@@ -1,5 +1,4 @@
 -- [[ Cryptic Hub - أداة الفلينج / Fling Tool ]]
--- فلينج فقط: كثافة عالية + نبضات BAV = كل من يلمسك يطير
 
 return function(Tab, UI)
     local Players          = game:GetService("Players")
@@ -9,14 +8,17 @@ return function(Tab, UI)
     local PhysicsService   = game:GetService("PhysicsService")
     local lp               = Players.LocalPlayer
 
-    local isActive   = false
-    local bav        = nil
-    local noclipConn = nil
-    local isEquipped = false
+    local SPIN_SPEED = 25000   -- 25% من الأصل (99999)
+
+    local isActive    = false
+    local bav         = nil
+    local noclipConn  = nil
+    local isEquipped  = false
+    local isRamping   = false  -- منع لوب النبضات أثناء الرمب
 
     local function Notify(text)
         pcall(function()
-            StarterGui:SetCore("SendNotification", { Title = "Cryptic Hub", Text = text, Duration = 3 })
+            StarterGui:SetCore("SendNotification", { Title = "Cryptic", Text = text, Duration = 2 })
         end)
     end
 
@@ -25,7 +27,7 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- فحص دعم الماب لتلامس اللاعبين
+    -- فحص دعم الماب للتلامس
     -- ==========================================
     local function CheckCollisionAllowed()
         local char = lp.Character
@@ -34,12 +36,10 @@ return function(Tab, UI)
         if not myTorso then return true end
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= lp and p.Character then
-                local tgtTorso = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso")
-                if tgtTorso then
+                local tgt = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso")
+                if tgt then
                     local ok, can = pcall(function()
-                        return PhysicsService:CollisionGroupsAreCollidable(
-                            myTorso.CollisionGroup, tgtTorso.CollisionGroup
-                        )
+                        return PhysicsService:CollisionGroupsAreCollidable(myTorso.CollisionGroup, tgt.CollisionGroup)
                     end)
                     if ok and not can then return false end
                 end
@@ -49,74 +49,54 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- تأثير الحمل: رفع خفيف ← توقف ← نزول ← ثباط ← ثبات
-    -- onDone: دالة اختيارية تُنادى بعد اكتمال التأثير
+    -- تجميد / تحرير اللاعب (Joystick + سرعة)
     -- ==========================================
-    local function CarryEffect(char, onDone)
-        task.spawn(function()
-            local hrp = GetRoot(char)
-            if not hrp then
-                if onDone then onDone() end
-                return
-            end
+    local function LockPlayer(char)
+        local hum = char and char:FindFirstChildWhichIsA("Humanoid")
+        local hrp = GetRoot(char)
+        if not hum or not hrp then return 16, 50 end
 
-            -- احفظ مرجع الموضع الحالي عند بدء التأثير
-            local startPos = hrp.Position
+        local prevWalk = hum.WalkSpeed
+        local prevJump = hum.JumpPower
 
-            -- أنشئ BodyPosition يتحكم في المحور Y فقط
-            local bp      = Instance.new("BodyPosition")
-            bp.Name       = "CrypticCarryBP"
-            bp.P          = 10000
-            bp.D          = 800
-            bp.MaxForce   = Vector3.new(0, math.huge, 0)
-            bp.Position   = startPos + Vector3.new(0, 2.5, 0)  -- ارفع 2.5 وحدة
-            bp.Parent     = hrp
+        hum.WalkSpeed = 0
+        hum.JumpPower = 0
+        pcall(function() hum.JumpHeight = 0 end)
 
-            task.wait(0.28)   -- صعود ناعم
+        -- BodyVelocity يمنع الانزلاق الأفقي
+        local old = hrp:FindFirstChild("CrypticLockBV")
+        if old then old:Destroy() end
+        local bv = Instance.new("BodyVelocity")
+        bv.Name     = "CrypticLockBV"
+        bv.Velocity  = Vector3.new(0, 0, 0)
+        bv.MaxForce  = Vector3.new(math.huge, 0, math.huge)
+        bv.Parent    = hrp
 
-            -- لو أعاد التجهيز أثناء التأثير → اخرج فوراً
-            if isEquipped == false and onDone ~= nil then
-                -- نحن في مرحلة خلع؛ استمر
-            elseif isEquipped == true and onDone == nil then
-                -- نحن في مرحلة تجهيز؛ استمر
-            end
+        return prevWalk, prevJump
+    end
 
-            -- توقف لحظي في الأعلى (0.08 ث) ← نزول
-            task.wait(0.08)
-            bp.Position = startPos                              -- هدف الـ BP للأسفل
-            task.wait(0.22)                                     -- نزول ناعم
-
-            -- أزل BodyPosition
-            pcall(function() bp:Destroy() end)
-
-            -- ثباط صغير (bounce)
-            task.wait(0.03)
-            pcall(function()
-                local v = hrp.AssemblyLinearVelocity
-                hrp.AssemblyLinearVelocity = Vector3.new(v.X, -11, v.Z)
-            end)
-            task.wait(0.07)
-            pcall(function()
-                local v = hrp.AssemblyLinearVelocity
-                hrp.AssemblyLinearVelocity = Vector3.new(v.X, 6, v.Z)
-            end)
-            task.wait(0.09)
-            pcall(function()
-                local v = hrp.AssemblyLinearVelocity
-                hrp.AssemblyLinearVelocity = Vector3.new(v.X, 0, v.Z)
-            end)
-
-            if onDone then onDone() end
-        end)
+    local function UnlockPlayer(char, prevWalk, prevJump)
+        local hum = char and char:FindFirstChildWhichIsA("Humanoid")
+        local hrp = GetRoot(char)
+        if hum then
+            hum.WalkSpeed = prevWalk or 16
+            hum.JumpPower = prevJump or 50
+            pcall(function() hum.JumpHeight = 7.2 end)
+        end
+        if hrp then
+            local bv = hrp:FindFirstChild("CrypticLockBV")
+            if bv then pcall(function() bv:Destroy() end) end
+        end
     end
 
     -- ==========================================
-    -- تفعيل فيزياء الفلينج
+    -- تهيئة فيزياء الفلينج (بدون تشغيل الدوران فوراً)
     -- ==========================================
-    local function ApplyFling(char)
+    local function ApplyFlingPhysics(char)
         local hrp = GetRoot(char)
         if not hrp then return end
 
+        -- كثافة عالية
         for _, child in pairs(char:GetDescendants()) do
             if child:IsA("BasePart") then
                 pcall(function()
@@ -125,7 +105,9 @@ return function(Tab, UI)
             end
         end
 
-        task.wait(0.1)
+        task.wait(0.05)
+
+        -- NoClip + Massless
         for _, v in pairs(char:GetChildren()) do
             if v:IsA("BasePart") then
                 pcall(function()
@@ -136,25 +118,18 @@ return function(Tab, UI)
             end
         end
 
+        -- أنشئ BAV بسرعة صفر (سيُفعَّل لاحقاً)
         local old = hrp:FindFirstChild("CrypticFlingBAV")
         if old then old:Destroy() end
 
         bav                 = Instance.new("BodyAngularVelocity")
         bav.Name            = "CrypticFlingBAV"
-        bav.AngularVelocity = Vector3.new(0, 99999, 0)
-        bav.MaxTorque       = Vector3.new(0, math.huge, 0)
+        bav.AngularVelocity = Vector3.new(0, 0, 0)
+        bav.MaxTorque       = Vector3.new(0, 0, 0)
         bav.P               = math.huge
         bav.Parent          = hrp
 
-        task.spawn(function()
-            while bav and bav.Parent and isActive do
-                pcall(function() bav.AngularVelocity = Vector3.new(0, 99999, 0) end)
-                task.wait(0.2)
-                pcall(function() bav.AngularVelocity = Vector3.new(0, 0, 0) end)
-                task.wait(0.1)
-            end
-        end)
-
+        -- لوب NoClip
         if noclipConn then noclipConn:Disconnect() end
         noclipConn = RunService.Stepped:Connect(function()
             local c = lp.Character
@@ -162,6 +137,23 @@ return function(Tab, UI)
             for _, v in pairs(c:GetDescendants()) do
                 if v:IsA("BasePart") and v.CanCollide then
                     v.CanCollide = false
+                end
+            end
+        end)
+
+        -- لوب نبضات الدوران (يبدأ فقط بعد انتهاء الرمب)
+        task.spawn(function()
+            while bav and bav.Parent and isActive do
+                if not isRamping then
+                    pcall(function() bav.AngularVelocity = Vector3.new(0, SPIN_SPEED, 0) end)
+                    pcall(function() bav.MaxTorque = Vector3.new(0, math.huge, 0) end)
+                    task.wait(0.25)
+                    if not isRamping then
+                        pcall(function() bav.AngularVelocity = Vector3.new(0, 0, 0) end)
+                    end
+                    task.wait(0.1)
+                else
+                    task.wait(0.05)
                 end
             end
         end)
@@ -174,7 +166,9 @@ return function(Tab, UI)
             local hrp = GetRoot(char)
             if hrp then
                 for _, v in pairs(hrp:GetChildren()) do
-                    if v.ClassName == "BodyAngularVelocity" and v.Name == "CrypticFlingBAV" then
+                    if (v.ClassName == "BodyAngularVelocity" and v.Name == "CrypticFlingBAV")
+                    or (v.ClassName == "BodyPosition"    and v.Name == "CrypticCarryBP")
+                    or (v.ClassName == "BodyVelocity"    and v.Name == "CrypticLockBV") then
                         pcall(function() v:Destroy() end)
                     end
                 end
@@ -192,31 +186,138 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- خلع تدريجي: CarryEffect موازٍ لتراجع السرعة
+    -- تسلسل التجهيز:
+    -- تجميد ← رفع ← ثبوت ← رمب الدوران ← نزول ← تحرير
     -- ==========================================
-    local function GradualUnequip(char)
-        isEquipped = false
-
-        -- [1] تراجع السرعة في 0.4 ث — موازٍ مع تأثير الرفع
+    local function EquipSequence(char)
         task.spawn(function()
-            local steps    = 20
-            local stepTime = 0.4 / steps
-            for i = steps, 0, -1 do
-                if isEquipped then return end
-                if bav and bav.Parent then
-                    pcall(function()
-                        bav.AngularVelocity = Vector3.new(0, 99999 * (i / steps), 0)
-                    end)
-                end
-                task.wait(stepTime)
-            end
-        end)
+            local hrp = GetRoot(char)
+            if not hrp then return end
 
-        -- [2] تأثير الرفع ← بعد اكتماله (~0.6 ث) أزل النوكليب والفيزياء
-        CarryEffect(char, function()
-            if not isEquipped then
-                RemoveFling(char)
+            isRamping = true
+
+            -- 1. تجميد
+            local prevWalk, prevJump = LockPlayer(char)
+            local startPos = hrp.Position
+
+            -- 2. رفع
+            local bp      = Instance.new("BodyPosition")
+            bp.Name       = "CrypticCarryBP"
+            bp.P          = 11000
+            bp.D          = 850
+            bp.MaxForce   = Vector3.new(0, math.huge, 0)
+            bp.Position   = startPos + Vector3.new(0, 2.5, 0)
+            bp.Parent     = hrp
+
+            task.wait(0.25)   -- صعود
+
+            -- 3. ثبوت في الأعلى + رمب الدوران تدريجياً
+            if bav and bav.Parent then
+                local steps = 12
+                for i = 1, steps do
+                    if not isEquipped then break end
+                    local t = i / steps
+                    pcall(function()
+                        bav.AngularVelocity = Vector3.new(0, SPIN_SPEED * t, 0)
+                        bav.MaxTorque       = Vector3.new(0, math.huge * t, 0)
+                    end)
+                    task.wait(0.28 / steps)
+                end
             end
+
+            isRamping = false
+
+            -- 4. نزول
+            bp.Position = startPos
+            task.wait(0.22)
+
+            -- 5. ثباط
+            pcall(function() bp:Destroy() end)
+            pcall(function()
+                local v = hrp.AssemblyLinearVelocity
+                hrp.AssemblyLinearVelocity = Vector3.new(v.X, -9, v.Z)
+            end)
+            task.wait(0.07)
+            pcall(function()
+                local v = hrp.AssemblyLinearVelocity
+                hrp.AssemblyLinearVelocity = Vector3.new(v.X, 5, v.Z)
+            end)
+            task.wait(0.09)
+            pcall(function()
+                local v = hrp.AssemblyLinearVelocity
+                hrp.AssemblyLinearVelocity = Vector3.new(v.X, 0, v.Z)
+            end)
+
+            -- 6. تحرير اللاعب
+            UnlockPlayer(char, prevWalk, prevJump)
+        end)
+    end
+
+    -- ==========================================
+    -- تسلسل الخلع (أقل من ثانية):
+    -- تجميد ← رفع خفيف ← إيقاف دوران ← نزول ← رجوع طبيعي
+    -- ==========================================
+    local function UnequipSequence(char)
+        isEquipped = false
+        isRamping  = true
+
+        task.spawn(function()
+            local hrp = GetRoot(char)
+            if not hrp then RemoveFling(char) return end
+
+            -- 1. تجميد
+            local prevWalk, prevJump = LockPlayer(char)
+            local startPos = hrp.Position
+
+            -- 2. إيقاف الدوران تدريجياً (0.12 ث)
+            if bav and bav.Parent then
+                local steps = 8
+                for i = steps, 0, -1 do
+                    pcall(function()
+                        local t = i / steps
+                        bav.AngularVelocity = Vector3.new(0, SPIN_SPEED * t, 0)
+                    end)
+                    task.wait(0.12 / steps)
+                end
+                pcall(function() bav.MaxTorque = Vector3.new(0, 0, 0) end)
+            end
+
+            -- 3. رفع خفيف (1.5 وحدة)
+            local bp      = Instance.new("BodyPosition")
+            bp.Name       = "CrypticCarryBP"
+            bp.P          = 13000
+            bp.D          = 950
+            bp.MaxForce   = Vector3.new(0, math.huge, 0)
+            bp.Position   = startPos + Vector3.new(0, 1.5, 0)
+            bp.Parent     = hrp
+
+            task.wait(0.17)   -- صعود سريع
+
+            -- 4. نزول
+            bp.Position = startPos
+            task.wait(0.15)
+
+            -- 5. ثباط خفيف
+            pcall(function() bp:Destroy() end)
+            pcall(function()
+                local v = hrp.AssemblyLinearVelocity
+                hrp.AssemblyLinearVelocity = Vector3.new(v.X, -6, v.Z)
+            end)
+            task.wait(0.06)
+            pcall(function()
+                local v = hrp.AssemblyLinearVelocity
+                hrp.AssemblyLinearVelocity = Vector3.new(v.X, 4, v.Z)
+            end)
+            task.wait(0.07)
+            pcall(function()
+                local v = hrp.AssemblyLinearVelocity
+                hrp.AssemblyLinearVelocity = Vector3.new(v.X, 0, v.Z)
+            end)
+
+            -- 6. تحرير + إزالة كاملة
+            UnlockPlayer(char, prevWalk, prevJump)
+            RemoveFling(char)
+            isRamping = false
         end)
     end
 
@@ -234,21 +335,19 @@ return function(Tab, UI)
         local tool = Instance.new("Tool")
         tool.Name           = "Cryptic Fling"
         tool.RequiresHandle = false
-        tool.ToolTip        = "Cryptic Hub | Fling anyone who touches you!"
+        tool.ToolTip        = "Cryptic Hub | Fling Tool"
         tool.Parent         = backpack
 
         tool.Equipped:Connect(function()
             isEquipped = true
             local c = lp.Character
             if not c then return end
-            -- [1] طبّق الفيزياء
-            ApplyFling(c)
-            -- [2] تأثير الرفع عند التجهيز (بدون onDone)
-            CarryEffect(c)
+            ApplyFlingPhysics(c)
+            EquipSequence(c)
         end)
 
         tool.Unequipped:Connect(function()
-            GradualUnequip(lp.Character)
+            UnequipSequence(lp.Character)
         end)
 
         return tool
@@ -321,8 +420,10 @@ return function(Tab, UI)
 
     local function Cleanup()
         local char=lp.Character
-        isEquipped = false
+        isEquipped = false; isRamping = false
         RemoveFling(char)
+        local hum = char and char:FindFirstChildWhichIsA("Humanoid")
+        if hum then hum.WalkSpeed = 16; hum.JumpPower = 50; pcall(function() hum.JumpHeight = 7.2 end) end
         local ui=lp.PlayerGui:FindFirstChild("CrypticFlingUI"); if ui then ui:Destroy() end
         local inB=lp.Backpack:FindFirstChild("Cryptic Fling"); local inC=char and char:FindFirstChild("Cryptic Fling")
         if inB then inB:Destroy() end; if inC then inC:Destroy() end
@@ -330,30 +431,30 @@ return function(Tab, UI)
 
     lp.CharacterAdded:Connect(function(newChar)
         if isActive then
-            isEquipped = false
+            isEquipped = false; isRamping = false
             task.wait(1.5)
             local t=CreateFlingTool(newChar); if t then EnforceSlot(t) end
         end
     end)
 
     -- ==========================================
-    -- Toggle مع فحص دعم الماب
+    -- Toggle
     -- ==========================================
     Tab:AddToggle("أداة الفلينج / Fling Tool", function(active)
         isActive = active
         if active then
             if not CheckCollisionAllowed() then
                 isActive = false
-                Notify("🚫 الماب لا يدعم التلامس بين اللاعبين\n🚫 Map doesn't support player collision")
+                Notify("🚫 الماب لا يدعم التلامس")
                 return
             end
             local char=lp.Character
             local t=CreateFlingTool(char); if t then EnforceSlot(t) end
             EnsureFloatingUI()
-            Notify("💥 فلينج مفعّل! جهّز الأداة\n💥 Fling ON! Equip the tool")
+            Notify("💥 فلينج ON — جهّز الأداة")
         else
             Cleanup()
-            Notify("⛔ إيقاف الفلينج\n⛔ Fling OFF!")
+            Notify("⛔ فلينج OFF")
         end
     end)
 end
