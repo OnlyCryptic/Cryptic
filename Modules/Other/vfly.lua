@@ -111,5 +111,4 @@ return function(Tab, UI)
         end
     end, 50) 
     
-    Tab:AddLine()
 end
