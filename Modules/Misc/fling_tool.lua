@@ -13,9 +13,11 @@ return function(Tab, UI)
     local isActive       = false
     local bav            = nil
     local noclipConn     = nil
-    local antiflingConn  = nil   -- أنتي فلينج صامت
+    local antiflingConn  = nil
     local isEquipped     = false
     local isRamping      = false
+    local savedWalk      = 16    -- آخر قيمة WalkSpeed محفوظة قبل التجميد
+    local savedJump      = 50    -- آخر قيمة JumpPower محفوظة قبل التجميد
 
     local function Notify(text)
         pcall(function()
@@ -77,10 +79,12 @@ return function(Tab, UI)
     local function LockPlayer(char)
         local hum = char and char:FindFirstChildWhichIsA("Humanoid")
         local hrp = GetRoot(char)
-        if not hum or not hrp then return 16, 50 end
+        if not hum or not hrp then return savedWalk, savedJump end
 
-        local prevWalk = hum.WalkSpeed
-        local prevJump = hum.JumpPower
+        -- احفظ القيم على مستوى الوحدة قبل التجميد
+        savedWalk = hum.WalkSpeed > 0 and hum.WalkSpeed or savedWalk
+        savedJump = hum.JumpPower > 0 and hum.JumpPower or savedJump
+
         hum.WalkSpeed = 0
         hum.JumpPower = 0
         pcall(function() hum.JumpHeight = 0 end)
@@ -93,21 +97,28 @@ return function(Tab, UI)
         bv.MaxForce  = Vector3.new(math.huge, 0, math.huge)
         bv.Parent    = hrp
 
-        return prevWalk, prevJump
+        return savedWalk, savedJump
     end
 
-    local function UnlockPlayer(char, prevWalk, prevJump)
-        local hum = char and char:FindFirstChildWhichIsA("Humanoid")
-        local hrp = GetRoot(char)
-        if hum then
-            hum.WalkSpeed = prevWalk or 16
-            hum.JumpPower = prevJump or 50
-            pcall(function() hum.JumpHeight = 7.2 end)
-        end
-        if hrp then
-            local bv = hrp:FindFirstChild("CrypticLockBV")
-            if bv then pcall(function() bv:Destroy() end) end
-        end
+    -- يضمن إعادة التحكم دائماً — يُستدعى حتى لو صار خطأ في التسلسل
+    local function UnlockPlayer(char, w, j)
+        local walk = w or savedWalk or 16
+        local jump = j or savedJump or 50
+        local hum  = char and char:FindFirstChildWhichIsA("Humanoid")
+        local hrp  = GetRoot(char)
+        pcall(function()
+            if hum then
+                hum.WalkSpeed = walk
+                hum.JumpPower = jump
+                hum.JumpHeight = 7.2
+            end
+        end)
+        pcall(function()
+            if hrp then
+                local bv = hrp:FindFirstChild("CrypticLockBV")
+                if bv then bv:Destroy() end
+            end
+        end)
     end
 
     -- ==========================================
@@ -235,42 +246,45 @@ return function(Tab, UI)
 
             isRamping = true
             local prevWalk, prevJump = LockPlayer(char)
-            local startPos = hrp.Position
 
-            local bp      = Instance.new("BodyPosition")
-            bp.Name       = "CrypticCarryBP"
-            bp.P          = 11000
-            bp.D          = 850
-            bp.MaxForce   = Vector3.new(0, math.huge, 0)
-            bp.Position   = startPos + Vector3.new(0, 2.5, 0)
-            bp.Parent     = hrp
-            task.wait(0.25)
+            local ok = pcall(function()
+                local startPos = hrp.Position
 
-            -- رمب الدوران
-            if bav and bav.Parent then
-                local steps = 12
-                for i = 1, steps do
-                    if not isEquipped then break end
-                    local t = i / steps
-                    pcall(function()
-                        bav.AngularVelocity = Vector3.new(0, SPIN_SPEED * t, 0)
-                        bav.MaxTorque       = Vector3.new(0, math.huge, 0)
-                    end)
-                    task.wait(0.28 / steps)
+                local bp      = Instance.new("BodyPosition")
+                bp.Name       = "CrypticCarryBP"
+                bp.P          = 11000
+                bp.D          = 850
+                bp.MaxForce   = Vector3.new(0, math.huge, 0)
+                bp.Position   = startPos + Vector3.new(0, 2.5, 0)
+                bp.Parent     = hrp
+                task.wait(0.25)
+
+                if bav and bav.Parent then
+                    local steps = 12
+                    for i = 1, steps do
+                        if not isEquipped then break end
+                        local t = i / steps
+                        pcall(function()
+                            bav.AngularVelocity = Vector3.new(0, SPIN_SPEED * t, 0)
+                            bav.MaxTorque       = Vector3.new(0, math.huge, 0)
+                        end)
+                        task.wait(0.28 / steps)
+                    end
                 end
-            end
+
+                bp.Position = startPos
+                task.wait(0.22)
+
+                pcall(function() bp:Destroy() end)
+                pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,-9,v.Z) end)
+                task.wait(0.07)
+                pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,5,v.Z) end)
+                task.wait(0.09)
+                pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,0,v.Z) end)
+            end)
+
             isRamping = false
-
-            bp.Position = startPos
-            task.wait(0.22)
-
-            pcall(function() bp:Destroy() end)
-            pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,-9,v.Z) end)
-            task.wait(0.07)
-            pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,5,v.Z) end)
-            task.wait(0.09)
-            pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,0,v.Z) end)
-
+            -- مضمون: يُعيد التحكم حتى لو صار خطأ في التسلسل
             UnlockPlayer(char, prevWalk, prevJump)
         end)
     end
@@ -284,47 +298,76 @@ return function(Tab, UI)
 
         task.spawn(function()
             local hrp = GetRoot(char)
-            if not hrp then RemoveFling(char) return end
-
-            local prevWalk, prevJump = LockPlayer(char)
-            local startPos = hrp.Position
-
-            -- إيقاف الدوران (0.12 ث)
-            if bav and bav.Parent then
-                local steps = 8
-                for i = steps, 0, -1 do
-                    pcall(function()
-                        bav.AngularVelocity = Vector3.new(0, SPIN_SPEED * (i / steps), 0)
-                    end)
-                    task.wait(0.12 / steps)
-                end
-                pcall(function() bav.MaxTorque = Vector3.new(0, 0, 0) end)
+            -- لو ما في HRP: أعد التحكم فوراً وأزل كل شيء
+            if not hrp then
+                UnlockPlayer(char, savedWalk, savedJump)
+                RemoveFling(char)
+                isRamping = false
+                return
             end
 
-            local bp      = Instance.new("BodyPosition")
-            bp.Name       = "CrypticCarryBP"
-            bp.P          = 13000
-            bp.D          = 950
-            bp.MaxForce   = Vector3.new(0, math.huge, 0)
-            bp.Position   = startPos + Vector3.new(0, 1.5, 0)
-            bp.Parent     = hrp
-            task.wait(0.17)
+            local prevWalk, prevJump = LockPlayer(char)
 
-            bp.Position = startPos
-            task.wait(0.15)
+            -- pcall يضمن وصول UnlockPlayer حتى لو صار خطأ
+            pcall(function()
+                local startPos = hrp.Position
 
-            pcall(function() bp:Destroy() end)
-            pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,-6,v.Z) end)
-            task.wait(0.06)
-            pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,4,v.Z) end)
-            task.wait(0.07)
-            pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,0,v.Z) end)
+                -- إيقاف الدوران (0.12 ث)
+                if bav and bav.Parent then
+                    local steps = 8
+                    for i = steps, 0, -1 do
+                        pcall(function()
+                            bav.AngularVelocity = Vector3.new(0, SPIN_SPEED * (i / steps), 0)
+                        end)
+                        task.wait(0.12 / steps)
+                    end
+                    pcall(function() bav.MaxTorque = Vector3.new(0, 0, 0) end)
+                end
 
+                local bp      = Instance.new("BodyPosition")
+                bp.Name       = "CrypticCarryBP"
+                bp.P          = 13000
+                bp.D          = 950
+                bp.MaxForce   = Vector3.new(0, math.huge, 0)
+                bp.Position   = startPos + Vector3.new(0, 1.5, 0)
+                bp.Parent     = hrp
+                task.wait(0.17)
+
+                bp.Position = startPos
+                task.wait(0.15)
+
+                pcall(function() bp:Destroy() end)
+                pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,-6,v.Z) end)
+                task.wait(0.06)
+                pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,4,v.Z) end)
+                task.wait(0.07)
+                pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,0,v.Z) end)
+            end)
+
+            -- مضمون دائماً حتى لو أي شيء فشل فوق
             UnlockPlayer(char, prevWalk, prevJump)
             RemoveFling(char)
             isRamping = false
         end)
     end
+
+    -- ==========================================
+    -- واتشدوج: يفحص كل ثانية ويعيد التحكم تلقائياً
+    -- لو الأداة مش مجهّزة ولكن WalkSpeed = 0
+    -- ==========================================
+    task.spawn(function()
+        while true do
+            task.wait(1)
+            if isActive and not isEquipped and not isRamping then
+                local char = lp.Character
+                local hum  = char and char:FindFirstChildWhichIsA("Humanoid")
+                if hum and hum.WalkSpeed == 0 then
+                    -- الشخصية مجمّدة بدون سبب → أعد التحكم
+                    UnlockPlayer(char, savedWalk, savedJump)
+                end
+            end
+        end
+    end)
 
     -- ==========================================
     -- صناعة الأداة
