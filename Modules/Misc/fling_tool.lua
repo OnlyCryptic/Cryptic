@@ -7,8 +7,9 @@ return function(Tab, UI)
     local StarterGui       = game:GetService("StarterGui")
     local lp               = Players.LocalPlayer
 
-    local isActive = false
-    local bav      = nil
+    local isActive   = false
+    local bav        = nil
+    local noclipConn = nil   -- لوب مستمر يمنع CanCollide من الرجوع
 
     local function Notify(text)
         pcall(function()
@@ -20,6 +21,8 @@ return function(Tab, UI)
         return char and char:FindFirstChild("HumanoidRootPart")
     end
 
+    local RunService = game:GetService("RunService")
+
     -- ==========================================
     -- تفعيل فيزياء الفلينج
     -- ==========================================
@@ -27,7 +30,7 @@ return function(Tab, UI)
         local hrp = GetRoot(char)
         if not hrp then return end
 
-        -- كثافة عالية = من يلمسك يطير
+        -- 1. كثافة عالية على كل الأجزاء
         for _, child in pairs(char:GetDescendants()) do
             if child:IsA("BasePart") then
                 pcall(function()
@@ -36,17 +39,23 @@ return function(Tab, UI)
             end
         end
 
-        -- صفّر السرعة الأولية
-        for _, child in pairs(char:GetDescendants()) do
-            if child:IsA("BasePart") then
-                pcall(function() child.AssemblyLinearVelocity = Vector3.zero end)
+        -- 2. تطبيق أولي: NoClip + Massless + صفّر السرعة
+        task.wait(0.1)
+        for _, v in pairs(char:GetChildren()) do
+            if v:IsA("BasePart") then
+                pcall(function()
+                    v.CanCollide = false
+                    v.Massless   = true
+                    v.Velocity   = Vector3.new(0, 0, 0)
+                end)
             end
         end
 
-        -- مسح القديم
+        -- مسح أي BAV قديم
         local old = hrp:FindFirstChild("CrypticFlingBAV")
         if old then old:Destroy() end
 
+        -- 3. BodyAngularVelocity
         bav = Instance.new("BodyAngularVelocity")
         bav.Name            = "CrypticFlingBAV"
         bav.AngularVelocity = Vector3.new(0, 99999, 0)
@@ -54,7 +63,7 @@ return function(Tab, UI)
         bav.P               = math.huge
         bav.Parent          = hrp
 
-        -- نبضات الفلينج: 99999 ↔ 0 — كل اصطدام يطير اللاعب
+        -- 4. نبضات الفلينج
         task.spawn(function()
             while bav and bav.Parent and isActive do
                 pcall(function() bav.AngularVelocity = Vector3.new(0, 99999, 0) end)
@@ -63,21 +72,43 @@ return function(Tab, UI)
                 task.wait(0.1)
             end
         end)
+
+        -- 5. لوب NoClip مستمر — يمنع الـ Humanoid من إعادة تشغيل التصادم
+        --    هذا هو الإصلاح الأساسي: بدله تطير عند الحوائط/الدرج
+        if noclipConn then noclipConn:Disconnect() end
+        noclipConn = RunService.Stepped:Connect(function()
+            local c = lp.Character
+            if not c then return end
+            for _, v in pairs(c:GetDescendants()) do
+                if v:IsA("BasePart") and v.CanCollide then
+                    v.CanCollide = false
+                end
+            end
+        end)
     end
 
     local function RemoveFling(char)
+        -- إيقاف لوب NoClip أولاً
+        if noclipConn then noclipConn:Disconnect() noclipConn = nil end
+
+        -- إزالة BAV
         if bav then pcall(function() bav:Destroy() end); bav = nil end
         if char then
             local hrp = GetRoot(char)
             if hrp then
                 for _, v in pairs(hrp:GetChildren()) do
-                    if v.ClassName == "BodyAngularVelocity" and v.Name == "CrypticFlingBAV" then v:Destroy() end
+                    if v.ClassName == "BodyAngularVelocity" and v.Name == "CrypticFlingBAV" then
+                        pcall(function() v:Destroy() end)
+                    end
                 end
             end
+            -- إرجاع الخصائص الطبيعية
             for _, child in pairs(char:GetDescendants()) do
                 if child:IsA("BasePart") then
                     pcall(function()
                         child.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
+                        child.CanCollide = true
+                        child.Massless   = false
                     end)
                 end
             end
