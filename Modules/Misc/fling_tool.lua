@@ -8,13 +8,14 @@ return function(Tab, UI)
     local PhysicsService   = game:GetService("PhysicsService")
     local lp               = Players.LocalPlayer
 
-    local SPIN_SPEED = 25000   -- 25% من الأصل (99999)
+    local SPIN_SPEED = 25000
 
-    local isActive    = false
-    local bav         = nil
-    local noclipConn  = nil
-    local isEquipped  = false
-    local isRamping   = false  -- منع لوب النبضات أثناء الرمب
+    local isActive       = false
+    local bav            = nil
+    local noclipConn     = nil
+    local antiflingConn  = nil   -- أنتي فلينج صامت
+    local isEquipped     = false
+    local isRamping      = false
 
     local function Notify(text)
         pcall(function()
@@ -24,6 +25,28 @@ return function(Tab, UI)
 
     local function GetRoot(char)
         return char and char:FindFirstChild("HumanoidRootPart")
+    end
+
+    -- ==========================================
+    -- أنتي فلينج صامت (يشتغل بمجرد تفعيل الزر)
+    -- ==========================================
+    local function StartAntifling()
+        if antiflingConn then antiflingConn:Disconnect() end
+        antiflingConn = RunService.Stepped:Connect(function()
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= lp and p.Character then
+                    for _, part in pairs(p.Character:GetChildren()) do
+                        if part:IsA("BasePart") and part.CanCollide then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end
+        end)
+    end
+
+    local function StopAntifling()
+        if antiflingConn then antiflingConn:Disconnect(); antiflingConn = nil end
     end
 
     -- ==========================================
@@ -49,7 +72,7 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- تجميد / تحرير اللاعب (Joystick + سرعة)
+    -- تجميد / تحرير اللاعب
     -- ==========================================
     local function LockPlayer(char)
         local hum = char and char:FindFirstChildWhichIsA("Humanoid")
@@ -58,12 +81,10 @@ return function(Tab, UI)
 
         local prevWalk = hum.WalkSpeed
         local prevJump = hum.JumpPower
-
         hum.WalkSpeed = 0
         hum.JumpPower = 0
         pcall(function() hum.JumpHeight = 0 end)
 
-        -- BodyVelocity يمنع الانزلاق الأفقي
         local old = hrp:FindFirstChild("CrypticLockBV")
         if old then old:Destroy() end
         local bv = Instance.new("BodyVelocity")
@@ -90,7 +111,7 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- تهيئة فيزياء الفلينج (بدون تشغيل الدوران فوراً)
+    -- تهيئة فيزياء الفلينج
     -- ==========================================
     local function ApplyFlingPhysics(char)
         local hrp = GetRoot(char)
@@ -118,10 +139,20 @@ return function(Tab, UI)
             end
         end
 
-        -- أنشئ BAV بسرعة صفر (سيُفعَّل لاحقاً)
+        -- BodyGyro: يثبّت الشخصية مستقيمة (يمنع الانقلاب) ويسمح فقط بدوران Y
+        local oldGyro = hrp:FindFirstChild("CrypticFlingGyro")
+        if oldGyro then oldGyro:Destroy() end
+        local gyro = Instance.new("BodyGyro")
+        gyro.Name      = "CrypticFlingGyro"
+        gyro.MaxTorque = Vector3.new(math.huge, 0, math.huge) -- يقفل X وZ، يترك Y للـ BAV
+        gyro.P         = 8000
+        gyro.D         = 300
+        gyro.CFrame    = CFrame.new()    -- توجيه مستقيم
+        gyro.Parent    = hrp
+
+        -- BAV بسرعة صفر (يُفعَّل لاحقاً بالرمب)
         local old = hrp:FindFirstChild("CrypticFlingBAV")
         if old then old:Destroy() end
-
         bav                 = Instance.new("BodyAngularVelocity")
         bav.Name            = "CrypticFlingBAV"
         bav.AngularVelocity = Vector3.new(0, 0, 0)
@@ -139,9 +170,17 @@ return function(Tab, UI)
                     v.CanCollide = false
                 end
             end
+            -- حافظ على توجيه الجايرو مستقيماً في كل فريم
+            local h = GetRoot(c)
+            local g = h and h:FindFirstChild("CrypticFlingGyro")
+            if g then
+                pcall(function()
+                    g.CFrame = CFrame.new(h.CFrame.Position)
+                end)
+            end
         end)
 
-        -- لوب نبضات الدوران (يبدأ فقط بعد انتهاء الرمب)
+        -- لوب نبضات الدوران
         task.spawn(function()
             while bav and bav.Parent and isActive do
                 if not isRamping then
@@ -160,15 +199,16 @@ return function(Tab, UI)
     end
 
     local function RemoveFling(char)
-        if noclipConn then noclipConn:Disconnect() noclipConn = nil end
+        if noclipConn then noclipConn:Disconnect(); noclipConn = nil end
         if bav then pcall(function() bav:Destroy() end); bav = nil end
         if char then
             local hrp = GetRoot(char)
             if hrp then
                 for _, v in pairs(hrp:GetChildren()) do
-                    if (v.ClassName == "BodyAngularVelocity" and v.Name == "CrypticFlingBAV")
-                    or (v.ClassName == "BodyPosition"    and v.Name == "CrypticCarryBP")
-                    or (v.ClassName == "BodyVelocity"    and v.Name == "CrypticLockBV") then
+                    if v.Name == "CrypticFlingBAV"
+                    or v.Name == "CrypticCarryBP"
+                    or v.Name == "CrypticLockBV"
+                    or v.Name == "CrypticFlingGyro" then
                         pcall(function() v:Destroy() end)
                     end
                 end
@@ -186,8 +226,7 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- تسلسل التجهيز:
-    -- تجميد ← رفع ← ثبوت ← رمب الدوران ← نزول ← تحرير
+    -- تسلسل التجهيز: تجميد ← رفع ← رمب دوران ← نزول ← تحرير
     -- ==========================================
     local function EquipSequence(char)
         task.spawn(function()
@@ -195,12 +234,9 @@ return function(Tab, UI)
             if not hrp then return end
 
             isRamping = true
-
-            -- 1. تجميد
             local prevWalk, prevJump = LockPlayer(char)
             local startPos = hrp.Position
 
-            -- 2. رفع
             local bp      = Instance.new("BodyPosition")
             bp.Name       = "CrypticCarryBP"
             bp.P          = 11000
@@ -208,10 +244,9 @@ return function(Tab, UI)
             bp.MaxForce   = Vector3.new(0, math.huge, 0)
             bp.Position   = startPos + Vector3.new(0, 2.5, 0)
             bp.Parent     = hrp
+            task.wait(0.25)
 
-            task.wait(0.25)   -- صعود
-
-            -- 3. ثبوت في الأعلى + رمب الدوران تدريجياً
+            -- رمب الدوران
             if bav and bav.Parent then
                 local steps = 12
                 for i = 1, steps do
@@ -219,43 +254,29 @@ return function(Tab, UI)
                     local t = i / steps
                     pcall(function()
                         bav.AngularVelocity = Vector3.new(0, SPIN_SPEED * t, 0)
-                        bav.MaxTorque       = Vector3.new(0, math.huge * t, 0)
+                        bav.MaxTorque       = Vector3.new(0, math.huge, 0)
                     end)
                     task.wait(0.28 / steps)
                 end
             end
-
             isRamping = false
 
-            -- 4. نزول
             bp.Position = startPos
             task.wait(0.22)
 
-            -- 5. ثباط
             pcall(function() bp:Destroy() end)
-            pcall(function()
-                local v = hrp.AssemblyLinearVelocity
-                hrp.AssemblyLinearVelocity = Vector3.new(v.X, -9, v.Z)
-            end)
+            pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,-9,v.Z) end)
             task.wait(0.07)
-            pcall(function()
-                local v = hrp.AssemblyLinearVelocity
-                hrp.AssemblyLinearVelocity = Vector3.new(v.X, 5, v.Z)
-            end)
+            pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,5,v.Z) end)
             task.wait(0.09)
-            pcall(function()
-                local v = hrp.AssemblyLinearVelocity
-                hrp.AssemblyLinearVelocity = Vector3.new(v.X, 0, v.Z)
-            end)
+            pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,0,v.Z) end)
 
-            -- 6. تحرير اللاعب
             UnlockPlayer(char, prevWalk, prevJump)
         end)
     end
 
     -- ==========================================
-    -- تسلسل الخلع (أقل من ثانية):
-    -- تجميد ← رفع خفيف ← إيقاف دوران ← نزول ← رجوع طبيعي
+    -- تسلسل الخلع (أقل من ثانية)
     -- ==========================================
     local function UnequipSequence(char)
         isEquipped = false
@@ -265,24 +286,21 @@ return function(Tab, UI)
             local hrp = GetRoot(char)
             if not hrp then RemoveFling(char) return end
 
-            -- 1. تجميد
             local prevWalk, prevJump = LockPlayer(char)
             local startPos = hrp.Position
 
-            -- 2. إيقاف الدوران تدريجياً (0.12 ث)
+            -- إيقاف الدوران (0.12 ث)
             if bav and bav.Parent then
                 local steps = 8
                 for i = steps, 0, -1 do
                     pcall(function()
-                        local t = i / steps
-                        bav.AngularVelocity = Vector3.new(0, SPIN_SPEED * t, 0)
+                        bav.AngularVelocity = Vector3.new(0, SPIN_SPEED * (i / steps), 0)
                     end)
                     task.wait(0.12 / steps)
                 end
                 pcall(function() bav.MaxTorque = Vector3.new(0, 0, 0) end)
             end
 
-            -- 3. رفع خفيف (1.5 وحدة)
             local bp      = Instance.new("BodyPosition")
             bp.Name       = "CrypticCarryBP"
             bp.P          = 13000
@@ -290,31 +308,18 @@ return function(Tab, UI)
             bp.MaxForce   = Vector3.new(0, math.huge, 0)
             bp.Position   = startPos + Vector3.new(0, 1.5, 0)
             bp.Parent     = hrp
+            task.wait(0.17)
 
-            task.wait(0.17)   -- صعود سريع
-
-            -- 4. نزول
             bp.Position = startPos
             task.wait(0.15)
 
-            -- 5. ثباط خفيف
             pcall(function() bp:Destroy() end)
-            pcall(function()
-                local v = hrp.AssemblyLinearVelocity
-                hrp.AssemblyLinearVelocity = Vector3.new(v.X, -6, v.Z)
-            end)
+            pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,-6,v.Z) end)
             task.wait(0.06)
-            pcall(function()
-                local v = hrp.AssemblyLinearVelocity
-                hrp.AssemblyLinearVelocity = Vector3.new(v.X, 4, v.Z)
-            end)
+            pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,4,v.Z) end)
             task.wait(0.07)
-            pcall(function()
-                local v = hrp.AssemblyLinearVelocity
-                hrp.AssemblyLinearVelocity = Vector3.new(v.X, 0, v.Z)
-            end)
+            pcall(function() local v=hrp.AssemblyLinearVelocity; hrp.AssemblyLinearVelocity=Vector3.new(v.X,0,v.Z) end)
 
-            -- 6. تحرير + إزالة كاملة
             UnlockPlayer(char, prevWalk, prevJump)
             RemoveFling(char)
             isRamping = false
@@ -382,7 +387,7 @@ return function(Tab, UI)
         local btn = Instance.new("TextButton")
         btn.Size = UDim2.new(0,65,0,18); btn.Position = UDim2.new(0.5,-32,0,60)
         btn.BackgroundColor3 = Color3.fromRGB(200,50,0); btn.BackgroundTransparency = 0.55
-        btn.TextColor3 = Color3.fromRGB(255,255,255); btn.Text = "💥 Fling"
+        btn.TextColor3 = Color3.fromRGB(255,255,255); btn.Text = "Fling"
         btn.Font = Enum.Font.GothamBold; btn.TextSize = 10; btn.Active = true; btn.Parent = sg
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0,4)
 
@@ -411,8 +416,8 @@ return function(Tab, UI)
         task.spawn(function()
             while sg.Parent do
                 local char=lp.Character; local eq=char and char:FindFirstChild("Cryptic Fling")
-                if eq then btn.BackgroundColor3=Color3.fromRGB(0,180,80); btn.Text="🟢 Fling ON"
-                else btn.BackgroundColor3=Color3.fromRGB(200,50,0); btn.Text="💥 Fling" end
+                if eq then btn.BackgroundColor3=Color3.fromRGB(0,180,80); btn.Text="Fling ON"
+                else btn.BackgroundColor3=Color3.fromRGB(200,50,0); btn.Text="Fling" end
                 task.wait(0.2)
             end
         end)
@@ -421,9 +426,10 @@ return function(Tab, UI)
     local function Cleanup()
         local char=lp.Character
         isEquipped = false; isRamping = false
+        StopAntifling()
         RemoveFling(char)
         local hum = char and char:FindFirstChildWhichIsA("Humanoid")
-        if hum then hum.WalkSpeed = 16; hum.JumpPower = 50; pcall(function() hum.JumpHeight = 7.2 end) end
+        if hum then hum.WalkSpeed=16; hum.JumpPower=50; pcall(function() hum.JumpHeight=7.2 end) end
         local ui=lp.PlayerGui:FindFirstChild("CrypticFlingUI"); if ui then ui:Destroy() end
         local inB=lp.Backpack:FindFirstChild("Cryptic Fling"); local inC=char and char:FindFirstChild("Cryptic Fling")
         if inB then inB:Destroy() end; if inC then inC:Destroy() end
@@ -445,16 +451,18 @@ return function(Tab, UI)
         if active then
             if not CheckCollisionAllowed() then
                 isActive = false
-                Notify("🚫 الماب لا يدعم التلامس")
+                Notify("الماب لا يدعم التلامس / Map has no collision")
                 return
             end
+            -- تشغيل أنتي فلينج صامت فوراً بدون إشعار
+            StartAntifling()
             local char=lp.Character
             local t=CreateFlingTool(char); if t then EnforceSlot(t) end
             EnsureFloatingUI()
-            Notify("💥 فلينج ON — جهّز الأداة")
+            Notify("فلينج ON — جهّز الأداة / Equip the tool")
         else
             Cleanup()
-            Notify("⛔ فلينج OFF")
+            Notify("فلينج OFF")
         end
     end)
 end
