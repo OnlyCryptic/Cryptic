@@ -71,33 +71,21 @@ return function(Tab, UI)
     -- ==========================================
     -- واجهة المستخدم (UI)
     -- ==========================================
-    
-    Tab:AddToggle("إكس راي (رؤية الجدران) / Map X-Ray", function(state)
-        if state then
-            Notify("Cryptic Hub 👁️", "جاري تفعيل الإكس راي... (قد يستغرق ثواني في المابات الضخمة)\nEnabling X-Ray...")
+
+    Tab:AddSpeedControl("إكس راي (رؤية الجدران) / Map X-Ray", function(active, value)
+        xrayTransparency = math.clamp(value, 1, 100) / 100
+        if active then
+            Notify("Cryptic Hub 👁️", "جاري تفعيل الإكس راي...\nEnabling X-Ray...")
             EnableXRay()
             if isXRayOn then
-                Notify("تفعيل / Applied ✅", "تم تفعيل الرؤية عبر الجدران!\nX-Ray is active!")
+                Notify("تفعيل ✅", "تم تفعيل الرؤية عبر الجدران!\nX-Ray is active!")
             end
         else
-            DisableXRay()
-            Notify("إيقاف / Restored 🔄", "تم إرجاع الماب لطبيعته!\nMap restored to normal!")
-        end
-    end)
-
-    Tab:AddSlider("درجة الشفافية / X-Ray Opacity", 10, 100, 50, function(value)
-        -- تحويل القيمة من (10-100) إلى (0.1 - 1.0)
-        xrayTransparency = value / 100
-        
-        -- تحديث الشفافية مباشرة إذا كان الإكس راي مفعلاً (بدون إعادة مسح الماب بالكامل لتجنب اللاق)
-        if isXRayOn then
-            for part, _ in pairs(originalTransparencies) do
-                if part and part.Parent then
-                    part.Transparency = xrayTransparency
-                end
+            if isXRayOn then
+                DisableXRay()
+                Notify("إيقاف 🔄", "تم إرجاع الماب لطبيعته!\nMap restored!")
             end
         end
-    end)
+    end, 50, 100)
 
-    Tab:AddLine()
 end
