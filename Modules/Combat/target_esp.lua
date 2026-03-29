@@ -96,7 +96,7 @@ return function(Tab, UI)
         end)
     end
 
-    Tab:AddToggle("👁️ ESP على الهدف / Target ESP", function(active)
+    Tab:AddToggle("مكان هدف / Target ESP", function(active)
         if active then
             local target = _G.ArwaTarget
             if not target or not target.Character then
