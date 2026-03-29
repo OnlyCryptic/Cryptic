@@ -11,8 +11,8 @@ return function(Tab, UI)
 
     local isActive   = false
     local bav        = nil
-    local noclipConn = nil   -- لوب مستمر يمنع CanCollide من الرجوع
-    local isEquipped = false -- تتبع حالة التجهيز لتجنب إزالة مبكرة
+    local noclipConn = nil
+    local isEquipped = false
 
     local function Notify(text)
         pcall(function()
@@ -32,15 +32,13 @@ return function(Tab, UI)
         if not char then return true end
         local myTorso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso")
         if not myTorso then return true end
-
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= lp and p.Character then
                 local tgtTorso = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso")
                 if tgtTorso then
                     local ok, can = pcall(function()
                         return PhysicsService:CollisionGroupsAreCollidable(
-                            myTorso.CollisionGroup,
-                            tgtTorso.CollisionGroup
+                            myTorso.CollisionGroup, tgtTorso.CollisionGroup
                         )
                     end)
                     if ok and not can then return false end
@@ -51,13 +49,74 @@ return function(Tab, UI)
     end
 
     -- ==========================================
+    -- تأثير الحمل: رفع خفيف ← توقف ← نزول ← ثباط ← ثبات
+    -- onDone: دالة اختيارية تُنادى بعد اكتمال التأثير
+    -- ==========================================
+    local function CarryEffect(char, onDone)
+        task.spawn(function()
+            local hrp = GetRoot(char)
+            if not hrp then
+                if onDone then onDone() end
+                return
+            end
+
+            -- احفظ مرجع الموضع الحالي عند بدء التأثير
+            local startPos = hrp.Position
+
+            -- أنشئ BodyPosition يتحكم في المحور Y فقط
+            local bp      = Instance.new("BodyPosition")
+            bp.Name       = "CrypticCarryBP"
+            bp.P          = 10000
+            bp.D          = 800
+            bp.MaxForce   = Vector3.new(0, math.huge, 0)
+            bp.Position   = startPos + Vector3.new(0, 2.5, 0)  -- ارفع 2.5 وحدة
+            bp.Parent     = hrp
+
+            task.wait(0.28)   -- صعود ناعم
+
+            -- لو أعاد التجهيز أثناء التأثير → اخرج فوراً
+            if isEquipped == false and onDone ~= nil then
+                -- نحن في مرحلة خلع؛ استمر
+            elseif isEquipped == true and onDone == nil then
+                -- نحن في مرحلة تجهيز؛ استمر
+            end
+
+            -- توقف لحظي في الأعلى (0.08 ث) ← نزول
+            task.wait(0.08)
+            bp.Position = startPos                              -- هدف الـ BP للأسفل
+            task.wait(0.22)                                     -- نزول ناعم
+
+            -- أزل BodyPosition
+            pcall(function() bp:Destroy() end)
+
+            -- ثباط صغير (bounce)
+            task.wait(0.03)
+            pcall(function()
+                local v = hrp.AssemblyLinearVelocity
+                hrp.AssemblyLinearVelocity = Vector3.new(v.X, -11, v.Z)
+            end)
+            task.wait(0.07)
+            pcall(function()
+                local v = hrp.AssemblyLinearVelocity
+                hrp.AssemblyLinearVelocity = Vector3.new(v.X, 6, v.Z)
+            end)
+            task.wait(0.09)
+            pcall(function()
+                local v = hrp.AssemblyLinearVelocity
+                hrp.AssemblyLinearVelocity = Vector3.new(v.X, 0, v.Z)
+            end)
+
+            if onDone then onDone() end
+        end)
+    end
+
+    -- ==========================================
     -- تفعيل فيزياء الفلينج
     -- ==========================================
     local function ApplyFling(char)
         local hrp = GetRoot(char)
         if not hrp then return end
 
-        -- 1. كثافة عالية على كل الأجزاء
         for _, child in pairs(char:GetDescendants()) do
             if child:IsA("BasePart") then
                 pcall(function()
@@ -66,7 +125,6 @@ return function(Tab, UI)
             end
         end
 
-        -- 2. تطبيق أولي: NoClip + Massless + صفّر السرعة
         task.wait(0.1)
         for _, v in pairs(char:GetChildren()) do
             if v:IsA("BasePart") then
@@ -78,19 +136,16 @@ return function(Tab, UI)
             end
         end
 
-        -- مسح أي BAV قديم
         local old = hrp:FindFirstChild("CrypticFlingBAV")
         if old then old:Destroy() end
 
-        -- 3. BodyAngularVelocity
-        bav = Instance.new("BodyAngularVelocity")
+        bav                 = Instance.new("BodyAngularVelocity")
         bav.Name            = "CrypticFlingBAV"
         bav.AngularVelocity = Vector3.new(0, 99999, 0)
         bav.MaxTorque       = Vector3.new(0, math.huge, 0)
         bav.P               = math.huge
         bav.Parent          = hrp
 
-        -- 4. نبضات الفلينج
         task.spawn(function()
             while bav and bav.Parent and isActive do
                 pcall(function() bav.AngularVelocity = Vector3.new(0, 99999, 0) end)
@@ -100,7 +155,6 @@ return function(Tab, UI)
             end
         end)
 
-        -- 5. لوب NoClip مستمر — يمنع الـ Humanoid من إعادة تشغيل التصادم
         if noclipConn then noclipConn:Disconnect() end
         noclipConn = RunService.Stepped:Connect(function()
             local c = lp.Character
@@ -114,10 +168,7 @@ return function(Tab, UI)
     end
 
     local function RemoveFling(char)
-        -- إيقاف لوب NoClip أولاً
         if noclipConn then noclipConn:Disconnect() noclipConn = nil end
-
-        -- إزالة BAV
         if bav then pcall(function() bav:Destroy() end); bav = nil end
         if char then
             local hrp = GetRoot(char)
@@ -128,7 +179,6 @@ return function(Tab, UI)
                     end
                 end
             end
-            -- إرجاع الخصائص الطبيعية
             for _, child in pairs(char:GetDescendants()) do
                 if child:IsA("BasePart") then
                     pcall(function()
@@ -142,32 +192,28 @@ return function(Tab, UI)
     end
 
     -- ==========================================
-    -- إزالة تدريجية عند الخلع (بدون صدمة)
+    -- خلع تدريجي: CarryEffect موازٍ لتراجع السرعة
     -- ==========================================
     local function GradualUnequip(char)
         isEquipped = false
 
+        -- [1] تراجع السرعة في 0.4 ث — موازٍ مع تأثير الرفع
         task.spawn(function()
-            -- المرحلة 1: تراجع السرعة تدريجياً في 0.4 ثانية
             local steps    = 20
             local stepTime = 0.4 / steps
-
             for i = steps, 0, -1 do
-                if isEquipped then return end  -- أعاد التجهيز? وقف
+                if isEquipped then return end
                 if bav and bav.Parent then
                     pcall(function()
-                        local scale = i / steps
-                        bav.AngularVelocity = Vector3.new(0, 99999 * scale, 0)
+                        bav.AngularVelocity = Vector3.new(0, 99999 * (i / steps), 0)
                     end)
                 end
                 task.wait(stepTime)
             end
+        end)
 
-            -- المرحلة 2: انتظار 0.3 ثانية إضافية (إجمالي = 0.7 ثانية)
-            -- النوكليب لا يزال نشطاً خلال هذه الفترة لتفادي الصدمة
-            task.wait(0.3)
-
-            -- المرحلة 3: إزالة كاملة (نوكليب + باقي الفيزياء)
+        -- [2] تأثير الرفع ← بعد اكتماله (~0.6 ث) أزل النوكليب والفيزياء
+        CarryEffect(char, function()
             if not isEquipped then
                 RemoveFling(char)
             end
@@ -194,7 +240,11 @@ return function(Tab, UI)
         tool.Equipped:Connect(function()
             isEquipped = true
             local c = lp.Character
-            if c then ApplyFling(c) end
+            if not c then return end
+            -- [1] طبّق الفيزياء
+            ApplyFling(c)
+            -- [2] تأثير الرفع عند التجهيز (بدون onDone)
+            CarryEffect(c)
         end)
 
         tool.Unequipped:Connect(function()
@@ -292,13 +342,11 @@ return function(Tab, UI)
     Tab:AddToggle("أداة الفلينج / Fling Tool", function(active)
         isActive = active
         if active then
-            -- 🔍 فحص إذا كان الماب يدعم التلامس بين اللاعبين
             if not CheckCollisionAllowed() then
                 isActive = false
                 Notify("🚫 الماب لا يدعم التلامس بين اللاعبين\n🚫 Map doesn't support player collision")
                 return
             end
-
             local char=lp.Character
             local t=CreateFlingTool(char); if t then EnforceSlot(t) end
             EnsureFloatingUI()
