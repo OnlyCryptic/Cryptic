@@ -12,7 +12,7 @@ return function(Tab, UI)
     local physicsConn = nil
 
     -- ارتفاع الشخصية فوق الهدف (1 متر)
-    local HOVER_HEIGHT = 2.5
+    local HOVER_HEIGHT = 3
 
     local function Notify(ar, en)
         pcall(function()
