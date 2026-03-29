@@ -1,21 +1,24 @@
 -- [[ Cryptic Hub - تتبع لاعب (Target Follow) ]]
+-- الوضع: معلّق فوق الهدف بمتر واحد، جسم نايم يراقبه من فوق
 
 return function(Tab, UI)
     local RunService = game:GetService("RunService")
-    local Players = game:GetService("Players")
+    local Players    = game:GetService("Players")
     local StarterGui = game:GetService("StarterGui")
-    local lp = Players.LocalPlayer
+    local lp         = Players.LocalPlayer
 
     local isFollowing = false
-    local followConn = nil
+    local followConn  = nil
     local physicsConn = nil
-    local FOLLOW_DISTANCE = 4
+
+    -- ارتفاع الشخصية فوق الهدف (1 متر)
+    local HOVER_HEIGHT = 2.5
 
     local function Notify(ar, en)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
                 Title = "Cryptic Hub",
-                Text = ar .. "\n" .. en,
+                Text  = ar .. "\n" .. en,
                 Duration = 3,
             })
         end)
@@ -23,14 +26,17 @@ return function(Tab, UI)
 
     local function StopFollow()
         isFollowing = false
-        if followConn then followConn:Disconnect() followConn = nil end
+        if followConn  then followConn:Disconnect()  followConn  = nil end
         if physicsConn then physicsConn:Disconnect() physicsConn = nil end
 
+        -- إرجاع وضعية الشخصية الطبيعية
         local char = lp.Character
         if not char then return end
-        local hum = char:FindFirstChildOfClass("Humanoid")
         local root = char:FindFirstChild("HumanoidRootPart")
-        if hum and root then
+        local hum  = char:FindFirstChildOfClass("Humanoid")
+        if root and hum then
+            -- نرجع الـ CFrame لوضعية مستقيمة عند نفس الموضع
+            root.CFrame = CFrame.new(root.Position) * CFrame.Angles(0, 0, 0)
             hum:MoveTo(root.Position)
         end
     end
@@ -46,23 +52,31 @@ return function(Tab, UI)
 
             isFollowing = true
             Notify(
-                "🚶 يتتبع: " .. target.DisplayName,
-                "🚶 Following: " .. target.DisplayName
+                "👁️ يراقب من فوق: " .. target.DisplayName,
+                "👁️ Hovering above: " .. target.DisplayName
             )
 
-            -- لوب الفيزياء: noclip + antifling + nofall
+            -- لوب الفيزياء: noclip + antifling + تعطيل الجاذبية
             physicsConn = RunService.Stepped:Connect(function()
                 if not isFollowing then return end
                 local char = lp.Character
                 if not char then return end
                 local root = char:FindFirstChild("HumanoidRootPart")
 
-                -- NoClip
+                -- NoClip للشخصية المحلية
                 for _, p in pairs(char:GetDescendants()) do
-                    if p:IsA("BasePart") then p.CanCollide = false end
+                    if p:IsA("BasePart") then
+                        p.CanCollide = false
+                    end
                 end
 
-                -- AntiFling
+                -- تعطيل الجاذبية على الـ root
+                if root then
+                    root.AssemblyLinearVelocity  = Vector3.new(0, 0, 0)
+                    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                end
+
+                -- AntiFling: تعطيل تصادم اللاعبين الآخرين
                 for _, pl in pairs(Players:GetPlayers()) do
                     if pl ~= lp and pl.Character then
                         for _, p in pairs(pl.Character:GetChildren()) do
@@ -70,51 +84,40 @@ return function(Tab, UI)
                         end
                     end
                 end
-
-                -- NoFall
-                if root then
-                    local vel = root.AssemblyLinearVelocity
-                    if vel.Y < -40 then
-                        root.AssemblyLinearVelocity = Vector3.new(vel.X, -40, vel.Z)
-                    end
-                end
             end)
 
-            -- لوب التتبع مع تتبع الارتفاع
+            -- لوب التتبع: ثبّت الشخصية فوق الهدف بوضعية "نايمة" تراقبه
             followConn = RunService.Heartbeat:Connect(function()
                 if not isFollowing then return end
 
-                local char = lp.Character
-                local root = char and char:FindFirstChild("HumanoidRootPart")
-                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                local char    = lp.Character
+                local root    = char and char:FindFirstChild("HumanoidRootPart")
+                local hum     = char and char:FindFirstChildOfClass("Humanoid")
 
-                local tgt = _G.ArwaTarget
+                local tgt     = _G.ArwaTarget
                 local tgtChar = tgt and tgt.Character
                 local tgtRoot = tgtChar and tgtChar:FindFirstChild("HumanoidRootPart")
 
                 if not root or not hum or not tgtRoot then return end
                 if hum.Health <= 0 then return end
 
-                -- نقطة خلف الهدف + نفس ارتفاعه
-                local tgtCF = tgtRoot.CFrame
-                local behindPos = tgtCF * CFrame.new(0, 0, FOLLOW_DISTANCE)
+                -- الموضع: مباشرة فوق الهدف بـ HOVER_HEIGHT متر
+                local abovePos = tgtRoot.Position + Vector3.new(0, HOVER_HEIGHT, 0)
 
-                -- نأخذ X,Z من النقطة خلفه، Y من الهدف نفسه
-                local targetPos = Vector3.new(
-                    behindPos.X,
-                    tgtRoot.Position.Y, -- نفس ارتفاع الهدف
-                    behindPos.Z
-                )
+                -- استخرج اتجاه الهدف على محور Y فقط (نفس اتجاهه الأفقي)
+                local _, targetYaw, _ = tgtRoot.CFrame:ToEulerAnglesYXZ()
 
-                local distance = (root.Position - tgtRoot.Position).Magnitude
+                --[[
+                    وضعية "نايمة وتراقب من فوق":
+                    - نحط الشخصية فوق الهدف
+                    - نديرها بنفس اتجاه الهدف الأفقي
+                    - نميلها 90 درجة للأمام (كأنها مستلقية على بطنها في الهواء وتشوف للأسفل)
+                ]]
+                local finalCF = CFrame.new(abovePos)
+                    * CFrame.fromEulerAnglesYXZ(0, targetYaw, 0)
+                    * CFrame.Angles(math.pi / 2, 0, 0)
 
-                if distance > FOLLOW_DISTANCE + 0.5 then
-                    -- نحرك بـ CFrame في الاتجاهات الثلاث X,Y,Z
-                    local fullTarget = Vector3.new(targetPos.X, tgtRoot.Position.Y, targetPos.Z)
-                    local dir = (fullTarget - root.Position).Unit
-                    local speed = math.min(distance * 0.3, hum.WalkSpeed)
-                    root.CFrame = CFrame.new(root.Position + dir * speed * 0.05) * (root.CFrame - root.CFrame.Position)
-                end
+                root.CFrame = finalCF
             end)
 
         else
@@ -122,5 +125,4 @@ return function(Tab, UI)
             Notify("❌ توقف التتبع.", "❌ Follow stopped.")
         end
     end)
-
 end
