@@ -286,6 +286,18 @@ return function(Tab, UI)
             isRamping = false
             -- مضمون: يُعيد التحكم حتى لو صار خطأ في التسلسل
             UnlockPlayer(char, prevWalk, prevJump)
+
+            -- بعد ثانية من رجوع التحكم: قفزة طبيعية وحدة
+            task.wait(1)
+            pcall(function()
+                if isEquipped then
+                    local char2 = lp.Character
+                    local hum2  = char2 and char2:FindFirstChildWhichIsA("Humanoid")
+                    if hum2 then
+                        hum2:ChangeState(Enum.HumanoidStateType.Jumping)
+                    end
+                end
+            end)
         end)
     end
 
@@ -348,16 +360,6 @@ return function(Tab, UI)
             UnlockPlayer(char, prevWalk, prevJump)
             RemoveFling(char)
             isRamping = false
-
-            -- قفزة طبيعية بعد رجوع التحكم (مثل ضغطة زر القفز)
-            task.wait(0.05)
-            pcall(function()
-                local char2 = lp.Character
-                local hum2  = char2 and char2:FindFirstChildWhichIsA("Humanoid")
-                if hum2 then
-                    hum2:ChangeState(Enum.HumanoidStateType.Jumping)
-                end
-            end)
         end)
     end
 
