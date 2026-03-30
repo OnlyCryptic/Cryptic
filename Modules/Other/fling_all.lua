@@ -52,6 +52,7 @@ return function(Tab, UI)
         hum.PlatformStand = true
         hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
         hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll,     false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Dead,        false) -- حماية 1: يمنع حالة الموت
 
         bav = Instance.new("BodyAngularVelocity")
         bav.Name            = "CrypticUpperFlingBAV"
@@ -75,16 +76,36 @@ return function(Tab, UI)
         end
 
         local currentTargetPos = nil
+        local lastSafePos      = root.Position  -- آخر موقع آمن للعودة إليه
+        local safeY            = workspace.FallenPartsDestroyHeight + 60
 
         steppedConn = RunService.Stepped:Connect(function()
-            if root and hum.Health > 0 then
-                root.RotVelocity = Vector3.new(0, 0, 0)
-                if currentTargetPos then
-                    bp.Position   = currentTargetPos
-                    root.CanCollide = true
-                    root.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 1)
+            if not root or not root.Parent then return end
+
+            root.RotVelocity = Vector3.new(0, 0, 0)
+
+            -- حماية 2: استعادة الصحة كل فريم
+            pcall(function()
+                if hum and hum.Health < hum.MaxHealth then
+                    hum.Health = hum.MaxHealth
+                end
+            end)
+
+            if currentTargetPos then
+                bp.Position = currentTargetPos
+                root.CanCollide = true
+                -- وزن معتدل بدل 100 لتقليل الأضرار الجانبية
+                root.CustomPhysicalProperties = PhysicalProperties.new(50, 0, 0)
+            else
+                root.CanCollide = false
+                -- حماية 3: لو سقطنا تحت الحد الآمن نرجع لآخر موقع
+                if root.Position.Y < safeY then
+                    pcall(function()
+                        root.CFrame   = CFrame.new(lastSafePos + Vector3.new(0, 5, 0))
+                        root.Velocity = Vector3.new(0, 0, 0)
+                    end)
                 else
-                    root.CanCollide = false
+                    lastSafePos = root.Position
                 end
             end
         end)
@@ -102,7 +123,8 @@ return function(Tab, UI)
                         local targetHum  = targetChar:FindFirstChildOfClass("Humanoid")
 
                         if targetRoot and targetHum and targetHum.Health > 0 then
-                            if targetRoot.Position.Y > (workspace.FallenPartsDestroyHeight + 20) then
+                            -- تأكد أن الهدف في منطقة آمنة قبل الانتقال إليه
+                            if targetRoot.Position.Y > safeY then
                                 local isStationary = targetRoot.Velocity.Magnitude < 5
 
                                 if isStationary then
@@ -122,8 +144,12 @@ return function(Tab, UI)
                                         task.wait()
                                     end
 
-                                    currentTargetPos    = nil
-                                    root.Velocity = Vector3.new(0, 0, 0)
+                                    currentTargetPos  = nil
+                                    root.Velocity     = Vector3.new(0, 0, 0)
+                                    -- ارجع لآخر موقع آمن بعد الفلينج مباشرةً
+                                    pcall(function()
+                                        root.CFrame = CFrame.new(lastSafePos + Vector3.new(0, 3, 0))
+                                    end)
                                 end
                             end
                         end
