@@ -348,6 +348,19 @@ return function(Tab, UI)
             UnlockPlayer(char, prevWalk, prevJump)
             RemoveFling(char)
             isRamping = false
+
+            -- قفزة واحدة بعد رجوع التحكم
+            task.wait(0.05)
+            pcall(function()
+                local h = GetRoot(lp.Character)
+                if h then
+                    h.AssemblyLinearVelocity = Vector3.new(
+                        h.AssemblyLinearVelocity.X,
+                        50,
+                        h.AssemblyLinearVelocity.Z
+                    )
+                end
+            end)
         end)
     end
 
