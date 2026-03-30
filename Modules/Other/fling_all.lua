@@ -153,16 +153,38 @@ return function(Tab, UI)
 
         flingTask = task.spawn(function()
             while isFlingAllActive do
+                local stationary = {}
+                local moving     = {}
+
+                -- صنّف اللاعبين: واقفين أولاً ثم متحركين
                 for _, player in ipairs(Players:GetPlayers()) do
-                    if not isFlingAllActive then break end
                     if player ~= LocalPlayer and player.Character then
-                        local tHum = player.Character:FindFirstChildOfClass("Humanoid")
-                        if tHum and tHum.Health > 0 then
-                            SkidFling(player)
-                            task.wait(0.1)
+                        local tHum  = player.Character:FindFirstChildOfClass("Humanoid")
+                        local tRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                        if tHum and tHum.Health > 0 and tRoot then
+                            if tRoot.Velocity.Magnitude < 5 then
+                                table.insert(stationary, player)
+                            else
+                                table.insert(moving, player)
+                            end
                         end
                     end
                 end
+
+                -- الواقفون أولاً
+                for _, player in ipairs(stationary) do
+                    if not isFlingAllActive then break end
+                    SkidFling(player)
+                    task.wait(0.1)
+                end
+
+                -- ثم المتحركون
+                for _, player in ipairs(moving) do
+                    if not isFlingAllActive then break end
+                    SkidFling(player)
+                    task.wait(0.1)
+                end
+
                 task.wait(0.5)
             end
         end)
