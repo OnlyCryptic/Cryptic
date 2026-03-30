@@ -349,16 +349,13 @@ return function(Tab, UI)
             RemoveFling(char)
             isRamping = false
 
-            -- قفزة واحدة بعد رجوع التحكم
+            -- قفزة طبيعية بعد رجوع التحكم (مثل ضغطة زر القفز)
             task.wait(0.05)
             pcall(function()
-                local h = GetRoot(lp.Character)
-                if h then
-                    h.AssemblyLinearVelocity = Vector3.new(
-                        h.AssemblyLinearVelocity.X,
-                        50,
-                        h.AssemblyLinearVelocity.Z
-                    )
+                local char2 = lp.Character
+                local hum2  = char2 and char2:FindFirstChildWhichIsA("Humanoid")
+                if hum2 then
+                    hum2:ChangeState(Enum.HumanoidStateType.Jumping)
                 end
             end)
         end)
