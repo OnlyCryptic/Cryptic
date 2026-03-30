@@ -1,8 +1,7 @@
--- [[ Cryptic Hub - تطيير الجميع (Fling All V7) ]]
+-- [[ Cryptic Hub - تطيير الجميع (SkidFling Method) ]]
 
 return function(Tab, UI)
     local Players        = game:GetService("Players")
-    local RunService     = game:GetService("RunService")
     local PhysicsService = game:GetService("PhysicsService")
     local StarterGui     = game:GetService("StarterGui")
     local LocalPlayer    = Players.LocalPlayer
@@ -10,10 +9,8 @@ return function(Tab, UI)
     local isFlingAllActive    = false
     local charAddedConnection = nil
     local flingTask           = nil
-    local steppedConn         = nil
-    local bav, bp             = nil, nil
+    local savedCFrame         = nil
 
-    -- إشعار ثنائي اللغة بدون إيموجي
     local function Notify(ar, en)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
@@ -24,13 +21,6 @@ return function(Tab, UI)
         end)
     end
 
-    local function CleanMovers()
-        if bav         then bav:Destroy();          bav         = nil end
-        if bp          then bp:Destroy();            bp          = nil end
-        if steppedConn then steppedConn:Disconnect(); steppedConn = nil end
-    end
-
-    -- فحص دعم الماب للتلامس (نفس منطق fling_tool)
     local function MapSupportsCollision(hrp)
         local ok, col = pcall(function()
             return PhysicsService:CollisionGroupsAreCollidable(
@@ -39,157 +29,186 @@ return function(Tab, UI)
         return not ok or col
     end
 
-    local function StartFlingProcess(char)
-        if not isFlingAllActive then return end
+    -- ==========================================
+    -- دالة التطيير الأساسية (SkidFling)
+    -- ==========================================
+    local function SkidFling(targetPlayer)
+        local char = LocalPlayer.Character
+        local hum  = char and char:FindFirstChildOfClass("Humanoid")
+        local root = hum and hum.RootPart
+        if not char or not hum or not root then return end
 
-        local root  = char:WaitForChild("HumanoidRootPart", 5)
-        local hum   = char:WaitForChild("Humanoid", 5)
-        local torso = char:WaitForChild("UpperTorso") or char:FindFirstChild("Torso")
+        local tChar = targetPlayer.Character
+        if not tChar then return end
 
-        if not root or not hum or not torso then return end
+        local tHum   = tChar:FindFirstChildOfClass("Humanoid")
+        local tRoot  = tHum and tHum.RootPart
+        local tHead  = tChar:FindFirstChild("Head")
+        local acc    = tChar:FindFirstChildOfClass("Accessory")
+        local handle = acc and acc:FindFirstChild("Handle")
 
-        CleanMovers()
-        hum.PlatformStand = true
-        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll,     false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.Dead,        false) -- حماية 1: يمنع حالة الموت
+        if not tChar:FindFirstChildWhichIsA("BasePart") then return end
+        if tHum and tHum.Sit then return end
 
-        bav = Instance.new("BodyAngularVelocity")
-        bav.Name            = "CrypticUpperFlingBAV"
-        bav.AngularVelocity = Vector3.new(0, 25000, 0)
-        bav.MaxTorque       = Vector3.new(0, math.huge, 0)
-        bav.P               = math.huge
-        bav.Parent          = torso
-
-        bp = Instance.new("BodyPosition")
-        bp.Name     = "CrypticFlingBP"
-        bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-        bp.P        = 15000
-        bp.D        = 100
-        bp.Parent   = root
-
-        for _, part in pairs(char:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.Massless   = true
-                part.CanCollide = false
-            end
+        if root.Velocity.Magnitude < 50 then
+            savedCFrame = root.CFrame
         end
 
-        local currentTargetPos = nil
-        local hoverPos         = root.Position  -- الموقع الذي تجمّد فيه الشخصية بين الأهداف
-
-        steppedConn = RunService.Stepped:Connect(function()
-            if not root or not root.Parent then return end
-
-            root.RotVelocity = Vector3.new(0, 0, 0)
-
-            -- استعادة الصحة كل فريم
-            pcall(function()
-                if hum and hum.Health < hum.MaxHealth then
-                    hum.Health = hum.MaxHealth
-                end
-            end)
-
-            if currentTargetPos then
-                -- وضع التطيير: اسحب للهدف
-                bp.Position     = currentTargetPos
-                root.CanCollide = true
-                root.CustomPhysicalProperties = PhysicalProperties.new(50, 0, 0)
-            else
-                -- وضع الانتظار: جمّد الشخصية في مكانها تماماً — لا تسقط
-                root.CanCollide = false
-                root.CustomPhysicalProperties = nil
-                root.Velocity   = Vector3.new(0, 0, 0)
-                bp.Position     = hoverPos      -- يمسكك في نفس الموقع بين كل هدف
-            end
+        pcall(function()
+            workspace.CurrentCamera.CameraSubject = tHead or handle or tHum
         end)
 
+        local fpdh = workspace.FallenPartsDestroyHeight
+        workspace.FallenPartsDestroyHeight = 0/0
+
+        local bv = Instance.new("BodyVelocity")
+        bv.Velocity  = Vector3.new(0, 0, 0)
+        bv.MaxForce  = Vector3.new(9e9, 9e9, 9e9)
+        bv.Parent    = root
+
+        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+
+        local function FPos(basePart, pos, ang)
+            local cf = CFrame.new(basePart.Position) * pos * ang
+            pcall(function() root.CFrame = cf end)
+            pcall(function() char:SetPrimaryPartCFrame(cf) end)
+            root.Velocity    = Vector3.new(9e7, 9e7 * 10, 9e7)
+            root.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+        end
+
+        local function SFBasePart(basePart)
+            local startTime = tick()
+            local angle     = 0
+            repeat
+                if not root or not tHum then break end
+                if basePart.Velocity.Magnitude < 50 then
+                    angle = angle + 100
+                    FPos(basePart, CFrame.new(0,  1.5, 0) + tHum.MoveDirection * basePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(angle), 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0, -1.5, 0) + tHum.MoveDirection * basePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(angle), 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0,  1.5, 0) + tHum.MoveDirection, CFrame.Angles(math.rad(angle), 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0, -1.5, 0) + tHum.MoveDirection, CFrame.Angles(math.rad(angle), 0, 0))
+                    task.wait()
+                else
+                    FPos(basePart, CFrame.new(0,  1.5,  tHum.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0, -1.5, -tHum.WalkSpeed), CFrame.Angles(0, 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0,  1.5,  tHum.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(90), 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(90), 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
+                    task.wait()
+                end
+            until tick() - startTime > 2 or not isFlingAllActive
+        end
+
+        if tRoot then
+            SFBasePart(tRoot)
+        elseif tHead then
+            SFBasePart(tHead)
+        elseif handle then
+            SFBasePart(handle)
+        end
+
+        pcall(function() bv:Destroy() end)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+        pcall(function() workspace.CurrentCamera.CameraSubject = hum end)
+
+        -- ارجع لموقعك بعد كل فلينج
+        if savedCFrame then
+            local attempts = 0
+            repeat
+                pcall(function()
+                    root.CFrame = savedCFrame * CFrame.new(0, 0.5, 0)
+                    char:SetPrimaryPartCFrame(savedCFrame * CFrame.new(0, 0.5, 0))
+                    hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+                    for _, part in pairs(char:GetChildren()) do
+                        if part:IsA("BasePart") then
+                            part.Velocity    = Vector3.new()
+                            part.RotVelocity = Vector3.new()
+                        end
+                    end
+                end)
+                task.wait()
+                attempts += 1
+            until (root.Position - savedCFrame.p).Magnitude < 25 or attempts > 20
+        end
+
+        workspace.FallenPartsDestroyHeight = fpdh
+    end
+
+    -- ==========================================
+    -- حلقة تطيير الجميع
+    -- ==========================================
+    local function StartFlingLoop()
         if flingTask then task.cancel(flingTask) end
 
         flingTask = task.spawn(function()
             while isFlingAllActive do
-                for _, targetPlayer in ipairs(Players:GetPlayers()) do
-                    if not isFlingAllActive then break end
+                local stationary = {}
+                local moving     = {}
 
-                    if targetPlayer ~= LocalPlayer and targetPlayer.Character then
-                        local targetChar = targetPlayer.Character
-                        local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
-                        local targetHum  = targetChar:FindFirstChildOfClass("Humanoid")
-
-                        if targetRoot and targetHum and targetHum.Health > 0 then
-                            local isStationary = targetRoot.Velocity.Magnitude < 5
-
-                            if isStationary then
-                                local startTime      = tick()
-                                local initialTargetY = targetRoot.Position.Y
-
-                                root.Velocity = Vector3.new(0, 0, 0)
-                                root.CFrame   = CFrame.new(targetRoot.Position + Vector3.new(0, 1.5, 0))
-
-                                while isFlingAllActive and targetRoot and targetRoot.Parent
-                                      and targetHum.Health > 0 and (tick() - startTime < 1.5) do
-                                    currentTargetPos = targetRoot.Position
-                                    if targetRoot.Velocity.Magnitude > 40
-                                       or math.abs(targetRoot.Position.Y - initialTargetY) > 10 then
-                                        break
-                                    end
-                                    task.wait()
-                                end
-
-                                currentTargetPos = nil
-                                root.Velocity    = Vector3.new(0, 0, 0)
-                                -- حدّث موقع التجميد للموقع الحالي بعد الفلينج
-                                hoverPos = root.Position
+                -- صنّف اللاعبين: واقفين أولاً ثم متحركين
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and player.Character then
+                        local tHum  = player.Character:FindFirstChildOfClass("Humanoid")
+                        local tRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                        if tHum and tHum.Health > 0 and tRoot then
+                            if tRoot.Velocity.Magnitude < 5 then
+                                table.insert(stationary, player)
+                            else
+                                table.insert(moving, player)
                             end
                         end
                     end
                 end
-                task.wait(0.1)
+
+                -- الواقفون أولاً
+                for _, player in ipairs(stationary) do
+                    if not isFlingAllActive then break end
+                    SkidFling(player)
+                    task.wait(0.1)
+                end
+
+                -- ثم المتحركون
+                for _, player in ipairs(moving) do
+                    if not isFlingAllActive then break end
+                    SkidFling(player)
+                    task.wait(0.1)
+                end
+
+                task.wait(0.5)
             end
         end)
     end
 
-    local function StopFlingProcess()
+    local function StopFlingLoop()
         isFlingAllActive = false
         if flingTask then task.cancel(flingTask); flingTask = nil end
-        CleanMovers()
 
+        -- أعد الكاميرا للشخصية
         local char = LocalPlayer.Character
-        if char then
-            local root  = char:FindFirstChild("HumanoidRootPart")
-            local hum   = char:FindFirstChildOfClass("Humanoid")
-            local torso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso")
-
-            if hum then
-                hum.PlatformStand = false
-                hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
-                hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll,     true)
-            end
-
-            if torso then torso.RotVelocity = Vector3.new(0, 0, 0) end
-
-            if root then
-                root.Velocity    = Vector3.new(0, 0, 0)
-                root.RotVelocity = Vector3.new(0, 0, 0)
-            end
-
-            for _, part in pairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.Massless              = false
-                    part.CustomPhysicalProperties = nil
-                    if part.Name ~= "HumanoidRootPart" then
-                        part.CanCollide = true
-                    end
-                end
-            end
-        end
+        local hum  = char and char:FindFirstChildOfClass("Humanoid")
+        pcall(function()
+            if hum then workspace.CurrentCamera.CameraSubject = hum end
+        end)
     end
 
+    -- ==========================================
+    -- زر التفعيل
+    -- ==========================================
     Tab:AddToggle("تطيير الجميع / Fling All", function(state)
         isFlingAllActive = state
 
         if state then
-            -- فحص دعم الماب للتلامس
             local char = LocalPlayer.Character
             local root = char and char:FindFirstChild("HumanoidRootPart")
             if root and not MapSupportsCollision(root) then
@@ -199,16 +218,13 @@ return function(Tab, UI)
             end
 
             Notify("يبحث عن لاعبين", "Scanning players")
-
-            if LocalPlayer.Character then
-                StartFlingProcess(LocalPlayer.Character)
-            end
+            StartFlingLoop()
 
             if not charAddedConnection then
-                charAddedConnection = LocalPlayer.CharacterAdded:Connect(function(newChar)
+                charAddedConnection = LocalPlayer.CharacterAdded:Connect(function()
                     if isFlingAllActive then
                         task.wait(1.5)
-                        StartFlingProcess(newChar)
+                        StartFlingLoop()
                     end
                 end)
             end
@@ -217,7 +233,7 @@ return function(Tab, UI)
                 charAddedConnection:Disconnect()
                 charAddedConnection = nil
             end
-            StopFlingProcess()
+            StopFlingLoop()
             Notify("توقف التطيير", "Fling All stopped")
         end
     end)
