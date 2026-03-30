@@ -76,15 +76,14 @@ return function(Tab, UI)
         end
 
         local currentTargetPos = nil
-        local lastSafePos      = root.Position  -- آخر موقع آمن للعودة إليه
-        local safeY            = workspace.FallenPartsDestroyHeight + 60
+        local hoverPos         = root.Position  -- الموقع الذي تجمّد فيه الشخصية بين الأهداف
 
         steppedConn = RunService.Stepped:Connect(function()
             if not root or not root.Parent then return end
 
             root.RotVelocity = Vector3.new(0, 0, 0)
 
-            -- حماية 2: استعادة الصحة كل فريم
+            -- استعادة الصحة كل فريم
             pcall(function()
                 if hum and hum.Health < hum.MaxHealth then
                     hum.Health = hum.MaxHealth
@@ -92,21 +91,16 @@ return function(Tab, UI)
             end)
 
             if currentTargetPos then
-                bp.Position = currentTargetPos
+                -- وضع التطيير: اسحب للهدف
+                bp.Position     = currentTargetPos
                 root.CanCollide = true
-                -- وزن معتدل بدل 100 لتقليل الأضرار الجانبية
                 root.CustomPhysicalProperties = PhysicalProperties.new(50, 0, 0)
             else
+                -- وضع الانتظار: جمّد الشخصية في مكانها تماماً — لا تسقط
                 root.CanCollide = false
-                -- حماية 3: لو سقطنا تحت الحد الآمن نرجع لآخر موقع
-                if root.Position.Y < safeY then
-                    pcall(function()
-                        root.CFrame   = CFrame.new(lastSafePos + Vector3.new(0, 5, 0))
-                        root.Velocity = Vector3.new(0, 0, 0)
-                    end)
-                else
-                    lastSafePos = root.Position
-                end
+                root.CustomPhysicalProperties = nil
+                root.Velocity   = Vector3.new(0, 0, 0)
+                bp.Position     = hoverPos      -- يمسكك في نفس الموقع بين كل هدف
             end
         end)
 
@@ -123,34 +117,29 @@ return function(Tab, UI)
                         local targetHum  = targetChar:FindFirstChildOfClass("Humanoid")
 
                         if targetRoot and targetHum and targetHum.Health > 0 then
-                            -- تأكد أن الهدف في منطقة آمنة قبل الانتقال إليه
-                            if targetRoot.Position.Y > safeY then
-                                local isStationary = targetRoot.Velocity.Magnitude < 5
+                            local isStationary = targetRoot.Velocity.Magnitude < 5
 
-                                if isStationary then
-                                    local startTime      = tick()
-                                    local initialTargetY = targetRoot.Position.Y
+                            if isStationary then
+                                local startTime      = tick()
+                                local initialTargetY = targetRoot.Position.Y
 
-                                    root.Velocity = Vector3.new(0, 0, 0)
-                                    root.CFrame   = CFrame.new(targetRoot.Position + Vector3.new(0, 1.5, 0))
+                                root.Velocity = Vector3.new(0, 0, 0)
+                                root.CFrame   = CFrame.new(targetRoot.Position + Vector3.new(0, 1.5, 0))
 
-                                    while isFlingAllActive and targetRoot and targetRoot.Parent
-                                          and targetHum.Health > 0 and (tick() - startTime < 1.5) do
-                                        currentTargetPos = targetRoot.Position
-                                        if targetRoot.Velocity.Magnitude > 40
-                                           or math.abs(targetRoot.Position.Y - initialTargetY) > 10 then
-                                            break
-                                        end
-                                        task.wait()
+                                while isFlingAllActive and targetRoot and targetRoot.Parent
+                                      and targetHum.Health > 0 and (tick() - startTime < 1.5) do
+                                    currentTargetPos = targetRoot.Position
+                                    if targetRoot.Velocity.Magnitude > 40
+                                       or math.abs(targetRoot.Position.Y - initialTargetY) > 10 then
+                                        break
                                     end
-
-                                    currentTargetPos  = nil
-                                    root.Velocity     = Vector3.new(0, 0, 0)
-                                    -- ارجع لآخر موقع آمن بعد الفلينج مباشرةً
-                                    pcall(function()
-                                        root.CFrame = CFrame.new(lastSafePos + Vector3.new(0, 3, 0))
-                                    end)
+                                    task.wait()
                                 end
+
+                                currentTargetPos = nil
+                                root.Velocity    = Vector3.new(0, 0, 0)
+                                -- حدّث موقع التجميد للموقع الحالي بعد الفلينج
+                                hoverPos = root.Position
                             end
                         end
                     end
