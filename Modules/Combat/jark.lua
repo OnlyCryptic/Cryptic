@@ -1,0 +1,141 @@
+-- [[ Cryptic Hub - Target Jerk V4 ]]
+
+return function(Tab, UI)
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local StarterGui = game:GetService("StarterGui")
+    local lp = Players.LocalPlayer
+
+    local i18n = getgenv().CrypticI18n
+    local T = (i18n and i18n.T) or function(k) return k end
+
+    local isJerkingAtTarget = false
+    local loopConnection = nil
+    local currentTrack = nil
+
+    local function Notify(text)
+        pcall(function() StarterGui:SetCore("SendNotification", {Title="Cryptic Hub", Text=text, Duration=3}) end)
+    end
+
+    local function StopAction()
+        isJerkingAtTarget = false
+        if loopConnection then loopConnection:Disconnect() loopConnection = nil end
+
+        if currentTrack then
+            currentTrack:Stop()
+            currentTrack:Destroy()
+            currentTrack = nil
+        end
+
+        if lp.Character then
+            for _, part in pairs(lp.Character:GetChildren()) do
+                if part:IsA("BasePart") then part.CanCollide = true end
+            end
+
+            local root = lp.Character:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.Velocity = Vector3.new(0,0,0)
+                root.RotVelocity = Vector3.new(0,0,0)
+            end
+
+            local hum = lp.Character:FindFirstChildOfClass("Humanoid")
+            local animator = hum and hum:FindFirstChildOfClass("Animator")
+
+            if animator then
+                for _, animTrack in pairs(animator:GetPlayingAnimationTracks()) do
+                    if animTrack.Animation.AnimationId == "rbxassetid://698251653" or animTrack.Animation.AnimationId == "rbxassetid://72042024" then
+                        animTrack:Stop()
+                        animTrack:Destroy()
+                    end
+                end
+            end
+        end
+    end
+
+    Tab:AddToggle(T("combat.jark.label"), function(state)
+        isJerkingAtTarget = state
+
+        if state then
+            local targetPlayer = _G.ArwaTarget
+            if not targetPlayer then
+                Notify(T("combat.common.no_target"))
+                StopAction()
+                return
+            end
+
+            Notify(string.format(T("combat.jark.on_fmt"), targetPlayer.DisplayName))
+
+            task.spawn(function()
+                local lastMyChar = nil
+
+                while isJerkingAtTarget do
+                    local myChar = lp.Character
+                    local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
+                    local animator = myHum and myHum:FindFirstChildOfClass("Animator")
+
+                    if myHum and animator and myHum.Health > 0 then
+                        local isR15 = myHum.RigType == Enum.HumanoidRigType.R15
+
+                        if lastMyChar ~= myChar then
+                            lastMyChar = myChar
+                            if currentTrack then currentTrack:Stop() currentTrack:Destroy() currentTrack = nil end
+                        end
+
+                        if not currentTrack then
+                            local anim = Instance.new("Animation")
+                            anim.AnimationId = isR15 and "rbxassetid://698251653" or "rbxassetid://72042024"
+                            currentTrack = animator:LoadAnimation(anim)
+                            currentTrack.Priority = Enum.AnimationPriority.Action
+                        end
+
+                        currentTrack:Play()
+                        currentTrack:AdjustSpeed(isR15 and 0.7 or 0.65)
+                        currentTrack.TimePosition = 0.6
+
+                        local targetTime = isR15 and 0.7 or 0.65
+
+                        while isJerkingAtTarget and currentTrack and currentTrack.TimePosition < targetTime do
+                            task.wait()
+                        end
+
+                        if currentTrack then currentTrack:Stop() end
+                    else
+                        task.wait(0.5)
+                    end
+                end
+            end)
+
+            loopConnection = RunService.Stepped:Connect(function()
+                if not isJerkingAtTarget then return end
+
+                targetPlayer = _G.ArwaTarget
+                if not targetPlayer then
+                    StopAction()
+                    Notify(T("combat.jark.target_left"))
+                    return
+                end
+
+                local myChar = lp.Character
+                local targetChar = targetPlayer.Character
+
+                if myChar and targetChar then
+                    local myRoot = myChar:FindFirstChild("HumanoidRootPart")
+                    local myHum = myChar:FindFirstChildOfClass("Humanoid")
+                    local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+                    local targetHum = targetChar:FindFirstChildOfClass("Humanoid")
+
+                    if myRoot and myHum and myHum.Health > 0 and targetRoot and targetHum and targetHum.Health > 0 then
+                        for _, part in pairs(myChar:GetChildren()) do
+                            if part:IsA("BasePart") then part.CanCollide = false end
+                        end
+
+                        myRoot.Velocity = Vector3.new(0, 0, 0)
+                        myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, -2.5) * CFrame.Angles(0, math.pi, 0)
+                    end
+                end
+            end)
+        else
+            StopAction()
+        end
+    end)
+end
