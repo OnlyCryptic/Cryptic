@@ -13,6 +13,8 @@ return {
         { pattern = "bloxfruits",    file = "Maps/bloxfruits" },
         { pattern = "sailor piece",  file = "Maps/sailor_piece" },
         { pattern = "sailorpiece",   file = "Maps/sailor_piece" },
+        { pattern = "slime rng", file = "Maps/Slime_RNG" },
+{ pattern = "slimerng",  file = "Maps/Slime_RNG" },
         { pattern = "murder mystery 2", file = "Maps/djn_mm2" },
         { pattern = "murdermystery2",   file = "Maps/djn_mm2" },
         { pattern = "mm2",              file = "Maps/djn_mm2" },
