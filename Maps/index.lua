@@ -34,6 +34,7 @@ return {
 
     GameIds = {
         [2923187244] = "Maps/bloxfruits",   -- Blox Fruits Universe
+        [9792947201] = "Maps/Slime_RNG",
         [9186719164] = "Maps/sailor_piece", -- Sailor Piece Universe
     },
 }
