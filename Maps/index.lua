@@ -26,6 +26,7 @@ return {
         [73902483975735]  = "Maps/bloxfruits",
         [85211729168715]  = "Maps/bloxfruits",
         [79091703265657]  = "Maps/bloxfruits",
+        [92416421522960]  = "Maps/Slime_RNG",
         [142823291]       = "Maps/djn_mm2",     -- Murder Mystery 2
     },
 
