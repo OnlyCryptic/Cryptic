@@ -9,7 +9,7 @@ return {
             Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/vaenzz/Loader/refs/heads/main/Games"))()]]
         },
         {
-            Name = "Slime RNG Script",
+            Name = "gumanba no key",
             Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/gumanba/Scripts/main/SlimeRNG"))()]]
         }
     }
