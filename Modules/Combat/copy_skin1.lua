@@ -158,32 +158,67 @@ return function(Tab, UI)
             end
         end
 
-        -- ══ خطوة 3: انسخ الاكسسوارات بـ AddAccessory ════════════
-        -- AddAccessory هي الطريقة الرسمية — ما تسبب التصاق لأنها تعمل
-        -- على نفس شخصيتك فقط بدون أي ربط بالمستهدف
+        -- ══ خطوة 3: انسخ الاكسسوارات بـ Weld يدوي نظيف ════════════
 
-        if myHum then
-            for _, acc in pairs(targetChar:GetChildren()) do
-                if acc:IsA("Accessory") then
-                    local cloned = acc:Clone()
+        for _, acc in pairs(targetChar:GetChildren()) do
+            if acc:IsA("Accessory") then
+                local cloned = acc:Clone()
 
-                    -- امسح كل الـ Welds والـ Motors من الكلون قبل AddAccessory
-                    -- عشان ما يكون فيه أي مرجع لأجزاء شخصية المستهدف
-                    for _, w in pairs(cloned:GetDescendants()) do
-                        if w:IsA("Weld") or w:IsA("WeldConstraint") or w:IsA("Motor6D") then
-                            w:Destroy()
+                -- امسح كل الـ Welds والـ Motors من كامل الكلون
+                -- عشان ما يبقى أي مرجع لأجزاء شخصية المستهدف
+                for _, w in pairs(cloned:GetDescendants()) do
+                    if w:IsA("Weld") or w:IsA("WeldConstraint") or w:IsA("Motor6D") then
+                        w:Destroy()
+                    end
+                end
+
+                local handle = cloned:FindFirstChild("Handle")
+                if handle then
+                    handle.CanCollide = false
+                    handle.Massless   = true  -- ما يأثر على وزن الشخصية أو حركتها
+                end
+
+                cloned:SetAttribute(COPIED_TAG, true)
+                cloned.Parent = myChar
+
+                -- اعمل Weld نظيف يربطه بجزء من شخصيتك أنت فقط
+                if handle then
+                    local handleAtt = handle:FindFirstChildWhichIsA("Attachment")
+                    local welded    = false
+
+                    if handleAtt then
+                        for _, part in pairs(myChar:GetDescendants()) do
+                            -- تأكد الـ Attachment في جزء جسم مباشر (مش في اكسسوار ثاني)
+                            if part:IsA("Attachment")
+                                and part.Name == handleAtt.Name
+                                and part.Parent ~= handle
+                                and part.Parent:IsA("BasePart")
+                                and part.Parent.Parent == myChar  -- فلتر: أجزاء الجسم فقط
+                            then
+                                local weld = Instance.new("Weld")
+                                weld.Part0  = part.Parent
+                                weld.Part1  = handle
+                                weld.C0     = part.CFrame
+                                weld.C1     = handleAtt.CFrame
+                                weld.Parent = handle
+                                welded = true
+                                break
+                            end
                         end
                     end
 
-                    local handle = cloned:FindFirstChild("Handle")
-                    if handle then
-                        handle.CanCollide = false
-                        handle.Massless   = true  -- ما يأثر على الحركة
+                    -- إذا ما لقى Attachment مطابق، الصقه بالـ Head
+                    if not welded then
+                        local head = myChar:FindFirstChild("Head")
+                        if head then
+                            local weld = Instance.new("Weld")
+                            weld.Part0  = head
+                            weld.Part1  = handle
+                            weld.C0     = CFrame.new()
+                            weld.C1     = CFrame.new()
+                            weld.Parent = handle
+                        end
                     end
-
-                    cloned:SetAttribute(COPIED_TAG, true)
-                    -- AddAccessory تربطه بشخصيتك الصح بدون أي مشكلة
-                    pcall(function() myHum:AddAccessory(cloned) end)
                 end
             end
         end
