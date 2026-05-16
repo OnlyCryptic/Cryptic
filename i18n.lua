@@ -101,6 +101,8 @@ local Translations = {
         ["core.save_fail_text"]       = "Failed to save: executor doesn't support this feature.",
         ["core.close_confirm_text"]   = "Are you sure you want to close the script?",
         ["core.close_confirm_close"]  = "Close",
+        ["core.keybind_label"]        = "Toggle Key",
+        ["core.keybind_listening"]    = "Press a key…",
 
         -- Suggestion mini-chat
         ["suggest.hint"]        = "Write your suggestion or any bug, the dev will reply",
@@ -527,6 +529,8 @@ local Translations = {
         ["core.save_fail_text"]       = "فشل الحفظ: المشغّل لا يدعم هذه الميزة.",
         ["core.close_confirm_text"]   = "هل أنت متأكد من إغلاق السكربت؟",
         ["core.close_confirm_close"]  = "إغلاق",
+        ["core.keybind_label"]        = "مفتاح التبديل",
+        ["core.keybind_listening"]    = "اضغط مفتاحاً…",
 
         ["suggest.hint"]        = "اكتب اقتراحك أو مشكلة واجهتها وسيرد عليك المطور",
         ["suggest.chat_title"]  = "المحادثة مع المطور",
@@ -951,6 +955,8 @@ local Translations = {
         ["core.save_fail_text"]       = "Не удалось сохранить: исполнитель не поддерживает эту функцию.",
         ["core.close_confirm_text"]   = "Вы уверены, что хотите закрыть скрипт?",
         ["core.close_confirm_close"]  = "Закрыть",
+        ["core.keybind_label"]        = "Клавиша",
+        ["core.keybind_listening"]    = "Нажмите…",
 
         ["suggest.hint"]        = "Напишите ваше предложение или баг, разработчик ответит",
         ["suggest.chat_title"]  = "Чат с разработчиком",
@@ -1375,6 +1381,8 @@ local Translations = {
         ["core.save_fail_text"]       = "Falha ao salvar: o executor não suporta este recurso.",
         ["core.close_confirm_text"]   = "Tem certeza que deseja fechar o script?",
         ["core.close_confirm_close"]  = "Fechar",
+        ["core.keybind_label"]        = "Tecla",
+        ["core.keybind_listening"]    = "Pressione…",
 
         ["suggest.hint"]        = "Escreva sua sugestão ou um bug, o dev responderá",
         ["suggest.chat_title"]  = "Conversa com o Dev",
@@ -1805,6 +1813,8 @@ local Translations = {
         ["core.save_fail_text"]       = "Error al guardar: el ejecutor no soporta esta función.",
         ["core.close_confirm_text"]   = "¿Seguro que quieres cerrar el script?",
         ["core.close_confirm_close"]  = "Cerrar",
+        ["core.keybind_label"]        = "Tecla",
+        ["core.keybind_listening"]    = "Presiona…",
 
         -- Mini-chat de sugerencias
         ["suggest.hint"]        = "Escribe tu sugerencia o bug, el dev responderá",
@@ -2248,6 +2258,8 @@ local Translations = {
         ["core.save_fail_text"]       = "Échec de la sauvegarde : l'exécuteur ne supporte pas cette fonction.",
         ["core.close_confirm_text"]   = "Voulez-vous vraiment fermer le script ?",
         ["core.close_confirm_close"]  = "Fermer",
+        ["core.keybind_label"]        = "Touche",
+        ["core.keybind_listening"]    = "Appuyez…",
 
         -- Mini-chat suggestions
         ["suggest.hint"]        = "Écrivez votre suggestion ou un bug, le dev répondra",
@@ -2691,6 +2703,8 @@ local Translations = {
         ["core.save_fail_text"]       = "Gagal menyimpan: eksekutor tidak mendukung fitur ini.",
         ["core.close_confirm_text"]   = "Apakah kamu yakin ingin menutup skrip?",
         ["core.close_confirm_close"]  = "Tutup",
+        ["core.keybind_label"]        = "Tombol",
+        ["core.keybind_listening"]    = "Tekan tombol…",
 
         -- Mini-chat saran
         ["suggest.hint"]        = "Tulis saran atau bug kamu, dev akan membalas",
@@ -3134,6 +3148,8 @@ local Translations = {
         ["core.save_fail_text"]       = "Kaydetme başarısız: çalıştırıcı bu özelliği desteklemiyor.",
         ["core.close_confirm_text"]   = "Scripti kapatmak istediğine emin misin?",
         ["core.close_confirm_close"]  = "Kapat",
+        ["core.keybind_label"]        = "Tuş",
+        ["core.keybind_listening"]    = "Tuşa basın…",
 
         -- Öneri mini-chat
         ["suggest.hint"]        = "Önerin veya bir bug yaz, geliştirici yanıtlayacak",
@@ -3571,6 +3587,8 @@ local Translations = {
         ["core.save_fail_text"]       = "सहेजने में विफल: एक्सीक्यूटर इस सुविधा का समर्थन नहीं करता।",
         ["core.close_confirm_text"]   = "क्या आप स्क्रिप्ट बंद करना चाहते हैं?",
         ["core.close_confirm_close"]  = "बंद करें",
+        ["core.keybind_label"]        = "कुंजी",
+        ["core.keybind_listening"]    = "दबाएं…",
 
         ["suggest.hint"]        = "अपना सुझाव या बग लिखें, डेव जवाब देगा",
         ["suggest.chat_title"]  = "डेव से चैट",
@@ -3979,6 +3997,8 @@ local Translations = {
         ["core.save_fail_text"]       = "Speichern fehlgeschlagen: Executor unterstützt diese Funktion nicht.",
         ["core.close_confirm_text"]   = "Möchtest du das Skript wirklich schließen?",
         ["core.close_confirm_close"]  = "Schließen",
+        ["core.keybind_label"]        = "Taste",
+        ["core.keybind_listening"]    = "Drücke…",
 
         ["suggest.hint"]        = "Schreibe deinen Vorschlag oder Bug, der Dev antwortet",
         ["suggest.chat_title"]  = "Chat mit Dev",
@@ -4387,6 +4407,8 @@ local Translations = {
         ["core.save_fail_text"]       = "Не вдалося зберегти: виконавець не підтримує цю функцію.",
         ["core.close_confirm_text"]   = "Ти впевнений, що хочеш закрити скрипт?",
         ["core.close_confirm_close"]  = "Закрити",
+        ["core.keybind_label"]        = "Клавіша",
+        ["core.keybind_listening"]    = "Натисніть…",
 
         ["suggest.hint"]        = "Напиши свою пропозицію або баг, дев відповість",
         ["suggest.chat_title"]  = "Чат з девом",
@@ -4795,6 +4817,8 @@ local Translations = {
         ["core.save_fail_text"]       = "Salvataggio fallito: l'esecutore non supporta questa funzione.",
         ["core.close_confirm_text"]   = "Sei sicuro di voler chiudere lo script?",
         ["core.close_confirm_close"]  = "Chiudi",
+        ["core.keybind_label"]        = "Tasto",
+        ["core.keybind_listening"]    = "Premi…",
 
         ["suggest.hint"]        = "Scrivi il tuo suggerimento o bug, il dev risponderà",
         ["suggest.chat_title"]  = "Chat con il Dev",
@@ -5209,6 +5233,8 @@ local Translations = {
         ["core.save_fail_text"]       = "Lưu thất bại: executor không hỗ trợ tính năng này.",
         ["core.close_confirm_text"]   = "Bạn có chắc muốn đóng script không?",
         ["core.close_confirm_close"]  = "Đóng",
+        ["core.keybind_label"]        = "Phím",
+        ["core.keybind_listening"]    = "Nhấn phím…",
 
         -- Suggestion mini-chat
         ["suggest.hint"]        = "Viết góp ý hoặc lỗi của bạn, nhà phát triển sẽ trả lời",
@@ -5641,6 +5667,8 @@ local Translations = {
         ["core.save_fail_text"]       = "บันทึกล้มเหลว: ตัวรันไม่รองรับฟีเจอร์นี้",
         ["core.close_confirm_text"]   = "คุณแน่ใจหรือไม่ว่าต้องการปิดสคริปต์?",
         ["core.close_confirm_close"]  = "ปิด",
+        ["core.keybind_label"]        = "ปุ่ม",
+        ["core.keybind_listening"]    = "กดปุ่ม…",
 
         -- Suggestion mini-chat
         ["suggest.hint"]        = "เขียนข้อเสนอแนะหรือบั๊กของคุณ ผู้พัฒนาจะตอบกลับ",
@@ -6073,6 +6101,8 @@ local Translations = {
         ["core.save_fail_text"]       = "保存失败:执行器不支持此功能。",
         ["core.close_confirm_text"]   = "你确定要关闭脚本吗?",
         ["core.close_confirm_close"]  = "关闭",
+        ["core.keybind_label"]        = "快捷键",
+        ["core.keybind_listening"]    = "按下按键…",
 
         -- Suggestion mini-chat
         ["suggest.hint"]        = "写下你的建议或任何 bug,开发者会回复",
@@ -6505,6 +6535,8 @@ local Translations = {
         ["core.save_fail_text"]       = "저장 실패: 실행기가 이 기능을 지원하지 않습니다.",
         ["core.close_confirm_text"]   = "정말로 스크립트를 닫으시겠습니까?",
         ["core.close_confirm_close"]  = "닫기",
+        ["core.keybind_label"]        = "단축키",
+        ["core.keybind_listening"]    = "키를 누르세요…",
 
         -- Suggestion mini-chat
         ["suggest.hint"]        = "제안이나 버그를 작성하세요. 개발자가 답장할 것입니다",
@@ -6931,6 +6963,8 @@ local Translations = {
         ["core.save_fail_text"]       = "Hindi na-save: hindi sinusuportahan ng executor ang feature na ito.",
         ["core.close_confirm_text"]   = "Sigurado ka bang gusto mong isara ang script?",
         ["core.close_confirm_close"]  = "Isara",
+        ["core.keybind_label"]        = "Susi",
+        ["core.keybind_listening"]    = "Pindutin…",
 
         ["suggest.hint"]        = "Isulat ang iyong mungkahi o bug, susugunan ng dev",
         ["suggest.chat_title"]  = "Chat sa Dev",
@@ -7354,6 +7388,8 @@ local Translations = {
         ["core.save_fail_text"]       = "保存失敗：このエグゼキューターは機能をサポートしていません。",
         ["core.close_confirm_text"]   = "スクリプトを閉じますか？",
         ["core.close_confirm_close"]  = "閉じる",
+        ["core.keybind_label"]        = "キー",
+        ["core.keybind_listening"]    = "押してください…",
 
         ["suggest.hint"]        = "提案やバグを書いてください、開発者が返信します",
         ["suggest.chat_title"]  = "開発者とチャット",
@@ -7772,6 +7808,8 @@ local Translations = {
         ["core.save_fail_text"]       = "Nie udało się zapisać: executor nie obsługuje tej funkcji.",
         ["core.close_confirm_text"]   = "Czy na pewno chcesz zamknąć skrypt?",
         ["core.close_confirm_close"]  = "Zamknij",
+        ["core.keybind_label"]        = "Klawisz",
+        ["core.keybind_listening"]    = "Naciśnij…",
         ["suggest.hint"]        = "Napisz sugestię lub błąd, deweloper odpowie",
         ["suggest.chat_title"]  = "Czat z deweloperem",
         ["suggest.placeholder"] = "Wpisz tutaj...",
@@ -8166,6 +8204,8 @@ local Translations = {
         ["core.save_fail_text"]       = "儲存失敗：執行器不支援此功能。",
         ["core.close_confirm_text"]   = "確定要關閉腳本嗎？",
         ["core.close_confirm_close"]  = "關閉",
+        ["core.keybind_label"]        = "快捷鍵",
+        ["core.keybind_listening"]    = "按下按鍵…",
         ["suggest.hint"]        = "寫下您的建議或任何錯誤，開發者會回覆",
         ["suggest.chat_title"]  = "與開發者聊天",
         ["suggest.placeholder"] = "在此輸入...",
@@ -8560,6 +8600,8 @@ local Translations = {
         ["core.save_fail_text"]       = "Opslaan mislukt: executor ondersteunt deze functie niet.",
         ["core.close_confirm_text"]   = "Weet je zeker dat je het script wilt sluiten?",
         ["core.close_confirm_close"]  = "Sluiten",
+        ["core.keybind_label"]        = "Sneltoets",
+        ["core.keybind_listening"]    = "Druk op…",
         ["suggest.hint"]        = "Schrijf je suggestie of bug, de ontwikkelaar zal reageren",
         ["suggest.chat_title"]  = "Chatten met ontwikkelaar",
         ["suggest.placeholder"] = "Typ hier...",
