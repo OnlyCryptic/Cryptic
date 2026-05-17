@@ -13,6 +13,7 @@ return {
 
         { pattern = "slime rng",        file = "Maps/Slime_RNG" },
         { pattern = "slimerng",         file = "Maps/Slime_RNG" },
+        { pattern = "wizard alchemy",         file = "Maps/wizard_alchemy" },
 
         { pattern = "murder mystery 2", file = "Maps/djn_mm2" },
         { pattern = "murdermystery2",   file = "Maps/djn_mm2" },
@@ -27,6 +28,7 @@ return {
         [73902483975735]  = "Maps/bloxfruits",
         [85211729168715]  = "Maps/bloxfruits",
         [79091703265657]  = "Maps/bloxfruits",
+        [118821269826806]  = "Maps/wizard_alchemy",
 
         [92416421522960]  = "Maps/Slime_RNG",
 
@@ -39,6 +41,7 @@ return {
         [2923187244] = "Maps/bloxfruits",
         [4777817887] = "Maps/BB",
         [9792947201] = "Maps/Slime_RNG",
+        [10006104044] = "Maps/wizard_alchemy",
         [9186719164] = "Maps/sailor_piece",
     },
 }
