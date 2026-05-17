@@ -5,7 +5,7 @@ return {
     Name = "Wizard Alchemy",
     Scripts = {
         {
-            Name = "Hune Hub",
+            Name = "Hune Hub no key",
             Script = [[loadstring(game:HttpGet("https://hune205.dev/api/v5/files/6a0949ca41406c5e219e2845.lua"))()]]
         }
     }
