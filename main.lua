@@ -71,7 +71,7 @@ local function BuildStructure()
         ["info"]        = { Icon = "ℹ️",  Key = "tab.info",        Folder = "",         Files = {"info"} },
         ["player"]      = { Icon = "🧍", Key = "tab.player",      Folder = "Player",   Files = {"lol", "auto_apple", "speed", "fly", "noclip", "walkfling", "antifling", "wallwalk", "nofall", "infinitejump", "restart", "discord"} },
         ["tools"]       = { Icon = "🛠️", Key = "tab.tools",       Folder = "Misc",     Files = {"lol", "tptool", "auto_tool", "fling_tool", "emotes", "esp", "shiftlock", "invis_tool", "spin_tool", "x-ray", "fullbright", "camera"} },
-        ["target"]      = { Icon = "🎯", Key = "tab.target",      Folder = "Combat",   Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "bring_parts", "carry", "jark", "backpack", "Target_follow", "target_esp", "copy_skin1", "target_emotes", "target_facesit", "info_t", "skinz"} },
+        ["target"]      = { Icon = "🎯", Key = "tab.target",      Folder = "Combat",   Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "bring_parts", "carry", "jark", "Target_follow", "target_esp", "copy_skin1", "target_emotes", "target_facesit", "info_t", "skinz"} },
         ["server"]      = { Icon = "🌐", Key = "tab.server",      Folder = "Server",   Files = {"server", "rejoin", "join_id", "players"} },
         ["teleport"]    = { Icon = "📍", Key = "tab.teleport",    Folder = "Teleport", Files = {"lol", "tp_locations", "checkpoint"} },
         ["other"]       = { Icon = "⚡", Key = "tab.other",       Folder = "Other",    Files = {"animations", "lol", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "infinite_zoom", "no_camera_clip", "anti_afk"} },
@@ -351,7 +351,7 @@ local function StartCrypticHub()
 
                         -- ── 3. خدع / Tricks ──────────────────────────────────
                         local tricksTab = MakeOpen("خدع / Tricks", "🎭")
-                        for _, fname in ipairs({"target_fling", "bring_parts", "target_mimic", "copy_walk", "copy_skin1", "target_aimbot", "target_emotes"}) do
+                        for _, fname in ipairs({"target_fling", "bring_parts", "target_mimic", "copy_walk", "target_aimbot", "target_emotes"}) do
                             local init = Import("Modules/Combat/" .. fname .. ".lua")
                             if type(init) == "function" then pcall(function() init(tricksTab, UI) end) end
                         end
