@@ -199,6 +199,10 @@ local Translations = {
         ["misc.fullbright.label"]     = "Lighting",
         ["misc.fullbright.on"]        = "✨ Full Bright Activated!",
 
+        ["misc.no_fog.label"]         = "No Fog",
+        ["misc.no_fog.on"]            = "🌫️ Fog removed!",
+        ["misc.no_fog.off"]           = "🌫️ Fog restored",
+
         ["misc.invis.label"]          = "Invisibility Tool",
 
         ["misc.shiftlock.label"]      = "Shift Lock",
@@ -624,6 +628,10 @@ local Translations = {
 
         ["misc.fullbright.label"]     = "إضاءة كاملة",
         ["misc.fullbright.on"]        = "✨ تم تفعيل الإضاءة الكاملة!",
+
+        ["misc.no_fog.label"]         = "إزالة الضباب",
+        ["misc.no_fog.on"]            = "🌫️ تم إزالة الضباب!",
+        ["misc.no_fog.off"]           = "🌫️ تم استعادة الضباب",
 
         ["misc.invis.label"]          = "أداة اختفاء",
 
@@ -1051,6 +1059,10 @@ local Translations = {
         ["misc.fullbright.label"]     = "Освещение",
         ["misc.fullbright.on"]        = "✨ Полное освещение активировано!",
 
+        ["misc.no_fog.label"]         = "Без тумана",
+        ["misc.no_fog.on"]            = "🌫️ Туман убран!",
+        ["misc.no_fog.off"]           = "🌫️ Туман восстановлен",
+
         ["misc.invis.label"]          = "Невидимость",
 
         ["misc.shiftlock.label"]      = "Shift Lock",
@@ -1476,6 +1488,10 @@ local Translations = {
 
         ["misc.fullbright.label"]     = "Iluminação",
         ["misc.fullbright.on"]        = "✨ Iluminação total ativada!",
+
+        ["misc.no_fog.label"]         = "Sem Névoa",
+        ["misc.no_fog.on"]            = "🌫️ Névoa removida!",
+        ["misc.no_fog.off"]           = "🌫️ Névoa restaurada",
 
         ["misc.invis.label"]          = "Ferramenta de Invisibilidade",
 
@@ -1910,6 +1926,10 @@ local Translations = {
 
         ["misc.fullbright.label"]     = "Iluminación",
         ["misc.fullbright.on"]        = "✨ ¡Brillo total activado!",
+
+        ["misc.no_fog.label"]         = "Sin Niebla",
+        ["misc.no_fog.on"]            = "🌫️ ¡Niebla eliminada!",
+        ["misc.no_fog.off"]           = "🌫️ Niebla restaurada",
 
         ["misc.invis.label"]          = "Herramienta de invisibilidad",
 
@@ -2356,6 +2376,10 @@ local Translations = {
         ["misc.fullbright.label"]     = "Éclairage",
         ["misc.fullbright.on"]        = "✨ Pleine luminosité activée !",
 
+        ["misc.no_fog.label"]         = "Sans Brouillard",
+        ["misc.no_fog.on"]            = "🌫️ Brouillard supprimé !",
+        ["misc.no_fog.off"]           = "🌫️ Brouillard restauré",
+
         ["misc.invis.label"]          = "Outil d'invisibilité",
 
         ["misc.shiftlock.label"]      = "Shift Lock",
@@ -2800,6 +2824,10 @@ local Translations = {
 
         ["misc.fullbright.label"]     = "Pencahayaan",
         ["misc.fullbright.on"]        = "✨ Kecerahan penuh diaktifkan!",
+
+        ["misc.no_fog.label"]         = "Tanpa Kabut",
+        ["misc.no_fog.on"]            = "🌫️ Kabut dihapus!",
+        ["misc.no_fog.off"]           = "🌫️ Kabut dikembalikan",
 
         ["misc.invis.label"]          = "Alat tak terlihat",
 
@@ -3246,6 +3274,10 @@ local Translations = {
         ["misc.fullbright.label"]     = "Aydınlatma",
         ["misc.fullbright.on"]        = "✨ Tam parlaklık etkinleştirildi!",
 
+        ["misc.no_fog.label"]         = "Sisi Kaldır",
+        ["misc.no_fog.on"]            = "🌫️ Sis kaldırıldı!",
+        ["misc.no_fog.off"]           = "🌫️ Sis geri yüklendi",
+
         ["misc.invis.label"]          = "Görünmezlik aracı",
 
         ["misc.shiftlock.label"]      = "Shift Lock",
@@ -3666,6 +3698,10 @@ local Translations = {
         ["misc.fling.stopped_text"]   = "बंद",
         ["misc.fullbright.label"]     = "रोशनी",
         ["misc.fullbright.on"]        = "✨ पूर्ण चमक सक्रिय!",
+
+        ["misc.no_fog.label"]         = "कोहरा हटाएं",
+        ["misc.no_fog.on"]            = "🌫️ कोहरा हटा दिया!",
+        ["misc.no_fog.off"]           = "🌫️ कोहरा वापस आया",
         ["misc.invis.label"]          = "अदृश्यता टूल",
         ["misc.shiftlock.label"]      = "शिफ्ट लॉक",
         ["misc.shiftlock.on"]         = "✅ सक्रिय! बटन अब स्क्रीन पर है।",
@@ -4076,6 +4112,10 @@ local Translations = {
         ["misc.fling.stopped_text"]   = "Aus",
         ["misc.fullbright.label"]     = "Beleuchtung",
         ["misc.fullbright.on"]        = "✨ Vollhelligkeit aktiviert!",
+
+        ["misc.no_fog.label"]         = "Kein Nebel",
+        ["misc.no_fog.on"]            = "🌫️ Nebel entfernt!",
+        ["misc.no_fog.off"]           = "🌫️ Nebel wiederhergestellt",
         ["misc.invis.label"]          = "Unsichtbarkeits-Werkzeug",
         ["misc.shiftlock.label"]      = "Shift Lock",
         ["misc.shiftlock.on"]         = "✅ Aktiviert! Schaltfläche jetzt auf dem Bildschirm.",
@@ -4486,6 +4526,10 @@ local Translations = {
         ["misc.fling.stopped_text"]   = "Вимкнено",
         ["misc.fullbright.label"]     = "Освітлення",
         ["misc.fullbright.on"]        = "✨ Повне освітлення активовано!",
+
+        ["misc.no_fog.label"]         = "Без туману",
+        ["misc.no_fog.on"]            = "🌫️ Туман видалено!",
+        ["misc.no_fog.off"]           = "🌫️ Туман відновлено",
         ["misc.invis.label"]          = "Інструмент невидимості",
         ["misc.shiftlock.label"]      = "Shift Lock",
         ["misc.shiftlock.on"]         = "✅ Активовано! Кнопка тепер на екрані.",
@@ -4896,6 +4940,10 @@ local Translations = {
         ["misc.fling.stopped_text"]   = "Spento",
         ["misc.fullbright.label"]     = "Illuminazione",
         ["misc.fullbright.on"]        = "✨ Luminosità totale attivata!",
+
+        ["misc.no_fog.label"]         = "Niente Nebbia",
+        ["misc.no_fog.on"]            = "🌫️ Nebbia rimossa!",
+        ["misc.no_fog.off"]           = "🌫️ Nebbia ripristinata",
         ["misc.invis.label"]          = "Strumento invisibilità",
         ["misc.shiftlock.label"]      = "Shift Lock",
         ["misc.shiftlock.on"]         = "✅ Attivato! Il pulsante è ora sullo schermo.",
@@ -5331,6 +5379,10 @@ local Translations = {
         ["misc.fullbright.label"]     = "Ánh sáng",
         ["misc.fullbright.on"]        = "✨ Full Bright đã kích hoạt!",
 
+        ["misc.no_fog.label"]         = "Không Sương Mù",
+        ["misc.no_fog.on"]            = "🌫️ Đã xóa sương mù!",
+        ["misc.no_fog.off"]           = "🌫️ Đã khôi phục sương mù",
+
         ["misc.invis.label"]          = "Công cụ tàng hình",
 
         ["misc.shiftlock.label"]      = "Shift Lock",
@@ -5764,6 +5816,10 @@ local Translations = {
 
         ["misc.fullbright.label"]     = "แสง",
         ["misc.fullbright.on"]        = "✨ Full Bright เปิดใช้งาน!",
+
+        ["misc.no_fog.label"]         = "ไม่มีหมอก",
+        ["misc.no_fog.on"]            = "🌫️ ลบหมอกแล้ว!",
+        ["misc.no_fog.off"]           = "🌫️ คืนหมอกแล้ว",
 
         ["misc.invis.label"]          = "เครื่องมือล่องหน",
 
@@ -6199,6 +6255,10 @@ local Translations = {
         ["misc.fullbright.label"]     = "光照",
         ["misc.fullbright.on"]        = "✨ Full Bright 已激活!",
 
+        ["misc.no_fog.label"]         = "无雾",
+        ["misc.no_fog.on"]            = "🌫️ 已移除雾气!",
+        ["misc.no_fog.off"]           = "🌫️ 雾气已恢复",
+
         ["misc.invis.label"]          = "隐形工具",
 
         ["misc.shiftlock.label"]      = "Shift Lock",
@@ -6633,6 +6693,10 @@ local Translations = {
         ["misc.fullbright.label"]     = "조명",
         ["misc.fullbright.on"]        = "✨ Full Bright 활성화됨!",
 
+        ["misc.no_fog.label"]         = "안개 제거",
+        ["misc.no_fog.on"]            = "🌫️ 안개 제거됨!",
+        ["misc.no_fog.off"]           = "🌫️ 안개 복원됨",
+
         ["misc.invis.label"]          = "투명 도구",
 
         ["misc.shiftlock.label"]      = "Shift Lock",
@@ -7057,6 +7121,10 @@ local Translations = {
 
         ["misc.fullbright.label"]     = "Full Brightness",
         ["misc.fullbright.on"]        = "✨ Na-activate ang Full Bright!",
+
+        ["misc.no_fog.label"]         = "Walang Ulap",
+        ["misc.no_fog.on"]            = "🌫️ Tinanggal ang ulap!",
+        ["misc.no_fog.off"]           = "🌫️ Naibalik ang ulap",
 
         ["misc.invis.label"]          = "Invisibility Tool",
 
@@ -7483,6 +7551,10 @@ local Translations = {
         ["misc.fullbright.label"]     = "フルブライト",
         ["misc.fullbright.on"]        = "✨ フルブライトを有効化！",
 
+        ["misc.no_fog.label"]         = "霧なし",
+        ["misc.no_fog.on"]            = "🌫️ 霧を除去！",
+        ["misc.no_fog.off"]           = "🌫️ 霧を復元",
+
         ["misc.invis.label"]          = "透明化ツール",
 
         ["misc.shiftlock.label"]      = "シフトロック",
@@ -7884,6 +7956,10 @@ local Translations = {
         ["misc.fling.stopped_text"]   = "Wyłączone",
         ["misc.fullbright.label"]     = "Oświetlenie",
         ["misc.fullbright.on"]        = "✨ Pełna jasność aktywowana!",
+
+        ["misc.no_fog.label"]         = "Bez Mgły",
+        ["misc.no_fog.on"]            = "🌫️ Mgła usunięta!",
+        ["misc.no_fog.off"]           = "🌫️ Mgła przywrócona",
         ["misc.invis.label"]          = "Narzędzie niewidzialności",
         ["misc.shiftlock.label"]      = "Shift Lock",
         ["misc.shiftlock.on"]         = "✅ Aktywowany! Przycisk jest teraz na ekranie.",
@@ -8280,6 +8356,10 @@ local Translations = {
         ["misc.fling.stopped_text"]   = "關閉",
         ["misc.fullbright.label"]     = "照明",
         ["misc.fullbright.on"]        = "✨ 全亮已啟用！",
+
+        ["misc.no_fog.label"]         = "無霧",
+        ["misc.no_fog.on"]            = "🌫️ 已移除霧氣！",
+        ["misc.no_fog.off"]           = "🌫️ 霧氣已恢復",
         ["misc.invis.label"]          = "隱形工具",
         ["misc.shiftlock.label"]      = "Shift 鎖定",
         ["misc.shiftlock.on"]         = "✅ 已啟用！按鈕現已在螢幕上。",
@@ -8676,6 +8756,10 @@ local Translations = {
         ["misc.fling.stopped_text"]   = "Uit",
         ["misc.fullbright.label"]     = "Verlichting",
         ["misc.fullbright.on"]        = "✨ Volledige helderheid geactiveerd!",
+
+        ["misc.no_fog.label"]         = "Geen Mist",
+        ["misc.no_fog.on"]            = "🌫️ Mist verwijderd!",
+        ["misc.no_fog.off"]           = "🌫️ Mist hersteld",
         ["misc.invis.label"]          = "Onzichtbaarheidsgereedschap",
         ["misc.shiftlock.label"]      = "Shift-vergrendeling",
         ["misc.shiftlock.on"]         = "✅ Geactiveerd! Knop staat nu op het scherm.",
