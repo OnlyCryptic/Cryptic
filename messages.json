@@ -7,10 +7,12 @@
     "sent": "2026-05-16"
   },
   {
-    "id": "msg_example_006",
-    "to": 2554140672,
+    "id": "msg_example_008",
+    "to": 8243004957,
     "from": "Developer",
-    "text": "Hello, I read your issue and the fix is simple. Go to the Info section and scroll down. You will find a button called 'Reset Settings' — press it and the problem should be fixed.",
+    "text": "No Fog sudah ditambahkan. Kamu bisa menemukannya di bagian tools — scroll ke bawah dan kamu akan melihat toggle untuk fitur tersebut.
+
+Coba dulu dan beri tahu kami jika kamu ingin ada peningkatan atau fitur tambahan.",
     "sent": "2026-05-16"
   }
 ]
