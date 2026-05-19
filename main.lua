@@ -70,7 +70,7 @@ local function BuildStructure()
     Cryptic.Structure = {
         ["info"]        = { Icon = "ℹ️",  Key = "tab.info",        Folder = "",         Files = {"info"} },
         ["player"]      = { Icon = "🧍", Key = "tab.player",      Folder = "Player",   Files = {"lol", "auto_apple", "speed", "fly", "noclip", "walkfling", "antifling", "wallwalk", "nofall", "infinitejump", "restart", "discord"} },
-        ["tools"]       = { Icon = "🛠️", Key = "tab.tools",       Folder = "Misc",     Files = {"lol", "tptool", "auto_tool", "fling_tool", "emotes", "esp", "shiftlock", "invis_tool", "spin_tool", "x-ray", "fullbright", "camera"} },
+        ["tools"]       = { Icon = "🛠️", Key = "tab.tools",       Folder = "Misc",     Files = {"lol", "tptool", "auto_tool", "fling_tool", "emotes", "esp", "shiftlock", "invis_tool", "spin_tool", "x-ray", "fullbright", "no_fog", "camera"} },
         ["target"]      = { Icon = "🎯", Key = "tab.target",      Folder = "Combat",   Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "bring_parts", "carry", "jark", "Target_follow", "target_esp", "copy_skin1", "target_emotes", "target_facesit", "info_t", "skinz"} },
         ["server"]      = { Icon = "🌐", Key = "tab.server",      Folder = "Server",   Files = {"server", "rejoin", "join_id", "players"} },
         ["teleport"]    = { Icon = "📍", Key = "tab.teleport",    Folder = "Teleport", Files = {"lol", "tp_locations", "checkpoint"} },
