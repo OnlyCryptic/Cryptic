@@ -76,7 +76,7 @@ return function(TabOps, label, callback)
 
         task.spawn(function()
             pcall(callback, true)
-            task.wait(2)
+            task.wait(1)
             Tw(Track, {BackgroundColor3 = OFF_CLR}, 0.18)
             Tw(Knob,  {Position = UDim2.new(0, 3, 0.5, -8), BackgroundColor3 = Color3.fromRGB(200,200,215)}, 0.18)
             Tw(Stroke, {Transparency = 0.55}, 0.18)
