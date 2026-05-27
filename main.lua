@@ -68,17 +68,16 @@ end
 local function BuildStructure()
     -- الأيقونة + " " + الترجمة
     Cryptic.Structure = {
-        ["info"]        = { Icon = "ℹ️",  Key = "tab.info",        Folder = "",         Files = {"info"} },
-        ["player"]      = { Icon = "🧍", Key = "tab.player",      Folder = "Player",   Files = {"lol", "auto_apple", "speed", "fly", "noclip", "walkfling", "antifling", "wallwalk", "nofall", "infinitejump", "restart", "discord"} },
-        ["tools"]       = { Icon = "🛠️", Key = "tab.tools",       Folder = "Misc",     Files = {"lol", "tptool", "auto_tool", "fling_tool", "emotes", "esp", "shiftlock", "invis_tool", "spin_tool", "x-ray", "fullbright", "no_fog", "camera"} },
-        ["target"]      = { Icon = "🎯", Key = "tab.target",      Folder = "Combat",   Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "bring_parts", "carry", "jark", "Target_follow", "target_esp", "copy_skin1", "target_emotes", "target_facesit", "info_t", "skinz"} },
-        ["server"]      = { Icon = "🌐", Key = "tab.server",      Folder = "Server",   Files = {"server", "rejoin", "join_id", "players"} },
-        ["teleport"]    = { Icon = "📍", Key = "tab.teleport",    Folder = "Teleport", Files = {"lol", "tp_locations", "checkpoint"} },
-        ["other"]       = { Icon = "⚡", Key = "tab.other",       Folder = "Other",    Files = {"animations", "lol", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "infinite_zoom", "no_camera_clip", "anti_afk"} },
-        ["suggestions"] = { Icon = "💡", Key = "tab.suggestions", Folder = "",         Files = {"suggestion"} },
+        ["player"]      = { Icon = "👤", Key = "tab.player",   Folder = "Player",   Files = {"lol", "auto_apple", "speed", "fly", "noclip", "walkfling", "antifling", "wallwalk", "nofall", "infinitejump", "restart", "discord"} },
+        ["tools"]       = { Icon = "🔧", Key = "tab.tools",    Folder = "Misc",     Files = {"lol", "tptool", "auto_tool", "fling_tool", "emotes", "esp", "shiftlock", "invis_tool", "spin_tool", "x-ray", "fullbright", "no_fog", "camera"} },
+        ["target"]      = { Icon = "🎯", Key = "tab.target",   Folder = "Combat",   Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "bring_parts", "carry", "jark", "Target_follow", "target_esp", "copy_skin1", "target_emotes", "target_facesit", "info_t", "skinz"} },
+        ["server"]      = { Icon = "🌐", Key = "tab.server",   Folder = "Server",   Files = {"server", "rejoin", "join_id", "players"} },
+        ["teleport"]    = { Icon = "📍", Key = "tab.teleport", Folder = "Teleport", Files = {"lol", "tp_locations", "checkpoint"} },
+        ["other"]       = { Icon = "⚡", Key = "tab.other",    Folder = "Other",    Files = {"animations", "lol", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "infinite_zoom", "no_camera_clip", "anti_afk"} },
+        ["settings"]    = { Icon = "⚙️", Key = "tab.settings", Folder = "Settings",  Files = {"settings"} },
     }
     Cryptic.TabsOrder = {
-        "info", "player", "tools", "target", "other", "teleport", "server", "suggestions"
+        "player", "tools", "target", "other", "teleport", "server", "settings"
     }
 end
 
@@ -89,7 +88,14 @@ local function TabDisplayName(id)
     if data._isMapTab and data._mapData then
         return "🗺️ " .. data._mapData.Name
     end
-    return data.Icon .. "  " .. T(data.Key)
+    return T(data.Key)
+end
+
+local function TabIcon(id)
+    local data = Cryptic.Structure[id]
+    if not data then return nil end
+    if data._isMapTab then return nil end
+    return data.Icon
 end
 
 local ElementCache = {}
@@ -251,7 +257,7 @@ local function StartCrypticHub()
         for _, tabId in ipairs(Cryptic.TabsOrder) do
             local tabData = Cryptic.Structure[tabId]
             if tabData then
-                local CurrentTab = MainWin:CreateTab(TabDisplayName(tabId))
+                local CurrentTab = MainWin:CreateTab(TabDisplayName(tabId), TabIcon(tabId))
 
                 local elementsList = {
                     "Button", "Toggle", "TimedToggle", "Input", "LargeInput",
