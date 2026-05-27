@@ -1,1 +1,1 @@
-print("HelloWorld")
+loadstring(game:HttpGet("https://raw.githubusercontent.com/OnlyCryptic/Cryptic/main/main.lua"))()
