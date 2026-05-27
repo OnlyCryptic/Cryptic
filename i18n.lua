@@ -498,6 +498,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "Arrived",
         ["teleport.locations.del_btn"] = "Delete",
         ["teleport.locations.deleted"] = "Deleted",
+        ["settings.transparency.title"]          = "Window Opacity",
+        ["settings.transparency.opacity_prefix"] = "Opacity: ",
+        ["settings.transparency.range_hint"]     = "Live update  |  Range: 12% - 80%",
+        ["settings.gift.label"]   = "Gift to a Friend",
+        ["settings.gift.copied"]  = "Copied! Share it with your friend 🎁",
+        ["settings.gift.message"] = "🎮 Try Cryptic Hub!",
     },
 
     -- ───────────── ARABIC ─────────────
@@ -945,6 +951,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "وصلت",
         ["teleport.locations.del_btn"] = "حذف",
         ["teleport.locations.deleted"] = "تم الحذف",
+        ["settings.transparency.title"]          = "شفافية النافذة",
+        ["settings.transparency.opacity_prefix"] = "الشفافية: ",
+        ["settings.transparency.range_hint"]     = "تحديث مباشر  |  النطاق: 12% - 80%",
+        ["settings.gift.label"]   = "أهدِ السكربت",
+        ["settings.gift.copied"]  = "تم النسخ! شاركه مع صديقك 🎁",
+        ["settings.gift.message"] = "🎮 جرّب Cryptic Hub!",
     },
 
     -- ───────────── RUSSIAN ─────────────
@@ -1392,6 +1404,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "Прибыл",
         ["teleport.locations.del_btn"] = "Удалить",
         ["teleport.locations.deleted"] = "Удалено",
+        ["settings.transparency.title"]          = "Прозрачность окна",
+        ["settings.transparency.opacity_prefix"] = "Непрозрачность: ",
+        ["settings.transparency.range_hint"]     = "Обновление в реальном времени  |  Диапазон: 12% - 80%",
+        ["settings.gift.label"]   = "Подарить другу",
+        ["settings.gift.copied"]  = "Скопировано! Поделись с другом 🎁",
+        ["settings.gift.message"] = "🎮 Попробуй Cryptic Hub!",
     },
 
     -- ───────────── PORTUGUESE (BR) ─────────────
@@ -1839,6 +1857,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "Chegou",
         ["teleport.locations.del_btn"] = "Excluir",
         ["teleport.locations.deleted"] = "Excluído",
+        ["settings.transparency.title"]          = "Opacidade da Janela",
+        ["settings.transparency.opacity_prefix"] = "Opacidade: ",
+        ["settings.transparency.range_hint"]     = "Atualização ao vivo  |  Intervalo: 12% - 80%",
+        ["settings.gift.label"]   = "Presentear Amigo",
+        ["settings.gift.copied"]  = "Copiado! Compartilhe com seu amigo 🎁",
+        ["settings.gift.message"] = "🎮 Experimente o Cryptic Hub!",
     },
 
     -- ───────────── SPANISH ─────────────
@@ -2305,6 +2329,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "Llegado",
         ["teleport.locations.del_btn"] = "Eliminar",
         ["teleport.locations.deleted"] = "Eliminado",
+        ["settings.transparency.title"]          = "Opacidad de Ventana",
+        ["settings.transparency.opacity_prefix"] = "Opacidad: ",
+        ["settings.transparency.range_hint"]     = "Actualización en vivo  |  Rango: 12% - 80%",
+        ["settings.gift.label"]   = "Regalar a Amigo",
+        ["settings.gift.copied"]  = "¡Copiado! Compártelo con tu amigo 🎁",
+        ["settings.gift.message"] = "🎮 ¡Prueba Cryptic Hub!",
     },
 
     -- ───────────── FRENCH ─────────────
@@ -2771,6 +2801,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "Arrivé",
         ["teleport.locations.del_btn"] = "Supprimer",
         ["teleport.locations.deleted"] = "Supprimé",
+        ["settings.transparency.title"]          = "Opacité de la Fenêtre",
+        ["settings.transparency.opacity_prefix"] = "Opacité : ",
+        ["settings.transparency.range_hint"]     = "Mise à jour en direct  |  Plage : 12% - 80%",
+        ["settings.gift.label"]   = "Offrir à un Ami",
+        ["settings.gift.copied"]  = "Copié ! Partage avec ton ami 🎁",
+        ["settings.gift.message"] = "🎮 Essaie Cryptic Hub !",
     },
 
     -- ───────────── INDONESIAN ─────────────
@@ -3237,6 +3273,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "Tiba",
         ["teleport.locations.del_btn"] = "Hapus",
         ["teleport.locations.deleted"] = "Dihapus",
+        ["settings.transparency.title"]          = "Opasitas Jendela",
+        ["settings.transparency.opacity_prefix"] = "Opasitas: ",
+        ["settings.transparency.range_hint"]     = "Pembaruan langsung  |  Rentang: 12% - 80%",
+        ["settings.gift.label"]   = "Hadiahkan ke Teman",
+        ["settings.gift.copied"]  = "Disalin! Bagikan ke temanmu 🎁",
+        ["settings.gift.message"] = "🎮 Coba Cryptic Hub!",
     },
 
     -- ───────────── TURKISH ─────────────
@@ -3703,6 +3745,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "Ulaşıldı",
         ["teleport.locations.del_btn"] = "Sil",
         ["teleport.locations.deleted"] = "Silindi",
+        ["settings.transparency.title"]          = "Pencere Saydamlığı",
+        ["settings.transparency.opacity_prefix"] = "Opaklık: ",
+        ["settings.transparency.range_hint"]     = "Canlı güncelleme  |  Aralık: 12% - 80%",
+        ["settings.gift.label"]   = "Arkadaşa Hediye Et",
+        ["settings.gift.copied"]  = "Kopyalandı! Arkadaşınla paylaş 🎁",
+        ["settings.gift.message"] = "🎮 Cryptic Hub'ı dene!",
     },
 
     -- ───────────── HINDI ─────────────
@@ -4135,6 +4183,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "पहुंच गए",
         ["teleport.locations.del_btn"] = "हटाएं",
         ["teleport.locations.deleted"] = "हटा दिया",
+        ["settings.transparency.title"]          = "विंडो अपारदर्शिता",
+        ["settings.transparency.opacity_prefix"] = "अपारदर्शिता: ",
+        ["settings.transparency.range_hint"]     = "लाइव अपडेट  |  रेंज: 12% - 80%",
+        ["settings.gift.label"]   = "दोस्त को गिफ्ट करें",
+        ["settings.gift.copied"]  = "कॉपी हो गया! दोस्त के साथ शेयर करें 🎁",
+        ["settings.gift.message"] = "🎮 Cryptic Hub आज़माएं!",
     },
 
     -- ───────────── GERMAN ─────────────
@@ -4567,6 +4621,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "Angekommen",
         ["teleport.locations.del_btn"] = "Löschen",
         ["teleport.locations.deleted"] = "Gelöscht",
+        ["settings.transparency.title"]          = "Fenster-Transparenz",
+        ["settings.transparency.opacity_prefix"] = "Deckkraft: ",
+        ["settings.transparency.range_hint"]     = "Live-Update  |  Bereich: 12% - 80%",
+        ["settings.gift.label"]   = "An Freund schenken",
+        ["settings.gift.copied"]  = "Kopiert! Teile es mit deinem Freund 🎁",
+        ["settings.gift.message"] = "🎮 Probiere Cryptic Hub!",
     },
 
     -- ───────────── UKRAINIAN ─────────────
@@ -4999,6 +5059,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "Прибули",
         ["teleport.locations.del_btn"] = "Видалити",
         ["teleport.locations.deleted"] = "Видалено",
+        ["settings.transparency.title"]          = "Прозорість вікна",
+        ["settings.transparency.opacity_prefix"] = "Непрозорість: ",
+        ["settings.transparency.range_hint"]     = "Оновлення в реальному часі  |  Діапазон: 12% - 80%",
+        ["settings.gift.label"]   = "Подарувати другу",
+        ["settings.gift.copied"]  = "Скопійовано! Поділися з другом 🎁",
+        ["settings.gift.message"] = "🎮 Спробуй Cryptic Hub!",
     },
 
     -- ───────────── ITALIAN ─────────────
@@ -5431,6 +5497,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "Arrivato",
         ["teleport.locations.del_btn"] = "Elimina",
         ["teleport.locations.deleted"] = "Eliminato",
+        ["settings.transparency.title"]          = "Opacità Finestra",
+        ["settings.transparency.opacity_prefix"] = "Opacità: ",
+        ["settings.transparency.range_hint"]     = "Aggiornamento live  |  Intervallo: 12% - 80%",
+        ["settings.gift.label"]   = "Regalare a un Amico",
+        ["settings.gift.copied"]  = "Copiato! Condividilo con il tuo amico 🎁",
+        ["settings.gift.message"] = "🎮 Prova Cryptic Hub!",
     },
 
     -- ───────────── VIETNAMESE ─────────────
@@ -5886,6 +5958,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "Đã đến",
         ["teleport.locations.del_btn"] = "Xóa",
         ["teleport.locations.deleted"] = "Đã xóa",
+        ["settings.transparency.title"]          = "Độ mờ cửa sổ",
+        ["settings.transparency.opacity_prefix"] = "Độ trong suốt: ",
+        ["settings.transparency.range_hint"]     = "Cập nhật trực tiếp  |  Khoảng: 12% - 80%",
+        ["settings.gift.label"]   = "Tặng cho Bạn bè",
+        ["settings.gift.copied"]  = "Đã sao chép! Chia sẻ với bạn bè 🎁",
+        ["settings.gift.message"] = "🎮 Hãy thử Cryptic Hub!",
     },
 
     -- ───────────── THAI ─────────────
@@ -6341,6 +6419,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "ถึงแล้ว",
         ["teleport.locations.del_btn"] = "ลบ",
         ["teleport.locations.deleted"] = "ลบแล้ว",
+        ["settings.transparency.title"]          = "ความโปร่งใสหน้าต่าง",
+        ["settings.transparency.opacity_prefix"] = "ความทึบ: ",
+        ["settings.transparency.range_hint"]     = "อัปเดตสด  |  ช่วง: 12% - 80%",
+        ["settings.gift.label"]   = "มอบให้เพื่อน",
+        ["settings.gift.copied"]  = "คัดลอกแล้ว! แชร์ให้เพื่อน 🎁",
+        ["settings.gift.message"] = "🎮 ลอง Cryptic Hub ดู!",
     },
 
     -- ───────────── CHINESE (Simplified) ─────────────
@@ -6796,6 +6880,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "已到达",
         ["teleport.locations.del_btn"] = "删除",
         ["teleport.locations.deleted"] = "已删除",
+        ["settings.transparency.title"]          = "窗口透明度",
+        ["settings.transparency.opacity_prefix"] = "不透明度：",
+        ["settings.transparency.range_hint"]     = "实时更新  |  范围：12% - 80%",
+        ["settings.gift.label"]   = "赠送给朋友",
+        ["settings.gift.copied"]  = "已复制！分享给你的朋友 🎁",
+        ["settings.gift.message"] = "🎮 试试 Cryptic Hub！",
     },
 
     -- ───────────── KOREAN ─────────────
@@ -7251,6 +7341,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "도착함",
         ["teleport.locations.del_btn"] = "삭제",
         ["teleport.locations.deleted"] = "삭제됨",
+        ["settings.transparency.title"]          = "창 불투명도",
+        ["settings.transparency.opacity_prefix"] = "불투명도: ",
+        ["settings.transparency.range_hint"]     = "실시간 업데이트  |  범위: 12% - 80%",
+        ["settings.gift.label"]   = "친구에게 선물",
+        ["settings.gift.copied"]  = "복사됨! 친구와 공유하세요 🎁",
+        ["settings.gift.message"] = "🎮 Cryptic Hub 써봐!",
     },
 
     -- ───────────── FILIPINO (Tagalog) ─────────────
@@ -7696,6 +7792,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "Nakarating na",
         ["teleport.locations.del_btn"] = "Burahin",
         ["teleport.locations.deleted"] = "Nabura",
+        ["settings.transparency.title"]          = "Opacity ng Window",
+        ["settings.transparency.opacity_prefix"] = "Opacity: ",
+        ["settings.transparency.range_hint"]     = "Live na update  |  Hanay: 12% - 80%",
+        ["settings.gift.label"]   = "I-regalo sa Kaibigan",
+        ["settings.gift.copied"]  = "Nakopya! Ibahagi sa iyong kaibigan 🎁",
+        ["settings.gift.message"] = "🎮 Subukan ang Cryptic Hub!",
     },
 
     -- ───────────── JAPANESE (日本語) ─────────────
@@ -8142,6 +8244,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "到着しました",
         ["teleport.locations.del_btn"] = "削除",
         ["teleport.locations.deleted"] = "削除しました",
+        ["settings.transparency.title"]          = "ウィンドウの不透明度",
+        ["settings.transparency.opacity_prefix"] = "不透明度: ",
+        ["settings.transparency.range_hint"]     = "ライブ更新  |  範囲: 12% - 80%",
+        ["settings.gift.label"]   = "友達にプレゼント",
+        ["settings.gift.copied"]  = "コピーしました！友達にシェアしよう 🎁",
+        ["settings.gift.message"] = "🎮 Cryptic Hubを試してみて！",
     },
 
     -- ───────────── POLISH ─────────────
@@ -8560,6 +8668,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "Dotarto",
         ["teleport.locations.del_btn"] = "Usuń",
         ["teleport.locations.deleted"] = "Usunięto",
+        ["settings.transparency.title"]          = "Przezroczystość okna",
+        ["settings.transparency.opacity_prefix"] = "Nieprzezroczystość: ",
+        ["settings.transparency.range_hint"]     = "Aktualizacja na żywo  |  Zakres: 12% - 80%",
+        ["settings.gift.label"]   = "Podaruj Znajomemu",
+        ["settings.gift.copied"]  = "Skopiowano! Podziel się ze znajomym 🎁",
+        ["settings.gift.message"] = "🎮 Wypróbuj Cryptic Hub!",
     },
 
     -- ───────────── TRADITIONAL CHINESE ─────────────
@@ -8978,6 +9092,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "已到達",
         ["teleport.locations.del_btn"] = "刪除",
         ["teleport.locations.deleted"] = "已刪除",
+        ["settings.transparency.title"]          = "視窗透明度",
+        ["settings.transparency.opacity_prefix"] = "不透明度：",
+        ["settings.transparency.range_hint"]     = "即時更新  |  範圍：12% - 80%",
+        ["settings.gift.label"]   = "贈送給朋友",
+        ["settings.gift.copied"]  = "已複製！分享給你的朋友 🎁",
+        ["settings.gift.message"] = "🎮 試試 Cryptic Hub！",
     },
 
     -- ───────────── DUTCH ─────────────
@@ -9396,6 +9516,12 @@ local Translations = {
         ["teleport.locations.arrived"] = "Aangekomen",
         ["teleport.locations.del_btn"] = "Verwijderen",
         ["teleport.locations.deleted"] = "Verwijderd",
+        ["settings.transparency.title"]          = "Venster Transparantie",
+        ["settings.transparency.opacity_prefix"] = "Dekking: ",
+        ["settings.transparency.range_hint"]     = "Live update  |  Bereik: 12% - 80%",
+        ["settings.gift.label"]   = "Cadeau aan Vriend",
+        ["settings.gift.copied"]  = "Gekopieerd! Deel het met je vriend 🎁",
+        ["settings.gift.message"] = "🎮 Probeer Cryptic Hub!",
     },
 }
 
