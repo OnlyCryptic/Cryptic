@@ -76,6 +76,8 @@ local Translations = {
         ["tab.other"]             = "Other",
         ["tab.suggestions"]       = "Suggestions",
         ["tab.map_scripts"]       = "Map Scripts",
+        ["tab.settings"]          = "Mga Setting",
+        ["tab.settings"]          = "Settings",
 
         -- Re-run prompt
         ["rerun.title"]           = "Cryptic Hub",
@@ -337,7 +339,7 @@ local Translations = {
         ["info.discord_label"] = "Join our Discord",
         ["info.discord_copied"] = "Discord link copied!",
         ["info.copy_script_label"] = "Copy Script",
-        ["info.copy_script_sub"] = "Get the loadstring",
+        ["info.copy_script_sub"] = "Share with your friends",
         ["info.script_copied"] = "Script copied!",
         ["info.save_label"] = "Save Settings",
         ["info.save_sub"] = "Persist your config",
@@ -527,6 +529,7 @@ local Translations = {
         ["tab.other"]             = "أخرى",
         ["tab.suggestions"]       = "اقتراحات",
         ["tab.map_scripts"]       = "سكربتات الماب",
+        ["tab.settings"]          = "الإعدادات",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "هل أنت متأكد من تشغيله مرة أخرى؟",
@@ -783,7 +786,7 @@ local Translations = {
         ["info.discord_label"] = "انضم لقناة الديسكورد",
         ["info.discord_copied"] = "تم نسخ رابط الديسكورد!",
         ["info.copy_script_label"] = "نسخ السكربت",
-        ["info.copy_script_sub"] = "احصل على الكود",
+        ["info.copy_script_sub"] = "شارك السكربت مع أصدقائك",
         ["info.script_copied"] = "تم نسخ السكربت!",
         ["info.save_label"] = "حفظ الإعدادات",
         ["info.save_sub"] = "احفظ ضبطك",
@@ -973,6 +976,7 @@ local Translations = {
         ["tab.other"]             = "Другое",
         ["tab.suggestions"]       = "Предложения",
         ["tab.map_scripts"]       = "Скрипты карты",
+        ["tab.settings"]          = "Настройки",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "Вы уверены, что хотите запустить снова?",
@@ -1419,6 +1423,7 @@ local Translations = {
         ["tab.other"]             = "Outros",
         ["tab.suggestions"]       = "Sugestões",
         ["tab.map_scripts"]       = "Scripts do Mapa",
+        ["tab.settings"]          = "Configurações",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "Tem certeza que deseja executar novamente?",
@@ -1868,6 +1873,7 @@ local Translations = {
         ["tab.other"]             = "Otros",
         ["tab.suggestions"]       = "Sugerencias",
         ["tab.map_scripts"]       = "Scripts del mapa",
+        ["tab.settings"]          = "Configuración",
 
         -- Re-ejecutar
         ["rerun.title"]           = "Cryptic Hub",
@@ -2333,6 +2339,7 @@ local Translations = {
         ["tab.other"]             = "Autre",
         ["tab.suggestions"]       = "Suggestions",
         ["tab.map_scripts"]       = "Scripts de carte",
+        ["tab.settings"]          = "Paramètres",
 
         -- Re-lancer
         ["rerun.title"]           = "Cryptic Hub",
@@ -2798,6 +2805,7 @@ local Translations = {
         ["tab.other"]             = "Lainnya",
         ["tab.suggestions"]       = "Saran",
         ["tab.map_scripts"]       = "Skrip Peta",
+        ["tab.settings"]          = "Pengaturan",
 
         -- Jalankan ulang
         ["rerun.title"]           = "Cryptic Hub",
@@ -3263,6 +3271,7 @@ local Translations = {
         ["tab.other"]             = "Diğer",
         ["tab.suggestions"]       = "Öneriler",
         ["tab.map_scripts"]       = "Harita Scriptleri",
+        ["tab.settings"]          = "Ayarlar",
 
         -- Yeniden çalıştır
         ["rerun.title"]           = "Cryptic Hub",
@@ -3725,6 +3734,7 @@ local Translations = {
         ["tab.other"]             = "अन्य",
         ["tab.suggestions"]       = "सुझाव",
         ["tab.map_scripts"]       = "मैप स्क्रिप्ट",
+        ["tab.settings"]          = "सेटिंग्स",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "क्या आप इसे फिर से चलाना चाहते हैं?",
@@ -4156,6 +4166,7 @@ local Translations = {
         ["tab.other"]             = "Sonstiges",
         ["tab.suggestions"]       = "Vorschläge",
         ["tab.map_scripts"]       = "Karten-Skripte",
+        ["tab.settings"]          = "Einstellungen",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "Möchtest du es wirklich erneut ausführen?",
@@ -4587,6 +4598,7 @@ local Translations = {
         ["tab.other"]             = "Інше",
         ["tab.suggestions"]       = "Пропозиції",
         ["tab.map_scripts"]       = "Скрипти карти",
+        ["tab.settings"]          = "Налаштування",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "Ти впевнений, що хочеш запустити знову?",
@@ -5018,6 +5030,7 @@ local Translations = {
         ["tab.other"]             = "Altro",
         ["tab.suggestions"]       = "Suggerimenti",
         ["tab.map_scripts"]       = "Script della mappa",
+        ["tab.settings"]          = "Impostazioni",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "Sei sicuro di volerlo eseguire di nuovo?",
@@ -5452,6 +5465,7 @@ local Translations = {
         ["tab.other"]             = "Khác",
         ["tab.suggestions"]       = "Góp ý",
         ["tab.map_scripts"]       = "Script Bản đồ",
+        ["tab.settings"]          = "Cài đặt",
 
         -- Re-run prompt
         ["rerun.title"]           = "Cryptic Hub",
@@ -5906,6 +5920,7 @@ local Translations = {
         ["tab.other"]             = "อื่นๆ",
         ["tab.suggestions"]       = "ข้อเสนอแนะ",
         ["tab.map_scripts"]       = "สคริปต์แผนที่",
+        ["tab.settings"]          = "การตั้งค่า",
 
         -- Re-run prompt
         ["rerun.title"]           = "Cryptic Hub",
@@ -6360,6 +6375,7 @@ local Translations = {
         ["tab.other"]             = "其他",
         ["tab.suggestions"]       = "建议",
         ["tab.map_scripts"]       = "地图脚本",
+        ["tab.settings"]          = "设置",
 
         -- Re-run prompt
         ["rerun.title"]           = "Cryptic Hub",
@@ -6814,6 +6830,7 @@ local Translations = {
         ["tab.other"]             = "기타",
         ["tab.suggestions"]       = "제안",
         ["tab.map_scripts"]       = "맵 스크립트",
+        ["tab.settings"]          = "설정",
 
         -- Re-run prompt
         ["rerun.title"]           = "Cryptic Hub",
@@ -7710,6 +7727,7 @@ local Translations = {
         ["tab.other"]             = "その他",
         ["tab.suggestions"]       = "提案",
         ["tab.map_scripts"]       = "マップスクリプト",
+        ["tab.settings"]          = "設定",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "もう一度実行しますか？",
@@ -8153,6 +8171,7 @@ local Translations = {
         ["tab.other"]             = "Inne",
         ["tab.suggestions"]       = "Sugestie",
         ["tab.map_scripts"]       = "Skrypty mapy",
+        ["tab.settings"]          = "Ustawienia",
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "Czy na pewno chcesz uruchomić ponownie?",
         ["rerun.yes"]             = "Tak",
@@ -8570,6 +8589,7 @@ local Translations = {
         ["tab.other"]             = "其他",
         ["tab.suggestions"]       = "建議",
         ["tab.map_scripts"]       = "地圖腳本",
+        ["tab.settings"]          = "設定",
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "確定要再次執行嗎？",
         ["rerun.yes"]             = "是",
@@ -8987,6 +9007,7 @@ local Translations = {
         ["tab.other"]             = "Overig",
         ["tab.suggestions"]       = "Suggesties",
         ["tab.map_scripts"]       = "Kaartscripts",
+        ["tab.settings"]          = "Instellingen",
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "Weet je zeker dat je het opnieuw wilt uitvoeren?",
         ["rerun.yes"]             = "Ja",
