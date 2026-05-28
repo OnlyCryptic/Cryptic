@@ -1,457 +1,457 @@
 -- [Arwa v9]
-local function _iIliilIIil()
-local _11lIlIlll1IL={[0x2]=0,[0x3]=44826,[8]=1689162229,[0xA]=0x2,[13]="\009\201\177\102\034\020\137\146\095\235\205\146\231\202\142\115\176\245\170\037\245\241\050\248\053\033\184\039\158\102\030\071\059\099\236\213\189\012\193\176\131\060\178\155\055\193\028\183\000\141\005\014\073\216\129\013\135\074\186\255\221\226\187\150\107\183\090\102\253\189\244\103\242\069\212\238\071\198\090\188\208\226\130\113\249\003\004\014\215\017\254\249\045\044\093\253\155\143\011\196\173\005\095\094\066\228\040\060\151\019\078\047\160\070\207\244\169\073\065\167\231\040\086\194\125\212\149\039\231\218\213\152\188\083\103\197\221\188\168\041\054\088\172\186\035\113\125\073\133\183\184\133\027\000\106\005\079\155\135\193\168\135\048\151\161\031\165\195\239\212\207\105\245\097\032\014\019\091\137\024\037\059\075\081\202\031\217\238\031\012\081\119\248\045\202\101\017\103\061\139\191\101\082\038\133\233\046\210\195\070\251\014\021\174\186\189\154\241\090\045\160\244\116\127\086\028\092\034\131\234\065\069\028\255\057\011\213\241\230\179\047\104\225\216\069\149\170\114\165\203\025\098\110\117\227\231\203\134\049\034\049\255\035\158\095\147\174\195\229\203\120\095\143\145\175\035\148\211\241\152\245\158\118\069\094\046\222\244\123\045\031\107\097\200\210\065\175\107\170\252\053\065\155\128\063\009\130\151\196\143\250\224\202\138\225\115\031\036\223\210\120\157\104\055\145\129\052\220\191\063\194\097\133\158\126\195\239\161\103\226\116\197\217\124\068\243\056\059\229\211\075\037\024\118\109\044\157\223\043\024\147\234\234\158\185\144\070\210\177\024\191\174\225\245\033\136\231\094\249\164\145\142\175\158\152\237\215\254\226\081\091\166\091\016\195\096\032\042\051\222\240\118\195\174\145\045\183\190\155\194\032\232\197\131\248\229\187\095\118\082\205\041\182\042\060\061\094\081\253\061\099\010\208\169\246\132\085\100\032\067\235\055\220\178\082\122\113\169\004\167\006\134\062\211\135\113\073\243\176\053\248\056\032\134\183\076\192\245\134\019\106\197\051\195\182\136\150\209\252\236\062\235\183\043\187\098\067\187\107\107\215\122\119\034\213\162",[0xE]=0,[0x10]=3541898892,[0x11]=11,[21]={{[0x2]=0,[0x3]=0x3A2F,[8]=1778786294,[10]=0,[13]="\105\220\189\051\091\081\097\152\095\027\064\211\151\034\070\055\226\057\160\018\137\147\172\018\201\248\180\075\010\037\112\172\065\023\179\030\125\150\168\194\012\022\218\115\169\039\093\070\248\116\009\125\168\216\068\227\231\179\044\178\067\042\233\122\035\082\236\213\255\135\222\050\192\024\070\168\016\088\139\199\255\040\176\109\218\198\004\156\110\197\179\227",[14]=0x2,[0x10]=2527684305,[17]=0x2,[21]={},[23]=63851,[24]={{3,{189,14,0xBC,0xD2},0x11,0x5A,135,0x3F,0xAE,36316},{3,{},0x9F,169,0x6E,0x4F,0xCB,26714},{0x3,{10,176,28,19,203,0xBC,225,235,87,41,0x6,60},116,0x14,48,202,0xE9,39820},{0x3,{187,0xCB,192,189,113,227,0xB5,69,0xE2,0xF7,30,148,0xA7,0x5C,0x78,0x5C},138,0xB9,0x86,0x51,0x56,0x362F},{3,{0x39,42,0x80,0xD5},97,134,154,0x35,134,28653},{3,{0x22,119,0xEB,0xBA},0x5D,33,227,142,28,0x56D3},1,{0x3,{15,0x26,61,0xD1,0xE6,169,239,73,1,0xCA,0x72,0x26,132,0x88,175,0x81},0x75,0x7A,0xE0,134,127,7982}},[48]=26473,[53]=41127,[0x37]=56702},{[0x2]=0x1,[3]=28542,[0x8]=3500263936,[10]=0,[0xD]="\198\152\193\044\014\242\048\118\174\051\103\216\238\149\138\236\234\156\018\183\005\117\244\024\039\005\228\082\236\073\153\254\249\093\144\230\007\065\060\083\166\062\176\199\217\049\170\191\222\068\105\098\133\051\039\227\098\138\007\035\032\142\191\213\210\055\207\002\129\171\115\182\175\058\209\096\093\026\101\247\017\027\089\035",[14]=1,[16]=2713959907,[17]=0x5,[21]={},[0x17]=61773,[0x18]={{3,{0x5D,113,122,0x9A,0x46,241,29,0x44,0x31},0x23,207,0x97,141,113,41105},{3,{15,0x81,63,36,154,0xC4},197,0x7C,0x9A,195,66,25742},{3,{223,0x7C,0xD2,188,0x30},0x8B,34,0x55,0xED,88,61223},{3,{0x34,129,79,1,166,240,133,46,0xE3,0xDC,140},203,187,111,183,0x60,0x34FE},{3,{252,0x5C,0x8C},0x24,0x1C,0xF5,144,0x3E,30479},{0x3,{20,0x1C,0xAC,222},121,0x6A,0xEB,112,0x53,48286}},[30]=58610,[32]=0x7A69,[41]=24899,[44]=38855,[60]=59919}},[0x17]=0x7155,[0x18]={{3,{140,62,244,0x85,247,21,0xAD,140},151,0x34,0xF0,91,108,50680},{0x3,{79,0x3E,25},0x65,143,18,0x1A,0xC5,47469},{0x3,{221,0x40,0xCA,160,40,216,0x5B,0xC,216},180,27,229,0xFB,0xCF,53875},{0x3,{0xAE,172,164,0x8F},0x11,184,0x26,170,0xC6,44531},{0x3,{173,0xFB,49,206,0x1,40,0x64},78,47,84,84,103,43428},{3,{0x41,222,0x5E,15,0xDE},0xE4,93,158,181,0xBE,5502},{0x3,{233,175,193,82},0xCB,0x82,236,90,0xE,47797},{3,{106,0x32,128,0x3,0x20},0x44,161,0x79,157,0x78,0x7250},0x0,0xC8,0x64,{0x3,{0xD4,0x9D,0x72,0x18,194,0xC1,40,225},74,215,0x61,208,0x5B,59524},0.5,-0x64,-50,{3,{68,123,0x28,252,83,0xC,0x73,0x6C,0x45,228,0xB0,0x9,234,59,203,0x3A},155,0xCC,166,0x80,37,60058},{3,{0xA,0xE5,223,0x19,69,168},0xF0,0x54,189,0xF4,0x11,0x5B3F},{0x3,{0x48,246,0x39,0xEA,255,0xD9,78},12,0x75,201,225,0x1D,61823},0x2D,{3,{119,95,0xC4,252,81,238,0x18},224,55,0xD5,0x69,49,0x7FBD},0.8,0.4,0.1,{0x3,{0xB7,3,128,30,153,72,0xF7,0x15,0x15,0x79,94,151,0xAF,0xAC,0xD2},0xD9,0x24,0x63,0x6B,0xA4,0x642A},{3,{0x8B,145,0x65,0xD8,111,0x9,18,147,0x9B,0x82,0xEF,0x76,0x62,237,191,201,135,215,8,8,0x60,186},27,185,134,0xC2,209,42281},{0x3,{0x44,253,186,0x61},0x2A,111,0xB1,206,0xE3,58212},{3,{},0x7E,0xF5,0xAC,118,46,17284},{3,{248,0x33,0x67,0x50,237,193,123,0xFF,0x5D,0x57},0x80,79,0x36,159,0xA8,40327},0.55,{3,{76,188,67,21,40,25,0x93,0xF4,6,31,143,0x3,166,0x48,0x36,109},124,0x48,0xA1,134,84,0x3DDD},0x78,215,{3,{128,0xD8,0x6D,58,78,219,37,0x8C,0x66,35,0x49,2,19,180,0x16,0xE1,32},0x27,0x9B,0x87,0xF6,105,45043},{0x3,{126,51,0xF3,0x74,159,248,0xDE},85,17,0xED,137,0xF5,0x7B68},{0x3,{0x63,203,0x58,0x23,9,227,0x51,0x5E,0xE6,0xF},0xCA,222,133,0xE7,187,41294},{0x3,{136,0xAF,0xFC,0x22,0xDC,56,162},0x41,0x5A,25,182,0x4D,54955},{3,{0xC5,124,125,0x5D,0x52,67,94,0x58,0x10,0x66,0x41},0x32,0x49,212,0xA9,37,464},{3,{67,33,36,0x3D,0x1B,0x69,0x84,150,0xA7},0xED,56,0x3D,15,31,12358},{3,{202,206,0xF7,73,0xBB,0xD6,0x43,0x5D,0x9E,0x9E,255,0xB0,0x77,0x72},163,0xEF,97,58,0xD4,51549},{0x3,{152,187,130,0xB3},228,42,0x49,0xB4,65,65010},{0x3,{0x6C,0x1C,246,60,178,0x53,150,88,188,0x5D,0x19,31},0x21,134,0xA6,0xA8,0xE4,43000},{0x3,{0x91,211,85,0x7,251,197,0x18,69},77,236,0x36,238,161,0x255B},{0x3,{0xDE,0x35,0x59,87,0x3A,62,0x68,0xD7,62,0xE4,171,182,74,0x4D,54},0x7E,0xDC,128,0xE8,0x6A,62766}},[0x21]=7765,[40]=0x17DE,[0x31]=15004,[0x33]=0x1265,[0x3A]=0x7F4C}
-local _LllL1L1ii1l=0x0
-local _LlLIiLIIiiIL1iIl=_11lIlIlll1IL[13]
-for _1LliLl1LI11liliI=0x1,math.min(0x8,math.floor(#_LlLIiLIIiiIL1iIl/0x4)) do
-local _lIILIIllL1,_q1,_q2,_q3=string.byte(_LlLIiLIIiiIL1iIl,_1LliLl1LI11liliI*4-3,_1LliLl1LI11liliI*0x4)
-local _iIILLLLli1lL=_lIILIIllL1+_q1*256+_q2*65536+_q3*16777216
-_LllL1L1ii1l=bit32.bxor((_LllL1L1ii1l*31)%4294967296,_iIILLLLli1lL)
+local function _iLlliI1ill1()
+local _1I1illlliII={[0x2]=400444390,[0x8]=46484,[9]=842712685,[13]=2,[0xF]={{0x3,{159,0xFC,0x96,133,0xDA,0x9D,79,0x2B},193,0x39,0x70,51,0x31,0x1165},{3,{0xF3,0xD8,0xEA},36,0x74,0x2D,0x2C,0xCA,54831},{3,{198,155,199,84,246,0x41,73,0x4E,0x7F},65,101,54,0x2C,150,20898},{3,{0xB8,18,0x11,182},0x22,70,114,62,132,55360},{0x3,{179,0x16,0x24,119,236,175,0x3F},146,0x75,153,0x9C,0x5F,0x6362},{0x3,{0x64,0x4F,60,0xE0,68},0xE0,141,0x23,108,0xBB,2370},{0x3,{0x2D,72,0x19,0xE1},0xB9,0x7B,0x77,194,0xEA,0x3DBB},{3,{149,0x67,105,0x60,202},152,0x32,148,224,0xD3,50131},0,200,0x64,{0x3,{52,155,0xEB,56,15,0x42,0xC3,0xD9},0x9A,46,131,184,0x98,24672},0.5,-0x64,-50,{3,{0x8E,89,186,0xF4,0xCE,0xA4,0x5A,0xDB,65,0x58,0x27,0x99,224,145,0x5C,0x13},0x8A,0x26,186,54,141,0x6003},{3,{0x78,83,128,101,0xDC,0x17},0xD1,0x10,88,81,0x7,0x12BC},{0x3,{0xAC,232,226,0xCA,0x3F,212,0x41},0x1B,0xE7,0xD9,141,0xB,25437},0x2D,{3,{32,0xF7,191,0x84,23,18,247},192,47,0xA4,0x72,0x43,48134},0.8,0.4,0.1,{0x3,{0xE2,93,0xA5,178,44,247,207,125,0x33,32,0x33,0x75,71,55,0x3C},51,145,0x26,0x13,0xF,11299},{3,{0xA4,0xB6,132,0x4A,0x94,0xB,164,0x91,242,65,0x25,68,0xF3,0xE2,0xEF,0x68,0xDE,0xAD,0xA0,142,249,30},0x28,234,123,180,134,0x7B32},{0x3,{0x51,73,203,244},166,85,0x9A,112,163,31757},{0x3,{},186,140,94,223,45,29659},{0x3,{0xDC,38,0x3C,0x5E,136,81,12,0x7C,109,0x19},0x7C,86,42,0x8E,0x84,0x4E91},0.55,{0x3,{0x1B,0x12,0xE9,0xE7,0x33,127,0x16,208,48,205,125,0x3A,101,156,0xAF,0x27},0x3A,180,0x7B,0x5F,84,10754},0x78,0xD7,{0x3,{191,164,175,168,0x6,24,0x1E,92,105,0x19,0x7A,0x82,0x2C,0xBD,236,0xE8,24},244,0x88,0x2B,203,52,24898},{3,{246,0xB8,154,41,15,0xC2,186},0x4B,141,0x34,0x7C,0x18,14559},{0x3,{0x65,228,77,196,19,0xEA,195,112,202,0x43},0x7B,13,0xA6,223,0xC5,27284},{0x3,{0xE4,74,47,0xA6,125,0x86,0xB},0x39,148,131,10,63,58773},{3,{233,0x7D,0xD8,0xA7,0xFC,34,184,0xEF,0xAB,105,0x9F},137,191,0x63,15,237,0x5467},{3,{0x4,205,0x16,0xF2,239,0xF1,233,240,0xD3},73,187,78,122,97,5599},{0x3,{0xDC,0xDF,0x8E,0x5D,0xAA,0xDA,101,236,0x47,236,51,0xB,157,0x6D},84,114,224,133,0x28,6387},{0x3,{8,185,204,0x2B},0xC0,93,222,211,0xC0,0x43C6},{0x3,{225,0xD3,0xA6,34,0x27,168,54,171,0x8A,0x3C,0x50,42},157,0x7A,0x27,146,0x60,47710},{0x3,{0x86,159,25,0x47,0x9,57,201,221},0x21,0xC4,0xA2,112,64,13040},{3,{0x7F,0x80,0xD3,0xFA,0xBA,0xC6,40,0x37,0x26,206,140,0x26,64,0xF,0x2E},152,0xD5,0x3E,0x59,7,40313}},[0x10]=0x0,[18]=11,[19]="\209\117\187\208\007\118\205\230\178\085\080\077\127\095\090\121\029\187\150\100\148\135\245\136\229\083\241\095\235\223\145\102\038\171\080\157\179\055\082\245\026\131\210\180\239\143\083\181\237\219\018\180\220\231\080\181\010\114\081\181\120\126\081\181\182\202\081\181\188\023\211\183\142\098\083\054\095\238\085\181\125\058\020\180\044\070\087\181\154\211\087\181\200\223\087\181\006\171\086\181\044\246\213\183\254\194\213\048\207\142\081\181\205\154\017\180\188\166\082\181\106\243\082\181\088\063\082\181\142\010\086\183\088\086\214\050\173\034\087\181\163\046\023\180\030\121\083\181\235\132\215\181\098\081\215\180\055\221\089\181\037\041\152\180\148\180\093\181\194\128\090\181\048\140\093\181\110\024\091\181\132\229\217\183\214\113\089\054\167\061\088\181\181\137\153\180\100\148\095\181\082\096\088\181\128\044\095\181\254\248\088\181\244\069\218\183\070\208\219\048\084\092\157\062\090\040\157\057\043\244\091\181\033\128\155\180\144\205\090\181\233\089\220\181\100\036\220\180\181\049\093\181\091\125\029\183\022\009\088\181\196\085\095\181\178\225\088\181\096\238\095\181\006\185\222\183\208\004\095\054\037\145\095\181\043\221\030\183\102\105\091\181\084\050\093\181\002\126\088\181\240\073\093\181\246\022\223\183\064\227\222\048\086\111\135\057\167\122\068\181\181\006\004\183\228\146\066\181\210\094\071\181\128\234\070\181\102\246\065\183\176\067\192\050\025\142\137\180\005\154\009\183\150\038\066\181\019\115\066\180\005\191\194\180\200\203\194\180\209\023\066\181\241\163\011\183\106\175\075\181\128\059\195\180\213\135\010\183\007\147\138\183\060\095\068\181\165\234\068\053\221\055\141\183\193\067\013\182\226\079\068\180\165\027\015\182\038\036\079\181\204\051\197\180\001\124\143\182\061\136\013\177\190\084\070\181\251\097\070\180\210\239\198\180\226\249\198\181\152\066\098\172\090\253\254\148\186\243\108\233\235\249\076\146\067\221\075\144\025\073\243\158\057\210\123\193\252\134\206\136",[23]=59122,[24]={{[0x2]=3095667749,[8]=65319,[0x9]=700498738,[13]=0,[0xF]={{3,{0x4C,93,246,0},54,241,87,0x4C,0xF6,18943},{3,{},0x7A,40,203,0xE2,31,10211},{3,{0xAF,210,0x11,207,35,0xAE,0x7B,206,72,0x43,0x13,243},0x98,117,0x94,0x39,35,0xDA6},{3,{0x7C,0xC3,148,238,0xA0,138,0x62,124,0x28,72,235,0xF2,27,183,0xBF,69},0x50,0x64,154,0x12,192,36383},{3,{122,0xC9,82,0x23},0x80,0x51,223,0x2F,12,63115},{3,{0xF9,0xAD,0x8B,143},0x65,0xF3,192,0xE9,17,13654},0x1,{3,{0xF0,0xCE,146,65,13,254,120,230,0x2A,108,85,245,0x4A,0xE1,0xB0,0x30},0x20,0xF5,0xD5,0xB2,0xD,28372}},[16]=0,[18]=0x2,[0x13]="\156\139\210\126\186\150\104\080\084\255\074\134\242\147\221\121\173\128\168\171\039\001\177\195\107\142\228\068\243\076\132\155\172\141\003\023\125\202\195\047\003\139\131\239\220\073\195\239\218\022\128\239\077\087\129\238\026\148\000\239\207\210\193\111\148\147\015\239\191\076\136\235\252\229\142\243\169\066\158\192\060\038\058\255\081\047\172\210",[0x17]=0x29E2,[0x18]={},[25]=0x2,[0x26]=0x57BB,[49]=0x40A9,[52]=51996,[56]=50703,[0x3A]=50180},{[0x2]=3737927519,[8]=9490,[0x9]=3061043880,[13]=0x0,[15]={{0x3,{21,0x6B,0x20,154,77,0xA1,0xEF,0xC8,0xCD},103,0xC6,0x50,173,0x10,0x7E3},{0x3,{48,1,0x5A,0xF4,198,0xCB},215,0x4A,23,0xD0,0x7B,0x38F6},{0x3,{0xCE,0x4A,0xBE,218,0x5A},160,0xBE,0x4C,104,0xBB,0x2DA5},{0x3,{244,92,0x49,242,63,0x71,254,137,121,0x70,0xC9},218,0x38,56,196,93,24090},{3,{0x53,0x1A,0xC0},0x3E,0x9E,152,0x92,175,7095},{0x3,{178,0x20,0x6D,0xAA},193,0xE9,120,0x30,171,9023}},[0x10]=0x1,[18]=5,[0x13]="\018\167\064\228\250\243\000\136\188\014\208\157\163\080\205\213\194\224\006\048\231\058\178\221\137\217\162\014\084\171\159\134\191\083\039\027\209\104\147\037\083\108\253\247\064\012\058\023\251\073\208\094\240\251\078\108\151\229\061\003\214\255\129\213\051\108\223\136\004\115\002\214",[23]=65165,[24]={},[0x19]=1,[0x25]=55864,[39]=10385,[42]=53221,[0x2C]=46096,[46]=36843,[49]=0x7745}},[0x19]=0,[34]=62868,[0x23]=54405,[0x26]=0x5BD9,[42]=45839,[54]=42385}
+local _iILiL1iILLIl=0
+local _1IlLI1I11i=_1I1illlliII[0x13]
+for _11ilLlLLIL=0x1,math.min(8,math.floor(#_1IlLI1I11i/4)) do
+local _l111lI1IIIiIlI,_q1,_q2,_q3=string.byte(_1IlLI1I11i,_11ilLlLLIL*0x4-3,_11ilLlLLIL*4)
+local _iiI1iIL1Il=_l111lI1IIIiIlI+_q1*0x100+_q2*65536+_q3*16777216
+_iILiL1iILLIl=bit32.bxor((_iILiL1iILLIl*0x1F)%4294967296,_iiI1iIL1Il)
 end
-if _LllL1L1ii1l~=3647769063 then
-  ;(warn or print)("[Arwa] checksum mismatch: got "..(tostring(_LllL1L1ii1l) or "nil").." expected 3647769063")
+if _iILiL1iILLIl~=1691368526 then
+  ;(warn or print)("[Arwa] checksum mismatch: got "..(tostring(_iILiL1iILLIl) or "nil").." expected 1691368526")
   return
 end
 
-local _LL1iilLlLlLLii1=bit32.bxor
-local _lIi1lIil11lL=bit32.rshift
-local _1iI1LiIlI1l=bit32.lshift
-local _iLLl1iIlL=bit32.band
-local _1LILIIlllL=bit32.bor
-local _lIL1iLl11l1=table.unpack or unpack
-local _LlLLillLIIi=table.concat
-local _IiIilL1il1il=tostring
-local _iiIiLLLiilIi=string.char
+local _iI1L1lliL1ILL=bit32.bxor
+local _LII1iI1iLii=bit32.rshift
+local _I1I1l1li11l1ILli=bit32.lshift
+local _LLIl111lILii=bit32.band
+local _IILiIIlLiiiiLl=bit32.bor
+local _LllLLLli1=table.unpack or unpack
+local _ILIIlI11lilLi1II=table.concat
+local _1LiILliI=tostring
+local _11iL1ii11I1l=string.char
 
-local function _Ll1iIiLli(t,k1,k2,k3,k4,k5,lf)
-local _1lI1lI1llILL={}
-local _ilILLIiiI1L11liI=lf
+local function _LIi1iIL1lLIIi11(t,k1,k2,k3,k4,k5,lf)
+local _iLil1I1lIIlli={}
+local _1LI1lIIii=lf
 for i=1,#t do
-local _L1lililIllILl1=t[i]
-_ilILLIiiI1L11liI=(_ilILLIiiI1L11liI*0x8405+0x2A5B)%65536
-_L1lililIllILl1=_LL1iilLlLlLLii1(_L1lililIllILl1,_iLLl1iIlL(_lIi1lIil11lL(_ilILLIiiI1L11liI,0x8),255))
-_L1lililIllILl1=(_L1lililIllILl1-k5)%0x100
-_L1lililIllILl1=_LL1iilLlLlLLii1(_L1lililIllILl1,_iLLl1iIlL(_ilILLIiiI1L11liI,255))
-_L1lililIllILl1=_LL1iilLlLlLLii1(_L1lililIllILl1,_iLLl1iIlL(_lIi1lIil11lL(k4*i,0x2),0xFF))
-_L1lililIllILl1=(_L1lililIllILl1-k3-(i-1)*0x7)%256
-local _iiILLLiilII1IiIi=_iLLl1iIlL(_lIi1lIil11lL(k2,(i-1)%4),0x7)
-_L1lililIllILl1=_iLLl1iIlL(_1LILIIlllL(_lIi1lIil11lL(_L1lililIllILl1,_iiILLLiilII1IiIi),_1iI1LiIlI1l(_L1lililIllILl1,8-_iiILLLiilII1IiIi)),255)
-_L1lililIllILl1=_LL1iilLlLlLLii1(_L1lililIllILl1,(k1+(i-1)*13)%0x100)
-_1lI1lI1llILL[i]=_iiIiLLLiilIi(_L1lililIllILl1)
+local _llL1Lli1il1L=t[i]
+_1LI1lIIii=(_1LI1lIIii*0x8405+0x2A5B)%65536
+_llL1Lli1il1L=_iI1L1lliL1ILL(_llL1Lli1il1L,_LLIl111lILii(_LII1iI1iLii(_1LI1lIIii,8),255))
+_llL1Lli1il1L=(_llL1Lli1il1L-k5)%0x100
+_llL1Lli1il1L=_iI1L1lliL1ILL(_llL1Lli1il1L,_LLIl111lILii(_1LI1lIIii,255))
+_llL1Lli1il1L=_iI1L1lliL1ILL(_llL1Lli1il1L,_LLIl111lILii(_LII1iI1iLii(k4*i,0x2),0xFF))
+_llL1Lli1il1L=(_llL1Lli1il1L-k3-(i-0x1)*7)%256
+local _iLiilli1l1I1iill=_LLIl111lILii(_LII1iI1iLii(k2,(i-0x1)%4),0x7)
+_llL1Lli1il1L=_LLIl111lILii(_IILiIIlLiiiiLl(_LII1iI1iLii(_llL1Lli1il1L,_iLiilli1l1I1iill),_I1I1l1li11l1ILli(_llL1Lli1il1L,8-_iLiilli1l1I1iill)),255)
+_llL1Lli1il1L=_iI1L1lliL1ILL(_llL1Lli1il1L,(k1+(i-0x1)*13)%0x100)
+_iLil1I1lIIlli[i]=_11iL1ii11I1l(_llL1Lli1il1L)
 end
-return _LlLLillLIIi(_1lI1lI1llILL)
-end
-
-local _LiL1l1IIlIlIi
-_LiL1l1IIlIlIi=function(proto,upvals,...)
-local _11ili1Il11IiiiiI={}
-local _11IlLLiiLil1i=proto[24]
-local _ILiIi11llLl=proto[13]
-local _1IIiI1Li1liilll=proto[21]
-local _11llI1ili=proto[0x2]
-local _IlI1IL11lliLiiii=proto[17]
-local _IILlLilL=proto[10]
-local _1il1Ll1II=1057277396
-local _IliiLLil=_LL1iilLlLlLLii1(proto[0x17],_iLLl1iIlL(_1il1Ll1II,65535))
-local _IIiLliiI=_LL1iilLlLlLLii1(proto[0x10],_1LILIIlllL(_iLLl1iIlL(_1il1Ll1II,65535),_1iI1LiIlI1l(_lIi1lIil11lL(_1il1Ll1II,0x10),0x10)))
-local _iI1iLLi1LIlIL=proto[0x8]
-local _ILIII1IiLL1=_LL1iilLlLlLLii1(proto[3],_iLLl1iIlL(_1il1Ll1II,65535))
-local _IliLllIl={}
-local _ilILilLI1I1ilil=0
-
-local _i11Ll1LiLlLI={}
-for _ci=1,_lIi1lIil11lL(#_ILiIi11llLl,0x2) do
-local _iLIl1IL1Ilii,_b1,_b2,_b3=string.byte(_ILiIi11llLl,_ci*4-3,_ci*0x4)
-_i11Ll1LiLlLI[_ci]=_iLIl1IL1Ilii+_b1*0x100+_b2*65536+_b3*16777216
+return _ILIIlI11lilLi1II(_iLil1I1lIIlli)
 end
 
-for _si=1,_IlI1IL11lliLiiii do _11ili1Il11IiiiiI[_si]={[0x8]=nil} end
-local _1llL11lIill={...}
-local _IL1IIIIIi=select('#',...)
-for _ai=1,_11llI1ili do _11ili1Il11IiiiiI[_ai][8]=_1llL11lIill[_ai] end
-if _IILlLilL~=0 then for _ai=_11llI1ili+1,_IL1IIIIIi do _IliLllIl[_ai-_11llI1ili]=_1llL11lIill[_ai] end end
+local _IliIL1i1ilLi
+_IliIL1i1ilLi=function(proto,upvals,...)
+local _11illL1L={}
+local _LiLiil1iLiiL=proto[15]
+local _IILIIILiLiiIIi=proto[19]
+local _iL1L1liLL111II=proto[24]
+local _1LLil1Ii11=proto[16]
+local _iiILiL1i=proto[18]
+local _1I11IIii=proto[13]
+local _lLiL1I1l1i=3571089818
+local _Il1iIi1ll=_iI1L1lliL1ILL(proto[0x17],_LLIl111lILii(_lLiL1I1l1i,65535))
+local _111lI1iI=_iI1L1lliL1ILL(proto[2],_IILiIIlLiiiiLl(_LLIl111lILii(_lLiL1I1l1i,65535),_I1I1l1li11l1ILli(_LII1iI1iLii(_lLiL1I1l1i,16),16)))
+local _1llllLL1ill=proto[0x9]
+local _1lIli1IiIL=_iI1L1lliL1ILL(proto[0x8],_LLIl111lILii(_lLiL1I1l1i,65535))
+local _Iiil1LLi1={}
+local _1l1iLiII1LI=0x0
 
-local _IlLiLLiiL11llLil=(type(getfenv)=="function"and getfenv(1)or _G)
-local function _LilIlIliL1L1(i) return _iLLl1iIlL(i,63) end
-local function _lLilLIIi(i) return _iLLl1iIlL(_lIi1lIil11lL(i,0x6),255) end
-local function _1LIi1il1i1iI(i) return _iLLl1iIlL(_lIi1lIil11lL(i,23),511) end
-local function _LI11i11lil11ii1(i) return _iLLl1iIlL(_lIi1lIil11lL(i,0xE),511) end
-local function _lI11ilII11li(i) return _iLLl1iIlL(_lIi1lIil11lL(i,14),262143) end
-local function _11LiI1L1i1I1L(i) return _iLLl1iIlL(_lIi1lIil11lL(i,0xE),262143)-131071 end
+local _1LLIlilLli={}
+for _ci=0x1,_LII1iI1iLii(#_IILIIILiLiiIIi,2) do
+local _iLiIL1i1Iii1lI,_b1,_b2,_b3=string.byte(_IILIIILiLiiIIi,_ci*0x4-0x3,_ci*0x4)
+_1LLIlilLli[_ci]=_iLiIL1i1Iii1lI+_b1*0x100+_b2*65536+_b3*16777216
+end
 
-local function _LI1iiLLI1iIi1I1(i)
-local _LILlIi1LIlIL11i=_11IlLLiiLil1i[i]
-if type(_LILlIi1LIlIL11i)=="table" then
-local _iLL11lLLi=_LILlIi1LIlIL11i[1]
-if _iLL11lLLi==0 then return nil
-elseif _iLL11lLLi==0x1 then return _LILlIi1LIlIL11i[2]
+for _si=0x1,_iiILiL1i do _11illL1L[_si]={[3]=nil} end
+local _LiLIlii1lLlL={...}
+local _lL1LLl11I1=select('#',...)
+for _ai=1,_1LLil1Ii11 do _11illL1L[_ai][0x3]=_LiLIlii1lLlL[_ai] end
+if _1I11IIii~=0 then for _ai=_1LLil1Ii11+0x1,_lL1LLl11I1 do _Iiil1LLi1[_ai-_1LLil1Ii11]=_LiLIlii1lLlL[_ai] end end
+
+local _iliLlll11iLliL=(type(getfenv)=="function"and getfenv(1)or _G)
+local function _iliiLilLll(i) return _LLIl111lILii(i,0x3F) end
+local function _1II1iiL1i(i) return _LLIl111lILii(_LII1iI1iLii(i,0x6),0xFF) end
+local function _1iiL1iIiL1I1lL1L(i) return _LLIl111lILii(_LII1iI1iLii(i,23),511) end
+local function _iil11i1lLllliLi(i) return _LLIl111lILii(_LII1iI1iLii(i,14),0x1FF) end
+local function _I1lI1l1l(i) return _LLIl111lILii(_LII1iI1iLii(i,14),262143) end
+local function _LLlLIIil(i) return _LLIl111lILii(_LII1iI1iLii(i,14),262143)-131071 end
+
+local function _LLLl1IL1LlLII(i)
+local _lLlIiLL1ili1lIL=_LiLiil1iLiiL[i]
+if type(_lLlIiLL1ili1lIL)=="table" then
+local _ii11illI=_lLlIiLL1ili1lIL[1]
+if _ii11illI==0x0 then return nil
+elseif _ii11illI==1 then return _lLlIiLL1ili1lIL[0x2]
 else
-local _LIl1L1iIlLLiilL=_Ll1iIiLli(_LILlIi1LIlIL11i[2],_LILlIi1LIlIL11i[0x3],_LILlIi1LIlIL11i[0x4],_LILlIi1LIlIL11i[0x5],_LILlIi1LIlIL11i[6],_LILlIi1LIlIL11i[0x7],_LILlIi1LIlIL11i[0x8])
-_11IlLLiiLil1i[i]=_LIl1L1iIlLLiilL
-return _LIl1L1iIlLLiilL
+local _iILLIL1liL1=_LIi1iIL1lLIIi11(_lLlIiLL1ili1lIL[2],_lLlIiLL1ili1lIL[3],_lLlIiLL1ili1lIL[4],_lLlIiLL1ili1lIL[5],_lLlIiLL1ili1lIL[0x6],_lLlIiLL1ili1lIL[0x7],_lLlIiLL1ili1lIL[8])
+_LiLiil1iLiiL[i]=_iILLIL1liL1
+return _iILLIL1liL1
 end
 end
-return _LILlIi1LIlIL11i
-end
-
-local function _1II111Lli(x)
-if x>=256 then return _LI1iiLLI1iIi1I1(x-255) else return _11ili1Il11IiiiiI[x+0x1][0x8] end
-end
-local function _IllLliLli1l1l(bx) return _LI1iiLLI1iIi1I1(bx+0x1) end
-
-local _1lLIiiiIIlIIi1l=1
-local _LL1l1LIiI1i1L=#_i11Ll1LiLlLI
-local _lill1I1LlLll=_iI1iLLi1LIlIL
-local _illiIl1iiLLiiIl=0
-local _1Illl1I1Lll=false
-local _1l1I1IiiLL1={}
-
-local function _iIiiIL11LlILlII()
-local _IlIi1iLlI=_1lLIiiiIIlIIi1l
-local _iIIlIiiLl=_LL1iilLlLlLLii1(42393,38953)
-_lill1I1LlLll=(_IliiLLil*_lill1I1LlLll+_IIiLliiI)%4294967296
-local _Lli1I11111ili=(_ILIII1IiLL1*_IlIi1iLlI)%4294967296
-local _1LlIiIii=_LL1iilLlLlLLii1(_LL1iilLlLlLLii1(_lill1I1LlLll,_iIIlIiiLl),_LL1iilLlLlLLii1(_Lli1I11111ili,_iIIlIiiLl))
-local _iliI1l1L1Ii1il=_LL1iilLlLlLLii1(_i11Ll1LiLlLI[_IlIi1iLlI],_1LlIiIii)
-_1lLIiiiIIlIIi1l=_1lLIiiiIIlIIi1l+1
-return _iliI1l1L1Ii1il
+return _lLlIiLL1ili1lIL
 end
 
-local _llliiIIII={}
-_llliiIIII[0x2B]=function()
-if(not not _11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+0x1][8])~=(_LI11i11lil11ii1(_illiIl1iiLLiiIl)~=0x0) then _1lLIiiiIIlIIi1l=_1lLIiiiIIlIIi1l+1 end
+local function _iLiL1lIllIiLliii(x)
+if x>=256 then return _LLLl1IL1LlLII(x-255) else return _11illL1L[x+1][3] end
 end
-local _LILiillli1LIIIiL=(0x2+61)*0
-_llliiIIII[50]=function()
-if(_1II111Lli(_1LIi1il1i1iI(_illiIl1iiLLiiIl))<=_1II111Lli(_LI11i11lil11ii1(_illiIl1iiLLiiIl)))~=(_lLilLIIi(_illiIl1iiLLiiIl)~=0x0) then _1lLIiiiIIlIIi1l=_1lLIiiiIIlIIi1l+0x1 end
+local function _Illi1IIiLll1ILi(bx) return _LLLl1IL1LlLII(bx+0x1) end
+
+local _lLLi11iL=0x1
+local _iLllLlIiIlL1LliL=#_1LLIlilLli
+local _l11iil1II1lil1L=_1llllLL1ill
+local _IL1LLILI1i=0
+local _lIi1l1l1LI1iLiLL=false
+local _IiI111IlIL={}
+
+local function _llILILlli1()
+local _11LliIiILLiIII=_lLLi11iL
+local _I11Ill1l1l=_iI1L1lliL1ILL(0x4EC6,0x6872)
+_l11iil1II1lil1L=(_Il1iIi1ll*_l11iil1II1lil1L+_111lI1iI)%4294967296
+local _Li1I1LIILILIii1L=(_1lIli1IiIL*_11LliIiILLiIII)%4294967296
+local _I1lliiI1LiliI=_iI1L1lliL1ILL(_iI1L1lliL1ILL(_l11iil1II1lil1L,_I11Ill1l1l),_iI1L1lliL1ILL(_Li1I1LIILILIii1L,_I11Ill1l1l))
+local _li11lLIiIILi=_iI1L1lliL1ILL(_1LLIlilLli[_11LliIiILLiIII],_I1lliiI1LiliI)
+_lLLi11iL=_lLLi11iL+1
+return _li11lLIiIILi
 end
-do local _iLiIiII1l=0x183 local _iILi1IIL=90 if _iLiIiII1l*_iILi1IIL>305130 then error("bad") end end
-_llliiIIII[0x3F]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+1][0x8]=#(_11ili1Il11IiiiiI[_1LIi1il1i1iI(_illiIl1iiLLiiIl)+0x1][0x8])
+
+local _li1iIlLIii={}
+_li1iIlLIii[8]=function()
+if(_iLiL1lIllIiLliii(_1iiL1iIiL1I1lL1L(_IL1LLILI1i))==_iLiL1lIllIiLliii(_iil11i1lLllliLi(_IL1LLILI1i)))~=(_1II1iiL1i(_IL1LLILI1i)~=0x0) then _lLLi11iL=_lLLi11iL+1 end
+end
+if select("#")>0x1DB then return end
+_li1iIlLIii[0x27]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+0x1][0x3]=_iLiL1lIllIiLliii(_1iiL1iIiL1I1lL1L(_IL1LLILI1i))-_iLiL1lIllIiLliii(_iil11i1lLllliLi(_IL1LLILI1i))
+end
+local _1ilIiIIl=0xCB*0x48
+_li1iIlLIii[58]=function()
+
+end
+local _1IILIIlIL1I=0x2C1*0x52
+_li1iIlLIii[54]=function()
+local _1llLiILl1l,_II11LILILLI,_C=_1II1iiL1i(_IL1LLILI1i),_1iiL1iIiL1I1lL1L(_IL1LLILI1i),_iil11i1lLllliLi(_IL1LLILI1i)
+if _C==0 then _C=_llILILlli1() end
+local _1ll1LlI1l1L=(_C-0x1)*50
+local _1i1lLl11lL=_11illL1L[_1llLiILl1l+1][3]
+local _Li1iLiiiL11llI1L=(_II11LILILLI==0x0) and (_1l1iLiII1LI-_1llLiILl1l) or _II11LILILLI
+for _j=0x1,_Li1iLiiiL11llI1L do _1i1lLl11lL[_1ll1LlI1l1L+_j]=_11illL1L[_1llLiILl1l+_j+0x1] and _11illL1L[_1llLiILl1l+_j+0x1][0x3] end
+end
+local _l111i1Ll=type(nil)=="number" and error() or 131
+_li1iIlLIii[0x3C]=function()
+if(_iLiL1lIllIiLliii(_1iiL1iIiL1I1lL1L(_IL1LLILI1i))<=_iLiL1lIllIiLliii(_iil11i1lLllliLi(_IL1LLILI1i)))~=(_1II1iiL1i(_IL1LLILI1i)~=0x0) then _lLLi11iL=_lLLi11iL+1 end
+end
+local _lIilI1llIII1IlI=0x1FF*0x18
+_li1iIlLIii[41]=function()
+if(_iLiL1lIllIiLliii(_1iiL1iIiL1I1lL1L(_IL1LLILI1i))<_iLiL1lIllIiLliii(_iil11i1lLllliLi(_IL1LLILI1i)))~=(_1II1iiL1i(_IL1LLILI1i)~=0) then _lLLi11iL=_lLLi11iL+1 end
+end
+local _Il1LLlLLii11IilI=type(nil)=="number" and error() or 210
+_li1iIlLIii[43]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+0x1][3]=_11illL1L[_1iiL1iIiL1I1lL1L(_IL1LLILI1i)+0x1][0x3][_iLiL1lIllIiLliii(_iil11i1lLllliLi(_IL1LLILI1i))]
+end
+if select("#")>0x29C then return end
+_li1iIlLIii[63]=function()
+for _j=_1II1iiL1i(_IL1LLILI1i),_1iiL1iIiL1I1lL1L(_IL1LLILI1i) do _11illL1L[_j+1][3]=nil end
 end
 for _qi=1,0x0 do error("dead") end
-_llliiIIII[0x2D]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+0x1][0x8]=_IlLiLLiiL11llLil[_IllLliLli1l1l(_lI11ilII11li(_illiIl1iiLLiiIl))]
+_li1iIlLIii[0x35]=function()
+local _1llLiILl1l=_1II1iiL1i(_IL1LLILI1i)
+_11illL1L[_1llLiILl1l+0x1][3]=_11illL1L[_1llLiILl1l+0x1][3]-_11illL1L[_1llLiILl1l+0x3][0x3]
+_lLLi11iL=_lLLi11iL+_LLlLIIil(_IL1LLILI1i)
 end
-local _L1ilL1iii1lil1ii=(9+45)*0
-_llliiIIII[5]=function()
-local _I1IlIllLlllII1,_C=_1LIi1il1i1iI(_illiIl1iiLLiiIl),_LI11i11lil11ii1(_illiIl1iiLLiiIl)
-local _LLLIll1i={}
-for _j=_I1IlIllLlllII1,_C do _LLLIll1i[#_LLLIll1i+1]=_IiIilL1il1il(_11ili1Il11IiiiiI[_j+0x1][0x8]) end
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+0x1][8]=_LlLLillLIIi(_LLLIll1i)
+do local _IIIL1iiiIi1III=0x5B _IIIL1iiiIi1III=bit32.bxor(_IIIL1iiiIi1III,_IIIL1iiiIi1III) end
+_li1iIlLIii[37]=function()
+local _LL1iiiI1lII=_11illL1L[_1iiL1iIiL1I1lL1L(_IL1LLILI1i)+0x1][0x3]
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+2][3]=_LL1iiiI1lII
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+0x1][3]=_LL1iiiI1lII[_iLiL1lIllIiLliii(_iil11i1lLllliLi(_IL1LLILI1i))]
 end
-local _Illlillil1llii=type(nil)=="number" and error() or 0x2B
-_llliiIIII[0x3E]=function()
-local _1i1l1i1L=_lLilLIIi(_illiIl1iiLLiiIl)
-local _1ili1l1l=_11ili1Il11IiiiiI[_1i1l1i1L+0x1][0x8]+_11ili1Il11IiiiiI[_1i1l1i1L+0x3][8]
-_11ili1Il11IiiiiI[_1i1l1i1L+0x1][8]=_1ili1l1l
-local _1Lii11ILLLl,_st=_11ili1Il11IiiiiI[_1i1l1i1L+0x2][8],_11ili1Il11IiiiiI[_1i1l1i1L+3][8]
-if(_st>0x0 and _1ili1l1l<=_1Lii11ILLLl)or(_st<=0 and _1ili1l1l>=_1Lii11ILLLl) then
-_1lLIiiiIIlIIi1l=_1lLIiiiIIlIIi1l+_11LiI1L1i1I1L(_illiIl1iiLLiiIl)
-_11ili1Il11IiiiiI[_1i1l1i1L+0x4][0x8]=_1ili1l1l end
+do local _IIIL1iiiIi1III=209 _IIIL1iiiIi1III=bit32.bxor(_IIIL1iiiIi1III,_IIIL1iiiIi1III) end
+_li1iIlLIii[0x2A]=function()
+local _II11LILILLI,_C=_1iiL1iIiL1I1lL1L(_IL1LLILI1i),_iil11i1lLllliLi(_IL1LLILI1i)
+if(not not _11illL1L[_II11LILILLI+0x1][0x3])~=(_C~=0) then _lLLi11iL=_lLLi11iL+1
+else _11illL1L[_1II1iiL1i(_IL1LLILI1i)+0x1][3]=_11illL1L[_II11LILILLI+1][0x3] end
 end
-local _LIiLiiLliII=(0x3+0x40)*0x0
-_llliiIIII[54]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+1][0x8]=-_11ili1Il11IiiiiI[_1LIi1il1i1iI(_illiIl1iiLLiiIl)+0x1][8]
+for _qi=1,0x0 do error("dead") end
+_li1iIlLIii[0xE]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+1][3]=_iLiL1lIllIiLliii(_1iiL1iIiL1I1lL1L(_IL1LLILI1i))/_iLiL1lIllIiLliii(_iil11i1lLllliLi(_IL1LLILI1i))
 end
-local _iI1liilLI1LI1i1={}
-_llliiIIII[48]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+0x1][0x8]=not _11ili1Il11IiiiiI[_1LIi1il1i1iI(_illiIl1iiLLiiIl)+0x1][8]
+do local _LIl1iiii,_qb=81,95 _LIl1iiii=_qb+_LIl1iiii-_qb end
+_li1iIlLIii[56]=function()
+local _1llLiILl1l=_1II1iiL1i(_IL1LLILI1i)
+local _LLLLiiiLi=_I1lI1l1l(_IL1LLILI1i)
+local _I1LLiLIIIl1L=_iL1L1liLL111II[_LLLLiiiLi+1]
+local _i1I1iIII1l1lII={}
+for _ui=0x1,_I1LLiLIIIl1L[25] do
+local _lIlIIl1IlIlii=_llILILlli1()
+local _L1lLIillll=_iliiLilLll(_lIlIIl1IlIlii)
+if _L1lLIillll==35 then _i1I1iIII1l1lII[_ui]=_11illL1L[_1iiL1iIiL1I1lL1L(_lIlIIl1IlIlii)+1]
+elseif _L1lLIillll==0xE then _i1I1iIII1l1lII[_ui]=upvals[_1iiL1iIiL1I1lL1L(_lIlIIl1IlIlii)+1]
+else _i1I1iIII1l1lII[_ui]={[3]=nil} end end
+local _II1L11i1liI1li1L,_ur=_I1LLiLIIIl1L,_i1I1iIII1l1lII
+_11illL1L[_1llLiILl1l+1][3]=function(...) return _IliIL1i1ilLi(_II1L11i1liI1li1L,_ur,...) end
 end
-local _1I1li1IlLI1II=0x221*0x1E
-_llliiIIII[0x2]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+0x1][0x8]=_1LIi1il1i1iI(_illiIl1iiLLiiIl)~=0
-if _LI11i11lil11ii1(_illiIl1iiLLiiIl)~=0x0 then _1lLIiiiIIlIIi1l=_1lLIiiiIIlIIi1l+1 end
+local _LlIIlLLL=type(nil)=="number" and error() or 68
+_li1iIlLIii[12]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+1][3]=_iLiL1lIllIiLliii(_1iiL1iIiL1I1lL1L(_IL1LLILI1i))%_iLiL1lIllIiLliii(_iil11i1lLllliLi(_IL1LLILI1i))
 end
-local _iiLILl1lil1IiI1I=(5+85)*0x0
-_llliiIIII[0x23]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+0x1][0x8]=_1II111Lli(_1LIi1il1i1iI(_illiIl1iiLLiiIl))+_1II111Lli(_LI11i11lil11ii1(_illiIl1iiLLiiIl))
+local _LL1iI1ilIiL11={}
+_li1iIlLIii[34]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+0x1][0x3]=upvals[_1iiL1iIiL1I1lL1L(_IL1LLILI1i)+1][0x3]
 end
-do local _1iiLlIlIiL11,_qb=73,0x3C _1iiLlIlIiL11=_qb+_1iiLlIlIiL11-_qb end
-_llliiIIII[0x7]=function()
-local _1i1l1i1L=_lLilLIIi(_illiIl1iiLLiiIl)
-_11ili1Il11IiiiiI[_1i1l1i1L+1][0x8]=_11ili1Il11IiiiiI[_1i1l1i1L+0x1][0x8]-_11ili1Il11IiiiiI[_1i1l1i1L+0x3][8]
-_1lLIiiiIIlIIi1l=_1lLIiiiIIlIIi1l+_11LiI1L1i1I1L(_illiIl1iiLLiiIl)
+local _iLI1l1IiIiLl=type(nil)=="number" and error() or 183
+_li1iIlLIii[46]=function()
+local _1llLiILl1l,_II11LILILLI=_1II1iiL1i(_IL1LLILI1i),_1iiL1iIiL1I1lL1L(_IL1LLILI1i)
+local _1liIiIIL=_11illL1L[_1llLiILl1l+0x1][0x3]
+local _iIl1LlLLLL1i1l1={}
+if _II11LILILLI==1 then
+elseif _II11LILILLI==0x0 then for _j=_1llLiILl1l+0x2,_1l1iLiII1LI+1 do _iIl1LlLLLL1i1l1[#_iIl1LlLLLL1i1l1+1]=_11illL1L[_j] and _11illL1L[_j][0x3] end
+else for _j=1,_II11LILILLI-1 do _iIl1LlLLLL1i1l1[_j]=_11illL1L[_1llLiILl1l+0x1+_j][0x3] end end
+_lIi1l1l1LI1iLiLL=true
+_IiI111IlIL={_1liIiIIL(_LllLLLli1(_iIl1LlLLLL1i1l1))}
 end
-if 4>0x48 then return end
-_llliiIIII[51]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+1][0x8]=_11ili1Il11IiiiiI[_1LIi1il1i1iI(_illiIl1iiLLiiIl)+1][8]
+local _11ili1lI11l={}
+_li1iIlLIii[36]=function()
+_iliLlll11iLliL[_Illi1IIiLll1ILi(_I1lI1l1l(_IL1LLILI1i))]=_11illL1L[_1II1iiL1i(_IL1LLILI1i)+0x1][3]
 end
-local _LIIIili1iIIL=0x46*22
-_llliiIIII[0x2A]=function()
-_1lLIiiiIIlIIi1l=_1lLIiiiIIlIIi1l+_11LiI1L1i1I1L(_illiIl1iiLLiiIl)
+do local _Il11llI1i=pcall(function() end) if not _Il11llI1i then error("bad") end end
+_li1iIlLIii[13]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+0x1][3]=_iLiL1lIllIiLliii(_1iiL1iIiL1I1lL1L(_IL1LLILI1i))*_iLiL1lIllIiLliii(_iil11i1lLllliLi(_IL1LLILI1i))
 end
-local _li1lL1i1LlIIi={}
-_llliiIIII[47]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+1][0x8]=_IllLliLli1l1l(_lI11ilII11li(_illiIl1iiLLiiIl))
+local _1lLiIII1iI=(0x6+67)*0
+_li1iIlLIii[0x3D]=function()
+upvals[_1iiL1iIiL1I1lL1L(_IL1LLILI1i)+1][3]=_11illL1L[_1II1iiL1i(_IL1LLILI1i)+0x1][0x3]
+end
+do local _Il11llI1i=pcall(function() end) if not _Il11llI1i then error("bad") end end
+_li1iIlLIii[32]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+0x1][3]=_iLiL1lIllIiLliii(_1iiL1iIiL1I1lL1L(_IL1LLILI1i))+_iLiL1lIllIiLliii(_iil11i1lLllliLi(_IL1LLILI1i))
+end
+do local _Il11llI1i=pcall(function() end) if not _Il11llI1i then error("bad") end end
+_li1iIlLIii[55]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+1][0x3]=_iliLlll11iLliL[_Illi1IIiLll1ILi(_I1lI1l1l(_IL1LLILI1i))]
+end
+if select("#")>0xFC then return end
+_li1iIlLIii[51]=function()
+local _1llLiILl1l,_II11LILILLI=_1II1iiL1i(_IL1LLILI1i),_1iiL1iIiL1I1lL1L(_IL1LLILI1i)
+if _II11LILILLI==0 then
+for _j=0x1,#_Iiil1LLi1 do if not _11illL1L[_1llLiILl1l+_j] then _11illL1L[_1llLiILl1l+_j]={[3]=nil} end;_11illL1L[_1llLiILl1l+_j][0x3]=_Iiil1LLi1[_j] end
+_1l1iLiII1LI=_1llLiILl1l+#_Iiil1LLi1-1
+else
+for _j=1,_II11LILILLI-1 do if not _11illL1L[_1llLiILl1l+_j] then _11illL1L[_1llLiILl1l+_j]={[0x3]=nil} end;_11illL1L[_1llLiILl1l+_j][3]=_Iiil1LLi1[_j] end
+end
+end
+for _qi=0x1,0x0 do error("dead") end
+_li1iIlLIii[0x2D]=function()
+_lLLi11iL=_lLLi11iL+_LLlLIIil(_IL1LLILI1i)
+end
+if 8>0x5E then return end
+_li1iIlLIii[0x3E]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+0x1][3]=_iLiL1lIllIiLliii(_1iiL1iIiL1I1lL1L(_IL1LLILI1i))^_iLiL1lIllIiLliii(_iil11i1lLllliLi(_IL1LLILI1i))
+end
+do local _iI1I1iII=0xE4 local _LI1LL111IIiI1=0x1C if _iI1I1iII*_LI1LL111IIiI1>601878 then error("bad") end end
+_li1iIlLIii[0x31]=function()
+local _II11LILILLI,_C=_1iiL1iIiL1I1lL1L(_IL1LLILI1i),_iil11i1lLllliLi(_IL1LLILI1i)
+local _li1llll1={}
+for _j=_II11LILILLI,_C do _li1llll1[#_li1llll1+1]=_1LiILliI(_11illL1L[_j+1][0x3]) end
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+1][0x3]=_ILIIlI11lilLi1II(_li1llll1)
+end
+do local _LIl1iiii,_qb=100,21 _LIl1iiii=_qb+_LIl1iiii-_qb end
+_li1iIlLIii[57]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+1][0x3]={}
+end
+do local _IIIL1iiiIi1III=241 _IIIL1iiiIi1III=bit32.bxor(_IIIL1iiiIi1III,_IIIL1iiiIi1III) end
+_li1iIlLIii[35]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+0x1][0x3]=_1iiL1iIiL1I1lL1L(_IL1LLILI1i)~=0x0
+if _iil11i1lLllliLi(_IL1LLILI1i)~=0x0 then _lLLi11iL=_lLLi11iL+0x1 end
 end
 for _qi=0x1,0 do error("dead") end
-_llliiIIII[56]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+1][0x8]=_1II111Lli(_1LIi1il1i1iI(_illiIl1iiLLiiIl))-_1II111Lli(_LI11i11lil11ii1(_illiIl1iiLLiiIl))
+_li1iIlLIii[0x26]=function()
+if(not not _11illL1L[_1II1iiL1i(_IL1LLILI1i)+0x1][0x3])~=(_iil11i1lLllliLi(_IL1LLILI1i)~=0) then _lLLi11iL=_lLLi11iL+0x1 end
 end
-do local _1iiLlIlIiL11,_qb=28,0x5D _1iiLlIlIiL11=_qb+_1iiLlIlIiL11-_qb end
-_llliiIIII[0x27]=function()
-local _li1LLIiiiiIiIl=_11ili1Il11IiiiiI[_1LIi1il1i1iI(_illiIl1iiLLiiIl)+1][8]
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+2][8]=_li1LLIiiiiIiIl
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+1][8]=_li1LLIiiiiIiIl[_1II111Lli(_LI11i11lil11ii1(_illiIl1iiLLiiIl))]
+for _qi=0x1,0 do error("dead") end
+_li1iIlLIii[0x28]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+1][3]=_Illi1IIiLll1ILi(_I1lI1l1l(_IL1LLILI1i))
 end
-do local _i1ll1i11IIIIL1=248 _i1ll1i11IIIIL1=bit32.bxor(_i1ll1i11IIIIL1,_i1ll1i11IIIIL1) end
-_llliiIIII[0x2C]=function()
-local _1i1l1i1L=_lLilLIIi(_illiIl1iiLLiiIl)
-local _lli1iLlliilLI1lL=_lI11ilII11li(_illiIl1iiLLiiIl)
-local _1LL1IlLlLIilIii1=_1IIiI1Li1liilll[_lli1iLlliilLI1lL+0x1]
-local _Li1ILlIIlLIII={}
-for _ui=0x1,_1LL1IlLlLIilIii1[0xE] do
-local _i111lILlIIi1I1I=_iIiiIL11LlILlII()
-local _i1LI1lII=_LilIlIliL1L1(_i111lILlIIi1I1I)
-if _i1LI1lII==0x14 then _Li1ILlIIlLIII[_ui]=_11ili1Il11IiiiiI[_1LIi1il1i1iI(_i111lILlIIi1I1I)+1]
-elseif _i1LI1lII==0x1D then _Li1ILlIIlLIII[_ui]=upvals[_1LIi1il1i1iI(_i111lILlIIi1I1I)+1]
-else _Li1ILlIIlLIII[_ui]={[0x8]=nil} end end
-local _LIiiliillLlilLl,_ur=_1LL1IlLlLIilIii1,_Li1ILlIIlLIII
-_11ili1Il11IiiiiI[_1i1l1i1L+0x1][8]=function(...) return _LiL1l1IIlIlIi(_LIiiliillLlilLl,_ur,...) end
-end
-for _qi=1,0 do error("dead") end
-_llliiIIII[0x34]=function()
-local _1i1l1i1L,_I1IlIllLlllII1,_C=_lLilLIIi(_illiIl1iiLLiiIl),_1LIi1il1i1iI(_illiIl1iiLLiiIl),_LI11i11lil11ii1(_illiIl1iiLLiiIl)
-if _C==0 then _C=_iIiiIL11LlILlII() end
-local _LLlLlL1lIl1Li=(_C-1)*50
-local _iI1ILiiiiL11ILi=_11ili1Il11IiiiiI[_1i1l1i1L+1][0x8]
-local _LiLilli11Ll1=(_I1IlIllLlllII1==0) and (_ilILilLI1I1ilil-_1i1l1i1L) or _I1IlIllLlllII1
-for _j=0x1,_LiLilli11Ll1 do _iI1ILiiiiL11ILi[_LLlLlL1lIl1Li+_j]=_11ili1Il11IiiiiI[_1i1l1i1L+_j+1] and _11ili1Il11IiiiiI[_1i1l1i1L+_j+1][8] end
-end
-do local _i1ll1i11IIIIL1=222 _i1ll1i11IIIIL1=bit32.bxor(_i1ll1i11IIIIL1,_i1ll1i11IIIIL1) end
-_llliiIIII[36]=function()
-for _j=_lLilLIIi(_illiIl1iiLLiiIl),_1LIi1il1i1iI(_illiIl1iiLLiiIl) do _11ili1Il11IiiiiI[_j+1][0x8]=nil end
-end
-if select("#")>0x151 then return end
-_llliiIIII[59]=function()
-if(_1II111Lli(_1LIi1il1i1iI(_illiIl1iiLLiiIl))<_1II111Lli(_LI11i11lil11ii1(_illiIl1iiLLiiIl)))~=(_lLilLIIi(_illiIl1iiLLiiIl)~=0) then _1lLIiiiIIlIIi1l=_1lLIiiiIIlIIi1l+0x1 end
-end
-local _L1l111lIL=(0x3+0x4B)*0
-_llliiIIII[0x3C]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+0x1][0x8]=_11ili1Il11IiiiiI[_1LIi1il1i1iI(_illiIl1iiLLiiIl)+1][0x8][_1II111Lli(_LI11i11lil11ii1(_illiIl1iiLLiiIl))]
-end
-for _qi=0x1,0x0 do error("dead") end
-_llliiIIII[33]=function()
-local _1i1l1i1L,_C=_lLilLIIi(_illiIl1iiLLiiIl),_LI11i11lil11ii1(_illiIl1iiLLiiIl)
-local _ILL1i1iII1={_11ili1Il11IiiiiI[_1i1l1i1L+0x1][8](_11ili1Il11IiiiiI[_1i1l1i1L+0x2][0x8],_11ili1Il11IiiiiI[_1i1l1i1L+0x3][0x8])}
-if _ILL1i1iII1[1]~=nil then
-_11ili1Il11IiiiiI[_1i1l1i1L+0x3][0x8]=_ILL1i1iII1[0x1]
-for _j=0x1,_C do if not _11ili1Il11IiiiiI[_1i1l1i1L+0x3+_j] then _11ili1Il11IiiiiI[_1i1l1i1L+3+_j]={[0x8]=nil} end;_11ili1Il11IiiiiI[_1i1l1i1L+0x3+_j][8]=_ILL1i1iII1[_j] end
-else _1lLIiiiIIlIIi1l=_1lLIiiiIIlIIi1l+0x1 end
-end
-local _liIii11l1=type(nil)=="number" and error() or 240
-_llliiIIII[0x25]=function()
-
-end
-if select("#")>886 then return end
-_llliiIIII[34]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+1][0x8][_1II111Lli(_1LIi1il1i1iI(_illiIl1iiLLiiIl))]=_1II111Lli(_LI11i11lil11ii1(_illiIl1iiLLiiIl))
+do local _IIIL1iiiIi1III=0x5B _IIIL1iiiIi1III=bit32.bxor(_IIIL1iiiIi1III,_IIIL1iiiIi1III) end
+_li1iIlLIii[0x21]=function()
+local _1llLiILl1l=_1II1iiL1i(_IL1LLILI1i)
+local _iiilLi11=_11illL1L[_1llLiILl1l+1][3]+_11illL1L[_1llLiILl1l+3][0x3]
+_11illL1L[_1llLiILl1l+0x1][3]=_iiilLi11
+local _Li1Iii1ll,_st=_11illL1L[_1llLiILl1l+0x2][3],_11illL1L[_1llLiILl1l+0x3][0x3]
+if(_st>0x0 and _iiilLi11<=_Li1Iii1ll)or(_st<=0 and _iiilLi11>=_Li1Iii1ll) then
+_lLLi11iL=_lLLi11iL+_LLlLIIil(_IL1LLILI1i)
+_11illL1L[_1llLiILl1l+4][3]=_iiilLi11 end
 end
 if false then error("") end
-_llliiIIII[0x37]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+0x1][8]=_1II111Lli(_1LIi1il1i1iI(_illiIl1iiLLiiIl))*_1II111Lli(_LI11i11lil11ii1(_illiIl1iiLLiiIl))
+_li1iIlLIii[47]=function()
+local _1llLiILl1l,_C=_1II1iiL1i(_IL1LLILI1i),_iil11i1lLllliLi(_IL1LLILI1i)
+local _IIIIlLLLILli={_11illL1L[_1llLiILl1l+1][0x3](_11illL1L[_1llLiILl1l+2][3],_11illL1L[_1llLiILl1l+0x3][3])}
+if _IIIIlLLLILli[1]~=nil then
+_11illL1L[_1llLiILl1l+3][0x3]=_IIIIlLLLILli[1]
+for _j=0x1,_C do if not _11illL1L[_1llLiILl1l+0x3+_j] then _11illL1L[_1llLiILl1l+3+_j]={[0x3]=nil} end;_11illL1L[_1llLiILl1l+0x3+_j][3]=_IIIIlLLLILli[_j] end
+else _lLLi11iL=_lLLi11iL+0x1 end
 end
-local _lilLi1IiL1L1ilL=0x244*0x11
-_llliiIIII[0x35]=function()
-_IlLiLLiiL11llLil[_IllLliLli1l1l(_lI11ilII11li(_illiIl1iiLLiiIl))]=_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+1][8]
+for _qi=1,0 do error("dead") end
+_li1iIlLIii[0x2C]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+0x1][3]=not _11illL1L[_1iiL1iIiL1I1lL1L(_IL1LLILI1i)+1][0x3]
 end
-local _iILIiL1LLilL=809*87
-_llliiIIII[58]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+1][0x8]=upvals[_1LIi1il1i1iI(_illiIl1iiLLiiIl)+1][8]
+local _l1iiLlIiL=(0x4+93)*0x0
+_li1iIlLIii[0x9]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+1][0x3]=-_11illL1L[_1iiL1iIiL1I1lL1L(_IL1LLILI1i)+0x1][0x3]
 end
-if select("#")>0x64 then return end
-_llliiIIII[0x6]=function()
-if(_1II111Lli(_1LIi1il1i1iI(_illiIl1iiLLiiIl))==_1II111Lli(_LI11i11lil11ii1(_illiIl1iiLLiiIl)))~=(_lLilLIIi(_illiIl1iiLLiiIl)~=0x0) then _1lLIiiiIIlIIi1l=_1lLIiiiIIlIIi1l+1 end
-end
-do local _i1ll1i11IIIIL1=239 _i1ll1i11IIIIL1=bit32.bxor(_i1ll1i11IIIIL1,_i1ll1i11IIIIL1) end
-_llliiIIII[3]=function()
-local _1i1l1i1L,_I1IlIllLlllII1,_C=_lLilLIIi(_illiIl1iiLLiiIl),_1LIi1il1i1iI(_illiIl1iiLLiiIl),_LI11i11lil11ii1(_illiIl1iiLLiiIl)
-local _L1i11iIiiILLi=_11ili1Il11IiiiiI[_1i1l1i1L+0x1][0x8]
-local _1lLL1111={}
-if _I1IlIllLlllII1==1 then
-elseif _I1IlIllLlllII1==0 then for _j=_1i1l1i1L+0x2,_ilILilLI1I1ilil+0x1 do _1lLL1111[#_1lLL1111+1]=_11ili1Il11IiiiiI[_j] and _11ili1Il11IiiiiI[_j][8] end
-else for _j=1,_I1IlIllLlllII1-1 do _1lLL1111[_j]=_11ili1Il11IiiiiI[_1i1l1i1L+0x1+_j][0x8] end end
-local _ILL1i1iII1={_L1i11iIiiILLi(_lIL1iLl11l1(_1lLL1111))}
-if _C==0x0 then
-for _j=0x1,#_ILL1i1iII1 do if not _11ili1Il11IiiiiI[_1i1l1i1L+_j] then _11ili1Il11IiiiiI[_1i1l1i1L+_j]={[8]=nil} end;_11ili1Il11IiiiiI[_1i1l1i1L+_j][8]=_ILL1i1iII1[_j] end
-_ilILilLI1I1ilil=_1i1l1i1L+#_ILL1i1iII1-0x1
+local _L11lIIIlI1L1i={}
+_li1iIlLIii[48]=function()
+local _1llLiILl1l,_II11LILILLI,_C=_1II1iiL1i(_IL1LLILI1i),_1iiL1iIiL1I1lL1L(_IL1LLILI1i),_iil11i1lLllliLi(_IL1LLILI1i)
+local _1liIiIIL=_11illL1L[_1llLiILl1l+1][0x3]
+local _iIl1LlLLLL1i1l1={}
+if _II11LILILLI==1 then
+elseif _II11LILILLI==0x0 then for _j=_1llLiILl1l+2,_1l1iLiII1LI+1 do _iIl1LlLLLL1i1l1[#_iIl1LlLLLL1i1l1+1]=_11illL1L[_j] and _11illL1L[_j][0x3] end
+else for _j=1,_II11LILILLI-0x1 do _iIl1LlLLLL1i1l1[_j]=_11illL1L[_1llLiILl1l+0x1+_j][0x3] end end
+local _IIIIlLLLILli={_1liIiIIL(_LllLLLli1(_iIl1LlLLLL1i1l1))}
+if _C==0 then
+for _j=1,#_IIIIlLLLILli do if not _11illL1L[_1llLiILl1l+_j] then _11illL1L[_1llLiILl1l+_j]={[0x3]=nil} end;_11illL1L[_1llLiILl1l+_j][3]=_IIIIlLLLILli[_j] end
+_1l1iLiII1LI=_1llLiILl1l+#_IIIIlLLLILli-1
 elseif _C>0x1 then
-for _j=0x1,_C-0x1 do if not _11ili1Il11IiiiiI[_1i1l1i1L+_j] then _11ili1Il11IiiiiI[_1i1l1i1L+_j]={[8]=nil} end;_11ili1Il11IiiiiI[_1i1l1i1L+_j][8]=_ILL1i1iII1[_j] end
+for _j=1,_C-0x1 do if not _11illL1L[_1llLiILl1l+_j] then _11illL1L[_1llLiILl1l+_j]={[0x3]=nil} end;_11illL1L[_1llLiILl1l+_j][0x3]=_IIIIlLLLILli[_j] end
 end
 end
-local _IIL1lIlilL1ll=952*0
-_llliiIIII[0x28]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+1][0x8]=_1II111Lli(_1LIi1il1i1iI(_illiIl1iiLLiiIl))/_1II111Lli(_LI11i11lil11ii1(_illiIl1iiLLiiIl))
+if false then error("") end
+_li1iIlLIii[0xF]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+1][3]=_11illL1L[_1iiL1iIiL1I1lL1L(_IL1LLILI1i)+0x1][0x3]
 end
-if 2>51 then return end
-_llliiIIII[0x39]=function()
-upvals[_1LIi1il1i1iI(_illiIl1iiLLiiIl)+0x1][0x8]=_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+0x1][8]
+local _I1I1LIl1=(6+40)*0x0
+_li1iIlLIii[0x32]=function()
+local _1llLiILl1l,_II11LILILLI=_1II1iiL1i(_IL1LLILI1i),_1iiL1iIiL1I1lL1L(_IL1LLILI1i)
+_lIi1l1l1LI1iLiLL=true
+if _II11LILILLI==1 then
+elseif _II11LILILLI==0x0 then for _j=_1llLiILl1l+1,_1l1iLiII1LI+0x1 do _IiI111IlIL[#_IiI111IlIL+1]=_11illL1L[_j] and _11illL1L[_j][0x3] end
+else for _j=1,_II11LILILLI-1 do _IiI111IlIL[_j]=_11illL1L[_1llLiILl1l+_j][0x3] end end
 end
-local _1L11LllLiILILi=type(nil)=="number" and error() or 175
-_llliiIIII[46]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+1][8]={}
+do local _iI1I1iII=0xEF local _LI1LL111IIiI1=57 if _iI1I1iII*_LI1LL111IIiI1>645155 then error("bad") end end
+_li1iIlLIii[0x3B]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+1][0x3]=#(_11illL1L[_1iiL1iIiL1I1lL1L(_IL1LLILI1i)+0x1][3])
 end
-local _I1llIilLIlLLl=type(nil)=="number" and error() or 48
-_llliiIIII[49]=function()
-local _I1IlIllLlllII1,_C=_1LIi1il1i1iI(_illiIl1iiLLiiIl),_LI11i11lil11ii1(_illiIl1iiLLiiIl)
-if(not not _11ili1Il11IiiiiI[_I1IlIllLlllII1+0x1][0x8])~=(_C~=0) then _1lLIiiiIIlIIi1l=_1lLIiiiIIlIIi1l+1
-else _11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+0x1][0x8]=_11ili1Il11IiiiiI[_I1IlIllLlllII1+1][8] end
+local _lii1Iiil1l1iL={}
+_li1iIlLIii[52]=function()
+_11illL1L[_1II1iiL1i(_IL1LLILI1i)+1][0x3][_iLiL1lIllIiLliii(_1iiL1iIiL1I1lL1L(_IL1LLILI1i))]=_iLiL1lIllIiLliii(_iil11i1lLllliLi(_IL1LLILI1i))
 end
-local _LLiLIl1ILi1I1iLl=0x363*0x2C
-_llliiIIII[32]=function()
-local _1i1l1i1L,_I1IlIllLlllII1=_lLilLIIi(_illiIl1iiLLiiIl),_1LIi1il1i1iI(_illiIl1iiLLiiIl)
-_1Illl1I1Lll=true
-if _I1IlIllLlllII1==1 then
-elseif _I1IlIllLlllII1==0 then for _j=_1i1l1i1L+0x1,_ilILilLI1I1ilil+1 do _1l1I1IiiLL1[#_1l1I1IiiLL1+0x1]=_11ili1Il11IiiiiI[_j] and _11ili1Il11IiiiiI[_j][0x8] end
-else for _j=0x1,_I1IlIllLlllII1-0x1 do _1l1I1IiiLL1[_j]=_11ili1Il11IiiiiI[_1i1l1i1L+_j][0x8] end end
+do local _LIl1iiii,_qb=0x3F,64 _LIl1iiii=_qb+_LIl1iiii-_qb end
+_li1iIlLIii[11]=function()
+do local _IIIL1iiiIi1III=0xD9 _IIIL1iiiIi1III=bit32.bxor(_IIIL1iiiIi1III,_IIIL1iiiIi1III) end
+local _lll1lLI11lll1I=type(nil)=="number" and error() or 38
 end
-local _iiiiL11liI1IIi=(0x3+53)*0
-_llliiIIII[61]=function()
-local _1i1l1i1L,_I1IlIllLlllII1=_lLilLIIi(_illiIl1iiLLiiIl),_1LIi1il1i1iI(_illiIl1iiLLiiIl)
-if _I1IlIllLlllII1==0 then
-for _j=1,#_IliLllIl do if not _11ili1Il11IiiiiI[_1i1l1i1L+_j] then _11ili1Il11IiiiiI[_1i1l1i1L+_j]={[8]=nil} end;_11ili1Il11IiiiiI[_1i1l1i1L+_j][8]=_IliLllIl[_j] end
-_ilILilLI1I1ilil=_1i1l1i1L+#_IliLllIl-1
-else
-for _j=1,_I1IlIllLlllII1-1 do if not _11ili1Il11IiiiiI[_1i1l1i1L+_j] then _11ili1Il11IiiiiI[_1i1l1i1L+_j]={[8]=nil} end;_11ili1Il11IiiiiI[_1i1l1i1L+_j][8]=_IliLllIl[_j] end
+if select("#")>101 then return end
+_li1iIlLIii[26]=function()
+if select("#")>378 then return end
+local _IlIlII1li1LiL1=type(nil)=="number" and error() or 104
 end
+local _I1li1LiiIiI=type(nil)=="number" and error() or 0x9D
+_li1iIlLIii[5]=function()
+local _1lIlIIi11l=0x229*0x57
+do local _IIIL1iiiIi1III=0x23 _IIIL1iiiIi1III=bit32.bxor(_IIIL1iiiIi1III,_IIIL1iiiIi1III) end
 end
-if select("#")>0x2F9 then return end
-_llliiIIII[0x4]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+0x1][0x8]=_1II111Lli(_1LIi1il1i1iI(_illiIl1iiLLiiIl))^_1II111Lli(_LI11i11lil11ii1(_illiIl1iiLLiiIl))
+local _1lilL1Li1iiiIIL={}
+_li1iIlLIii[1]=function()
+do local _Il11llI1i=pcall(function() end) if not _Il11llI1i then error("bad") end end
+local _1lLiLLLlliiL={}
 end
-do local _ilLlLIi1Ll=pcall(function() end) if not _ilLlLIi1Ll then error("bad") end end
-_llliiIIII[38]=function()
-_11ili1Il11IiiiiI[_lLilLIIi(_illiIl1iiLLiiIl)+0x1][0x8]=_1II111Lli(_1LIi1il1i1iI(_illiIl1iiLLiiIl))%_1II111Lli(_LI11i11lil11ii1(_illiIl1iiLLiiIl))
-end
-do local _ilLlLIi1Ll=pcall(function() end) if not _ilLlLIi1Ll then error("bad") end end
-_llliiIIII[41]=function()
-local _1i1l1i1L,_I1IlIllLlllII1=_lLilLIIi(_illiIl1iiLLiiIl),_1LIi1il1i1iI(_illiIl1iiLLiiIl)
-local _L1i11iIiiILLi=_11ili1Il11IiiiiI[_1i1l1i1L+1][0x8]
-local _1lLL1111={}
-if _I1IlIllLlllII1==1 then
-elseif _I1IlIllLlllII1==0 then for _j=_1i1l1i1L+2,_ilILilLI1I1ilil+0x1 do _1lLL1111[#_1lLL1111+1]=_11ili1Il11IiiiiI[_j] and _11ili1Il11IiiiiI[_j][0x8] end
-else for _j=0x1,_I1IlIllLlllII1-0x1 do _1lLL1111[_j]=_11ili1Il11IiiiiI[_1i1l1i1L+0x1+_j][0x8] end end
-_1Illl1I1Lll=true
-_1l1I1IiiLL1={_L1i11iIiiILLi(_lIL1iLl11l1(_1lLL1111))}
-end
-if select("#")>0x346 then return end
-_llliiIIII[0]=function()
-if select("#")>648 then return end
-if 5>0x56 then return end
-end
-for _qi=0x1,0x0 do error("dead") end
-_llliiIIII[23]=function()
-do local _i1ll1i11IIIIL1=159 _i1ll1i11IIIIL1=bit32.bxor(_i1ll1i11IIIIL1,_i1ll1i11IIIIL1) end
-local _IiiIi1Li11I1={}
-end
-if 0x6>0x20 then return end
-_llliiIIII[25]=function()
-for _qi=0x1,0x0 do error("dead") end
-for _qi=1,0 do error("dead") end
-end
-do local _i1ll1i11IIIIL1=173 _i1ll1i11IIIIL1=bit32.bxor(_i1ll1i11IIIIL1,_i1ll1i11IIIIL1) end
-_llliiIIII[9]=function()
-if select("#")>518 then return end
-local _ILliL1LIILIii=type(nil)=="number" and error() or 107
-end
-for _qi=0x1,0x0 do error("dead") end
-_llliiIIII[0xC]=function()
+do local _LIl1iiii,_qb=0x4A,14 _LIl1iiii=_qb+_LIl1iiii-_qb end
+_li1iIlLIii[2]=function()
+do local _IIIL1iiiIi1III=232 _IIIL1iiiIi1III=bit32.bxor(_IIIL1iiiIi1III,_IIIL1iiiIi1III) end
 for _qi=1,0x0 do error("dead") end
-local _llliiii1iILi1l={}
 end
-if 0x4>0x5D then return end
-_llliiIIII[13]=function()
-do local _1iiLlIlIiL11,_qb=0x4E,35 _1iiLlIlIiL11=_qb+_1iiLlIlIiL11-_qb end
-local _I1ilL1iilL={}
+if 1>0x1F then return end
+_li1iIlLIii[0x13]=function()
+do local _LIl1iiii,_qb=0x2F,0x1E _LIl1iiii=_qb+_LIl1iiii-_qb end
+if 1>0x4F then return end
 end
-do local _1iiLlIlIiL11,_qb=72,62 _1iiLlIlIiL11=_qb+_1iiLlIlIiL11-_qb end
-_llliiIIII[29]=function()
-do local _1iiLlIlIiL11,_qb=0x39,67 _1iiLlIlIiL11=_qb+_1iiLlIlIiL11-_qb end
-local _11L1L1IlLIl=type(nil)=="number" and error() or 0x15
+if select("#")>550 then return end
+_li1iIlLIii[0]=function()
+local _ilillLIl1=type(nil)=="number" and error() or 0x14
+local _1Lilil1iLII={}
 end
-if select("#")>0x369 then return end
-_llliiIIII[0x13]=function()
-do local _1iiLlIlIiL11,_qb=0x35,76 _1iiLlIlIiL11=_qb+_1iiLlIlIiL11-_qb end
-local _IiLI1llIii1IIl1I=(3+0x49)*0
+do local _Il11llI1i=pcall(function() end) if not _Il11llI1i then error("bad") end end
+_li1iIlLIii[31]=function()
+do local _LIl1iiii,_qb=0x17,29 _LIl1iiii=_qb+_LIl1iiii-_qb end
+do local _Il11llI1i=pcall(function() end) if not _Il11llI1i then error("bad") end end
 end
-local _ILllIILllII1l={}
-_llliiIIII[8]=function()
+do local _Il11llI1i=pcall(function() end) if not _Il11llI1i then error("bad") end end
+_li1iIlLIii[0x1E]=function()
+do local _Il11llI1i=pcall(function() end) if not _Il11llI1i then error("bad") end end
 if false then error("") end
-do local _ilLlLIi1Ll=pcall(function() end) if not _ilLlLIi1Ll then error("bad") end end
 end
-local _IILLiIi1Iii1=575*0x9
-_llliiIIII[26]=function()
-for _qi=1,0 do error("dead") end
-local _liL1lLIILlI=type(nil)=="number" and error() or 51
-end
-do local _1iiLlIlIiL11,_qb=26,0x11 _1iiLlIlIiL11=_qb+_1iiLlIlIiL11-_qb end
-_llliiIIII[11]=function()
-for _qi=1,0 do error("dead") end
-do local _1iiLlIlIiL11,_qb=79,89 _1iiLlIlIiL11=_qb+_1iiLlIlIiL11-_qb end
-end
-do local _1iiLlIlIiL11,_qb=0x5B,0x3D _1iiLlIlIiL11=_qb+_1iiLlIlIiL11-_qb end
-_llliiIIII[0x1E]=function()
-local _1liLi1LLl11I={}
-do local _ilLlLIi1Ll=pcall(function() end) if not _ilLlLIi1Ll then error("bad") end end
-end
-do local _i1ll1i11IIIIL1=0xA1 _i1ll1i11IIIIL1=bit32.bxor(_i1ll1i11IIIIL1,_i1ll1i11IIIIL1) end
-
-while _1lLIiiiIIlIIi1l<=_LL1l1LIiI1i1L do
-_illiIl1iiLLiiIl=_iIiiIL11LlILlII()
-local _1iIILiIL=_llliiIIII[_LL1iilLlLlLLii1(_LilIlIliL1L1(_illiIl1iiLLiiIl),39)]
-if _1iIILiIL then _1iIILiIL() end
-if _1Illl1I1Lll then break end
-end
-return _lIL1iLl11l1(_1l1I1IiiLL1)
-end
-_LiL1l1IIlIlIi(_11lIlIlll1IL,{{}})
-
-end
-
-local function _l1ILii11IlliI()
-local _lIiLl1Ii={}
-do local _iLiIiII1l=310 local _iILi1IIL=95 if _iLiIiII1l*_iILi1IIL>652561 then error("bad") end end
-if bit32.bxor(68,0x4E)~=0xA then return end
-if bit32.band(0x44,0x4E)~=0x44 then return end
-if bit32.lshift(10,2)~=40 then return end
-if bit32.band(155,0xF0)~=0x90 then return end
-local _IIii1lilil1iil=type(nil)=="number" and error() or 32
-local _IILiLiIliLI=bit32.bxor(47619,47619)
-if _IILiLiIliLI~=0 then return end
-local _i1lLL1iiLl=bit32.lshift(0x0,0x6)
-if _i1lLL1iiLl~=0x0 then return end
-local _1L1LllII1il1l1ll=bit32.band(0x67FD,bit32.bnot(26621))
-if _1L1LllII1il1l1ll~=0 then return end
+if 7>31 then return end
+_li1iIlLIii[7]=function()
 if false then error("") end
-local _lL11LiI1=string.byte("A")
-if _lL11LiI1~=0x41 then return end
-local _LliiilIllLIlLL1=type(type)
-if _LliiilIllLIlLL1~="function" then return end
-do local _iLiIiII1l=565 local _iILi1IIL=0xA if _iLiIiII1l*_iILi1IIL>532890 then error("bad") end end
-local _i1i111iIlII1ll=string.byte(string.char(0x5A))
-if _i1i111iIlII1ll~=90 then return end
-local _liIllLiiIllIii=table.concat({"x"})
-if _liIllLiiIllIii~="x" then return end
-local _1L1LLIli={}
-local _iILLlILI=false
+for _qi=1,0x0 do error("dead") end
+end
+if 0x5>0x62 then return end
+_li1iIlLIii[0x10]=function()
+local _1lI1l11IiIi1ILL={}
+if select("#")>726 then return end
+end
+local _iLliIii1i1=type(nil)=="number" and error() or 142
+_li1iIlLIii[25]=function()
+local _Ii1lLiIiLliILi=101*67
+local _lLLIiIl11i={}
+end
+local _Ii11lLlli1ILIli=455*0x18
+
+while _lLLi11iL<=_iLllLlIiIlL1LliL do
+_IL1LLILI1i=_llILILlli1()
+local _1i1IiL1lIIlILI=_li1iIlLIii[_iI1L1lliL1ILL(_iliiLilLll(_IL1LLILI1i),44)]
+if _1i1IiL1lIIlILI then _1i1IiL1lIIlILI() end
+if _lIi1l1l1LI1iLiLL then break end
+end
+return _LllLLLli1(_IiI111IlIL)
+end
+_IliIL1i1ilLi(_1I1illlliII,{{}})
+
+end
+
+local function _LI11LLLILlII()
+do local _LIl1iiii,_qb=66,3 _LIl1iiii=_qb+_LIl1iiii-_qb end
+do local _iI1I1iII=0x104 local _LI1LL111IIiI1=51 if _iI1I1iII*_LI1LL111IIiI1>900979 then error("bad") end end
+if bit32.bxor(48,0x42)~=114 then return end
+if bit32.band(0x30,0x42)~=0 then return end
+if bit32.lshift(3,2)~=12 then return end
+if bit32.band(0xB2,240)~=176 then return end
+if select("#")>0x1BB then return end
+local _lIi1iIilIllIilil=bit32.bxor(21130,0x528A)
+if _lIi1iIilIllIilil~=0x0 then return end
+local _l1llIIILL1lI=bit32.lshift(0x0,0xF)
+if _l1llIIILL1lI~=0x0 then return end
+local _illiLIllILIiLi=bit32.band(49324,bit32.bnot(49324))
+if _illiLIllILIiLi~=0x0 then return end
+local _LIilLILlI={}
+local _iLLL11llil1=string.byte("A")
+if _iLLL11llil1~=65 then return end
+local _LLLiI1iiiIlL=type(type)
+if _LLLiI1iiiIlL~="function" then return end
+do local _iI1I1iII=0x333 local _LI1LL111IIiI1=0x14 if _iI1I1iII*_LI1LL111IIiI1>601730 then error("bad") end end
+local _iiilillLlL1LILlI=string.byte(string.char(0x4B))
+if _iiilillLlL1LILlI~=0x4B then return end
+local _1L1IiiIlLL11=table.concat({"x"})
+if _1L1IiiIlLL11~="x" then return end
+do local _Il11llI1i=pcall(function() end) if not _Il11llI1i then error("bad") end end
+local _i11llLiIL1iIi=false
 pcall(function()
-local _L1lL1i1Li1LlI={}
-setmetatable(_L1lL1i1Li1LlI,{__index=function(_,k) return k+5316 end})
-if _L1lL1i1Li1LlI[0x2501]~=0x39C5 then _iILLlILI=true end
+local _Ll11ILil1={}
+setmetatable(_Ll11ILil1,{__index=function(_,k) return k+5268 end})
+if _Ll11ILil1[19967]~=0x6293 then _i11llLiIL1iIi=true end
 end)
-if _iILLlILI then return end
+if _i11llLiIL1iIi then return end
+if 7>0x12 then return end
+local _L11ILlLiLIIilL1L=type(nil)=="number" and error() or 0x50
+local _1II11ilI=math.floor(math.pi*0xE)%256
+local _11li111LIIIIi1L1=bit32.bxor(_1II11ilI,220)
+if _11li111LIIIIi1L1~=0xF7 then return end
 if false then error("") end
-do local _i1ll1i11IIIIL1=0xCC _i1ll1i11IIIIL1=bit32.bxor(_i1ll1i11IIIIL1,_i1ll1i11IIIIL1) end
-local _ilil1l1iiilL=math.floor(math.pi*141592)%256
-local _i1lll1IiL11Il1=bit32.bxor(_ilil1l1iiilL,0x26)
-if _i1lll1IiL11Il1~=0xBE then return end
-if 0x6>87 then return end
-local _1iL1II1LlIilliLl=(1+86)*0
-local _lIlLIlllLLii,_IiII1I1L=pcall(_iIliilIIil)
-if not _lIlLIlllLLii then
-  ;(warn or print)("[Arwa] runtime error: "..tostring(_IiII1I1L))
+local _1liliilliLiI={}
+local _lllIlI11lLi1Iill,_IILiliILILL1i=pcall(_iLlliI1ill1)
+if not _lllIlI11lLi1Iill then
+  ;(warn or print)("[Arwa] runtime error: "..tostring(_IILiliILILL1i))
 end
 
 end
-_l1ILii11IlliI()
+_LI11LLLILlII()
