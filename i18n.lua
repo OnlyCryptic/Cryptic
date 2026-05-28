@@ -130,6 +130,9 @@ local Translations = {
         ["player.fly.label"]            = "Fly",
         ["player.fly.on"]               = "✈️ Fly activated!",
 
+        ["player.jumppower.label"]      = "Jump Power",
+        ["player.jumppower.on"]         = "⬆️ Jump Power activated!",
+
         ["player.infinitejump.label"]   = "Infinite Jump",
         ["player.infinitejump.on"]      = "✅ Infinite Jump activated",
 
@@ -583,6 +586,9 @@ local Translations = {
 
         ["player.fly.label"]            = "طيران",
         ["player.fly.on"]               = "✈️ تم تفعيل الطيران!",
+
+        ["player.jumppower.label"]      = "قوة القفزة",
+        ["player.jumppower.on"]         = "⬆️ تم تفعيل قوة القفزة!",
 
         ["player.infinitejump.label"]   = "قفز لانهائي",
         ["player.infinitejump.on"]      = "✅ تم تفعيل القفز اللانهائي",
@@ -1038,6 +1044,9 @@ local Translations = {
         ["player.fly.label"]            = "Полёт",
         ["player.fly.on"]               = "✈️ Полёт активирован!",
 
+        ["player.jumppower.label"]      = "Сила прыжка",
+        ["player.jumppower.on"]         = "⬆️ Сила прыжка активирована!",
+
         ["player.infinitejump.label"]   = "Бесконечный прыжок",
         ["player.infinitejump.on"]      = "✅ Бесконечный прыжок активирован",
 
@@ -1491,6 +1500,9 @@ local Translations = {
 
         ["player.fly.label"]            = "Voar",
         ["player.fly.on"]               = "✈️ Voo ativado!",
+
+        ["player.jumppower.label"]      = "Força de Pulo",
+        ["player.jumppower.on"]         = "⬆️ Força de pulo ativada!",
 
         ["player.infinitejump.label"]   = "Pulo infinito",
         ["player.infinitejump.on"]      = "✅ Pulo infinito ativado",
@@ -1953,6 +1965,9 @@ local Translations = {
 
         ["player.fly.label"]            = "Volar",
         ["player.fly.on"]               = "✈️ ¡Vuelo activado!",
+
+        ["player.jumppower.label"]      = "Fuerza de Salto",
+        ["player.jumppower.on"]         = "⬆️ ¡Fuerza de salto activada!",
 
         ["player.infinitejump.label"]   = "Salto infinito",
         ["player.infinitejump.on"]      = "✅ Salto infinito activado",
@@ -2427,6 +2442,9 @@ local Translations = {
         ["player.fly.label"]            = "Voler",
         ["player.fly.on"]               = "✈️ Vol activé !",
 
+        ["player.jumppower.label"]      = "Force de saut",
+        ["player.jumppower.on"]         = "⬆️ Force de saut activée !",
+
         ["player.infinitejump.label"]   = "Saut infini",
         ["player.infinitejump.on"]      = "✅ Saut infini activé",
 
@@ -2899,6 +2917,9 @@ local Translations = {
 
         ["player.fly.label"]            = "Terbang",
         ["player.fly.on"]               = "✈️ Mode terbang diaktifkan!",
+
+        ["player.jumppower.label"]      = "Kekuatan Lompat",
+        ["player.jumppower.on"]         = "⬆️ Kekuatan lompat aktif!",
 
         ["player.infinitejump.label"]   = "Lompat tak terbatas",
         ["player.infinitejump.on"]      = "✅ Lompat tak terbatas diaktifkan",
@@ -3373,6 +3394,9 @@ local Translations = {
         ["player.fly.label"]            = "Uçuş",
         ["player.fly.on"]               = "✈️ Uçuş etkinleştirildi!",
 
+        ["player.jumppower.label"]      = "Zıplama Gücü",
+        ["player.jumppower.on"]         = "⬆️ Zıplama gücü aktif!",
+
         ["player.infinitejump.label"]   = "Sonsuz zıplama",
         ["player.infinitejump.on"]      = "✅ Sonsuz zıplama etkinleştirildi",
 
@@ -3834,6 +3858,10 @@ local Translations = {
         ["player.discord.copied"]       = "Discord लिंक कॉपी हो गया",
         ["player.fly.label"]            = "उड़ान",
         ["player.fly.on"]               = "✈️ उड़ान सक्रिय!",
+
+        ["player.jumppower.label"]      = "कूद शक्ति",
+        ["player.jumppower.on"]         = "⬆️ कूद शक्ति सक्रिय!",
+
         ["player.infinitejump.label"]   = "अनंत कूद",
         ["player.infinitejump.on"]      = "✅ अनंत कूद सक्रिय",
         ["player.noclip.label"]         = "नोक्लिप",
@@ -4273,6 +4301,10 @@ local Translations = {
         ["player.discord.copied"]       = "Discord-Link kopiert",
         ["player.fly.label"]            = "Fliegen",
         ["player.fly.on"]               = "✈️ Fliegen aktiviert!",
+
+        ["player.jumppower.label"]      = "Sprungkraft",
+        ["player.jumppower.on"]         = "⬆️ Sprungkraft aktiviert!",
+
         ["player.infinitejump.label"]   = "Unendliches Springen",
         ["player.infinitejump.on"]      = "✅ Unendliches Springen aktiviert",
         ["player.noclip.label"]         = "NoClip",
@@ -4712,6 +4744,10 @@ local Translations = {
         ["player.discord.copied"]       = "Посилання Discord скопійовано",
         ["player.fly.label"]            = "Польот",
         ["player.fly.on"]               = "✈️ Польот активовано!",
+
+        ["player.jumppower.label"]      = "Сила стрибка",
+        ["player.jumppower.on"]         = "⬆️ Сила стрибка активована!",
+
         ["player.infinitejump.label"]   = "Нескінченний стрибок",
         ["player.infinitejump.on"]      = "✅ Нескінченний стрибок активовано",
         ["player.noclip.label"]         = "Нокліп",
@@ -5151,6 +5187,10 @@ local Translations = {
         ["player.discord.copied"]       = "Link Discord copiato",
         ["player.fly.label"]            = "Volo",
         ["player.fly.on"]               = "✈️ Volo attivato!",
+
+        ["player.jumppower.label"]      = "Forza di salto",
+        ["player.jumppower.on"]         = "⬆️ Forza di salto attivata!",
+
         ["player.infinitejump.label"]   = "Salto infinito",
         ["player.infinitejump.on"]      = "✅ Salto infinito attivato",
         ["player.noclip.label"]         = "NoClip",
@@ -5601,6 +5641,9 @@ local Translations = {
 
         ["player.fly.label"]            = "Bay",
         ["player.fly.on"]               = "✈️ Bay đã được kích hoạt!",
+
+        ["player.jumppower.label"]      = "Lực nhảy",
+        ["player.jumppower.on"]         = "⬆️ Lực nhảy đã kích hoạt!",
 
         ["player.infinitejump.label"]   = "Nhảy vô hạn",
         ["player.infinitejump.on"]      = "✅ Nhảy vô hạn đã bật",
@@ -6064,6 +6107,9 @@ local Translations = {
         ["player.fly.label"]            = "บิน",
         ["player.fly.on"]               = "✈️ บินเปิดใช้งานแล้ว!",
 
+        ["player.jumppower.label"]      = "พลังกระโดด",
+        ["player.jumppower.on"]         = "⬆️ เปิดใช้พลังกระโดดแล้ว!",
+
         ["player.infinitejump.label"]   = "กระโดดไม่จำกัด",
         ["player.infinitejump.on"]      = "✅ กระโดดไม่จำกัดเปิดใช้งาน",
 
@@ -6525,6 +6571,9 @@ local Translations = {
 
         ["player.fly.label"]            = "飞行",
         ["player.fly.on"]               = "✈️ 飞行已激活!",
+
+        ["player.jumppower.label"]      = "跳跃力",
+        ["player.jumppower.on"]         = "⬆️ 跳跃力已激活！",
 
         ["player.infinitejump.label"]   = "无限跳跃",
         ["player.infinitejump.on"]      = "✅ 无限跳跃已激活",
@@ -6988,6 +7037,9 @@ local Translations = {
         ["player.fly.label"]            = "비행",
         ["player.fly.on"]               = "✈️ 비행 활성화됨!",
 
+        ["player.jumppower.label"]      = "점프 파워",
+        ["player.jumppower.on"]         = "⬆️ 점프 파워 활성화!",
+
         ["player.infinitejump.label"]   = "무한 점프",
         ["player.infinitejump.on"]      = "✅ 무한 점프 활성화됨",
 
@@ -7440,6 +7492,9 @@ local Translations = {
 
         ["player.fly.label"]            = "Lumipad",
         ["player.fly.on"]               = "✈️ Na-activate ang Lumipad!",
+
+        ["player.jumppower.label"]      = "Lakas ng Tulon",
+        ["player.jumppower.on"]         = "⬆️ Lakas ng tulon na-aktibo!",
 
         ["player.infinitejump.label"]   = "Walang Katapusang Tumalon",
         ["player.infinitejump.on"]      = "✅ Na-activate ang Walang Katapusang Tumalon",
@@ -7894,6 +7949,9 @@ local Translations = {
         ["player.fly.label"]            = "飛行",
         ["player.fly.on"]               = "✈️ 飛行を有効化！",
 
+        ["player.jumppower.label"]      = "ジャンプ力",
+        ["player.jumppower.on"]         = "⬆️ ジャンプ力が有効化されました!",
+
         ["player.infinitejump.label"]   = "無限ジャンプ",
         ["player.infinitejump.on"]      = "✅ 無限ジャンプを有効化",
 
@@ -8336,6 +8394,10 @@ local Translations = {
         ["player.discord.copied"]       = "Link Discord skopiowany",
         ["player.fly.label"]            = "Latanie",
         ["player.fly.on"]               = "✈️ Latanie aktywowane!",
+
+        ["player.jumppower.label"]      = "Siła skoku",
+        ["player.jumppower.on"]         = "⬆️ Siła skoku aktywowana!",
+
         ["player.infinitejump.label"]   = "Nieskończony skok",
         ["player.infinitejump.on"]      = "✅ Nieskończony skok aktywowany",
         ["player.noclip.label"]         = "NoClip",
@@ -8761,6 +8823,10 @@ local Translations = {
         ["player.discord.copied"]       = "Discord 連結已複製",
         ["player.fly.label"]            = "飛行",
         ["player.fly.on"]               = "✈️ 飛行已啟用！",
+
+        ["player.jumppower.label"]      = "跳躍力",
+        ["player.jumppower.on"]         = "⬆️ 跳躍力已啟動！",
+
         ["player.infinitejump.label"]   = "無限跳躍",
         ["player.infinitejump.on"]      = "✅ 無限跳躍已啟用",
         ["player.noclip.label"]         = "穿牆",
@@ -9186,6 +9252,10 @@ local Translations = {
         ["player.discord.copied"]       = "Discord-link gekopieerd",
         ["player.fly.label"]            = "Vliegen",
         ["player.fly.on"]               = "✈️ Vliegen geactiveerd!",
+
+        ["player.jumppower.label"]      = "Sprongkracht",
+        ["player.jumppower.on"]         = "⬆️ Sprongkracht geactiveerd!",
+
         ["player.infinitejump.label"]   = "Oneindig springen",
         ["player.infinitejump.on"]      = "✅ Oneindig springen geactiveerd",
         ["player.noclip.label"]         = "NoClip",
