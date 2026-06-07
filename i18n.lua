@@ -512,6 +512,9 @@ local Translations = {
         ["settings.gift.label"]   = "Gift to a Friend",
         ["settings.gift.copied"]  = "Copied! Share it with your friend 🎁",
         ["settings.gift.message"] = "🎮 Try Cryptic Hub!",
+        ["settings.lag_reduce.label"] = "Lag Reduce (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ Lag Reduce ON",
+        ["settings.lag_reduce.off"]   = "❌ Lag Reduce OFF",
     },
 
     -- ───────────── ARABIC ─────────────
@@ -973,6 +976,9 @@ local Translations = {
         ["settings.gift.label"]   = "أهدِ السكربت",
         ["settings.gift.copied"]  = "تم النسخ! شاركه مع صديقك 🎁",
         ["settings.gift.message"] = "🎮 جرّب Cryptic Hub!",
+        ["settings.lag_reduce.label"] = "تخفيف لاق (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ تم تفعيل تخفيف اللاق",
+        ["settings.lag_reduce.off"]   = "❌ تم إيقاف تخفيف اللاق",
     },
 
     -- ───────────── RUSSIAN ─────────────
@@ -1434,6 +1440,9 @@ local Translations = {
         ["settings.gift.label"]   = "Подарить другу",
         ["settings.gift.copied"]  = "Скопировано! Поделись с другом 🎁",
         ["settings.gift.message"] = "🎮 Попробуй Cryptic Hub!",
+        ["settings.lag_reduce.label"] = "Снижение лагов (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ Снижение лагов включено",
+        ["settings.lag_reduce.off"]   = "❌ Снижение лагов отключено",
     },
 
     -- ───────────── PORTUGUESE (BR) ─────────────
@@ -1895,6 +1904,9 @@ local Translations = {
         ["settings.gift.label"]   = "Presentear Amigo",
         ["settings.gift.copied"]  = "Copiado! Compartilhe com seu amigo 🎁",
         ["settings.gift.message"] = "🎮 Experimente o Cryptic Hub!",
+        ["settings.lag_reduce.label"] = "Reduzir Lag (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ Redução de lag ativada",
+        ["settings.lag_reduce.off"]   = "❌ Redução de lag desativada",
     },
 
     -- ───────────── SPANISH ─────────────
@@ -2375,6 +2387,9 @@ local Translations = {
         ["settings.gift.label"]   = "Regalar a Amigo",
         ["settings.gift.copied"]  = "¡Copiado! Compártelo con tu amigo 🎁",
         ["settings.gift.message"] = "🎮 ¡Prueba Cryptic Hub!",
+        ["settings.lag_reduce.label"] = "Reducir Lag (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ Reducción de lag activada",
+        ["settings.lag_reduce.off"]   = "❌ Reducción de lag desactivada",
     },
 
     -- ───────────── FRENCH ─────────────
@@ -2855,6 +2870,9 @@ local Translations = {
         ["settings.gift.label"]   = "Offrir à un Ami",
         ["settings.gift.copied"]  = "Copié ! Partage avec ton ami 🎁",
         ["settings.gift.message"] = "🎮 Essaie Cryptic Hub !",
+        ["settings.lag_reduce.label"] = "Réduire le Lag (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ Réduction de lag activée",
+        ["settings.lag_reduce.off"]   = "❌ Réduction de lag désactivée",
     },
 
     -- ───────────── INDONESIAN ─────────────
@@ -3335,6 +3353,9 @@ local Translations = {
         ["settings.gift.label"]   = "Hadiahkan ke Teman",
         ["settings.gift.copied"]  = "Disalin! Bagikan ke temanmu 🎁",
         ["settings.gift.message"] = "🎮 Coba Cryptic Hub!",
+        ["settings.lag_reduce.label"] = "Kurangi Lag (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ Pengurangan lag aktif",
+        ["settings.lag_reduce.off"]   = "❌ Pengurangan lag nonaktif",
     },
 
     -- ───────────── TURKISH ─────────────
@@ -3815,6 +3836,9 @@ local Translations = {
         ["settings.gift.label"]   = "Arkadaşa Hediye Et",
         ["settings.gift.copied"]  = "Kopyalandı! Arkadaşınla paylaş 🎁",
         ["settings.gift.message"] = "🎮 Cryptic Hub'ı dene!",
+        ["settings.lag_reduce.label"] = "Lag Azalt (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ Lag azaltma açık",
+        ["settings.lag_reduce.off"]   = "❌ Lag azaltma kapalı",
     },
 
     -- ───────────── HINDI ─────────────
@@ -4262,6 +4286,9 @@ local Translations = {
         ["settings.gift.label"]   = "दोस्त को गिफ्ट करें",
         ["settings.gift.copied"]  = "कॉपी हो गया! दोस्त के साथ शेयर करें 🎁",
         ["settings.gift.message"] = "🎮 Cryptic Hub आज़माएं!",
+        ["settings.lag_reduce.label"] = "लैग कम करें (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ लैग कम करना चालू",
+        ["settings.lag_reduce.off"]   = "❌ लैग कम करना बंद",
     },
 
     -- ───────────── GERMAN ─────────────
@@ -4709,6 +4736,9 @@ local Translations = {
         ["settings.gift.label"]   = "An Freund schenken",
         ["settings.gift.copied"]  = "Kopiert! Teile es mit deinem Freund 🎁",
         ["settings.gift.message"] = "🎮 Probiere Cryptic Hub!",
+        ["settings.lag_reduce.label"] = "Lag Reduzieren (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ Lag-Reduzierung aktiv",
+        ["settings.lag_reduce.off"]   = "❌ Lag-Reduzierung deaktiviert",
     },
 
     -- ───────────── UKRAINIAN ─────────────
@@ -5156,6 +5186,9 @@ local Translations = {
         ["settings.gift.label"]   = "Подарувати другу",
         ["settings.gift.copied"]  = "Скопійовано! Поділися з другом 🎁",
         ["settings.gift.message"] = "🎮 Спробуй Cryptic Hub!",
+        ["settings.lag_reduce.label"] = "Зменшити лаги (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ Зменшення лагів увімкнено",
+        ["settings.lag_reduce.off"]   = "❌ Зменшення лагів вимкнено",
     },
 
     -- ───────────── ITALIAN ─────────────
@@ -5603,6 +5636,9 @@ local Translations = {
         ["settings.gift.label"]   = "Regalare a un Amico",
         ["settings.gift.copied"]  = "Copiato! Condividilo con il tuo amico 🎁",
         ["settings.gift.message"] = "🎮 Prova Cryptic Hub!",
+        ["settings.lag_reduce.label"] = "Riduci Lag (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ Riduzione lag attivata",
+        ["settings.lag_reduce.off"]   = "❌ Riduzione lag disattivata",
     },
 
     -- ───────────── VIETNAMESE ─────────────
@@ -6072,6 +6108,9 @@ local Translations = {
         ["settings.gift.label"]   = "Tặng cho Bạn bè",
         ["settings.gift.copied"]  = "Đã sao chép! Chia sẻ với bạn bè 🎁",
         ["settings.gift.message"] = "🎮 Hãy thử Cryptic Hub!",
+        ["settings.lag_reduce.label"] = "Giảm Lag (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ Giảm lag đã bật",
+        ["settings.lag_reduce.off"]   = "❌ Giảm lag đã tắt",
     },
 
     -- ───────────── THAI ─────────────
@@ -6541,6 +6580,9 @@ local Translations = {
         ["settings.gift.label"]   = "มอบให้เพื่อน",
         ["settings.gift.copied"]  = "คัดลอกแล้ว! แชร์ให้เพื่อน 🎁",
         ["settings.gift.message"] = "🎮 ลอง Cryptic Hub ดู!",
+        ["settings.lag_reduce.label"] = "ลดแลค (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ เปิดลดแลคแล้ว",
+        ["settings.lag_reduce.off"]   = "❌ ปิดลดแลคแล้ว",
     },
 
     -- ───────────── CHINESE (Simplified) ─────────────
@@ -7010,6 +7052,9 @@ local Translations = {
         ["settings.gift.label"]   = "赠送给朋友",
         ["settings.gift.copied"]  = "已复制！分享给你的朋友 🎁",
         ["settings.gift.message"] = "🎮 试试 Cryptic Hub！",
+        ["settings.lag_reduce.label"] = "减少延迟 (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ 已启用减少延迟",
+        ["settings.lag_reduce.off"]   = "❌ 已禁用减少延迟",
     },
 
     -- ───────────── KOREAN ─────────────
@@ -7479,6 +7524,9 @@ local Translations = {
         ["settings.gift.label"]   = "친구에게 선물",
         ["settings.gift.copied"]  = "복사됨! 친구와 공유하세요 🎁",
         ["settings.gift.message"] = "🎮 Cryptic Hub 써봐!",
+        ["settings.lag_reduce.label"] = "랙 감소 (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ 랙 감소 활성화됨",
+        ["settings.lag_reduce.off"]   = "❌ 랙 감소 비활성화됨",
     },
 
     -- ───────────── FILIPINO (Tagalog) ─────────────
@@ -7938,6 +7986,9 @@ local Translations = {
         ["settings.gift.label"]   = "I-regalo sa Kaibigan",
         ["settings.gift.copied"]  = "Nakopya! Ibahagi sa iyong kaibigan 🎁",
         ["settings.gift.message"] = "🎮 Subukan ang Cryptic Hub!",
+        ["settings.lag_reduce.label"] = "Bawasan ang Lag (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ Nabawasan na ang lag",
+        ["settings.lag_reduce.off"]   = "❌ Lag reduction naka-off",
     },
 
     -- ───────────── JAPANESE (日本語) ─────────────
@@ -8398,6 +8449,9 @@ local Translations = {
         ["settings.gift.label"]   = "友達にプレゼント",
         ["settings.gift.copied"]  = "コピーしました！友達にシェアしよう 🎁",
         ["settings.gift.message"] = "🎮 Cryptic Hubを試してみて！",
+        ["settings.lag_reduce.label"] = "ラグ軽減 (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ ラグ軽減が有効になりました",
+        ["settings.lag_reduce.off"]   = "❌ ラグ軽減が無効になりました",
     },
 
     -- ───────────── POLISH ─────────────
@@ -8831,6 +8885,9 @@ local Translations = {
         ["settings.gift.label"]   = "Podaruj Znajomemu",
         ["settings.gift.copied"]  = "Skopiowano! Podziel się ze znajomym 🎁",
         ["settings.gift.message"] = "🎮 Wypróbuj Cryptic Hub!",
+        ["settings.lag_reduce.label"] = "Redukcja Lagu (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ Redukcja lagu włączona",
+        ["settings.lag_reduce.off"]   = "❌ Redukcja lagu wyłączona",
     },
 
     -- ───────────── TRADITIONAL CHINESE ─────────────
@@ -9264,6 +9321,9 @@ local Translations = {
         ["settings.gift.label"]   = "贈送給朋友",
         ["settings.gift.copied"]  = "已複製！分享給你的朋友 🎁",
         ["settings.gift.message"] = "🎮 試試 Cryptic Hub！",
+        ["settings.lag_reduce.label"] = "減少延遲 (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ 已啟用減少延遲",
+        ["settings.lag_reduce.off"]   = "❌ 已停用減少延遲",
     },
 
     -- ───────────── DUTCH ─────────────
@@ -9697,6 +9757,9 @@ local Translations = {
         ["settings.gift.label"]   = "Cadeau aan Vriend",
         ["settings.gift.copied"]  = "Gekopieerd! Deel het met je vriend 🎁",
         ["settings.gift.message"] = "🎮 Probeer Cryptic Hub!",
+        ["settings.lag_reduce.label"] = "Lag Verminderen (FPS BOOST)",
+        ["settings.lag_reduce.on"]    = "✅ Lagvermindering ingeschakeld",
+        ["settings.lag_reduce.off"]   = "❌ Lagvermindering uitgeschakeld",
     },
 }
 
