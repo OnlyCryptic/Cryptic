@@ -1,13 +1,14 @@
       -- =====================================================
-      --  Grow a Garden 2 — Gear Shop Tracker  v4
+      --  Grow a Garden 2 — Gear Shop Tracker  v5
       --
       --  قواعد الإرسال:
       --    ✅ فقط عند تغيّر UnixLastRestock (= وقت restock حقيقي)
       --    ✅ فقط إذا nextRestock على مضاعف 5 دقائق
-      --    ✅ فقط إذا لم يُبلَّغ عن هذا الـ restock مسبقاً
-      --    ✅ فقط بعد استقرار الستوك (يقرأ مرتين ويقارن)
+      --    ✅ فحص سريع قبل الانتظار — يتخطى اللي أُبلغ مسبقاً
+      --    ✅ jitter 8-45 ثانية لتفريق الطلبات
+      --    ✅ Worker يتولى الـ dedup النهائي بـ atomic race lock
       --    ❌ لا إرسال عشوائي عند التشغيل
-      --    ❌ لا polling بدون حدث restock
+      --    ❌ لا فحص مزدوج بعد استقرار الستوك (يوسّع نافذة السباق)
       -- =====================================================
 
       local BASE_URL  = "https://gag2-shop.crypticluaobf.workers.dev"
@@ -49,8 +50,6 @@
       end
 
       -- ─── انتظر استقرار الستوك ──────────────────────────────
-      -- يقرأ الـ gear، ينتظر ثانيتين، يقرأ ثانية
-      -- إذا متطابقتين → الستوك مكتمل ✅
       local function waitForStableStock(getItems)
           local prev = hashGear(getItems())
           for _ = 1, 3 do
@@ -58,14 +57,16 @@
               local items = getItems()
               local curr  = hashGear(items)
               if curr == prev and curr ~= "" then
-                  return items  -- استقر ✅
+                  return items
               end
               prev = curr
           end
           return getItems()
       end
 
-      -- ─── تحقق هل بعثنا لهذا الـ restock ──────────────────
+      -- ─── فحص سريع: هل أُبلغ عن هذا الـ restock؟ ──────────
+      -- يُستخدم كـ fast path فقط — قبل الانتظار
+      -- Worker هو المرجع النهائي للـ dedup
       local function alreadyReported(nextRestock)
           if nextRestock <= 0 then return false end
           local ok, res = pcall(req, {
@@ -84,7 +85,7 @@
       end
 
       -- ─── انتظر اللعبة تحمّل ───────────────────────────────
-      print("⚙️ Gear Shop Tracker v4 — بدأ التشغيل")
+      print("⚙️ Gear Shop Tracker v5 — بدأ التشغيل")
 
       local RS = game:GetService("ReplicatedStorage")
 
@@ -148,13 +149,14 @@
               return
           end
 
-          -- شرط 2: لم يُبلَّغ مسبقاً
+          -- شرط 2: فحص سريع قبل الانتظار (fast path)
+          -- إذا Worker قال skip → تخطّ مباشرة بدون انتظار ثواني
           if alreadyReported(nr) then
-              print("[GearShop] ⏭️ " .. source .. " — تم الإبلاغ مسبقاً")
+              print("[GearShop] ⏭️ " .. source .. " — تم الإبلاغ (fast check)")
               return
           end
 
-          -- شرط 3: انتظر استقرار الستوك الكامل
+          -- انتظر استقرار الستوك الكامل
           print("[GearShop] ⏳ " .. source .. " — انتظار استقرار الستوك...")
           local gear = waitForStableStock(getGear)
           if #gear == 0 then
@@ -162,13 +164,7 @@
               return
           end
 
-          -- تحقق أخير (أثناء الانتظار ممكن أحد سبق)
-          if alreadyReported(nr) then
-              print("[GearShop] ⏭️ أحد بعث أثناء الانتظار — تم التخطي")
-              return
-          end
-
-          -- ── ابعث POST ──────────────────────────────────
+          -- ابعث مباشرة — Worker يتولى الـ dedup النهائي بـ atomic race lock
           local body = json({ items = gear, nextRestock = nr })
           local ok, res = pcall(req, {
               Url     = BASE_URL .. "/report/gear",
@@ -182,9 +178,11 @@
 
           if ok and (res.StatusCode == 200 or res.StatusCode == 204) then
               if res.Body:find('"skipped":true') then
-                  print("[GearShop] ⏭️ Worker: تم الإبلاغ مسبقاً")
-              else
+                  print("[GearShop] ⏭️ Worker: dedup — تم التخطي")
+              elseif res.Body:find('"sent":true') then
                   print("[GearShop] ✅ " .. source .. " | أُرسل | " .. #gear .. " عنصر | nextRestock=" .. nr)
+              else
+                  print("[GearShop] ℹ️ " .. source .. " | " .. res.Body)
               end
           else
               warn("[GearShop] ❌ " .. tostring(ok and res.StatusCode or res))
@@ -205,10 +203,12 @@
       end
 
       -- ─── مراقبة UnixLastRestock ────────────────────────────
+      -- jitter أكبر (8-45 ث) لتفريق الطلبات بين المستخدمين
+      -- Worker يضمن رسالة واحدة فقط عبر atomic race lock
       if LastRestock then
           LastRestock.Changed:Connect(function()
-              local jitter = math.random(3, 15)
-              print("[GearShop] 🔔 LastRestock تغيّر — انتظار " .. jitter .. " ث")
+              local jitter = math.random(8, 45)
+              print("[GearShop] 🔔 LastRestock تغيّر — jitter " .. jitter .. " ث")
               task.wait(jitter)
               reportRestock("restock-event")
           end)
