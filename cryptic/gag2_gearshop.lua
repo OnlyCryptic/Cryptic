@@ -1,21 +1,23 @@
       -- =====================================================
       --  Grow a Garden 2 — Gear Shop Tracker  v7
       --
-      --  الفلسفة: الـ Lua تبعث بس — Worker يقرر
+      --  السبب الرئيسي للرسائل الكثيرة:
+      --    اللعبة تطلق UnixLastRestock.Changed عدة مرات
+      --    في الثانية الواحدة → يصل عشرات الطلبات معاً
       --
-      --  Worker v10 يعمل 3 مستويات dedup:
-      --    1. window cooldown  → رسالة وحدة كل 5 دقائق
-      --    2. content hash     → نفس الستوك → لا إرسال أبداً
-      --    3. write-then-read  → race condition proof
+      --  الحل: debounce في الـ event handler
+      --    أول تفعيل → يبدأ timer الـ jitter
+      --    أي تفعيل ثاني خلال DEBOUNCE_S → يُتجاهل
       --
-      --  الـ Lua مسؤوليتها فقط:
-      --    - jitter (8-45 ث) لتوزيع الضغط
-      --    - انتظار استقرار الستوك
-      --    - local guard ضد الإرسال المزدوج من نفس السكربت
+      --  Worker v10 يوفر الحماية النهائية:
+      --    • 5-min window lock (KV)
+      --    • Cache API (نفس datacenter)
+      --    • double KV verify
       -- =====================================================
 
-      local BASE_URL  = "https://gag2-shop.crypticluaobf.workers.dev"
-      local API_TOKEN = "SUf4RmxL1Pv_ECaNfI6KRRk1dAdW2cDT"
+      local BASE_URL    = "https://gag2-shop.crypticluaobf.workers.dev"
+      local API_TOKEN   = "SUf4RmxL1Pv_ECaNfI6KRRk1dAdW2cDT"
+      local DEBOUNCE_S  = 10  -- تجاهل الأحداث المتكررة خلال 10 ث
 
       -- ─── HTTP ─────────────────────────────────────────────
       local function req(options)
@@ -52,7 +54,7 @@
           return h
       end
 
-      -- ─── انتظار استقرار الستوك ────────────────────────────
+      -- ─── انتظار استقرار الستوك (2 قراءات متساوية) ────────
       local function waitForStableStock(getItems)
           local prev = hashGear(getItems())
           for _ = 1, 3 do
@@ -127,8 +129,8 @@
           return gear
       end
 
-      -- ─── guard: نفس السكربت لا يبعث مرتين لنفس النافذة ───
-      local reportedWindows = {}
+      -- ─── حماية محلية ─────────────────────────────────────
+      local reportedWindows = {}  -- windows التي أُبلغ عنها محلياً
 
       -- ─── الإبلاغ لـ Worker ────────────────────────────────
       local function reportRestock(source)
@@ -146,20 +148,20 @@
 
           -- 3. تحقق من المضاعف
           if not isValidRestockTime(nr) then
-              warn("[GearShop] ⛔ " .. source .. " — rem=" .. (nr % 300) .. " ليس على مضاعف 5 دق")
+              warn("[GearShop] ⛔ " .. source .. " — rem=" .. (nr % 300) .. " ليس مضاعف 5 دق")
               return
           end
 
-          -- 4. window guard (nearest 5-min boundary)
+          -- 4. window guard (نفس الـ Lua instance)
           local windowKey = math.floor(nr / 300) * 300
           if reportedWindows[windowKey] then
               print("[GearShop] ⏭️ هذا الـ window سبق أُبلغ عنه محلياً")
               return
           end
 
-          -- 5. ابعث — Worker يعمل الـ dedup الكامل
+          -- 5. ابعث — Worker يعمل الـ dedup النهائي
           reportedWindows[windowKey] = true
-          print("[GearShop] 📤 " .. source .. " | " .. #gear .. " عنصر | nr=" .. nr .. " | window=" .. windowKey)
+          print("[GearShop] 📤 " .. source .. " | " .. #gear .. " عنصر | nr=" .. nr)
 
           local ok, res = pcall(req, {
               Url     = BASE_URL .. "/report/gear",
@@ -174,16 +176,15 @@
           if ok and (res.StatusCode == 200 or res.StatusCode == 204) then
               local body = res.Body or ""
               if body:find('"sent":true') then
-                  print("[GearShop] ✅ أُرسل لـ Discord بنجاح")
+                  print("[GearShop] ✅ أُرسل لـ Discord")
               elseif body:find('"skipped":true') then
                   local reason = body:match('"reason":"([^"]+)"') or "?"
-                  print("[GearShop] ⏭️ Worker: skip — " .. reason)
+                  print("[GearShop] ⏭️ Worker skip — " .. reason)
               else
                   print("[GearShop] ℹ️ " .. body)
               end
           else
-              -- فشل — امسح الـ guard للمحاولة التالية
-              reportedWindows[windowKey] = nil
+              reportedWindows[windowKey] = nil  -- أعد للمحاولة
               warn("[GearShop] ❌ " .. tostring(ok and res.StatusCode or res))
           end
       end
@@ -197,15 +198,36 @@
               task.wait(math.random(5, 20))
               reportRestock("startup")
           else
-              print("[GearShop] 💤 آخر restock منذ " .. math.floor(diff/60) .. " دق — لا حاجة للفحص")
+              print("[GearShop] 💤 آخر restock منذ " .. math.floor(diff/60) .. " دق")
           end
       end
 
-      -- ─── مراقبة LastRestock ──────────────────────────────
+      -- ─── مراقبة LastRestock مع DEBOUNCE ──────────────────
+      -- اللعبة ممكن تطلق Changed عدة مرات في الثانية الواحدة!
+      -- الـ debounce يضمن أن كل restock event يُعالج مرة وحدة فقط
       if LastRestock then
+          local lastFiredAt = 0
+          local lastFiredNr = 0
+
           LastRestock.Changed:Connect(function()
+              local now = os.clock()
+              local nr  = NextRestock and math.floor(NextRestock.Value) or 0
+
+              -- DEBOUNCE: نفس النافذة وفي أقل من DEBOUNCE_S → تجاهل
+              local windowKey  = math.floor(nr / 300) * 300
+              local lastWindow = math.floor(lastFiredNr / 300) * 300
+
+              if windowKey == lastWindow and (now - lastFiredAt) < DEBOUNCE_S then
+                  print("[GearShop] 🔕 debounce — تكرار سريع، تجاهل")
+                  return
+              end
+
+              -- حدث جديد حقيقي
+              lastFiredAt = now
+              lastFiredNr = nr
+
               local jitter = math.random(8, 45)
-              print("[GearShop] 🔔 restock! jitter=" .. jitter .. " ث")
+              print("[GearShop] 🔔 restock! jitter=" .. jitter .. " ث | nr=" .. nr)
               task.wait(jitter)
               reportRestock("event")
           end)
@@ -213,4 +235,4 @@
           warn("[GearShop] ⚠️ UnixLastRestock غير موجود")
       end
 
-      print("[GearShop] 👂 جاهز...")
+      print("[GearShop] 👂 جاهز — debounce=" .. DEBOUNCE_S .. " ث")
