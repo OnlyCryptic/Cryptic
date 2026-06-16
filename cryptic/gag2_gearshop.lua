@@ -1,23 +1,27 @@
       -- =====================================================
-      --  Grow a Garden 2 — Gear Shop Tracker  v7
+      --  Grow a Garden 2 — Gear Shop Tracker  v8
       --
-      --  السبب الرئيسي للرسائل الكثيرة:
-      --    اللعبة تطلق UnixLastRestock.Changed عدة مرات
-      --    في الثانية الواحدة → يصل عشرات الطلبات معاً
+      --  الحل القطعي — 3 طبقات:
       --
-      --  الحل: debounce في الـ event handler
-      --    أول تفعيل → يبدأ timer الـ jitter
-      --    أي تفعيل ثاني خلال DEBOUNCE_S → يُتجاهل
+      --  طبقة 1 — Roblox server leader election
+      --    فقط المستخدم بأصغر UserId في السيرفر يبعث
+      --    → كل سيرفر Roblox يبعث طلب واحد بالضبط
       --
-      --  Worker v10 يوفر الحماية النهائية:
-      --    • 5-min window lock (KV)
-      --    • Cache API (نفس datacenter)
-      --    • double KV verify
+      --  طبقة 2 — Lua debounce + window guard
+      --    debounce 10 ث يمنع إطلاق الحدث أكثر من مرة
+      --    window guard يمنع نفس السكربت من الإرسال مرتين
+      --
+      --  طبقة 3 — Worker v10 (Cloudflare)
+      --    • 5-min window lock  → رسالة واحدة كل 5 دقائق
+      --    • Cache API          → نفس datacenter فوري
+      --    • double KV verify   → cross-datacenter
+      --
+      --  النتيجة: مستحيل وصول أكثر من رسالة لـ Discord
       -- =====================================================
 
-      local BASE_URL    = "https://gag2-shop.crypticluaobf.workers.dev"
-      local API_TOKEN   = "SUf4RmxL1Pv_ECaNfI6KRRk1dAdW2cDT"
-      local DEBOUNCE_S  = 10  -- تجاهل الأحداث المتكررة خلال 10 ث
+      local BASE_URL   = "https://gag2-shop.crypticluaobf.workers.dev"
+      local API_TOKEN  = "SUf4RmxL1Pv_ECaNfI6KRRk1dAdW2cDT"
+      local DEBOUNCE_S = 10
 
       -- ─── HTTP ─────────────────────────────────────────────
       local function req(options)
@@ -54,7 +58,7 @@
           return h
       end
 
-      -- ─── انتظار استقرار الستوك (2 قراءات متساوية) ────────
+      -- ─── انتظار استقرار الستوك ────────────────────────────
       local function waitForStableStock(getItems)
           local prev = hashGear(getItems())
           for _ = 1, 3 do
@@ -67,31 +71,45 @@
           return getItems()
       end
 
-      -- ─── تحقق أن nextRestock على مضاعف 5 دق ──────────────
+      -- ─── تحقق من مضاعف 5 دق ─────────────────────────────
       local function isValidRestockTime(nr)
           if nr <= 0 then return false end
           local rem = nr % 300
           return rem <= 60 or rem >= 240
       end
 
+      -- ─────────────────────────────────────────────────────
+      --  LEADER ELECTION — فقط المستخدم بأصغر UserId يبعث
+      -- ─────────────────────────────────────────────────────
+      local Players     = game:GetService("Players")
+      local LocalPlayer = Players.LocalPlayer
+
+      local function isLeader()
+          local myId = LocalPlayer.UserId
+          for _, player in ipairs(Players:GetPlayers()) do
+              if player.UserId < myId then
+                  return false
+              end
+          end
+          return true
+      end
+
       -- ─── تشغيل ────────────────────────────────────────────
-      print("⚙️ Gear Shop Tracker v7 — بدأ التشغيل")
+      print("⚙️ Gear Shop Tracker v8 — بدأ التشغيل")
+      print("[GearShop] 🆔 UserId=" .. LocalPlayer.UserId)
 
       local RS = game:GetService("ReplicatedStorage")
 
       local StockValues = RS:WaitForChild("StockValues", 30)
       if not StockValues then warn("[GearShop] ❌ ما لقيت StockValues") return end
 
-      -- ─── نبحث عن GearShop ─────────────────────────────────
+      -- ─── البحث عن GearShop ────────────────────────────────
       local GEAR_NAMES = { "GearShop","EquipmentShop","ItemShop","ToolShop","ShopGear","Gear" }
       local GearShop
 
       for _, name in ipairs(GEAR_NAMES) do
           GearShop = StockValues:FindFirstChild(name)
-          if GearShop then
-              print("[GearShop] ✅ وجدناه: " .. name)
-              break
-          end
+          if GearShop then print("[GearShop] ✅ وجدناه: " .. name) break end
       end
 
       if not GearShop then
@@ -130,12 +148,17 @@
       end
 
       -- ─── حماية محلية ─────────────────────────────────────
-      local reportedWindows = {}  -- windows التي أُبلغ عنها محلياً
+      local reportedWindows = {}
 
       -- ─── الإبلاغ لـ Worker ────────────────────────────────
       local function reportRestock(source)
-          -- 1. انتظر استقرار الستوك
-          print("[GearShop] ⏳ " .. source .. " — انتظار الاستقرار...")
+          -- تحقق: هل أنا القائد؟
+          if not isLeader() then
+              print("[GearShop] 👤 لست القائد في هذا السيرفر — تخطي")
+              return
+          end
+
+          print("[GearShop] ⏳ " .. source .. " — القائد، انتظار الاستقرار...")
           local gear = waitForStableStock(getGear)
 
           if #gear == 0 then
@@ -143,25 +166,21 @@
               return
           end
 
-          -- 2. أعد قراءة nextRestock بعد الاستقرار
           local nr = NextRestock and math.floor(NextRestock.Value) or 0
 
-          -- 3. تحقق من المضاعف
           if not isValidRestockTime(nr) then
               warn("[GearShop] ⛔ " .. source .. " — rem=" .. (nr % 300) .. " ليس مضاعف 5 دق")
               return
           end
 
-          -- 4. window guard (نفس الـ Lua instance)
           local windowKey = math.floor(nr / 300) * 300
           if reportedWindows[windowKey] then
               print("[GearShop] ⏭️ هذا الـ window سبق أُبلغ عنه محلياً")
               return
           end
 
-          -- 5. ابعث — Worker يعمل الـ dedup النهائي
           reportedWindows[windowKey] = true
-          print("[GearShop] 📤 " .. source .. " | " .. #gear .. " عنصر | nr=" .. nr)
+          print("[GearShop] 📤 " .. source .. " | قائد | " .. #gear .. " عنصر | nr=" .. nr)
 
           local ok, res = pcall(req, {
               Url     = BASE_URL .. "/report/gear",
@@ -176,7 +195,7 @@
           if ok and (res.StatusCode == 200 or res.StatusCode == 204) then
               local body = res.Body or ""
               if body:find('"sent":true') then
-                  print("[GearShop] ✅ أُرسل لـ Discord")
+                  print("[GearShop] ✅ أُرسل لـ Discord بنجاح")
               elseif body:find('"skipped":true') then
                   local reason = body:match('"reason":"([^"]+)"') or "?"
                   print("[GearShop] ⏭️ Worker skip — " .. reason)
@@ -184,18 +203,18 @@
                   print("[GearShop] ℹ️ " .. body)
               end
           else
-              reportedWindows[windowKey] = nil  -- أعد للمحاولة
+              reportedWindows[windowKey] = nil
               warn("[GearShop] ❌ " .. tostring(ok and res.StatusCode or res))
           end
       end
 
-      -- ─── فحص أولي عند التشغيل ────────────────────────────
+      -- ─── فحص أولي ────────────────────────────────────────
       do
           local lr   = LastRestock and LastRestock.Value or 0
           local diff = os.time() - lr
           if lr > 0 and diff <= 90 then
-              print("[GearShop] 🔄 restock حديث منذ " .. diff .. " ث — فحص أولي...")
-              task.wait(math.random(5, 20))
+              print("[GearShop] 🔄 restock حديث منذ " .. diff .. " ث")
+              task.wait(math.random(3, 12))
               reportRestock("startup")
           else
               print("[GearShop] 💤 آخر restock منذ " .. math.floor(diff/60) .. " دق")
@@ -203,8 +222,6 @@
       end
 
       -- ─── مراقبة LastRestock مع DEBOUNCE ──────────────────
-      -- اللعبة ممكن تطلق Changed عدة مرات في الثانية الواحدة!
-      -- الـ debounce يضمن أن كل restock event يُعالج مرة وحدة فقط
       if LastRestock then
           local lastFiredAt = 0
           local lastFiredNr = 0
@@ -213,16 +230,14 @@
               local now = os.clock()
               local nr  = NextRestock and math.floor(NextRestock.Value) or 0
 
-              -- DEBOUNCE: نفس النافذة وفي أقل من DEBOUNCE_S → تجاهل
               local windowKey  = math.floor(nr / 300) * 300
               local lastWindow = math.floor(lastFiredNr / 300) * 300
 
               if windowKey == lastWindow and (now - lastFiredAt) < DEBOUNCE_S then
-                  print("[GearShop] 🔕 debounce — تكرار سريع، تجاهل")
+                  print("[GearShop] 🔕 debounce — تكرار سريع")
                   return
               end
 
-              -- حدث جديد حقيقي
               lastFiredAt = now
               lastFiredNr = nr
 
@@ -235,4 +250,4 @@
           warn("[GearShop] ⚠️ UnixLastRestock غير موجود")
       end
 
-      print("[GearShop] 👂 جاهز — debounce=" .. DEBOUNCE_S .. " ث")
+      print("[GearShop] 👂 جاهز — v8 leader election + debounce")
