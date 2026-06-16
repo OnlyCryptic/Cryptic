@@ -1,12 +1,13 @@
         -- =====================================================
-        --  Grow a Garden 2 — Seed Shop Tracker  v3
+        --  Grow a Garden 2 — Seed Shop Tracker  v4
         --
-        --  المنطق:
-        --    1. عند تغيّر UnixLastRestock أو عند التشغيل:
-        --       → تحقق أولاً من الـ Worker هل بعثنا لهذا الـ restock
-        --       → إذا لا: ابعث POST (رسالة واحدة مضمونة)
-        --       → إذا نعم: تجاهل (لا تكرار)
-        --    2. Polling كل دقيقتين كـ fallback فقط إذا تغيّر الستوك
+        --  قواعد الإرسال:
+        --    ✅ فقط عند تغيّر UnixLastRestock (= وقت restock حقيقي)
+        --    ✅ فقط إذا nextRestock على مضاعف 5 دقائق
+        --    ✅ فقط إذا لم يُبلَّغ عن هذا الـ restock مسبقاً
+        --    ✅ فقط بعد استقرار الستوك (يقرأ مرتين ويقارن)
+        --    ❌ لا إرسال عشوائي عند التشغيل
+        --    ❌ لا polling بدون حدث restock
         -- =====================================================
 
         local BASE_URL  = "https://gag2-shop.crypticluaobf.workers.dev"
@@ -21,7 +22,7 @@
             error("[SeedShop] executor ما يدعم HTTP")
         end
 
-        -- ─── JSON encoder بسيط ────────────────────────────
+        -- ─── JSON encoder ─────────────────────────────────
         local function json(v)
             local t = type(v)
             if t == "string"  then return '"'..v:gsub('\\','\\\\'):gsub('"','\\"')..'"' end
@@ -38,8 +39,32 @@
             return "null"
         end
 
-        -- ─── تحقق هل بعثنا لهذا الـ restock من قبل ────────
-        -- يسأل الـ Worker مباشرة قبل ما يبعث — هذا يمنع التكرار
+        -- ─── hash البذور (للمقارنة) ────────────────────────
+        local function hashSeeds(seeds)
+            local h = ""
+            for _, s in ipairs(seeds) do h = h .. s.name .. s.stock end
+            return h
+        end
+
+        -- ─── انتظر استقرار الستوك ──────────────────────────
+        -- يقرأ البذور، ينتظر ثانيتين، يقرأ ثانية
+        -- إذا متطابقتين → الستوك مكتمل ✅
+        -- إذا لا → ينتظر ثانيتين أخريين ويحاول مرة أخيرة
+        local function waitForStableStock(getItems)
+            local prev = hashSeeds(getItems())
+            for _ = 1, 3 do
+                task.wait(2)
+                local items = getItems()
+                local curr  = hashSeeds(items)
+                if curr == prev and curr ~= "" then
+                    return items  -- استقر ✅
+                end
+                prev = curr
+            end
+            return getItems()  -- أعطي ما عندنا بعد 6 ثواني على الأكثر
+        end
+
+        -- ─── تحقق هل بعثنا لهذا الـ restock ──────────────
         local function alreadyReported(nextRestock)
             if nextRestock <= 0 then return false end
             local ok, res = pcall(req, {
@@ -50,8 +75,16 @@
             return res.Body:find('"skip":true') ~= nil
         end
 
+        -- ─── تحقق أن الوقت على مضاعف 5 دقائق ────────────
+        -- nextRestock % 300 يجب أن يكون 0 (±60 ثانية تسامح)
+        local function isValidRestockTime(nextRestock)
+            if nextRestock <= 0 then return false end
+            local rem = nextRestock % 300
+            return rem <= 60 or rem >= 240
+        end
+
         -- ─── انتظر SeedShop ────────────────────────────────
-        print("🌱 Seed Shop Tracker v3 — بدأ التشغيل")
+        print("🌱 Seed Shop Tracker v4 — بدأ التشغيل")
 
         local RS      = game:GetService("ReplicatedStorage")
 
@@ -79,29 +112,37 @@
             return seeds
         end
 
-        -- ─── إرسال ─────────────────────────────────────────
-        local lastSentHash = ""
-
-        local function send(seeds, force)
-            if #seeds == 0 then return end
-
-            -- hash للتحقق من تغيّر المحتوى (للـ polling فقط)
-            local hash = ""
-            for _, s in ipairs(seeds) do hash = hash .. s.name .. s.stock end
-            if not force and hash == lastSentHash then return end
-
+        -- ─── إرسال لـ Worker ───────────────────────────────
+        local function reportRestock(source)
             local nr = NextRestock and math.floor(NextRestock.Value) or 0
 
-            -- ── تحقق من الـ Worker أولاً ──────────────────────
-            -- هذا السطر هو قلب منع التكرار:
-            -- إذا أحد سبقنا وبعث لهذا الـ restock → تجاهل
-            if alreadyReported(nr) then
-                print("[SeedShop] ⏭️ تم الإبلاغ مسبقاً لهذا الـ restock — تم التخطي")
-                lastSentHash = hash
+            -- شرط 1: الوقت على مضاعف 5 دقائق
+            if not isValidRestockTime(nr) then
+                warn("[SeedShop] ⛔ " .. source .. " — الوقت مش مضاعف 5 دق (rem=" .. (nr%300) .. ")")
                 return
             end
 
-            -- ── ابعث POST ──────────────────────────────────
+            -- شرط 2: لم يُبلَّغ مسبقاً
+            if alreadyReported(nr) then
+                print("[SeedShop] ⏭️ " .. source .. " — تم الإبلاغ مسبقاً")
+                return
+            end
+
+            -- شرط 3: انتظر استقرار الستوك الكامل
+            print("[SeedShop] ⏳ " .. source .. " — انتظار استقرار الستوك...")
+            local seeds = waitForStableStock(getSeeds)
+            if #seeds == 0 then
+                warn("[SeedShop] ⚠️ الستوك فاضي — تم التخطي")
+                return
+            end
+
+            -- تحقق أخير قبل الإرسال (أثناء الانتظار ممكن أحد سبق)
+            if alreadyReported(nr) then
+                print("[SeedShop] ⏭️ أحد بعث أثناء الانتظار — تم التخطي")
+                return
+            end
+
+            -- ── ابعث POST ────────────────────────────────
             local body = json({ seeds = seeds, nextRestock = nr })
             local ok, res = pcall(req, {
                 Url     = BASE_URL .. "/report",
@@ -114,35 +155,43 @@
             })
 
             if ok and (res.StatusCode == 200 or res.StatusCode == 204) then
-                lastSentHash = hash
-                -- تحقق من الرد: هل أُرسل أم تخُطي؟
                 if res.Body:find('"skipped":true') then
                     print("[SeedShop] ⏭️ Worker: تم الإبلاغ مسبقاً")
                 else
-                    print("[SeedShop] ✅ أُرسل | " .. #seeds .. " بذرة")
+                    print("[SeedShop] ✅ " .. source .. " | أُرسل | " .. #seeds .. " بذرة | nextRestock=" .. nr)
                 end
             else
                 warn("[SeedShop] ❌ " .. tostring(ok and res.StatusCode or res))
             end
         end
 
-        -- ─── إرسال أولي ────────────────────────────────────
-        -- تأخير عشوائي لتفريق اللاعبين — بعدها check أولاً
-        task.wait(math.random(3, 15))
-        send(getSeeds(), true)
+        -- ─── عند التشغيل: فقط إذا كان الـ restock حديثاً ──
+        -- إذا UnixLastRestock تغيّر منذ أقل من 90 ثانية → ممكن فاتنا الـ event
+        do
+            local lr    = LastRestock and LastRestock.Value or 0
+            local diff  = os.time() - lr
+            if lr > 0 and diff <= 90 then
+                print("[SeedShop] 🔄 restock حديث قبل " .. diff .. " ث — سنتحقق...")
+                task.wait(math.random(3, 12))
+                reportRestock("initial-check")
+            else
+                print("[SeedShop] 💤 آخر restock منذ " .. math.floor(diff/60) .. " دق — لا إرسال أولي")
+            end
+        end
 
         -- ─── مراقبة UnixLastRestock ────────────────────────
+        -- هذا الحدث = تجديد الشوب الحقيقي
         if LastRestock then
             LastRestock.Changed:Connect(function()
-                -- تأخير عشوائي 3-20 ث → يفرّق الطلبات
+                -- تأخير عشوائي 3-15 ث بين اللاعبين
                 -- الأول يبعث، الباقين يشوفون skip من الـ check
-                task.wait(3 + math.random(0, 17))
-                send(getSeeds(), true)
+                local jitter = math.random(3, 15)
+                print("[SeedShop] 🔔 LastRestock تغيّر — انتظار " .. jitter .. " ث")
+                task.wait(jitter)
+                reportRestock("restock-event")
             end)
+        else
+            warn("[SeedShop] ⚠️ UnixLastRestock غير موجود — لا يوجد event listener")
         end
 
-        -- ─── Polling كل دقيقتين كـ fallback ─────────────────
-        -- يبعث فقط لو تغيّر الستوك (hash مختلف) ولو لم يُبلَّغ بعد
-        while task.wait(120) do
-            send(getSeeds(), false)
-        end
+        print("[SeedShop] 👂 ينتظر أحداث الـ restock...")
