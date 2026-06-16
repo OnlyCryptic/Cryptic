@@ -1,24 +1,23 @@
         -- =====================================================
-        --  Grow a Garden 2 — Seed Shop Tracker  v6
+        --  Grow a Garden 2 — Seed Shop Tracker  v7
         --
-        --  الترتيب الصحيح:
-        --    1. حدث LastRestock → انتظر jitter
-        --    2. انتظر استقرار الستوك
-        --    3. أعد قراءة nextRestock (قد يتغيّر أثناء الانتظار)
-        --    4. تحقق من Worker (/check) — الفائز يكون بعث بهذا الوقت
-        --    5. ابعث POST — Worker يعمل dedup نهائي
+        --  الفلسفة: الـ Lua تبعث بس — Worker يقرر
         --
-        --  لماذا /check بعد الاستقرار؟
-        --    المستخدم بالـ jitter الأصغر (8 ث) ينتهي في ~12 ث
-        --    المستخدم بالـ jitter 15 ث ينتهي في ~19 ث
-        --    بحلول الثانية 19، الأول انتهى وكُتب الـ lock
-        --    → الثاني يشوف skip=true ولا يبعث ✅
+        --  Worker v10 يعمل 3 مستويات dedup:
+        --    1. window cooldown  → رسالة وحدة كل 5 دقائق
+        --    2. content hash     → نفس الستوك → لا إرسال أبداً
+        --    3. write-then-read  → race condition proof
+        --
+        --  الـ Lua مسؤوليتها فقط:
+        --    - jitter (8-45 ث) لتوزيع الضغط
+        --    - انتظار استقرار الستوك
+        --    - local guard ضد الإرسال المزدوج من نفس السكربت
         -- =====================================================
 
         local BASE_URL  = "https://gag2-shop.crypticluaobf.workers.dev"
         local API_TOKEN = "SUf4RmxL1Pv_ECaNfI6KRRk1dAdW2cDT"
 
-        -- ─── HTTP ─────────────────────────────────────────
+        -- ─── HTTP ─────────────────────────────────────────────
         local function req(options)
             if syn and syn.request   then return syn.request(options)   end
             if http and http.request then return http.request(options)  end
@@ -27,65 +26,54 @@
             error("[SeedShop] executor ما يدعم HTTP")
         end
 
-        -- ─── JSON encoder ─────────────────────────────────
+        -- ─── JSON encoder ─────────────────────────────────────
         local function json(v)
             local t = type(v)
             if t == "string"  then return '"'..v:gsub('\\','\\\\'):gsub('"','\\"')..'"' end
             if t == "number" or t == "boolean" then return tostring(v) end
             if t == "table" then
                 if #v > 0 then
-                    local p = {}; for _,x in ipairs(v) do p[#p+1] = json(x) end
+                    local p = {}
+                    for _, x in ipairs(v) do p[#p+1] = json(x) end
                     return "["..table.concat(p,",").."]"
                 else
-                    local p = {}; for k,x in pairs(v) do p[#p+1] = '"'..k..'":'..json(x) end
+                    local p = {}
+                    for k, x in pairs(v) do p[#p+1] = '"'..k..'":'..json(x) end
                     return "{"..table.concat(p,",").."}"
                 end
             end
             return "null"
         end
 
-        -- ─── hash البذور (للمقارنة) ────────────────────────
+        -- ─── hash البذور ──────────────────────────────────────
         local function hashSeeds(seeds)
             local h = ""
             for _, s in ipairs(seeds) do h = h .. s.name .. s.stock end
             return h
         end
 
-        -- ─── انتظر استقرار الستوك ──────────────────────────
+        -- ─── انتظار استقرار الستوك ────────────────────────────
         local function waitForStableStock(getItems)
             local prev = hashSeeds(getItems())
             for _ = 1, 3 do
                 task.wait(2)
                 local items = getItems()
                 local curr  = hashSeeds(items)
-                if curr == prev and curr ~= "" then
-                    return items
-                end
+                if curr == prev and curr ~= "" then return items end
                 prev = curr
             end
             return getItems()
         end
 
-        -- ─── فحص: هل أُبلغ عن هذا الـ restock؟ ──────────
-        local function alreadyReported(nextRestock)
-            if nextRestock <= 0 then return false end
-            local ok, res = pcall(req, {
-                Url    = BASE_URL .. "/check/seed/" .. tostring(math.floor(nextRestock)),
-                Method = "GET",
-            })
-            if not ok or res.StatusCode ~= 200 then return false end
-            return res.Body:find('"skip":true') ~= nil
+        -- ─── تحقق أن nextRestock على مضاعف 5 دق ──────────────
+        local function isValidRestockTime(nr)
+            if nr <= 0 then return false end
+            local rem = nr % 300
+            return rem <= 60 or rem >= 240
         end
 
-        -- ─── تحقق أن الوقت على مضاعف 5 دقائق ────────────
-        local function isValidRestockTime(nextRestock)
-            if nextRestock <= 0 then return false end
-            local rem = nextRestock % 300
-            return rem <= 45 or rem >= 255
-        end
-
-        -- ─── انتظر SeedShop ────────────────────────────────
-        print("🌱 Seed Shop Tracker v6 — بدأ التشغيل")
+        -- ─── تشغيل ────────────────────────────────────────────
+        print("🌱 Seed Shop Tracker v7 — بدأ التشغيل")
 
         local RS = game:GetService("ReplicatedStorage")
 
@@ -101,7 +89,7 @@
 
         if not Items then warn("[SeedShop] ❌ ما لقيت Items") return end
 
-        -- ─── جمع البذور ────────────────────────────────────
+        -- ─── جمع البذور ───────────────────────────────────────
         local function getSeeds()
             local seeds = {}
             for _, v in ipairs(Items:GetChildren()) do
@@ -113,47 +101,40 @@
             return seeds
         end
 
-        -- ─── حماية من التكرار داخل نفس السكربت ───────────
-        local reportedRestocks = {}
+        -- ─── guard: نفس السكربت لا يبعث مرتين لنفس النافذة ───
+        local reportedWindows = {}
 
-        -- ─── إرسال لـ Worker ───────────────────────────────
+        -- ─── الإبلاغ لـ Worker ────────────────────────────────
         local function reportRestock(source)
-            -- ── 1. انتظر استقرار الستوك أولاً ──────────────
-            print("[SeedShop] ⏳ " .. source .. " — انتظار استقرار الستوك...")
+            -- 1. انتظر استقرار الستوك
+            print("[SeedShop] ⏳ " .. source .. " — انتظار الاستقرار...")
             local seeds = waitForStableStock(getSeeds)
 
             if #seeds == 0 then
-                warn("[SeedShop] ⚠️ الستوك فاضي — تم التخطي")
+                warn("[SeedShop] ⚠️ الستوك فاضي — تخطي")
                 return
             end
 
-            -- ── 2. أعد قراءة nextRestock بعد الاستقرار ──────
-            -- الـ restock قد يغيّر UnixNextRestock أثناء الانتظار
+            -- 2. أعد قراءة nextRestock بعد الاستقرار
             local nr = NextRestock and math.floor(NextRestock.Value) or 0
 
-            -- ── 3. تحقق من مضاعف 5 دقائق ────────────────────
+            -- 3. تحقق من المضاعف
             if not isValidRestockTime(nr) then
-                warn("[SeedShop] ⛔ " .. source .. " — الوقت مش مضاعف 5 دق (rem=" .. (nr%300) .. ")")
+                warn("[SeedShop] ⛔ " .. source .. " — rem=" .. (nr % 300) .. " ليس على مضاعف 5 دق")
                 return
             end
 
-            -- ── 4. حماية من التكرار داخل السكربت ────────────
-            if reportedRestocks[nr] then
-                print("[SeedShop] ⏭️ هذا السكربت سبق بلّغ عن nr=" .. nr)
+            -- 4. window guard (nearest 5-min boundary)
+            local windowKey = math.floor(nr / 300) * 300
+            if reportedWindows[windowKey] then
+                print("[SeedShop] ⏭️ هذا الـ window سبق أُبلغ عنه محلياً")
                 return
             end
 
-            -- ── 5. تحقق من Worker — الفائز يكون كتب الـ lock ─
-            -- بحلول هذا الوقت (jitter + 4-6 ث للاستقرار)
-            -- المستخدم الأسرع يكون انتهى وكُتب الـ lock
-            if alreadyReported(nr) then
-                print("[SeedShop] ⏭️ " .. source .. " — تم الإبلاغ بالفعل")
-                return
-            end
+            -- 5. ابعث — Worker يعمل الـ dedup الكامل
+            reportedWindows[windowKey] = true
+            print("[SeedShop] 📤 " .. source .. " | " .. #seeds .. " بذرة | nr=" .. nr .. " | window=" .. windowKey)
 
-            -- ── 6. ابعث — Worker يعمل الـ dedup النهائي ──────
-            reportedRestocks[nr] = true
-            local body = json({ seeds = seeds, nextRestock = nr })
             local ok, res = pcall(req, {
                 Url     = BASE_URL .. "/report",
                 Method  = "POST",
@@ -161,46 +142,49 @@
                     ["Content-Type"]    = "application/json",
                     ["X-Cryptic-Token"] = API_TOKEN,
                 },
-                Body = body,
+                Body = json({ seeds = seeds, nextRestock = nr }),
             })
 
             if ok and (res.StatusCode == 200 or res.StatusCode == 204) then
-                if res.Body:find('"skipped":true') then
-                    print("[SeedShop] ⏭️ Worker: dedup — تم التخطي")
-                elseif res.Body:find('"sent":true') then
-                    print("[SeedShop] ✅ " .. source .. " | أُرسل | " .. #seeds .. " بذرة | nr=" .. nr)
+                local body = res.Body or ""
+                if body:find('"sent":true') then
+                    print("[SeedShop] ✅ أُرسل لـ Discord بنجاح")
+                elseif body:find('"skipped":true') then
+                    local reason = body:match('"reason":"([^"]+)"') or "?"
+                    print("[SeedShop] ⏭️ Worker: skip — " .. reason)
                 else
-                    print("[SeedShop] ℹ️ " .. res.Body)
+                    print("[SeedShop] ℹ️ " .. body)
                 end
             else
-                reportedRestocks[nr] = nil -- أعد المحاولة لو فشل الإرسال
+                -- فشل — امسح الـ guard للمحاولة التالية
+                reportedWindows[windowKey] = nil
                 warn("[SeedShop] ❌ " .. tostring(ok and res.StatusCode or res))
             end
         end
 
-        -- ─── عند التشغيل: فقط إذا كان الـ restock حديثاً ──
+        -- ─── فحص أولي عند التشغيل ────────────────────────────
         do
             local lr   = LastRestock and LastRestock.Value or 0
             local diff = os.time() - lr
             if lr > 0 and diff <= 90 then
-                print("[SeedShop] 🔄 restock حديث قبل " .. diff .. " ث — سنتحقق...")
+                print("[SeedShop] 🔄 restock حديث منذ " .. diff .. " ث — فحص أولي...")
                 task.wait(math.random(5, 20))
-                reportRestock("initial-check")
+                reportRestock("startup")
             else
-                print("[SeedShop] 💤 آخر restock منذ " .. math.floor(diff/60) .. " دق — لا إرسال أولي")
+                print("[SeedShop] 💤 آخر restock منذ " .. math.floor(diff/60) .. " دق — لا حاجة للفحص")
             end
         end
 
-        -- ─── مراقبة UnixLastRestock ────────────────────────
+        -- ─── مراقبة LastRestock ───────────────────────────────
         if LastRestock then
             LastRestock.Changed:Connect(function()
                 local jitter = math.random(8, 45)
-                print("[SeedShop] 🔔 LastRestock تغيّر — jitter " .. jitter .. " ث")
+                print("[SeedShop] 🔔 restock! jitter=" .. jitter .. " ث")
                 task.wait(jitter)
-                reportRestock("restock-event")
+                reportRestock("event")
             end)
         else
             warn("[SeedShop] ⚠️ UnixLastRestock غير موجود")
         end
 
-        print("[SeedShop] 👂 ينتظر أحداث الـ restock...")
+        print("[SeedShop] 👂 جاهز...")
