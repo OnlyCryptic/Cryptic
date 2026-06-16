@@ -86,7 +86,7 @@ local function send(seeds, force)
     local ok, res = pcall(req, {
         Url     = WORKER_URL,
         Method  = "POST",
-        Headers = { ["Content-Type"] = "application/json" },
+        Headers = { ["Content-Type"] = "application/json", ["X-Cryptic-Token"] = "SUf4RmxL1Pv_ECaNfI6KRRk1dAdW2cDT" },
         Body    = body,
     })
 
@@ -105,7 +105,7 @@ send(getSeeds(), true)
 -- ─── مراقبة UnixLastRestock ────────────────────────
 if LastRestock then
     LastRestock.Changed:Connect(function()
-        task.wait(0.5)
+        task.wait(5) -- ننتظر حتى تتحدث كل العناصر كاملاً
         send(getSeeds(), true)
     end)
 end
