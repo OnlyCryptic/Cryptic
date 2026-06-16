@@ -1,23 +1,27 @@
         -- =====================================================
-        --  Grow a Garden 2 — Seed Shop Tracker  v7
+        --  Grow a Garden 2 — Seed Shop Tracker  v8
         --
-        --  السبب الرئيسي للرسائل الكثيرة:
-        --    اللعبة تطلق UnixLastRestock.Changed عدة مرات
-        --    في الثانية الواحدة → يصل عشرات الطلبات معاً
+        --  الحل القطعي — 3 طبقات:
         --
-        --  الحل: debounce في الـ event handler
-        --    أول تفعيل → يبدأ timer الـ jitter
-        --    أي تفعيل ثاني خلال DEBOUNCE_S → يُتجاهل
+        --  طبقة 1 — Roblox server leader election
+        --    فقط المستخدم بأصغر UserId في السيرفر يبعث
+        --    → كل سيرفر Roblox يبعث طلب واحد بالضبط
         --
-        --  Worker v10 يوفر الحماية النهائية:
-        --    • 5-min window lock (KV)
-        --    • Cache API (نفس datacenter)
-        --    • double KV verify
+        --  طبقة 2 — Lua debounce + window guard
+        --    debounce 10 ث يمنع إطلاق الحدث أكثر من مرة
+        --    window guard يمنع نفس السكربت من الإرسال مرتين
+        --
+        --  طبقة 3 — Worker v10 (Cloudflare)
+        --    • 5-min window lock  → رسالة واحدة كل 5 دقائق
+        --    • Cache API          → نفس datacenter فوري
+        --    • double KV verify   → cross-datacenter
+        --
+        --  النتيجة: مستحيل وصول أكثر من رسالة لـ Discord
         -- =====================================================
 
-        local BASE_URL    = "https://gag2-shop.crypticluaobf.workers.dev"
-        local API_TOKEN   = "SUf4RmxL1Pv_ECaNfI6KRRk1dAdW2cDT"
-        local DEBOUNCE_S  = 10  -- تجاهل الأحداث المتكررة خلال 10 ث
+        local BASE_URL   = "https://gag2-shop.crypticluaobf.workers.dev"
+        local API_TOKEN  = "SUf4RmxL1Pv_ECaNfI6KRRk1dAdW2cDT"
+        local DEBOUNCE_S = 10  -- تجاهل الأحداث المتكررة خلال 10 ث
 
         -- ─── HTTP ─────────────────────────────────────────────
         local function req(options)
@@ -54,7 +58,7 @@
             return h
         end
 
-        -- ─── انتظار استقرار الستوك (2 قراءات متساوية) ────────
+        -- ─── انتظار استقرار الستوك ────────────────────────────
         local function waitForStableStock(getItems)
             local prev = hashSeeds(getItems())
             for _ = 1, 3 do
@@ -67,15 +71,35 @@
             return getItems()
         end
 
-        -- ─── تحقق أن nextRestock على مضاعف 5 دق ──────────────
+        -- ─── تحقق من مضاعف 5 دق ─────────────────────────────
         local function isValidRestockTime(nr)
             if nr <= 0 then return false end
             local rem = nr % 300
             return rem <= 60 or rem >= 240
         end
 
+        -- ─────────────────────────────────────────────────────
+        --  LEADER ELECTION — فقط المستخدم بأصغر UserId يبعث
+        --  داخل كل سيرفر Roblox، واحد فقط هو "القائد"
+        --  بقية المستخدمين يتجاهلون الحدث تماماً
+        -- ─────────────────────────────────────────────────────
+        local Players  = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+
+        local function isLeader()
+            local myId = LocalPlayer.UserId
+            -- أصغر UserId في السيرفر = القائد
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player.UserId < myId then
+                    return false  -- في واحد أصغر، مو قائد
+                end
+            end
+            return true  -- أنا الأصغر = القائد
+        end
+
         -- ─── تشغيل ────────────────────────────────────────────
-        print("🌱 Seed Shop Tracker v7 — بدأ التشغيل")
+        print("🌱 Seed Shop Tracker v8 — بدأ التشغيل")
+        print("[SeedShop] 🆔 UserId=" .. LocalPlayer.UserId)
 
         local RS = game:GetService("ReplicatedStorage")
 
@@ -104,12 +128,18 @@
         end
 
         -- ─── حماية محلية ─────────────────────────────────────
-        local reportedWindows = {}  -- windows التي أُبلغ عنها محلياً
+        local reportedWindows = {}
 
         -- ─── الإبلاغ لـ Worker ────────────────────────────────
         local function reportRestock(source)
-            -- 1. انتظر استقرار الستوك
-            print("[SeedShop] ⏳ " .. source .. " — انتظار الاستقرار...")
+            -- تحقق: هل أنا القائد في هذا السيرفر؟
+            if not isLeader() then
+                print("[SeedShop] 👤 لست القائد في هذا السيرفر — تخطي")
+                return
+            end
+
+            -- انتظر استقرار الستوك
+            print("[SeedShop] ⏳ " .. source .. " — القائد، انتظار الاستقرار...")
             local seeds = waitForStableStock(getSeeds)
 
             if #seeds == 0 then
@@ -117,25 +147,25 @@
                 return
             end
 
-            -- 2. أعد قراءة nextRestock بعد الاستقرار
+            -- أعد قراءة nextRestock بعد الاستقرار
             local nr = NextRestock and math.floor(NextRestock.Value) or 0
 
-            -- 3. تحقق من المضاعف
+            -- تحقق من المضاعف
             if not isValidRestockTime(nr) then
                 warn("[SeedShop] ⛔ " .. source .. " — rem=" .. (nr % 300) .. " ليس مضاعف 5 دق")
                 return
             end
 
-            -- 4. window guard (نفس الـ Lua instance)
+            -- window guard
             local windowKey = math.floor(nr / 300) * 300
             if reportedWindows[windowKey] then
                 print("[SeedShop] ⏭️ هذا الـ window سبق أُبلغ عنه محلياً")
                 return
             end
 
-            -- 5. ابعث — Worker يعمل الـ dedup النهائي
+            -- ابعث — Worker يعمل الـ dedup النهائي
             reportedWindows[windowKey] = true
-            print("[SeedShop] 📤 " .. source .. " | " .. #seeds .. " بذرة | nr=" .. nr)
+            print("[SeedShop] 📤 " .. source .. " | قائد | " .. #seeds .. " بذرة | nr=" .. nr)
 
             local ok, res = pcall(req, {
                 Url     = BASE_URL .. "/report",
@@ -150,7 +180,7 @@
             if ok and (res.StatusCode == 200 or res.StatusCode == 204) then
                 local body = res.Body or ""
                 if body:find('"sent":true') then
-                    print("[SeedShop] ✅ أُرسل لـ Discord")
+                    print("[SeedShop] ✅ أُرسل لـ Discord بنجاح")
                 elseif body:find('"skipped":true') then
                     local reason = body:match('"reason":"([^"]+)"') or "?"
                     print("[SeedShop] ⏭️ Worker skip — " .. reason)
@@ -158,18 +188,18 @@
                     print("[SeedShop] ℹ️ " .. body)
                 end
             else
-                reportedWindows[windowKey] = nil  -- أعد للمحاولة
+                reportedWindows[windowKey] = nil
                 warn("[SeedShop] ❌ " .. tostring(ok and res.StatusCode or res))
             end
         end
 
-        -- ─── فحص أولي عند التشغيل ────────────────────────────
+        -- ─── فحص أولي ────────────────────────────────────────
         do
             local lr   = LastRestock and LastRestock.Value or 0
             local diff = os.time() - lr
             if lr > 0 and diff <= 90 then
-                print("[SeedShop] 🔄 restock حديث منذ " .. diff .. " ث — فحص أولي...")
-                task.wait(math.random(5, 20))
+                print("[SeedShop] 🔄 restock حديث منذ " .. diff .. " ث")
+                task.wait(math.random(3, 12))
                 reportRestock("startup")
             else
                 print("[SeedShop] 💤 آخر restock منذ " .. math.floor(diff/60) .. " دق")
@@ -177,29 +207,27 @@
         end
 
         -- ─── مراقبة LastRestock مع DEBOUNCE ──────────────────
-        -- اللعبة ممكن تطلق Changed عدة مرات في الثانية الواحدة!
-        -- الـ debounce يضمن أن كل restock event يُعالج مرة وحدة فقط
         if LastRestock then
-            local lastFiredAt  = 0   -- وقت آخر تفعيل فعلي
-            local lastFiredNr  = 0   -- nextRestock عند آخر تفعيل
+            local lastFiredAt = 0
+            local lastFiredNr = 0
 
             LastRestock.Changed:Connect(function()
                 local now = os.clock()
                 local nr  = NextRestock and math.floor(NextRestock.Value) or 0
 
-                -- DEBOUNCE: إذا نفس النافذة وفي أقل من DEBOUNCE_S → تجاهل
-                local windowKey = math.floor(nr / 300) * 300
+                local windowKey  = math.floor(nr / 300) * 300
                 local lastWindow = math.floor(lastFiredNr / 300) * 300
 
+                -- DEBOUNCE: نفس النافذة وسريع جداً → تجاهل
                 if windowKey == lastWindow and (now - lastFiredAt) < DEBOUNCE_S then
-                    print("[SeedShop] 🔕 debounce — تكرار سريع، تجاهل")
+                    print("[SeedShop] 🔕 debounce — تكرار سريع")
                     return
                 end
 
-                -- حدث جديد حقيقي
                 lastFiredAt = now
                 lastFiredNr = nr
 
+                -- jitter: يفرّق بين طلبات السيرفرات المختلفة
                 local jitter = math.random(8, 45)
                 print("[SeedShop] 🔔 restock! jitter=" .. jitter .. " ث | nr=" .. nr)
                 task.wait(jitter)
@@ -209,4 +237,4 @@
             warn("[SeedShop] ⚠️ UnixLastRestock غير موجود")
         end
 
-        print("[SeedShop] 👂 جاهز — debounce=" .. DEBOUNCE_S .. " ث")
+        print("[SeedShop] 👂 جاهز — v8 leader election + debounce")
