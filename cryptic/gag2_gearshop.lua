@@ -114,7 +114,7 @@ end
 -- ─────────────────────────────────────────────────────
 local function tryClaimRedis(windowKey)
     local key = "gag2:gear:" .. windowKey
-    local url = REDIS_URL .. "/set/" .. key .. "/1?nx=true&ex=360"
+    local url = REDIS_URL .. "/set/" .. key .. "/1/EX/360/NX"
 
     local ok, res = pcall(req, {
         Url     = url,
