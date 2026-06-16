@@ -1,9 +1,16 @@
       -- =====================================================
-      --  Grow a Garden 2 — Gear Shop Tracker
-      --  يرسل لـ Cloudflare Worker /report/gear
+      --  Grow a Garden 2 — Gear Shop Tracker  v3
+      --
+      --  المنطق:
+      --    1. عند تغيّر UnixLastRestock أو عند التشغيل:
+      --       → تحقق أولاً من الـ Worker هل بعثنا لهذا الـ restock
+      --       → إذا لا: ابعث POST (رسالة واحدة مضمونة)
+      --       → إذا نعم: تجاهل (لا تكرار)
+      --    2. Polling كل دقيقتين كـ fallback فقط إذا تغيّر الستوك
       -- =====================================================
 
-      local WORKER_URL = "https://gag2-shop.crypticluaobf.workers.dev/report/gear"
+      local BASE_URL  = "https://gag2-shop.crypticluaobf.workers.dev"
+      local API_TOKEN = "SUf4RmxL1Pv_ECaNfI6KRRk1dAdW2cDT"
 
       -- ─── HTTP ─────────────────────────────────────────────
       local function req(options)
@@ -14,7 +21,7 @@
           error("[GearShop] executor ما يدعم HTTP")
       end
 
-      -- ─── JSON بسيط ────────────────────────────────────────
+      -- ─── JSON encoder بسيط ────────────────────────────────
       local function json(v)
           local t = type(v)
           if t == "string"  then return '"'..v:gsub('\\','\\\\'):gsub('"','\\"')..'"' end
@@ -33,20 +40,27 @@
           return "null"
       end
 
-      -- ─── انتظر اللعبة تحمّل ───────────────────────────────
-      print("⚙️ Gear Shop Tracker — بدأ التشغيل")
-
-      local RS      = game:GetService("ReplicatedStorage")
-      local Players = game:GetService("Players")
-
-      local StockValues = RS:WaitForChild("StockValues", 30)
-      if not StockValues then
-          warn("[GearShop] ❌ ما لقيت StockValues")
-          return
+      -- ─── تحقق هل بعثنا لهذا الـ restock من قبل ────────────
+      -- يسأل الـ Worker مباشرة قبل ما يبعث — هذا يمنع التكرار
+      local function alreadyReported(nextRestock)
+          if nextRestock <= 0 then return false end
+          local ok, res = pcall(req, {
+              Url    = BASE_URL .. "/check/gear/" .. tostring(math.floor(nextRestock)),
+              Method = "GET",
+          })
+          if not ok or res.StatusCode ~= 200 then return false end
+          return res.Body:find('"skip":true') ~= nil
       end
 
+      -- ─── انتظر اللعبة تحمّل ───────────────────────────────
+      print("⚙️ Gear Shop Tracker v3 — بدأ التشغيل")
+
+      local RS = game:GetService("ReplicatedStorage")
+
+      local StockValues = RS:WaitForChild("StockValues", 30)
+      if not StockValues then warn("[GearShop] ❌ ما لقيت StockValues") return end
+
       -- ─── نبحث عن GearShop تحت StockValues ────────────────
-      -- اللعبة ممكن تستخدم أي اسم، نجرّب أكثر الأسماء شيوعاً
       local GEAR_NAMES = { "GearShop", "EquipmentShop", "ItemShop", "ToolShop", "ShopGear", "Gear" }
       local GearShop
 
@@ -59,7 +73,6 @@
       end
 
       if not GearShop then
-          -- بحث بالـ partial match
           for _, child in ipairs(StockValues:GetChildren()) do
               local n = child.Name:lower()
               if n:find("gear") or n:find("equip") or n:find("tool") then
@@ -72,10 +85,7 @@
 
       if not GearShop then
           warn("[GearShop] ❌ ما لقيت Gear Shop تحت StockValues")
-          warn("[GearShop] الأولاد الموجودون:")
-          for _, c in ipairs(StockValues:GetChildren()) do
-              warn("  - " .. c.Name)
-          end
+          for _, c in ipairs(StockValues:GetChildren()) do warn("  - " .. c.Name) end
           return
       end
 
@@ -83,10 +93,7 @@
       local NextRestock = GearShop:FindFirstChild("UnixNextRestock")
       local LastRestock = GearShop:FindFirstChild("UnixLastRestock")
 
-      if not Items then
-          warn("[GearShop] ❌ ما لقيت Items — جرّب تشغّل السكان وتبعث لنا النتيجة")
-          return
-      end
+      if not Items then warn("[GearShop] ❌ ما لقيت Items") return end
 
       -- ─── جمع الـ Gear ─────────────────────────────────────
       local function getGear()
@@ -104,52 +111,64 @@
       local lastSentHash = ""
 
       local function send(gear, force)
+          if #gear == 0 then return end
+
+          -- hash للتحقق من تغيّر المحتوى (للـ polling فقط)
           local hash = ""
           for _, g in ipairs(gear) do hash = hash .. g.name .. g.stock end
           if not force and hash == lastSentHash then return end
-          if #gear == 0 then return end
 
-          local body = json({
-              items       = gear,
-              nextRestock = NextRestock and NextRestock.Value or 0,
-          })
+          local nr = NextRestock and math.floor(NextRestock.Value) or 0
 
+          -- ── تحقق من الـ Worker أولاً ──────────────────────
+          -- إذا أحد سبقنا وبعث لهذا الـ restock → تجاهل
+          if alreadyReported(nr) then
+              print("[GearShop] ⏭️ تم الإبلاغ مسبقاً لهذا الـ restock — تم التخطي")
+              lastSentHash = hash
+              return
+          end
+
+          -- ── ابعث POST ──────────────────────────────────
+          local body = json({ items = gear, nextRestock = nr })
           local ok, res = pcall(req, {
-              Url     = WORKER_URL,
+              Url     = BASE_URL .. "/report/gear",
               Method  = "POST",
-              Headers = { ["Content-Type"] = "application/json", ["X-Cryptic-Token"] = "SUf4RmxL1Pv_ECaNfI6KRRk1dAdW2cDT" },
-              Body    = body,
+              Headers = {
+                  ["Content-Type"]    = "application/json",
+                  ["X-Cryptic-Token"] = API_TOKEN,
+              },
+              Body = body,
           })
 
           if ok and (res.StatusCode == 200 or res.StatusCode == 204) then
               lastSentHash = hash
-              local resp = pcall(function()
-                  local j = game:GetService("HttpService"):JSONDecode(res.Body)
-                  if j.skipped then
-                      print("[GearShop] ⏭️ Slot مقفول — لا تكرار")
-                      return
-                  end
-              end)
-              print("[GearShop] ✅ أُرسل | " .. #gear .. " عنصر")
+              if res.Body:find('"skipped":true') then
+                  print("[GearShop] ⏭️ Worker: تم الإبلاغ مسبقاً")
+              else
+                  print("[GearShop] ✅ أُرسل | " .. #gear .. " عنصر")
+              end
           else
               warn("[GearShop] ❌ " .. tostring(ok and res.StatusCode or res))
           end
       end
 
-      -- ─── إرسال أولي (بعد تأخير عشوائي حتى لا يتزاحم كل اللاعبين) ───
-      task.wait(2 + math.random(0, 20))
+      -- ─── إرسال أولي ────────────────────────────────────────
+      -- تأخير عشوائي لتفريق اللاعبين — بعدها check أولاً
+      task.wait(math.random(3, 15))
       send(getGear(), true)
 
       -- ─── مراقبة UnixLastRestock ────────────────────────────
       if LastRestock then
           LastRestock.Changed:Connect(function()
-              -- تأخير عشوائي 5-30 ث → يفرّق الطلبات ويمنع التزاحم على الـ Worker
-              task.wait(5 + math.random(0, 25))
+              -- تأخير عشوائي 3-20 ث → يفرّق الطلبات
+              -- الأول يبعث، الباقين يشوفون skip من الـ check
+              task.wait(3 + math.random(0, 17))
               send(getGear(), true)
           end)
       end
 
       -- ─── Polling كل دقيقتين كـ fallback ────────────────────
+      -- يبعث فقط لو تغيّر الستوك (hash مختلف) ولو لم يُبلَّغ بعد
       while task.wait(120) do
           send(getGear(), false)
       end
