@@ -419,6 +419,11 @@ local function Boot()
     -- تحقق من الرسائل في الخلفية (بشكل موازٍ لا يوقف التحميل)
     RunInboxCheck()
 
+    -- تشغيل متتبع شوب Grow a Garden 2 في الخلفية
+    task.spawn(function()
+        pcall(function() Import("cryptic/gag2_seedshop.lua") end)
+    end)
+
     if not i18n then
         -- لو فشل تحميل i18n، نشغّل بالإنجليزية بدون اختيار
         StartCrypticHub()
