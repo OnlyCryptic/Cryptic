@@ -1,14 +1,18 @@
         -- =====================================================
-        --  Grow a Garden 2 — Seed Shop Tracker  v5
+        --  Grow a Garden 2 — Seed Shop Tracker  v6
         --
-        --  قواعد الإرسال:
-        --    ✅ فقط عند تغيّر UnixLastRestock (= وقت restock حقيقي)
-        --    ✅ فقط إذا nextRestock على مضاعف 5 دقائق
-        --    ✅ فحص سريع قبل الانتظار — يتخطى اللي أُبلغ مسبقاً
-        --    ✅ jitter 8-45 ثانية لتفريق الطلبات
-        --    ✅ Worker يتولى الـ dedup النهائي بـ atomic race lock
-        --    ❌ لا إرسال عشوائي عند التشغيل
-        --    ❌ لا فحص مزدوج بعد استقرار الستوك (يوسّع نافذة السباق)
+        --  الترتيب الصحيح:
+        --    1. حدث LastRestock → انتظر jitter
+        --    2. انتظر استقرار الستوك
+        --    3. أعد قراءة nextRestock (قد يتغيّر أثناء الانتظار)
+        --    4. تحقق من Worker (/check) — الفائز يكون بعث بهذا الوقت
+        --    5. ابعث POST — Worker يعمل dedup نهائي
+        --
+        --  لماذا /check بعد الاستقرار؟
+        --    المستخدم بالـ jitter الأصغر (8 ث) ينتهي في ~12 ث
+        --    المستخدم بالـ jitter 15 ث ينتهي في ~19 ث
+        --    بحلول الثانية 19، الأول انتهى وكُتب الـ lock
+        --    → الثاني يشوف skip=true ولا يبعث ✅
         -- =====================================================
 
         local BASE_URL  = "https://gag2-shop.crypticluaobf.workers.dev"
@@ -62,9 +66,7 @@
             return getItems()
         end
 
-        -- ─── فحص سريع: هل أُبلغ عن هذا الـ restock؟ ──────
-        -- يُستخدم كـ fast path فقط — قبل الانتظار
-        -- Worker هو المرجع النهائي للـ dedup
+        -- ─── فحص: هل أُبلغ عن هذا الـ restock؟ ──────────
         local function alreadyReported(nextRestock)
             if nextRestock <= 0 then return false end
             local ok, res = pcall(req, {
@@ -79,11 +81,11 @@
         local function isValidRestockTime(nextRestock)
             if nextRestock <= 0 then return false end
             local rem = nextRestock % 300
-            return rem <= 60 or rem >= 240
+            return rem <= 45 or rem >= 255
         end
 
         -- ─── انتظر SeedShop ────────────────────────────────
-        print("🌱 Seed Shop Tracker v5 — بدأ التشغيل")
+        print("🌱 Seed Shop Tracker v6 — بدأ التشغيل")
 
         local RS = game:GetService("ReplicatedStorage")
 
@@ -111,32 +113,46 @@
             return seeds
         end
 
+        -- ─── حماية من التكرار داخل نفس السكربت ───────────
+        local reportedRestocks = {}
+
         -- ─── إرسال لـ Worker ───────────────────────────────
         local function reportRestock(source)
-            local nr = NextRestock and math.floor(NextRestock.Value) or 0
-
-            -- شرط 1: الوقت على مضاعف 5 دقائق
-            if not isValidRestockTime(nr) then
-                warn("[SeedShop] ⛔ " .. source .. " — الوقت مش مضاعف 5 دق (rem=" .. (nr%300) .. ")")
-                return
-            end
-
-            -- شرط 2: فحص سريع قبل الانتظار (fast path)
-            -- إذا Worker قال skip → تخطّ مباشرة بدون انتظار ثواني
-            if alreadyReported(nr) then
-                print("[SeedShop] ⏭️ " .. source .. " — تم الإبلاغ (fast check)")
-                return
-            end
-
-            -- انتظر استقرار الستوك الكامل
+            -- ── 1. انتظر استقرار الستوك أولاً ──────────────
             print("[SeedShop] ⏳ " .. source .. " — انتظار استقرار الستوك...")
             local seeds = waitForStableStock(getSeeds)
+
             if #seeds == 0 then
                 warn("[SeedShop] ⚠️ الستوك فاضي — تم التخطي")
                 return
             end
 
-            -- ابعث مباشرة — Worker يتولى الـ dedup النهائي بـ atomic race lock
+            -- ── 2. أعد قراءة nextRestock بعد الاستقرار ──────
+            -- الـ restock قد يغيّر UnixNextRestock أثناء الانتظار
+            local nr = NextRestock and math.floor(NextRestock.Value) or 0
+
+            -- ── 3. تحقق من مضاعف 5 دقائق ────────────────────
+            if not isValidRestockTime(nr) then
+                warn("[SeedShop] ⛔ " .. source .. " — الوقت مش مضاعف 5 دق (rem=" .. (nr%300) .. ")")
+                return
+            end
+
+            -- ── 4. حماية من التكرار داخل السكربت ────────────
+            if reportedRestocks[nr] then
+                print("[SeedShop] ⏭️ هذا السكربت سبق بلّغ عن nr=" .. nr)
+                return
+            end
+
+            -- ── 5. تحقق من Worker — الفائز يكون كتب الـ lock ─
+            -- بحلول هذا الوقت (jitter + 4-6 ث للاستقرار)
+            -- المستخدم الأسرع يكون انتهى وكُتب الـ lock
+            if alreadyReported(nr) then
+                print("[SeedShop] ⏭️ " .. source .. " — تم الإبلاغ بالفعل")
+                return
+            end
+
+            -- ── 6. ابعث — Worker يعمل الـ dedup النهائي ──────
+            reportedRestocks[nr] = true
             local body = json({ seeds = seeds, nextRestock = nr })
             local ok, res = pcall(req, {
                 Url     = BASE_URL .. "/report",
@@ -152,11 +168,12 @@
                 if res.Body:find('"skipped":true') then
                     print("[SeedShop] ⏭️ Worker: dedup — تم التخطي")
                 elseif res.Body:find('"sent":true') then
-                    print("[SeedShop] ✅ " .. source .. " | أُرسل | " .. #seeds .. " بذرة | nextRestock=" .. nr)
+                    print("[SeedShop] ✅ " .. source .. " | أُرسل | " .. #seeds .. " بذرة | nr=" .. nr)
                 else
-                    print("[SeedShop] ℹ️ " .. source .. " | " .. res.Body)
+                    print("[SeedShop] ℹ️ " .. res.Body)
                 end
             else
+                reportedRestocks[nr] = nil -- أعد المحاولة لو فشل الإرسال
                 warn("[SeedShop] ❌ " .. tostring(ok and res.StatusCode or res))
             end
         end
@@ -167,7 +184,7 @@
             local diff = os.time() - lr
             if lr > 0 and diff <= 90 then
                 print("[SeedShop] 🔄 restock حديث قبل " .. diff .. " ث — سنتحقق...")
-                task.wait(math.random(3, 12))
+                task.wait(math.random(5, 20))
                 reportRestock("initial-check")
             else
                 print("[SeedShop] 💤 آخر restock منذ " .. math.floor(diff/60) .. " دق — لا إرسال أولي")
@@ -175,8 +192,6 @@
         end
 
         -- ─── مراقبة UnixLastRestock ────────────────────────
-        -- jitter أكبر (8-45 ث) لتفريق الطلبات بين المستخدمين
-        -- Worker يضمن رسالة واحدة فقط عبر atomic race lock
         if LastRestock then
             LastRestock.Changed:Connect(function()
                 local jitter = math.random(8, 45)
@@ -185,7 +200,7 @@
                 reportRestock("restock-event")
             end)
         else
-            warn("[SeedShop] ⚠️ UnixLastRestock غير موجود — لا يوجد event listener")
+            warn("[SeedShop] ⚠️ UnixLastRestock غير موجود")
         end
 
         print("[SeedShop] 👂 ينتظر أحداث الـ restock...")
