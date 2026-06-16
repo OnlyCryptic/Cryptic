@@ -79,7 +79,6 @@ local function send(seeds, force)
     if #seeds == 0 then return end
 
     local body = json({
-        player      = Players.LocalPlayer and Players.LocalPlayer.Name or "Unknown",
         seeds       = seeds,
         nextRestock = NextRestock and NextRestock.Value or 0,
     })
