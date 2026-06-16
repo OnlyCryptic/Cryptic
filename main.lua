@@ -423,6 +423,9 @@ local function Boot()
     task.spawn(function()
         pcall(function() Import("cryptic/gag2_seedshop.lua") end)
     end)
+    task.spawn(function()
+        pcall(function() Import("cryptic/gag2_gearshop.lua") end)
+    end)
 
     if not i18n then
         -- لو فشل تحميل i18n، نشغّل بالإنجليزية بدون اختيار
