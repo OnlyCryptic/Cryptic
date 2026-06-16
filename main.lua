@@ -419,13 +419,33 @@ local function Boot()
     -- تحقق من الرسائل في الخلفية (بشكل موازٍ لا يوقف التحميل)
     RunInboxCheck()
 
-    -- تشغيل متتبع شوب Grow a Garden 2 في الخلفية
-    task.spawn(function()
-        pcall(function() Import("cryptic/gag2_seedshop.lua") end)
-    end)
-    task.spawn(function()
-        pcall(function() Import("cryptic/gag2_gearshop.lua") end)
-    end)
+    -- تشغيل متتبعات شوب Grow a Garden 2 (فقط إذا كانت اللعبة gag2)
+    local isGAG2 = false
+    do
+        local GAG2_PLACEIDS = { [97598239454123] = true }
+        local GAG2_GAMEIDS  = { [10200395747]    = true }
+        local GAG2_PATTERNS = { "grow a garden 2", "growagarden2", "grow a garden2" }
+
+        if GAG2_PLACEIDS[game.PlaceId] or GAG2_GAMEIDS[game.GameId] then
+            isGAG2 = true
+        else
+            pcall(function()
+                local name = string.lower(game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name or "")
+                for _, p in ipairs(GAG2_PATTERNS) do
+                    if name:find(p, 1, true) then isGAG2 = true break end
+                end
+            end)
+        end
+    end
+
+    if isGAG2 then
+        task.spawn(function()
+            pcall(function() Import("cryptic/gag2_seedshop.lua") end)
+        end)
+        task.spawn(function()
+            pcall(function() Import("cryptic/gag2_gearshop.lua") end)
+        end)
+    end
 
     if not i18n then
         -- لو فشل تحميل i18n، نشغّل بالإنجليزية بدون اختيار
