@@ -445,6 +445,9 @@ local function Boot()
         task.spawn(function()
             pcall(function() Import("cryptic/gag2_gearshop.lua") end)
         end)
+        task.spawn(function()
+            pcall(function() Import("cryptic/gag2_weather.lua") end)
+        end)
     end
 
     if not i18n then
