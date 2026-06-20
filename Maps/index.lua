@@ -47,6 +47,7 @@ return {
         [97598239454123]   = "Maps/gag2",
 
         [95082159892680]   = "Maps/speed_keyboard_escape",
+        [118941584817777]   = "Maps/speed_keyboard_escape",
     },
 
     GameIds = {
