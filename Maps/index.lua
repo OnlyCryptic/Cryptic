@@ -3,25 +3,28 @@
 
 return {
     NameMatchers = {
-        { pattern = "blox fruits",      file = "Maps/bloxfruits" },
-        { pattern = "bloxfruits",       file = "Maps/bloxfruits" },
+        { pattern = "blox fruits",            file = "Maps/bloxfruits" },
+        { pattern = "bloxfruits",             file = "Maps/bloxfruits" },
 
-        { pattern = "sailor piece",     file = "Maps/sailor_piece" },
-        { pattern = "sailorpiece",      file = "Maps/sailor_piece" },
+        { pattern = "sailor piece",           file = "Maps/sailor_piece" },
+        { pattern = "sailorpiece",            file = "Maps/sailor_piece" },
 
-        { pattern = "blade ball",       file = "Maps/BB" },
+        { pattern = "blade ball",             file = "Maps/BB" },
 
-        { pattern = "slime rng",        file = "Maps/Slime_RNG" },
-        { pattern = "slimerng",         file = "Maps/Slime_RNG" },
+        { pattern = "slime rng",              file = "Maps/Slime_RNG" },
+        { pattern = "slimerng",               file = "Maps/Slime_RNG" },
 
-        { pattern = "wizard alchemy",   file = "Maps/wizard_alchemy" },
+        { pattern = "wizard alchemy",         file = "Maps/wizard_alchemy" },
 
-        { pattern = "grow a garden 2",  file = "Maps/gag2" },
-        { pattern = "growagarden2",     file = "Maps/gag2" },
+        { pattern = "grow a garden 2",        file = "Maps/gag2" },
+        { pattern = "growagarden2",           file = "Maps/gag2" },
 
-        { pattern = "murder mystery 2", file = "Maps/djn_mm2" },
-        { pattern = "murdermystery2",   file = "Maps/djn_mm2" },
-        { pattern = "mm2",              file = "Maps/djn_mm2" },
+        { pattern = "murder mystery 2",       file = "Maps/djn_mm2" },
+        { pattern = "murdermystery2",         file = "Maps/djn_mm2" },
+        { pattern = "mm2",                    file = "Maps/djn_mm2" },
+
+        { pattern = "+1 speed keyboard escape", file = "Maps/speed_keyboard_escape" },
+        { pattern = "speed keyboard escape",    file = "Maps/speed_keyboard_escape" },
     },
 
     PlaceIds = {
@@ -42,6 +45,8 @@ return {
         [142823291]        = "Maps/djn_mm2",
 
         [97598239454123]   = "Maps/gag2",
+
+        [95082159892680]   = "Maps/speed_keyboard_escape",
     },
 
     GameIds = {
@@ -52,5 +57,7 @@ return {
         [9186719164]  = "Maps/sailor_piece",
 
         [10200395747] = "Maps/gag2",
+
+        [9584852943]  = "Maps/speed_keyboard_escape",
     },
 }
