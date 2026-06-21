@@ -445,7 +445,6 @@ local function Boot()
         task.spawn(function()
             pcall(function() Import("cryptic/gag2_gearshop.lua") end)
         end)
-
     end
 
     if not i18n then
