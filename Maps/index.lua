@@ -25,6 +25,10 @@ return {
 
         { pattern = "+1 speed keyboard escape", file = "Maps/speed_keyboard_escape" },
         { pattern = "speed keyboard escape",    file = "Maps/speed_keyboard_escape" },
+
+        { pattern = "survive 99 nights",        file = "Maps/99_nights" },
+        { pattern = "99 nights in the forest",  file = "Maps/99_nights" },
+        { pattern = "99 nights",                file = "Maps/99_nights" },
     },
 
     PlaceIds = {
@@ -47,7 +51,10 @@ return {
         [97598239454123]   = "Maps/gag2",
 
         [95082159892680]   = "Maps/speed_keyboard_escape",
-        [118941584817777]   = "Maps/speed_keyboard_escape",
+        [118941584817777]  = "Maps/speed_keyboard_escape",
+
+        [126509999114328]  = "Maps/99_nights",
+        [79546208627805]   = "Maps/99_nights",
     },
 
     GameIds = {
@@ -60,5 +67,7 @@ return {
         [10200395747] = "Maps/gag2",
 
         [9584852943]  = "Maps/speed_keyboard_escape",
+
+        [7326934954]  = "Maps/99_nights",
     },
 }
