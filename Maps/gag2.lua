@@ -5,10 +5,6 @@ return {
     Name = "grow a garden 2",
     Scripts = {
         {
-            Name = "Real Kid Hub (keyless ✅)",
-            Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/realkidhub/realkid/refs/heads/main/main.lua"))()]]
-        },
-        {
             Name = "Bacon Hub (keyless ✅)",
             Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/vinh129150/hack/refs/heads/main/Gag2.lua"))()]]
         },
@@ -26,6 +22,10 @@ return {
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Teddyseetink/Haidepzai/refs/heads/main/main.lua"))()
 ]]
+        },
+        {
+            Name = "Real Kid Hub (need key 🔒😔)",
+            Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/realkidhub/realkid/refs/heads/main/main.lua"))()]]
         }
     }
 }
