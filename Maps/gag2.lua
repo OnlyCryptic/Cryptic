@@ -9,6 +9,10 @@ return {
             Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/realkidhub/realkid/refs/heads/main/main.lua"))()]]
         },
         {
+            Name = "Bacon Hub (keyless ✅)",
+            Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/vinh129150/hack/refs/heads/main/Gag2.lua"))()]]
+        },
+        {
             Name = "Solix Hub (keyless ✅)",
             Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/meobeo8/a/a/a"))()]]
         },
