@@ -260,7 +260,7 @@ local function StartCrypticHub()
                 local CurrentTab = MainWin:CreateTab(TabDisplayName(tabId), TabIcon(tabId))
 
                 local elementsList = {
-                    "Button", "Toggle", "TimedToggle", "Input", "LargeInput",
+                    "Button", "Toggle", "LockedToggle", "ExclusiveToggle", "TimedToggle", "Input", "LargeInput",
                     "SpeedControl", "Dropdown", "PlayerSelector", "AddAutoOffToggle", "ProfileCard",
                     "Line", "Label", "Paragraph", "Folder"
                 }
@@ -311,7 +311,7 @@ local function StartCrypticHub()
                             local openFunc = LoadElement("Open")
                             if not openFunc then return tab end
                             local openTab = openFunc(tab, title, icon)
-                            local els = {"Button", "Toggle", "TimedToggle", "Input", "LargeInput", "SpeedControl", "Dropdown", "PlayerSelector", "ProfileCard", "Label", "Paragraph", "Folder", "Line"}
+                            local els = {"Button", "Toggle", "LockedToggle", "ExclusiveToggle", "TimedToggle", "Input", "LargeInput", "SpeedControl", "Dropdown", "PlayerSelector", "ProfileCard", "Label", "Paragraph", "Folder", "Line"}
                             for _, el in ipairs(els) do
                                 openTab["Add" .. el] = function(self, ...)
                                     local f = LoadElement(el)
@@ -332,6 +332,7 @@ local function StartCrypticHub()
                         local funTab = MakeOpen("مزح / Fun", "😂")
                         local funGroup = {}
 
+                        -- ── Exclusive wrapper للـ AddToggle ─────────────────
                         local origFunToggle = funTab.AddToggle
                         funTab.AddToggle = function(self, label, callback)
                             local toggleObj
@@ -346,6 +347,36 @@ local function StartCrypticHub()
                                 if callback then callback(active) end
                             end
                             toggleObj = origFunToggle(self, label, wrapped)
+                            if toggleObj then table.insert(funGroup, toggleObj) end
+                            return toggleObj
+                        end
+
+                        -- ── Exclusive wrapper للـ AddLockedToggle ─────────────
+                        -- يدعم كلا الشكلين: (label, reason, cb) أو (label, cb)
+                        local origFunLockedToggle = funTab.AddLockedToggle
+                        funTab.AddLockedToggle = function(self, label, reasonOrCb, callbackOrNil)
+                            local reason, callback
+                            if type(reasonOrCb) == "function" then
+                                -- استدعاء بدون reason: (label, callback)
+                                reason   = ""
+                                callback = reasonOrCb
+                            else
+                                -- استدعاء كامل: (label, reason, callback)
+                                reason   = reasonOrCb
+                                callback = callbackOrNil
+                            end
+                            local toggleObj
+                            local wrapped = function(active)
+                                if active then
+                                    for _, other in ipairs(funGroup) do
+                                        if other ~= toggleObj then
+                                            pcall(function() other:SetState(false) end)
+                                        end
+                                    end
+                                end
+                                if callback then callback(active) end
+                            end
+                            toggleObj = origFunLockedToggle(self, label, reason, wrapped)
                             if toggleObj then table.insert(funGroup, toggleObj) end
                             return toggleObj
                         end
@@ -371,7 +402,7 @@ local function StartCrypticHub()
                             local openFunc = LoadElement("Open")
                             if not openFunc then return tab end
                             local openTab = openFunc(tab, title, icon)
-                            local els = {"Button", "Toggle", "TimedToggle", "Input", "LargeInput", "SpeedControl", "Dropdown", "PlayerSelector", "ProfileCard", "Label", "Paragraph", "Folder", "Line"}
+                            local els = {"Button", "Toggle", "LockedToggle", "TimedToggle", "Input", "LargeInput", "SpeedControl", "Dropdown", "PlayerSelector", "ProfileCard", "Label", "Paragraph", "Folder", "Line"}
                             for _, el in ipairs(els) do
                                 openTab["Add" .. el] = function(self, ...)
                                     local f = LoadElement(el)
