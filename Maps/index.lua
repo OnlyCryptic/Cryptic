@@ -29,6 +29,9 @@ return {
         { pattern = "survive 99 nights",        file = "Maps/99_nights" },
         { pattern = "99 nights in the forest",  file = "Maps/99_nights" },
         { pattern = "99 nights",                file = "Maps/99_nights" },
+
+        { pattern = "sell lemons",              file = "Maps/sell_lemons" },
+        { pattern = "selllemons",               file = "Maps/sell_lemons" },
     },
 
     PlaceIds = {
@@ -52,10 +55,12 @@ return {
 
         [95082159892680]   = "Maps/speed_keyboard_escape",
         [118941584817777]  = "Maps/speed_keyboard_escape",
-        [93411036959889]  = "Maps/speed_keyboard_escape",
+        [93411036959889]   = "Maps/speed_keyboard_escape",
 
         [126509999114328]  = "Maps/99_nights",
         [79546208627805]   = "Maps/99_nights",
+
+        [79268393072444]   = "Maps/sell_lemons",
     },
 
     GameIds = {
@@ -70,5 +75,7 @@ return {
         [9584852943]  = "Maps/speed_keyboard_escape",
 
         [7326934954]  = "Maps/99_nights",
+
+        [7395930870]  = "Maps/sell_lemons",
     },
 }
