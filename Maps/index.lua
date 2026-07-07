@@ -32,6 +32,9 @@ return {
 
         { pattern = "sell lemons",              file = "Maps/sell_lemons" },
         { pattern = "selllemons",               file = "Maps/sell_lemons" },
+
+        { pattern = "the animal hospital",      file = "Maps/the_animal_hospital" },
+        { pattern = "animal hospital",          file = "Maps/the_animal_hospital" },
     },
 
     PlaceIds = {
@@ -61,6 +64,10 @@ return {
         [79546208627805]   = "Maps/99_nights",
 
         [79268393072444]   = "Maps/sell_lemons",
+
+        -- The Animal Hospital
+        [78515283254292]   = "Maps/the_animal_hospital",
+        [104522435597696]  = "Maps/the_animal_hospital",
     },
 
     GameIds = {
@@ -77,5 +84,8 @@ return {
         [7326934954]  = "Maps/99_nights",
 
         [7395930870]  = "Maps/sell_lemons",
+
+        -- The Animal Hospital
+        [10148749921] = "Maps/the_animal_hospital",
     },
 }
