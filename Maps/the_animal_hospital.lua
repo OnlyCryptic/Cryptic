@@ -11,6 +11,10 @@ return {
         {
             Name = "Cyraa Hub",
             Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/LynX99-9/komtolmmek2script/refs/heads/main/CyraaHub.lua", true))()]]
+        },
+        {
+            Name = "Vexus Hub",
+            Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/eiis2id2idi/Vexus-hub/refs/heads/main/README.md"))()]]
         }
     }
 }
