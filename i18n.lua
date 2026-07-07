@@ -520,6 +520,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "Lag Reduce (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ Lag Reduce ON",
         ["settings.lag_reduce.off"]   = "❌ Lag Reduce OFF",
+        ["settings.lag_reduce.quick_key.label"] = "Script Shortcut Key",
     },
 
     -- ───────────── ARABIC ─────────────
@@ -989,6 +990,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "تخفيف لاق (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ تم تفعيل تخفيف اللاق",
         ["settings.lag_reduce.off"]   = "❌ تم إيقاف تخفيف اللاق",
+        ["settings.lag_reduce.quick_key.label"] = "مفتاح فتح/إغلاق السكربت",
     },
 
     -- ───────────── RUSSIAN ─────────────
@@ -1458,6 +1460,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "Снижение лагов (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ Снижение лагов включено",
         ["settings.lag_reduce.off"]   = "❌ Снижение лагов отключено",
+        ["settings.lag_reduce.quick_key.label"] = "Горячая клавиша скрипта",
     },
 
     -- ───────────── PORTUGUESE (BR) ─────────────
@@ -1927,6 +1930,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "Reduzir Lag (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ Redução de lag ativada",
         ["settings.lag_reduce.off"]   = "❌ Redução de lag desativada",
+        ["settings.lag_reduce.quick_key.label"] = "Tecla de Atalho do Script",
     },
 
     -- ───────────── SPANISH ─────────────
@@ -2415,6 +2419,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "Reducir Lag (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ Reducción de lag activada",
         ["settings.lag_reduce.off"]   = "❌ Reducción de lag desactivada",
+        ["settings.lag_reduce.quick_key.label"] = "Tecla de Acceso Rápido",
     },
 
     -- ───────────── FRENCH ─────────────
@@ -2903,6 +2908,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "Réduire le Lag (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ Réduction de lag activée",
         ["settings.lag_reduce.off"]   = "❌ Réduction de lag désactivée",
+        ["settings.lag_reduce.quick_key.label"] = "Touche de Raccourci",
     },
 
     -- ───────────── INDONESIAN ─────────────
@@ -3391,6 +3397,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "Kurangi Lag (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ Pengurangan lag aktif",
         ["settings.lag_reduce.off"]   = "❌ Pengurangan lag nonaktif",
+        ["settings.lag_reduce.quick_key.label"] = "Tombol Pintasan Skrip",
     },
 
     -- ───────────── TURKISH ─────────────
@@ -3879,6 +3886,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "Lag Azalt (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ Lag azaltma açık",
         ["settings.lag_reduce.off"]   = "❌ Lag azaltma kapalı",
+        ["settings.lag_reduce.quick_key.label"] = "Script Kısayol Tuşu",
     },
 
     -- ───────────── HINDI ─────────────
@@ -4334,6 +4342,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "लैग कम करें (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ लैग कम करना चालू",
         ["settings.lag_reduce.off"]   = "❌ लैग कम करना बंद",
+        ["settings.lag_reduce.quick_key.label"] = "स्क्रिप्ट शॉर्टकट कुंजी",
     },
 
     -- ───────────── GERMAN ─────────────
@@ -4789,6 +4798,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "Lag Reduzieren (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ Lag-Reduzierung aktiv",
         ["settings.lag_reduce.off"]   = "❌ Lag-Reduzierung deaktiviert",
+        ["settings.lag_reduce.quick_key.label"] = "Skript-Schnelltaste",
     },
 
     -- ───────────── UKRAINIAN ─────────────
@@ -5244,6 +5254,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "Зменшити лаги (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ Зменшення лагів увімкнено",
         ["settings.lag_reduce.off"]   = "❌ Зменшення лагів вимкнено",
+        ["settings.lag_reduce.quick_key.label"] = "Гаряча клавіша скрипту",
     },
 
     -- ───────────── ITALIAN ─────────────
@@ -5699,6 +5710,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "Riduci Lag (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ Riduzione lag attivata",
         ["settings.lag_reduce.off"]   = "❌ Riduzione lag disattivata",
+        ["settings.lag_reduce.quick_key.label"] = "Tasto Scorciatoia Script",
     },
 
     -- ───────────── VIETNAMESE ─────────────
@@ -6176,6 +6188,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "Giảm Lag (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ Giảm lag đã bật",
         ["settings.lag_reduce.off"]   = "❌ Giảm lag đã tắt",
+        ["settings.lag_reduce.quick_key.label"] = "Phím Tắt Mở/Đóng",
     },
 
     -- ───────────── THAI ─────────────
@@ -6653,6 +6666,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "ลดแลค (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ เปิดลดแลคแล้ว",
         ["settings.lag_reduce.off"]   = "❌ ปิดลดแลคแล้ว",
+        ["settings.lag_reduce.quick_key.label"] = "ปุ่มลัดเปิด/ปิดสคริปต์",
     },
 
     -- ───────────── CHINESE (Simplified) ─────────────
@@ -7130,6 +7144,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "减少延迟 (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ 已启用减少延迟",
         ["settings.lag_reduce.off"]   = "❌ 已禁用减少延迟",
+        ["settings.lag_reduce.quick_key.label"] = "脚本快捷键",
     },
 
     -- ───────────── KOREAN ─────────────
@@ -7607,6 +7622,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "랙 감소 (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ 랙 감소 활성화됨",
         ["settings.lag_reduce.off"]   = "❌ 랙 감소 비활성화됨",
+        ["settings.lag_reduce.quick_key.label"] = "스크립트 단축키",
     },
 
     -- ───────────── FILIPINO (Tagalog) ─────────────
@@ -8074,6 +8090,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "Bawasan ang Lag (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ Nabawasan na ang lag",
         ["settings.lag_reduce.off"]   = "❌ Lag reduction naka-off",
+        ["settings.lag_reduce.quick_key.label"] = "Shortcut ng Script",
     },
 
     -- ───────────── JAPANESE (日本語) ─────────────
@@ -8542,6 +8559,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "ラグ軽減 (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ ラグ軽減が有効になりました",
         ["settings.lag_reduce.off"]   = "❌ ラグ軽減が無効になりました",
+        ["settings.lag_reduce.quick_key.label"] = "スクリプトショートカット",
     },
 
     -- ───────────── POLISH ─────────────
@@ -8983,6 +9001,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "Redukcja Lagu (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ Redukcja lagu włączona",
         ["settings.lag_reduce.off"]   = "❌ Redukcja lagu wyłączona",
+        ["settings.lag_reduce.quick_key.label"] = "Skrót Skryptu",
     },
 
     -- ───────────── TRADITIONAL CHINESE ─────────────
@@ -9424,6 +9443,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "減少延遲 (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ 已啟用減少延遲",
         ["settings.lag_reduce.off"]   = "❌ 已停用減少延遲",
+        ["settings.lag_reduce.quick_key.label"] = "腳本快捷鍵",
     },
 
     -- ───────────── DUTCH ─────────────
@@ -9865,6 +9885,7 @@ local Translations = {
         ["settings.lag_reduce.label"] = "Lag Verminderen (FPS BOOST)",
         ["settings.lag_reduce.on"]    = "✅ Lagvermindering ingeschakeld",
         ["settings.lag_reduce.off"]   = "❌ Lagvermindering uitgeschakeld",
+        ["settings.lag_reduce.quick_key.label"] = "Script Sneltoets",
     },
 }
 
