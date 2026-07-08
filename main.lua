@@ -381,7 +381,7 @@ local function StartCrypticHub()
                             return toggleObj
                         end
 
-                        for _, fname in ipairs({"bang", "target_facesit", "jark", "target_hug", "target_sit", "backpack", "carry", "target_dee", "lkm"}) do
+                        for _, fname in ipairs({"bang", "target_facesit", "jark", "target_hug", "target_sit", "backpack", "carry", "target_dee", "lkm", "target_shit"}) do
                             local init = Import("Modules/Combat/" .. fname .. ".lua")
                             if type(init) == "function" then pcall(function() init(funTab, UI) end) end
                         end
