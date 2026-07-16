@@ -58,6 +58,11 @@ if i18n then
 end
 
 -- ============================================================
+-- Physics Guard: يعمل بصمت، يمنع اهتزاز الفيزياء في كل الميزات
+-- ============================================================
+pcall(function() Import("Modules/Core/physics_guard.lua") end)
+
+-- ============================================================
 -- بناء الهيكل (يستخدم i18n لأسماء التابات الديناميكية)
 -- ============================================================
 local function T(key)
@@ -69,7 +74,7 @@ local function BuildStructure()
     -- الأيقونة + " " + الترجمة
     Cryptic.Structure = {
         ["player"]      = { Icon = "👤", Key = "tab.player",   Folder = "Player",   Files = {"lol", "auto_apple", "speed", "fly", "jumppower", "noclip", "walkfling", "antifling", "wallwalk", "nofall", "infinitejump", "restart", "discord"} },
-        ["tools"]       = { Icon = "🔧", Key = "tab.tools",    Folder = "Misc",     Files = {"lol", "tptool", "noclip_tool", "auto_tool", "fling_tool", "emotes", "esp", "shiftlock", "invis_tool", "spin_tool", "x-ray", "fullbright", "no_fog", "camera"} },
+        ["tools"]       = { Icon = "🔧", Key = "tab.tools",    Folder = "Misc",     Files = {"lol", "tptool", "auto_tool", "fling_tool", "noclip_tool", "emotes", "esp", "shiftlock", "invis_tool", "spin_tool", "x-ray", "fullbright", "no_fog", "camera"} },
         ["target"]      = { Icon = "🎯", Key = "tab.target",   Folder = "Combat",   Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "bring_parts", "carry", "jark", "Target_follow", "target_esp", "copy_skin1", "target_emotes", "target_facesit", "info_t", "skinz"} },
         ["server"]      = { Icon = "🌐", Key = "tab.server",   Folder = "Server",   Files = {"server", "rejoin", "join_id", "players"} },
         ["teleport"]    = { Icon = "📍", Key = "tab.teleport", Folder = "Teleport", Files = {"lol", "tp_locations", "checkpoint"} },
