@@ -528,6 +528,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Lag Reduce ON",
         ["settings.lag_reduce.off"]   = "❌ Lag Reduce OFF",
         ["settings.lag_reduce.quick_key.label"] = "Script Shortcut Key",
+        ["settings.ui_lock.label"] = "🔒 Lock UI Position",
     },
 
     -- ───────────── ARABIC ─────────────
@@ -1005,6 +1006,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ تم تفعيل تخفيف اللاق",
         ["settings.lag_reduce.off"]   = "❌ تم إيقاف تخفيف اللاق",
         ["settings.lag_reduce.quick_key.label"] = "مفتاح فتح/إغلاق السكربت",
+        ["settings.ui_lock.label"] = "🔒 تثبيت الواجهة",
     },
 
     -- ───────────── RUSSIAN ─────────────
@@ -1482,6 +1484,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Снижение лагов включено",
         ["settings.lag_reduce.off"]   = "❌ Снижение лагов отключено",
         ["settings.lag_reduce.quick_key.label"] = "Горячая клавиша скрипта",
+        ["settings.ui_lock.label"] = "🔒 Закрепить интерфейс",
     },
 
     -- ───────────── PORTUGUESE (BR) ─────────────
@@ -1959,6 +1962,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Redução de lag ativada",
         ["settings.lag_reduce.off"]   = "❌ Redução de lag desativada",
         ["settings.lag_reduce.quick_key.label"] = "Tecla de Atalho do Script",
+        ["settings.ui_lock.label"] = "🔒 Fixar Interface",
     },
 
     -- ───────────── SPANISH ─────────────
@@ -2455,6 +2459,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Reducción de lag activada",
         ["settings.lag_reduce.off"]   = "❌ Reducción de lag desactivada",
         ["settings.lag_reduce.quick_key.label"] = "Tecla de Acceso Rápido",
+        ["settings.ui_lock.label"] = "🔒 Fijar Interfaz",
     },
 
     -- ───────────── FRENCH ─────────────
@@ -2951,6 +2956,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Réduction de lag activée",
         ["settings.lag_reduce.off"]   = "❌ Réduction de lag désactivée",
         ["settings.lag_reduce.quick_key.label"] = "Touche de Raccourci",
+        ["settings.ui_lock.label"] = "🔒 Verrouiller l'interface",
     },
 
     -- ───────────── INDONESIAN ─────────────
@@ -3447,6 +3453,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Pengurangan lag aktif",
         ["settings.lag_reduce.off"]   = "❌ Pengurangan lag nonaktif",
         ["settings.lag_reduce.quick_key.label"] = "Tombol Pintasan Skrip",
+        ["settings.ui_lock.label"] = "🔒 Kunci Posisi UI",
     },
 
     -- ───────────── TURKISH ─────────────
@@ -3943,6 +3950,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Lag azaltma açık",
         ["settings.lag_reduce.off"]   = "❌ Lag azaltma kapalı",
         ["settings.lag_reduce.quick_key.label"] = "Script Kısayol Tuşu",
+        ["settings.ui_lock.label"] = "🔒 Arayüzü Sabitle",
     },
 
     -- ───────────── HINDI ─────────────
@@ -4406,6 +4414,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ लैग कम करना चालू",
         ["settings.lag_reduce.off"]   = "❌ लैग कम करना बंद",
         ["settings.lag_reduce.quick_key.label"] = "स्क्रिप्ट शॉर्टकट कुंजी",
+        ["settings.ui_lock.label"] = "🔒 UI लॉक करें",
     },
 
     -- ───────────── GERMAN ─────────────
@@ -4869,6 +4878,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Lag-Reduzierung aktiv",
         ["settings.lag_reduce.off"]   = "❌ Lag-Reduzierung deaktiviert",
         ["settings.lag_reduce.quick_key.label"] = "Skript-Schnelltaste",
+        ["settings.ui_lock.label"] = "🔒 UI-Position sperren",
     },
 
     -- ───────────── UKRAINIAN ─────────────
@@ -5332,6 +5342,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Зменшення лагів увімкнено",
         ["settings.lag_reduce.off"]   = "❌ Зменшення лагів вимкнено",
         ["settings.lag_reduce.quick_key.label"] = "Гаряча клавіша скрипту",
+        ["settings.ui_lock.label"] = "🔒 Закріпити інтерфейс",
     },
 
     -- ───────────── ITALIAN ─────────────
@@ -5795,6 +5806,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Riduzione lag attivata",
         ["settings.lag_reduce.off"]   = "❌ Riduzione lag disattivata",
         ["settings.lag_reduce.quick_key.label"] = "Tasto Scorciatoia Script",
+        ["settings.ui_lock.label"] = "🔒 Blocca posizione UI",
     },
 
     -- ───────────── VIETNAMESE ─────────────
@@ -6280,6 +6292,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Giảm lag đã bật",
         ["settings.lag_reduce.off"]   = "❌ Giảm lag đã tắt",
         ["settings.lag_reduce.quick_key.label"] = "Phím Tắt Mở/Đóng",
+        ["settings.ui_lock.label"] = "🔒 Khóa vị trí UI",
     },
 
     -- ───────────── THAI ─────────────
@@ -6765,6 +6778,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ เปิดลดแลคแล้ว",
         ["settings.lag_reduce.off"]   = "❌ ปิดลดแลคแล้ว",
         ["settings.lag_reduce.quick_key.label"] = "ปุ่มลัดเปิด/ปิดสคริปต์",
+        ["settings.ui_lock.label"] = "🔒 ล็อกตำแหน่ง UI",
     },
 
     -- ───────────── CHINESE (Simplified) ─────────────
@@ -7250,6 +7264,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ 已启用减少延迟",
         ["settings.lag_reduce.off"]   = "❌ 已禁用减少延迟",
         ["settings.lag_reduce.quick_key.label"] = "脚本快捷键",
+        ["settings.ui_lock.label"] = "🔒 锁定界面位置",
     },
 
     -- ───────────── KOREAN ─────────────
@@ -7735,6 +7750,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ 랙 감소 활성화됨",
         ["settings.lag_reduce.off"]   = "❌ 랙 감소 비활성화됨",
         ["settings.lag_reduce.quick_key.label"] = "스크립트 단축키",
+        ["settings.ui_lock.label"] = "🔒 UI 위치 고정",
     },
 
     -- ───────────── FILIPINO (Tagalog) ─────────────
@@ -8210,6 +8226,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Nabawasan na ang lag",
         ["settings.lag_reduce.off"]   = "❌ Lag reduction naka-off",
         ["settings.lag_reduce.quick_key.label"] = "Shortcut ng Script",
+        ["settings.ui_lock.label"] = "🔒 I-lock ang UI",
     },
 
     -- ───────────── JAPANESE (日本語) ─────────────
@@ -8686,6 +8703,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ ラグ軽減が有効になりました",
         ["settings.lag_reduce.off"]   = "❌ ラグ軽減が無効になりました",
         ["settings.lag_reduce.quick_key.label"] = "スクリプトショートカット",
+        ["settings.ui_lock.label"] = "🔒 UIを固定",
     },
 
     -- ───────────── POLISH ─────────────
@@ -9135,6 +9153,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Redukcja lagu włączona",
         ["settings.lag_reduce.off"]   = "❌ Redukcja lagu wyłączona",
         ["settings.lag_reduce.quick_key.label"] = "Skrót Skryptu",
+        ["settings.ui_lock.label"] = "🔒 Zablokuj UI",
     },
 
     -- ───────────── TRADITIONAL CHINESE ─────────────
@@ -9584,6 +9603,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ 已啟用減少延遲",
         ["settings.lag_reduce.off"]   = "❌ 已停用減少延遲",
         ["settings.lag_reduce.quick_key.label"] = "腳本快捷鍵",
+        ["settings.ui_lock.label"] = "🔒 鎖定介面位置",
     },
 
     -- ───────────── DUTCH ─────────────
@@ -10033,6 +10053,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Lagvermindering ingeschakeld",
         ["settings.lag_reduce.off"]   = "❌ Lagvermindering uitgeschakeld",
         ["settings.lag_reduce.quick_key.label"] = "Script Sneltoets",
+        ["settings.ui_lock.label"] = "🔒 UI-positie vergrendelen",
     },
 }
 
