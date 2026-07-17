@@ -35,6 +35,10 @@ return {
 
         { pattern = "the animal hospital",      file = "Maps/the_animal_hospital" },
         { pattern = "animal hospital",          file = "Maps/the_animal_hospital" },
+
+        -- Prison Life
+        { pattern = "prison life",              file = "Maps/prison_life" },
+        { pattern = "prisonlife",               file = "Maps/prison_life" },
     },
 
     PlaceIds = {
@@ -68,6 +72,9 @@ return {
         -- The Animal Hospital
         [78515283254292]   = "Maps/the_animal_hospital",
         [104522435597696]  = "Maps/the_animal_hospital",
+
+        -- Prison Life
+        [155615604]        = "Maps/prison_life",
     },
 
     GameIds = {
@@ -87,5 +94,8 @@ return {
 
         -- The Animal Hospital
         [10148749921] = "Maps/the_animal_hospital",
+
+        -- Prison Life
+        [73885730]    = "Maps/prison_life",
     },
 }
