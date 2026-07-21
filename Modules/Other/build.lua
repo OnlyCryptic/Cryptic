@@ -352,63 +352,37 @@ return function(Tab, UI)
     -- ============================================================
     local PAGE = Tab.Page
 
-    -- ── MakeSection: نفس أسلوب Open.lua لتناسق الشكل مع المذكرة ──
     local function MakeSection(icon, title, defaultOpen)
         Tab.Order = Tab.Order + 1
-
-        local Container = Instance.new("Frame", PAGE)
-        Container.LayoutOrder = Tab.Order
-        Container.Size = UDim2.new(0.98, 0, 0, 44)
-        Container.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-        Container.BackgroundTransparency = 0.2
-        Container.ClipsDescendants = true
-        Instance.new("UICorner", Container).CornerRadius = UDim.new(0, 8)
-
-        local Stroke = Instance.new("UIStroke", Container)
-        Stroke.Thickness = 1.2; Stroke.Transparency = 0.4
-        local SG = Instance.new("UIGradient", Stroke)
-        SG.Color = ColorSequence.new{
-            ColorSequenceKeypoint.new(0, ACCENT),
-            ColorSequenceKeypoint.new(1, ACCENT2)
-        }
-        SG.Rotation = 45
-
-        local Hdr = Instance.new("TextButton", Container)
-        Hdr.Size = UDim2.new(1, 0, 0, 44)
-        Hdr.BackgroundTransparency = 1
+        local Hdr = Instance.new("TextButton", PAGE)
+        Hdr.LayoutOrder = Tab.Order; Hdr.Size = UDim2.new(0.98, 0, 0, 40)
+        Hdr.BackgroundColor3 = BG; Hdr.BackgroundTransparency = 0.1
         Hdr.Text = ""; Hdr.AutoButtonColor = false
+        Instance.new("UICorner", Hdr).CornerRadius = UDim.new(0, 10)
+        GradStroke(Hdr)
 
-        local Arrow = Instance.new("TextLabel", Hdr)
-        Arrow.Size = UDim2.new(0, 24, 0, 24)
-        Arrow.Position = UDim2.new(1, -32, 0.5, -12)
-        Arrow.BackgroundTransparency = 1
-        Arrow.Text = "▶"
-        Arrow.TextColor3 = Color3.fromRGB(120, 120, 120)
-        Arrow.Font = Enum.Font.GothamBold; Arrow.TextSize = 12
+        local IL = Instance.new("TextLabel", Hdr)
+        IL.Size = UDim2.new(0, 26, 1, 0); IL.Position = UDim2.new(0, 10, 0, 0)
+        IL.BackgroundTransparency = 1; IL.Text = icon; IL.TextSize = 16
+        IL.Font = Enum.Font.GothamBold
 
-        local TitleLbl = Instance.new("TextLabel", Hdr)
-        TitleLbl.Size = UDim2.new(1, -50, 1, 0)
-        TitleLbl.Position = UDim2.new(0, 12, 0, 0)
-        TitleLbl.BackgroundTransparency = 1
-        TitleLbl.Text = icon .. "  " .. title
-        TitleLbl.TextColor3 = Color3.fromRGB(220, 220, 220)
-        TitleLbl.Font = Enum.Font.GothamBold; TitleLbl.TextSize = 12
-        TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+        local TL = Instance.new("TextLabel", Hdr)
+        TL.Size = UDim2.new(0.75, 0, 1, 0); TL.Position = UDim2.new(0, 40, 0, 0)
+        TL.BackgroundTransparency = 1; TL.Text = title
+        TL.TextColor3 = Color3.fromRGB(200, 200, 215)
+        TL.Font = Enum.Font.GothamBold; TL.TextSize = 11
+        TL.TextXAlignment = Enum.TextXAlignment.Left
 
-        local Divider = Instance.new("Frame", Container)
-        Divider.Size = UDim2.new(0.9, 0, 0, 1)
-        Divider.Position = UDim2.new(0.05, 0, 0, 44)
-        Divider.BorderSizePixel = 0; Divider.BackgroundTransparency = 1
-        local DivG = Instance.new("UIGradient", Divider)
-        DivG.Color = ColorSequence.new{
-            ColorSequenceKeypoint.new(0, ACCENT),
-            ColorSequenceKeypoint.new(1, ACCENT2)
-        }
+        local Arr = Instance.new("TextLabel", Hdr)
+        Arr.Size = UDim2.new(0, 22, 1, 0); Arr.Position = UDim2.new(1, -26, 0, 0)
+        Arr.BackgroundTransparency = 1; Arr.Text = ">"
+        Arr.TextColor3 = Color3.fromRGB(80, 80, 100)
+        Arr.Font = Enum.Font.GothamBlack; Arr.TextSize = 16
 
-        local Cont = Instance.new("Frame", Container)
-        Cont.Position = UDim2.new(0, 6, 0, 50)
-        Cont.Size = UDim2.new(1, -12, 0, 0)
-        Cont.BackgroundTransparency = 1
+        Tab.Order = Tab.Order + 1
+        local Cont = Instance.new("Frame", PAGE)
+        Cont.LayoutOrder = Tab.Order; Cont.Size = UDim2.new(0.98, 0, 0, 0)
+        Cont.BackgroundTransparency = 1; Cont.ClipsDescendants = true
 
         local LL = Instance.new("UIListLayout", Cont)
         LL.SortOrder = Enum.SortOrder.LayoutOrder
@@ -416,46 +390,27 @@ return function(Tab, UI)
         LL.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
         local LP = Instance.new("UIPadding", Cont)
-        LP.PaddingBottom = UDim.new(0, 8)
+        LP.PaddingTop = UDim.new(0, 5); LP.PaddingBottom = UDim.new(0, 5)
 
         local isOpen = defaultOpen or false
-
-        local function UpdateSize()
-            local contentH = LL.AbsoluteContentSize.Y
+        local function setOpen(v)
+            isOpen = v
+            local h = LL.AbsoluteContentSize.Y + 12
             if isOpen then
-                local totalH = 44 + 10 + contentH + 8
-                Tw(Container, {Size = UDim2.new(0.98, 0, 0, totalH)}, 0.25)
-                Tw(Arrow, {TextColor3 = ACCENT, Rotation = 90}, 0.2)
-                Tw(TitleLbl, {TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.2)
-                Tw(Divider, {BackgroundTransparency = 0.5}, 0.2)
-                Cont.Size = UDim2.new(1, -12, 0, contentH + 16)
+                Tw(Cont, {Size = UDim2.new(0.98, 0, 0, h)}, 0.25)
+                Tw(Arr, {Rotation = 90, TextColor3 = ACCENT}, 0.2)
             else
-                Tw(Container, {Size = UDim2.new(0.98, 0, 0, 44)}, 0.22)
-                Tw(Arrow, {TextColor3 = Color3.fromRGB(120, 120, 120), Rotation = 0}, 0.2)
-                Tw(TitleLbl, {TextColor3 = Color3.fromRGB(220, 220, 220)}, 0.2)
-                Tw(Divider, {BackgroundTransparency = 1}, 0.15)
+                Tw(Cont, {Size = UDim2.new(0.98, 0, 0, 0)}, 0.22)
+                Tw(Arr, {Rotation = 0, TextColor3 = Color3.fromRGB(80, 80, 100)}, 0.2)
             end
         end
-
         LL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            if isOpen then UpdateSize() end
+            if isOpen then Cont.Size = UDim2.new(0.98, 0, 0, LL.AbsoluteContentSize.Y + 12) end
         end)
-
-        Hdr.MouseEnter:Connect(function()
-            if not isOpen then
-                Tw(Container, {BackgroundColor3 = Color3.fromRGB(25, 25, 32)}, 0.15)
-            end
-        end)
-        Hdr.MouseLeave:Connect(function()
-            Tw(Container, {BackgroundColor3 = Color3.fromRGB(20, 20, 25)}, 0.15)
-        end)
-        Hdr.MouseButton1Click:Connect(function()
-            isOpen = not isOpen
-            UpdateSize()
-        end)
-
-        if defaultOpen then task.defer(function() UpdateSize() end) end
-
+        if defaultOpen then task.defer(function() setOpen(true) end) end
+        Hdr.MouseEnter:Connect(function() Tw(Hdr, {BackgroundTransparency = 0.6}, 0.15) end)
+        Hdr.MouseLeave:Connect(function() Tw(Hdr, {BackgroundTransparency = 0.1}, 0.15) end)
+        Hdr.MouseButton1Click:Connect(function() setOpen(not isOpen) end)
         return Cont, LL
     end
 
@@ -768,26 +723,14 @@ return function(Tab, UI)
         HL.Font = Enum.Font.Gotham; HL.TextSize = 8; HL.TextWrapped = true
         HL.TextXAlignment = Enum.TextXAlignment.Center
 
-        -- ── Demolish Hammer (قسم قابل للطي – نفس أسلوب المذكرة) ──
+        -- ── Demolish Hammer ───────────────────────────────────
         local demolishActive = false
         local demolishConn   = nil
         local demolishHover  = nil
-        local RED = Color3.fromRGB(255, 70, 70)
 
-        local DemCont, _ = MakeSection("⛏️", T("other.build.demolish"), false)
-
-        local function StopDemolish()
-            demolishActive = false
-            if demolishConn then demolishConn:Disconnect(); demolishConn = nil end
-            if demolishHover then
-                pcall(function() demolishHover:Destroy() end)
-                demolishHover = nil
-            end
-        end
-
-        -- ── صف التبديل (toggle) داخل القسم ─────────────────
-        local DemRow = Instance.new("Frame", DemCont)
-        DemRow.Size = UDim2.new(0.96, 0, 0, 52)
+        Tab.Order = Tab.Order + 1
+        local DemRow = Instance.new("Frame", PAGE)
+        DemRow.LayoutOrder = Tab.Order; DemRow.Size = UDim2.new(0.98, 0, 0, 52)
         DemRow.BackgroundColor3 = Color3.fromRGB(45, 10, 10); DemRow.BackgroundTransparency = 0.05
         Instance.new("UICorner", DemRow).CornerRadius = UDim.new(0, 12)
         GradStroke(DemRow, 1.5)
@@ -804,6 +747,7 @@ return function(Tab, UI)
         DLbl.Font = Enum.Font.GothamBlack; DLbl.TextSize = 13
         DLbl.TextXAlignment = Enum.TextXAlignment.Left
 
+        local RED = Color3.fromRGB(255, 70, 70)
         local DTW, DTH = 52, 26
         local DTrack = Instance.new("Frame", DemRow)
         DTrack.Size = UDim2.new(0, DTW, 0, DTH)
@@ -818,19 +762,14 @@ return function(Tab, UI)
         DTBtn.Size = UDim2.new(1, 0, 1, 0); DTBtn.BackgroundTransparency = 1
         DTBtn.Text = ""; DTBtn.AutoButtonColor = false
 
-        -- ── تلميح داخل القسم ─────────────────────────────────
-        local DemHint = Instance.new("Frame", DemCont)
-        DemHint.Size = UDim2.new(0.96, 0, 0, 26)
-        DemHint.BackgroundColor3 = Color3.fromRGB(38, 10, 10)
-        DemHint.BackgroundTransparency = 0.3
-        Instance.new("UICorner", DemHint).CornerRadius = UDim.new(0, 6)
-        local DemHL = Instance.new("TextLabel", DemHint)
-        DemHL.Size = UDim2.new(1, -8, 1, 0); DemHL.Position = UDim2.new(0, 4, 0, 0)
-        DemHL.BackgroundTransparency = 1
-        DemHL.Text = "💡 " .. T("other.build.hint")
-        DemHL.TextColor3 = Color3.fromRGB(255, 100, 100)
-        DemHL.Font = Enum.Font.Gotham; DemHL.TextSize = 8; DemHL.TextWrapped = true
-        DemHL.TextXAlignment = Enum.TextXAlignment.Center
+        local function StopDemolish()
+            demolishActive = false
+            if demolishConn then demolishConn:Disconnect(); demolishConn = nil end
+            if demolishHover then
+                pcall(function() demolishHover:Destroy() end)
+                demolishHover = nil
+            end
+        end
 
         local function SetDemolish(on)
             if on then
