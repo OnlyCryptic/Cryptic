@@ -417,7 +417,7 @@ local function StartCrypticHub()
                             return openTab
                         end
 
-                        RunModules(tab, data.Folder, {"lol", "animations", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "infinite_zoom", "no_camera_clip", "anti_afk", "aimbot", "notepad"})
+                        RunModules(tab, data.Folder, {"lol", "animations", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "infinite_zoom", "no_camera_clip", "anti_afk"})
 
                         local buildTab = MakeOpen("البناء / Building", "🏗️")
                         local buildInit = Import("Modules/Other/build.lua")
