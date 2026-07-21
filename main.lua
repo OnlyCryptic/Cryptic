@@ -10,7 +10,7 @@ local lp              = Players.LocalPlayer
 
 local Cryptic = {
     Config = {
-        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "gm",
+        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "hm",
         Discord = "https://discord.gg/QSvQJs7BdP"
     },
     -- ملاحظة: قوائم الماب (NameMatchers / PlaceIds / GameIds) صارت
