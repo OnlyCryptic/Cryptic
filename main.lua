@@ -327,14 +327,14 @@ local function StartCrypticHub()
                         end
 
                         -- ── 1. مراقبة / Spy ──────────────────────────────────
-                        local spyTab = MakeOpen("مراقبة / Spy", "👁️")
+                        local spyTab = MakeOpen(T("open.spy"), "👁️")
                         for _, fname in ipairs({"target_spectate", "target_tp", "Target_follow", "target_esp", "skinz", "info_t"}) do
                             local init = Import("Modules/Combat/" .. fname .. ".lua")
                             if type(init) == "function" then pcall(function() init(spyTab, UI) end) end
                         end
 
                         -- ── 2. مزح / Fun (تشغيل حصري: زر واحد فقط) ─────────
-                        local funTab = MakeOpen("مزح / Fun", "😂")
+                        local funTab = MakeOpen(T("open.fun"), "😂")
                         local funGroup = {}
 
                         -- ── Exclusive wrapper للـ AddToggle ─────────────────
@@ -392,7 +392,7 @@ local function StartCrypticHub()
                         end
 
                         -- ── 3. خدع / Tricks ──────────────────────────────────
-                        local tricksTab = MakeOpen("خدع / Tricks", "🎭")
+                        local tricksTab = MakeOpen(T("open.tricks"), "🎭")
                         for _, fname in ipairs({"target_fling", "bring_parts", "target_mimic", "copy_walk", "target_aimbot", "target_emotes"}) do
                             local init = Import("Modules/Combat/" .. fname .. ".lua")
                             if type(init) == "function" then pcall(function() init(tricksTab, UI) end) end
@@ -419,7 +419,7 @@ local function StartCrypticHub()
 
                         RunModules(tab, data.Folder, {"lol", "animations", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "infinite_zoom", "no_camera_clip", "anti_afk"})
 
-                        local buildTab = MakeOpen("البناء / Building", "🏗️")
+                        local buildTab = MakeOpen(T("other.build.tab"), "🏗️")
                         local buildInit = Import("Modules/Other/build.lua")
                         if type(buildInit) == "function" then pcall(function() buildInit(buildTab, UI) end) end
                         tab:AddLine()
