@@ -77,7 +77,13 @@ local Translations = {
         ["tab.suggestions"]       = "Suggestions",
         ["tab.map_scripts"]       = "Map Scripts",
         ["tab.settings"]          = "Mga Setting",
+        ["open.spy"]              = "Espiya",
+        ["open.fun"]              = "Kasiyahan",
+        ["open.tricks"]           = "Mga Trick",
         ["tab.settings"]          = "Settings",
+        ["open.spy"]              = "Spy",
+        ["open.fun"]              = "Fun",
+        ["open.tricks"]           = "Tricks",
 
         -- Re-run prompt
         ["rerun.title"]           = "Cryptic Hub",
@@ -528,6 +534,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Lag Reduce ON",
         ["settings.lag_reduce.off"]   = "❌ Lag Reduce OFF",
         ["settings.lag_reduce.quick_key.label"] = "Script Shortcut Key",
+        ["other.build.tab"]              = "Building",
         ["settings.ui_lock.label"] = "🔒 Lock UI Position",
     },
 
@@ -561,6 +568,9 @@ local Translations = {
         ["tab.suggestions"]       = "اقتراحات",
         ["tab.map_scripts"]       = "سكربتات الماب",
         ["tab.settings"]          = "الإعدادات",
+        ["open.spy"]              = "مراقبة",
+        ["open.fun"]              = "مزح",
+        ["open.tricks"]           = "خدع",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "هل أنت متأكد من تشغيله مرة أخرى؟",
@@ -1006,6 +1016,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ تم تفعيل تخفيف اللاق",
         ["settings.lag_reduce.off"]   = "❌ تم إيقاف تخفيف اللاق",
         ["settings.lag_reduce.quick_key.label"] = "مفتاح فتح/إغلاق السكربت",
+        ["other.build.tab"]              = "البناء",
         ["settings.ui_lock.label"] = "🔒 تثبيت الواجهة",
     },
 
@@ -1039,6 +1050,9 @@ local Translations = {
         ["tab.suggestions"]       = "Предложения",
         ["tab.map_scripts"]       = "Скрипты карты",
         ["tab.settings"]          = "Настройки",
+        ["open.spy"]              = "Слежка",
+        ["open.fun"]              = "Веселье",
+        ["open.tricks"]           = "Трюки",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "Вы уверены, что хотите запустить снова?",
@@ -1484,6 +1498,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Снижение лагов включено",
         ["settings.lag_reduce.off"]   = "❌ Снижение лагов отключено",
         ["settings.lag_reduce.quick_key.label"] = "Горячая клавиша скрипта",
+        ["other.build.tab"]              = "Строительство",
         ["settings.ui_lock.label"] = "🔒 Закрепить интерфейс",
     },
 
@@ -1517,6 +1532,9 @@ local Translations = {
         ["tab.suggestions"]       = "Sugestões",
         ["tab.map_scripts"]       = "Scripts do Mapa",
         ["tab.settings"]          = "Configurações",
+        ["open.spy"]              = "Espionagem",
+        ["open.fun"]              = "Diversão",
+        ["open.tricks"]           = "Truques",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "Tem certeza que deseja executar novamente?",
@@ -1962,6 +1980,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Redução de lag ativada",
         ["settings.lag_reduce.off"]   = "❌ Redução de lag desativada",
         ["settings.lag_reduce.quick_key.label"] = "Tecla de Atalho do Script",
+        ["other.build.tab"]              = "Construção",
         ["settings.ui_lock.label"] = "🔒 Fixar Interface",
     },
 
@@ -1998,6 +2017,9 @@ local Translations = {
         ["tab.suggestions"]       = "Sugerencias",
         ["tab.map_scripts"]       = "Scripts del mapa",
         ["tab.settings"]          = "Configuración",
+        ["open.spy"]              = "Espionaje",
+        ["open.fun"]              = "Diversión",
+        ["open.tricks"]           = "Trucos",
 
         -- Re-ejecutar
         ["rerun.title"]           = "Cryptic Hub",
@@ -2459,6 +2481,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Reducción de lag activada",
         ["settings.lag_reduce.off"]   = "❌ Reducción de lag desactivada",
         ["settings.lag_reduce.quick_key.label"] = "Tecla de Acceso Rápido",
+        ["other.build.tab"]              = "Construcción",
         ["settings.ui_lock.label"] = "🔒 Fijar Interfaz",
     },
 
@@ -2495,6 +2518,9 @@ local Translations = {
         ["tab.suggestions"]       = "Suggestions",
         ["tab.map_scripts"]       = "Scripts de carte",
         ["tab.settings"]          = "Paramètres",
+        ["open.spy"]              = "Espionnage",
+        ["open.fun"]              = "Amusement",
+        ["open.tricks"]           = "Astuces",
 
         -- Re-lancer
         ["rerun.title"]           = "Cryptic Hub",
@@ -2956,6 +2982,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Réduction de lag activée",
         ["settings.lag_reduce.off"]   = "❌ Réduction de lag désactivée",
         ["settings.lag_reduce.quick_key.label"] = "Touche de Raccourci",
+        ["other.build.tab"]              = "Construction",
         ["settings.ui_lock.label"] = "🔒 Verrouiller l'interface",
     },
 
@@ -2992,6 +3019,9 @@ local Translations = {
         ["tab.suggestions"]       = "Saran",
         ["tab.map_scripts"]       = "Skrip Peta",
         ["tab.settings"]          = "Pengaturan",
+        ["open.spy"]              = "Mata-mata",
+        ["open.fun"]              = "Hiburan",
+        ["open.tricks"]           = "Tipuan",
 
         -- Jalankan ulang
         ["rerun.title"]           = "Cryptic Hub",
@@ -3453,6 +3483,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Pengurangan lag aktif",
         ["settings.lag_reduce.off"]   = "❌ Pengurangan lag nonaktif",
         ["settings.lag_reduce.quick_key.label"] = "Tombol Pintasan Skrip",
+        ["other.build.tab"]              = "Membangun",
         ["settings.ui_lock.label"] = "🔒 Kunci Posisi UI",
     },
 
@@ -3489,6 +3520,9 @@ local Translations = {
         ["tab.suggestions"]       = "Öneriler",
         ["tab.map_scripts"]       = "Harita Scriptleri",
         ["tab.settings"]          = "Ayarlar",
+        ["open.spy"]              = "Gözetleme",
+        ["open.fun"]              = "Eğlence",
+        ["open.tricks"]           = "Hileler",
 
         -- Yeniden çalıştır
         ["rerun.title"]           = "Cryptic Hub",
@@ -3950,6 +3984,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Lag azaltma açık",
         ["settings.lag_reduce.off"]   = "❌ Lag azaltma kapalı",
         ["settings.lag_reduce.quick_key.label"] = "Script Kısayol Tuşu",
+        ["other.build.tab"]              = "İnşaat",
         ["settings.ui_lock.label"] = "🔒 Arayüzü Sabitle",
     },
 
@@ -3983,6 +4018,9 @@ local Translations = {
         ["tab.suggestions"]       = "सुझाव",
         ["tab.map_scripts"]       = "मैप स्क्रिप्ट",
         ["tab.settings"]          = "सेटिंग्स",
+        ["open.spy"]              = "जासूसी",
+        ["open.fun"]              = "मस्ती",
+        ["open.tricks"]           = "चालबाज़ी",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "क्या आप इसे फिर से चलाना चाहते हैं?",
@@ -4414,6 +4452,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ लैग कम करना चालू",
         ["settings.lag_reduce.off"]   = "❌ लैग कम करना बंद",
         ["settings.lag_reduce.quick_key.label"] = "स्क्रिप्ट शॉर्टकट कुंजी",
+        ["other.build.tab"]              = "निर्माण",
         ["settings.ui_lock.label"] = "🔒 UI लॉक करें",
     },
 
@@ -4447,6 +4486,9 @@ local Translations = {
         ["tab.suggestions"]       = "Vorschläge",
         ["tab.map_scripts"]       = "Karten-Skripte",
         ["tab.settings"]          = "Einstellungen",
+        ["open.spy"]              = "Spionage",
+        ["open.fun"]              = "Spaß",
+        ["open.tricks"]           = "Tricks",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "Möchtest du es wirklich erneut ausführen?",
@@ -4878,6 +4920,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Lag-Reduzierung aktiv",
         ["settings.lag_reduce.off"]   = "❌ Lag-Reduzierung deaktiviert",
         ["settings.lag_reduce.quick_key.label"] = "Skript-Schnelltaste",
+        ["other.build.tab"]              = "Bauen",
         ["settings.ui_lock.label"] = "🔒 UI-Position sperren",
     },
 
@@ -4911,6 +4954,9 @@ local Translations = {
         ["tab.suggestions"]       = "Пропозиції",
         ["tab.map_scripts"]       = "Скрипти карти",
         ["tab.settings"]          = "Налаштування",
+        ["open.spy"]              = "Стеження",
+        ["open.fun"]              = "Розваги",
+        ["open.tricks"]           = "Хитрощі",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "Ти впевнений, що хочеш запустити знову?",
@@ -5342,6 +5388,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Зменшення лагів увімкнено",
         ["settings.lag_reduce.off"]   = "❌ Зменшення лагів вимкнено",
         ["settings.lag_reduce.quick_key.label"] = "Гаряча клавіша скрипту",
+        ["other.build.tab"]              = "Будівництво",
         ["settings.ui_lock.label"] = "🔒 Закріпити інтерфейс",
     },
 
@@ -5375,6 +5422,9 @@ local Translations = {
         ["tab.suggestions"]       = "Suggerimenti",
         ["tab.map_scripts"]       = "Script della mappa",
         ["tab.settings"]          = "Impostazioni",
+        ["open.spy"]              = "Sorveglianza",
+        ["open.fun"]              = "Divertimento",
+        ["open.tricks"]           = "Trucchi",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "Sei sicuro di volerlo eseguire di nuovo?",
@@ -5806,6 +5856,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Riduzione lag attivata",
         ["settings.lag_reduce.off"]   = "❌ Riduzione lag disattivata",
         ["settings.lag_reduce.quick_key.label"] = "Tasto Scorciatoia Script",
+        ["other.build.tab"]              = "Costruzione",
         ["settings.ui_lock.label"] = "🔒 Blocca posizione UI",
     },
 
@@ -5842,6 +5893,9 @@ local Translations = {
         ["tab.suggestions"]       = "Góp ý",
         ["tab.map_scripts"]       = "Script Bản đồ",
         ["tab.settings"]          = "Cài đặt",
+        ["open.spy"]              = "Do Thám",
+        ["open.fun"]              = "Vui Vẻ",
+        ["open.tricks"]           = "Mẹo",
 
         -- Re-run prompt
         ["rerun.title"]           = "Cryptic Hub",
@@ -6292,6 +6346,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Giảm lag đã bật",
         ["settings.lag_reduce.off"]   = "❌ Giảm lag đã tắt",
         ["settings.lag_reduce.quick_key.label"] = "Phím Tắt Mở/Đóng",
+        ["other.build.tab"]              = "Xây dựng",
         ["settings.ui_lock.label"] = "🔒 Khóa vị trí UI",
     },
 
@@ -6328,6 +6383,9 @@ local Translations = {
         ["tab.suggestions"]       = "ข้อเสนอแนะ",
         ["tab.map_scripts"]       = "สคริปต์แผนที่",
         ["tab.settings"]          = "การตั้งค่า",
+        ["open.spy"]              = "สายลับ",
+        ["open.fun"]              = "สนุก",
+        ["open.tricks"]           = "กลอุบาย",
 
         -- Re-run prompt
         ["rerun.title"]           = "Cryptic Hub",
@@ -6778,6 +6836,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ เปิดลดแลคแล้ว",
         ["settings.lag_reduce.off"]   = "❌ ปิดลดแลคแล้ว",
         ["settings.lag_reduce.quick_key.label"] = "ปุ่มลัดเปิด/ปิดสคริปต์",
+        ["other.build.tab"]              = "การก่อสร้าง",
         ["settings.ui_lock.label"] = "🔒 ล็อกตำแหน่ง UI",
     },
 
@@ -6814,6 +6873,9 @@ local Translations = {
         ["tab.suggestions"]       = "建议",
         ["tab.map_scripts"]       = "地图脚本",
         ["tab.settings"]          = "设置",
+        ["open.spy"]              = "监视",
+        ["open.fun"]              = "娱乐",
+        ["open.tricks"]           = "诡计",
 
         -- Re-run prompt
         ["rerun.title"]           = "Cryptic Hub",
@@ -7264,6 +7326,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ 已启用减少延迟",
         ["settings.lag_reduce.off"]   = "❌ 已禁用减少延迟",
         ["settings.lag_reduce.quick_key.label"] = "脚本快捷键",
+        ["other.build.tab"]              = "建造",
         ["settings.ui_lock.label"] = "🔒 锁定界面位置",
     },
 
@@ -7300,6 +7363,9 @@ local Translations = {
         ["tab.suggestions"]       = "제안",
         ["tab.map_scripts"]       = "맵 스크립트",
         ["tab.settings"]          = "설정",
+        ["open.spy"]              = "정찰",
+        ["open.fun"]              = "재미",
+        ["open.tricks"]           = "속임수",
 
         -- Re-run prompt
         ["rerun.title"]           = "Cryptic Hub",
@@ -7750,6 +7816,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ 랙 감소 활성화됨",
         ["settings.lag_reduce.off"]   = "❌ 랙 감소 비활성화됨",
         ["settings.lag_reduce.quick_key.label"] = "스크립트 단축키",
+        ["other.build.tab"]              = "건축",
         ["settings.ui_lock.label"] = "🔒 UI 위치 고정",
     },
 
@@ -7782,6 +7849,9 @@ local Translations = {
         ["tab.other"]             = "Iba Pa",
         ["tab.suggestions"]       = "Mungkahi",
         ["tab.map_scripts"]       = "Map Scripts",
+        ["open.spy"]              = "Espiya",
+        ["open.fun"]              = "Kasiyahan",
+        ["open.tricks"]           = "Mga Trick",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "Sigurado ka bang gusto mong patakbuhin ulit?",
@@ -8226,6 +8296,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Nabawasan na ang lag",
         ["settings.lag_reduce.off"]   = "❌ Lag reduction naka-off",
         ["settings.lag_reduce.quick_key.label"] = "Shortcut ng Script",
+        ["other.build.tab"]              = "Pagtatayo",
         ["settings.ui_lock.label"] = "🔒 I-lock ang UI",
     },
 
@@ -8259,6 +8330,9 @@ local Translations = {
         ["tab.suggestions"]       = "提案",
         ["tab.map_scripts"]       = "マップスクリプト",
         ["tab.settings"]          = "設定",
+        ["open.spy"]              = "スパイ",
+        ["open.fun"]              = "楽しみ",
+        ["open.tricks"]           = "トリック",
 
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "もう一度実行しますか？",
@@ -8703,6 +8777,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ ラグ軽減が有効になりました",
         ["settings.lag_reduce.off"]   = "❌ ラグ軽減が無効になりました",
         ["settings.lag_reduce.quick_key.label"] = "スクリプトショートカット",
+        ["other.build.tab"]              = "建築",
         ["settings.ui_lock.label"] = "🔒 UIを固定",
     },
 
@@ -8734,6 +8809,9 @@ local Translations = {
         ["tab.suggestions"]       = "Sugestie",
         ["tab.map_scripts"]       = "Skrypty mapy",
         ["tab.settings"]          = "Ustawienia",
+        ["open.spy"]              = "Szpiegowanie",
+        ["open.fun"]              = "Zabawa",
+        ["open.tricks"]           = "Sztuczki",
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "Czy na pewno chcesz uruchomić ponownie?",
         ["rerun.yes"]             = "Tak",
@@ -9153,6 +9231,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Redukcja lagu włączona",
         ["settings.lag_reduce.off"]   = "❌ Redukcja lagu wyłączona",
         ["settings.lag_reduce.quick_key.label"] = "Skrót Skryptu",
+        ["other.build.tab"]              = "Budowanie",
         ["settings.ui_lock.label"] = "🔒 Zablokuj UI",
     },
 
@@ -9184,6 +9263,9 @@ local Translations = {
         ["tab.suggestions"]       = "建議",
         ["tab.map_scripts"]       = "地圖腳本",
         ["tab.settings"]          = "設定",
+        ["open.spy"]              = "監視",
+        ["open.fun"]              = "娛樂",
+        ["open.tricks"]           = "詭計",
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "確定要再次執行嗎？",
         ["rerun.yes"]             = "是",
@@ -9603,6 +9685,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ 已啟用減少延遲",
         ["settings.lag_reduce.off"]   = "❌ 已停用減少延遲",
         ["settings.lag_reduce.quick_key.label"] = "腳本快捷鍵",
+        ["other.build.tab"]              = "建造",
         ["settings.ui_lock.label"] = "🔒 鎖定介面位置",
     },
 
@@ -9634,6 +9717,9 @@ local Translations = {
         ["tab.suggestions"]       = "Suggesties",
         ["tab.map_scripts"]       = "Kaartscripts",
         ["tab.settings"]          = "Instellingen",
+        ["open.spy"]              = "Spionage",
+        ["open.fun"]              = "Plezier",
+        ["open.tricks"]           = "Trucs",
         ["rerun.title"]           = "Cryptic Hub",
         ["rerun.text"]            = "Weet je zeker dat je het opnieuw wilt uitvoeren?",
         ["rerun.yes"]             = "Ja",
@@ -10053,6 +10139,7 @@ local Translations = {
         ["settings.lag_reduce.on"]    = "✅ Lagvermindering ingeschakeld",
         ["settings.lag_reduce.off"]   = "❌ Lagvermindering uitgeschakeld",
         ["settings.lag_reduce.quick_key.label"] = "Script Sneltoets",
+        ["other.build.tab"]              = "Bouwen",
         ["settings.ui_lock.label"] = "🔒 UI-positie vergrendelen",
     },
 }
