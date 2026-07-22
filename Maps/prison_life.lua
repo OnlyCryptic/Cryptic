@@ -6,7 +6,7 @@ return {
     Scripts = {
         {
             Name = "Prison Life Script",
-            Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/zenss555a/script/refs/heads/main/Prison-Life.lua", true))()]]
+            Script = [[loadstring(game:HttpGet('https://raw.githubusercontent.com/nlzzpro/rscripts/refs/heads/main/prisonlife'))()]]
         }
     }
 }
