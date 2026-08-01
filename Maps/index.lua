@@ -62,6 +62,7 @@ return {
 
         [95082159892680]   = "Maps/speed_keyboard_escape",
         [118941584817777]  = "Maps/speed_keyboard_escape",
+        [132218070076716]  = "Maps/speed_keyboard_escape",
         [93411036959889]   = "Maps/speed_keyboard_escape",
 
         [126509999114328]  = "Maps/99_nights",
