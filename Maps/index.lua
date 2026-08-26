@@ -3,32 +3,32 @@
 
 return {
     NameMatchers = {
-        { pattern = "blox fruits",            file = "Maps/bloxfruits" },
-        { pattern = "bloxfruits",             file = "Maps/bloxfruits" },
+        { pattern = "blox fruits",              file = "Maps/bloxfruits" },
+        { pattern = "bloxfruits",               file = "Maps/bloxfruits" },
 
-        { pattern = "sailor piece",           file = "Maps/sailor_piece" },
-        { pattern = "sailorpiece",            file = "Maps/sailor_piece" },
+        { pattern = "sailor piece",             file = "Maps/sailor_piece" },
+        { pattern = "sailorpiece",              file = "Maps/sailor_piece" },
 
-        { pattern = "blade ball",             file = "Maps/BB" },
+        { pattern = "blade ball",               file = "Maps/BB" },
 
-        { pattern = "slime rng",              file = "Maps/Slime_RNG" },
-        { pattern = "slimerng",               file = "Maps/Slime_RNG" },
+        { pattern = "slime rng",                file = "Maps/Slime_RNG" },
+        { pattern = "slimerng",                 file = "Maps/Slime_RNG" },
 
-        { pattern = "wizard alchemy",         file = "Maps/wizard_alchemy" },
+        { pattern = "wizard alchemy",           file = "Maps/wizard_alchemy" },
 
-        { pattern = "grow a garden 2",        file = "Maps/gag2" },
-        { pattern = "growagarden2",           file = "Maps/gag2" },
+        { pattern = "grow a garden 2",          file = "Maps/gag2" },
+        { pattern = "growagarden2",             file = "Maps/gag2" },
 
-        { pattern = "murder mystery 2",       file = "Maps/djn_mm2" },
-        { pattern = "murdermystery2",         file = "Maps/djn_mm2" },
-        { pattern = "mm2",                    file = "Maps/djn_mm2" },
+        { pattern = "murder mystery 2",         file = "Maps/djn_mm2" },
+        { pattern = "murdermystery2",            file = "Maps/djn_mm2" },
+        { pattern = "mm2",                       file = "Maps/djn_mm2" },
 
         { pattern = "+1 speed keyboard escape", file = "Maps/speed_keyboard_escape" },
         { pattern = "speed keyboard escape",    file = "Maps/speed_keyboard_escape" },
 
         { pattern = "survive 99 nights",        file = "Maps/99_nights" },
         { pattern = "99 nights in the forest",  file = "Maps/99_nights" },
-        { pattern = "99 nights",                file = "Maps/99_nights" },
+        { pattern = "99 nights",                 file = "Maps/99_nights" },
 
         { pattern = "sell lemons",              file = "Maps/sell_lemons" },
         { pattern = "selllemons",               file = "Maps/sell_lemons" },
@@ -39,6 +39,10 @@ return {
         -- Prison Life
         { pattern = "prison life",              file = "Maps/prison_life" },
         { pattern = "prisonlife",               file = "Maps/prison_life" },
+
+        -- Steal An Egg
+        { pattern = "steal an egg",             file = "Maps/steal_an_egg" },
+        { pattern = "stealanegg",               file = "Maps/steal_an_egg" },
     },
 
     PlaceIds = {
@@ -62,7 +66,7 @@ return {
 
         [95082159892680]   = "Maps/speed_keyboard_escape",
         [118941584817777]  = "Maps/speed_keyboard_escape",
-        [75012837977315]  = "Maps/speed_keyboard_escape",
+        [75012837977315]   = "Maps/speed_keyboard_escape",
         [93411036959889]   = "Maps/speed_keyboard_escape",
 
         [126509999114328]  = "Maps/99_nights",
@@ -76,6 +80,9 @@ return {
 
         -- Prison Life
         [155615604]        = "Maps/prison_life",
+
+        -- Steal An Egg
+        [107778070777162]  = "Maps/steal_an_egg",
     },
 
     GameIds = {
@@ -87,16 +94,19 @@ return {
 
         [10200395747] = "Maps/gag2",
 
-        [9584852943]  = "Maps/speed_keyboard_escape",
+        [9584852943] = "Maps/speed_keyboard_escape",
 
-        [7326934954]  = "Maps/99_nights",
+        [7326934954] = "Maps/99_nights",
 
-        [7395930870]  = "Maps/sell_lemons",
+        [7395930870] = "Maps/sell_lemons",
 
         -- The Animal Hospital
         [10148749921] = "Maps/the_animal_hospital",
 
         -- Prison Life
-        [73885730]    = "Maps/prison_life",
+        [73885730] = "Maps/prison_life",
+
+        -- Steal An Egg
+        [10563114921] = "Maps/steal_an_egg",
     },
 }
