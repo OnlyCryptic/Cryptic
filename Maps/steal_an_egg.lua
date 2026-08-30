@@ -7,6 +7,10 @@ return {
         {
             Name = "Ouroboros (keyless)",
             Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/joustingmatch/Ouroboros/main/loader.lua"))()]]
+        },
+        {
+            Name = "Oxide Loader",
+            Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/xulfo/Oxide-Loader/main/Main.lua"))()]]
         }
     }
 }
