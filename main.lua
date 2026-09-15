@@ -1,7 +1,3 @@
--- [[ Cryptic Hub - المحرك الرئيسي V9.0 ]]
--- المطور: يامي
--- يدعم 4 لغات: العربية، الإنجليزية، الروسية، البرتغالية
-
 local HttpService     = game:GetService("HttpService")
 local Players         = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
@@ -10,7 +6,7 @@ local lp              = Players.LocalPlayer
 
 local Cryptic = {
     Config = {
-        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "gm",
+        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "hm",
         Discord = "https://discord.gg/QSvQJs7BdP"
     },
     -- ملاحظة: قوائم الماب (NameMatchers / PlaceIds / GameIds) صارت
@@ -33,7 +29,6 @@ end
 
 -- ============================================================
 -- تحميل سجل الماب من Cryptic/Maps/index.lua
--- (هيك main.lua يبقى نظيف وكل ماب جديد ينضاف هناك)
 -- ============================================================
 do
     local registry = Import("Maps/index.lua")
@@ -63,7 +58,7 @@ end
 pcall(function() Import("Modules/Core/physics_guard.lua") end)
 
 -- ============================================================
--- بناء الهيكل (يستخدم i18n لأسماء التابات الديناميكية)
+-- بناء الهيكل
 -- ============================================================
 local function T(key)
     if i18n then return i18n.T(key) end
@@ -71,7 +66,6 @@ local function T(key)
 end
 
 local function BuildStructure()
-    -- الأيقونة + " " + الترجمة
     Cryptic.Structure = {
         ["player"]      = { Icon = "👤", Key = "tab.player",   Folder = "Player",   Files = {"lol", "auto_apple", "speed", "fly", "jumppower", "noclip", "walkfling", "antifling", "wallwalk", "nofall", "infinitejump", "restart", "discord"} },
         ["tools"]       = { Icon = "🔧", Key = "tab.tools",    Folder = "Misc",     Files = {"lol", "tptool", "auto_tool", "fling_tool", "noclip_tool", "emotes", "esp", "shiftlock", "invis_tool", "spin_tool", "x-ray", "fullbright", "no_fog", "camera"} },
@@ -86,7 +80,6 @@ local function BuildStructure()
     }
 end
 
--- اسم تاب جاهز بالأيقونة + الترجمة
 local function TabDisplayName(id)
     local data = Cryptic.Structure[id]
     if not data then return id end
@@ -123,7 +116,6 @@ end
 local function InjectMapTab()
     local mapFilePath
 
-    -- ───── طريقة 1: مطابقة باسم اللعبة (الأقوى) ─────
     if Cryptic.MapNameMatchers then
         local placeName
         pcall(function()
@@ -140,12 +132,10 @@ local function InjectMapTab()
         end
     end
 
-    -- ───── طريقة 2: PlaceId (إيديات الأماكن المعروفة) ─────
     if not mapFilePath and Cryptic.Maps then
         mapFilePath = Cryptic.Maps[game.PlaceId]
     end
 
-    -- ───── طريقة 4: GameId / UniverseId (يغطي كل العوالم) ─────
     if not mapFilePath and Cryptic.GameIds then
         mapFilePath = Cryptic.GameIds[game.GameId]
     end
@@ -173,7 +163,6 @@ local function RejoinForLanguage()
         loaderURL
     )
 
-    -- صف التشغيل التلقائي بعد التيليبورت
     pcall(function()
         if queue_on_teleport then
             queue_on_teleport(loader)
@@ -192,14 +181,12 @@ local function RejoinForLanguage()
         end)
     end
 
-    -- 1) محاولة العودة لنفس السيرفر
     notify(T("lang.rejoining"))
     local sameOk = pcall(function()
         TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, lp)
     end)
     if sameOk then return end
 
-    -- 2) لو فشل، Server Hop عبر Roblox API
     notify(T("lang.hopping"))
     local hopOk = false
     pcall(function()
@@ -231,7 +218,6 @@ local function RejoinForLanguage()
     end)
     if hopOk then return end
 
-    -- 3) لو ما قدرنا، نخلي اللاعب يخرج ويدخل يدوياً
     notify(T("lang.fail"))
 end
 
@@ -244,9 +230,9 @@ local function StartCrypticHub()
     local UI = Import("UI/Core.lua")
 
     if UI then
+        -- تم تصحيح علامة الدمج هنا إلى (..) لتفادي أي خطأ
         local MainWin = UI:CreateWindow("Cryptic Hub / " .. Cryptic.Config.Discord)
 
-        -- إتاحة فتح اختيار اللغة من الـCore (شارة العلم)
         getgenv().CrypticOpenLangPicker = function()
             local Picker = Import("UI/LanguagePicker.lua")
             if Picker and i18n then
@@ -278,14 +264,11 @@ local function StartCrypticHub()
                 end
 
                 task.spawn(function(data, tab, nameOfTab)
-                    -- 1. معالجة تاب الماب المخصص
                     if data._isMapTab and data._mapData then
                         local mapData = data._mapData
-                        -- لو الماب عنده دالة Render خاصة → نشغّلها مباشرةً
                         if type(mapData.Render) == "function" then
                             pcall(function() mapData.Render(tab, UI) end)
                         else
-                            -- وإلا نعرض بطاقات السكربتات التقليدية
                             tab:AddLabel("🗺️ " .. T("tab.map_scripts"))
                             local MapCardFunc = LoadElement("MapCard")
                             if MapCardFunc then pcall(function() MapCardFunc(tab, mapData) end) end
@@ -293,7 +276,6 @@ local function StartCrypticHub()
                         return
                     end
 
-                    -- دالة مساعدة: تشغل قائمة ملفات وتضيف خط فاصل تلقائياً بينها
                     local function RunModules(targetTab, folder, fileList)
                         for i, fname in ipairs(fileList) do
                             local filePath = (folder == "") and (fname .. ".lua") or ("Modules/" .. folder .. "/" .. fname .. ".lua")
@@ -307,7 +289,6 @@ local function StartCrypticHub()
                         end
                     end
 
-                    -- 2. معالجة تاب الاستهداف (نظام القوائم الفرعية)
                     if nameOfTab == "target" then
                         local tsInit = Import("Modules/Combat/target_select.lua")
                         if type(tsInit) == "function" then pcall(function() tsInit(tab, UI) end) end
@@ -326,18 +307,15 @@ local function StartCrypticHub()
                             return openTab
                         end
 
-                        -- ── 1. مراقبة / Spy ──────────────────────────────────
                         local spyTab = MakeOpen(T("open.spy"), "👁️")
                         for _, fname in ipairs({"target_spectate", "target_tp", "Target_follow", "target_esp", "skinz", "info_t"}) do
                             local init = Import("Modules/Combat/" .. fname .. ".lua")
                             if type(init) == "function" then pcall(function() init(spyTab, UI) end) end
                         end
 
-                        -- ── 2. مزح / Fun (تشغيل حصري: زر واحد فقط) ─────────
                         local funTab = MakeOpen(T("open.fun"), "😂")
                         local funGroup = {}
 
-                        -- ── Exclusive wrapper للـ AddToggle ─────────────────
                         local origFunToggle = funTab.AddToggle
                         funTab.AddToggle = function(self, label, callback)
                             local toggleObj
@@ -356,17 +334,13 @@ local function StartCrypticHub()
                             return toggleObj
                         end
 
-                        -- ── Exclusive wrapper للـ AddLockedToggle ─────────────
-                        -- يدعم كلا الشكلين: (label, reason, cb) أو (label, cb)
                         local origFunLockedToggle = funTab.AddLockedToggle
                         funTab.AddLockedToggle = function(self, label, reasonOrCb, callbackOrNil)
                             local reason, callback
                             if type(reasonOrCb) == "function" then
-                                -- استدعاء بدون reason: (label, callback)
                                 reason   = ""
                                 callback = reasonOrCb
                             else
-                                -- استدعاء كامل: (label, reason, callback)
                                 reason   = reasonOrCb
                                 callback = callbackOrNil
                             end
@@ -391,7 +365,6 @@ local function StartCrypticHub()
                             if type(init) == "function" then pcall(function() init(funTab, UI) end) end
                         end
 
-                        -- ── 3. خدع / Tricks ──────────────────────────────────
                         local tricksTab = MakeOpen(T("open.tricks"), "🎭")
                         for _, fname in ipairs({"target_fling", "bring_parts", "target_mimic", "copy_walk", "target_aimbot", "target_emotes"}) do
                             local init = Import("Modules/Combat/" .. fname .. ".lua")
@@ -401,7 +374,6 @@ local function StartCrypticHub()
                         return
                     end
 
-                    -- 3. معالجة تاب أخرى (نظام القوائم الفرعية)
                     if nameOfTab == "other" then
                         local function MakeOpen(title, icon)
                             local openFunc = LoadElement("Open")
@@ -426,7 +398,6 @@ local function StartCrypticHub()
                         return
                     end
 
-                    -- 4. التحميل الافتراضي لبقية التابات
                     RunModules(tab, data.Folder, data.Files)
                 end, tabData, CurrentTab, tabId)
             end
@@ -435,7 +406,7 @@ local function StartCrypticHub()
 end
 
 -- ============================================================
--- فحص صندوق الرسائل (Inbox) — يعرض الرسائل الجديدة مرة واحدة فقط
+-- فحص صندوق الرسائل (Inbox)
 -- ============================================================
 local function RunInboxCheck()
     task.spawn(function()
@@ -448,55 +419,20 @@ end
 
 -- ============================================================
 -- البوابة الرئيسية
---   - أول مرة يفتح السكربت → نعرض شاشة اختيار اللغة → نحفظ → نعيد الدخول
---   - بعد كذا → نشغّل الواجهة مباشرة
 -- ============================================================
 local function Boot()
-    -- تحقق من الرسائل في الخلفية (بشكل موازٍ لا يوقف التحميل)
     RunInboxCheck()
 
-    -- تشغيل متتبعات شوب Grow a Garden 2 (فقط إذا كانت اللعبة gag2)
-    local isGAG2 = false
-    do
-        local GAG2_PLACEIDS = { [97598239454123] = true }
-        local GAG2_GAMEIDS  = { [10200395747]    = true }
-        local GAG2_PATTERNS = { "grow a garden 2", "growagarden2", "grow a garden2" }
-
-        if GAG2_PLACEIDS[game.PlaceId] or GAG2_GAMEIDS[game.GameId] then
-            isGAG2 = true
-        else
-            pcall(function()
-                local name = string.lower(game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name or "")
-                for _, p in ipairs(GAG2_PATTERNS) do
-                    if name:find(p, 1, true) then isGAG2 = true break end
-                end
-            end)
-        end
-    end
-
-    if isGAG2 then
-        task.spawn(function()
-            pcall(function() Import("cryptic/gag2_seedshop.lua") end)
-        end)
-        task.spawn(function()
-            pcall(function() Import("cryptic/gag2_gearshop.lua") end)
-        end)
-    end
-
     if not i18n then
-        -- لو فشل تحميل i18n، نشغّل بالإنجليزية بدون اختيار
         StartCrypticHub()
         return
     end
 
     if i18n.HasSaved() then
-        -- تم اختيار اللغة سابقاً → نشغّل مباشرة
         StartCrypticHub()
         return
     end
 
-    -- أول مرة → شاشة اختيار اللغة، ثم نشغّل الواجهة مباشرة (بدون إعادة دخول)
-    -- إعادة الدخول مطلوبة فقط عند تغيير اللغة من شارة العلم بعد التشغيل.
     local Picker = Import("UI/LanguagePicker.lua")
     if not Picker then
         StartCrypticHub()
