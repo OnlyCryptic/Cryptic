@@ -1,7 +1,3 @@
--- [[ Cryptic Hub - المحرك الرئيسي V9.0 ]]
--- المطور: يامي
--- يدعم 4 لغات: العربية، الإنجليزية، الروسية، البرتغالية
-
 local HttpService     = game:GetService("HttpService")
 local Players         = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
