@@ -43,6 +43,9 @@ return {
         -- Steal An Egg
         { pattern = "steal an egg",             file = "Maps/steal_an_egg" },
         { pattern = "stealanegg",               file = "Maps/steal_an_egg" },
+        -- Fling Things and People
+        { pattern = "fling things and people",  file = "Maps/fling_things_and_people" },
+        { pattern = "fling things & people",    file = "Maps/fling_things_and_people" },
     },
 
     PlaceIds = {
@@ -83,6 +86,8 @@ return {
 
         -- Steal An Egg
         [107778070777162]  = "Maps/steal_an_egg",
+        -- Fling Things and People
+        [6961824067]       = "Maps/fling_things_and_people",
     },
 
     GameIds = {
@@ -108,5 +113,7 @@ return {
 
         -- Steal An Egg
         [10563114921] = "Maps/steal_an_egg",
+        -- Fling Things and People
+        [2668101271]  = "Maps/fling_things_and_people",
     },
 }
