@@ -39,7 +39,11 @@ return function(TabOps, label, options, callback)
     OptionsContainer.Size = UDim2.new(1, 0, 1, -40)
     OptionsContainer.Position = UDim2.new(0, 0, 0, 40)
     OptionsContainer.BackgroundTransparency = 1
-    OptionsContainer.ScrollBarThickness = 2
+    OptionsContainer.ScrollBarThickness = 4
+    OptionsContainer.ScrollBarImageTransparency = 0.3
+    OptionsContainer.ScrollingDirection = Enum.ScrollingDirection.Y
+    OptionsContainer.ScrollingEnabled = true
+    OptionsContainer.Active = true
     
     local OptLayout = Instance.new("UIListLayout", OptionsContainer)
     OptLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -47,14 +51,24 @@ return function(TabOps, label, options, callback)
     
     -- دالة لتحديث حجم الإطار بناءً على عدد الخيارات المفتوحة
     local function RefreshSize()
+        local contentHeight = TabOps.UI and TabOps.UI.GetUnscaledLayoutHeight
+            and TabOps.UI.GetUnscaledLayoutHeight(OptLayout.AbsoluteContentSize.Y)
+            or OptLayout.AbsoluteContentSize.Y
+        OptionsContainer.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
         if isOpen then
             -- أقصى حجم للقائمة هو 150، وإذا زاد تظهر عجلة التمرير
-            local h = math.clamp(OptLayout.AbsoluteContentSize.Y + 40, 40, 150)
+            local h = math.clamp(contentHeight + 40, 40, 150)
             DropdownFrame.Size = UDim2.new(0.95, 0, 0, h)
-            OptionsContainer.CanvasSize = UDim2.new(0, 0, 0, OptLayout.AbsoluteContentSize.Y)
         else
             DropdownFrame.Size = UDim2.new(0.95, 0, 0, 40)
         end
+    end
+    OptLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(RefreshSize)
+    local responsiveScale = TabOps.UI and TabOps.UI.ResponsiveScale
+    if responsiveScale then
+        responsiveScale:GetPropertyChangedSignal("Scale"):Connect(function()
+            task.defer(RefreshSize)
+        end)
     end
     
     -- فتح وإغلاق القائمة
