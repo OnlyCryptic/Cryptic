@@ -44,32 +44,48 @@ return function(TabOps, label, placeholder, callback)
 
     -- 5. قائمة اللاعبين (المكان الذي تظهر فيه الصور والأسماء)
     local DropList = Instance.new("ScrollingFrame", Container)
-    DropList.Size = UDim2.new(0.9, 0, 0, 140)
+    DropList.Size = UDim2.new(0.9, 0, 0, 0)
     DropList.Position = UDim2.new(0.05, 0, 0, 75)
     DropList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     DropList.Visible = false
-    DropList.ScrollBarThickness = 2
+    DropList.ScrollBarThickness = 4
+    DropList.ScrollBarImageTransparency = 0.3
+    DropList.ScrollingDirection = Enum.ScrollingDirection.Y
+    DropList.ScrollingEnabled = true
+    DropList.Active = true
     Instance.new("UICorner", DropList)
     
     local ListLayout = Instance.new("UIListLayout", DropList)
     ListLayout.Padding = UDim.new(0, 5)
-    ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() 
-        DropList.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 5) 
-    end)
 
     local isOpen = false
     local currentSelectedUser = nil
+    local playerCount = 0
+    local MAX_VISIBLE_LIST_HEIGHT = 220
+
+    local function updateListMetrics()
+        local contentHeight = playerCount > 0 and (playerCount * 45 - 5) or 0
+        local visibleHeight = math.min(contentHeight, MAX_VISIBLE_LIST_HEIGHT)
+        DropList.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 5)
+        DropList.Size = UDim2.new(0.9, 0, 0, visibleHeight)
+        Container.Size = UDim2.new(0.95, 0, 0, isOpen and (75 + visibleHeight) or 75)
+    end
+
+    local function setOpen(open)
+        isOpen = open
+        DropList.Visible = isOpen
+        DropBtn.Text = isOpen and "▲ إغلاق القائمة / Close List ▲" or "▼ عرض قائمة اللاعبين / Show Players ▼"
+        updateListMetrics()
+    end
 
     -- حركة فتح وإغلاق القائمة
     DropBtn.MouseButton1Click:Connect(function()
-        isOpen = not isOpen
-        DropList.Visible = isOpen
-        Container.Size = isOpen and UDim2.new(0.95, 0, 0, 220) or UDim2.new(0.95, 0, 0, 75)
-        DropBtn.Text = isOpen and "▲ إغلاق القائمة / Close List ▲" or "▼ عرض قائمة اللاعبين / Show Players ▼"
+        setOpen(not isOpen)
     end)
 
     -- 6. دالة بناء وتحديث بطاقات اللاعبين داخل القائمة
     local function UpdateList(playersList)
+        playerCount = #playersList
         for _, v in pairs(DropList:GetChildren()) do
             if v:IsA("Frame") then v:Destroy() end
         end
@@ -121,15 +137,15 @@ return function(TabOps, label, placeholder, callback)
                 end
                 
                 task.wait(0.15)
-                isOpen = false; DropList.Visible = false
-                Container.Size = UDim2.new(0.95, 0, 0, 75)
-                DropBtn.Text = "▼ عرض قائمة اللاعبين / Show Players ▼"
+                setOpen(false)
                 
                 -- تسجيل وإرسال للديسكورد
                 if TabOps.LogAction then TabOps.LogAction("👤 تحديد لاعب", label, "تم تحديد: " .. p.Name, 10181046) end
                 pcall(callback, p) 
             end)
         end
+        DropList.CanvasPosition = Vector2.new(0, 0)
+        updateListMetrics()
     end
 
     -- 7. نظام البحث الذكي (عند الكتابة داخل المربع)
