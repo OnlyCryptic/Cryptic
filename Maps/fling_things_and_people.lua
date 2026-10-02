@@ -1,36 +1,29 @@
--- [[ Cryptic Hub - Map: Fling Things and People (Optimized & Enhanced) ]]
+-- [[ Cryptic Hub - Module: Fling Things and People (FTAP) ]]
 
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 
--- Remotes & References
-local menuToys = ReplicatedStorage:FindFirstChild("MenuToys")
-local spawnToyRF = menuToys and menuToys:FindFirstChild("SpawnToyRemoteFunction")
-local buyToyRF = menuToys and menuToys:FindFirstChild("BuyToyRemoteFunction")
-
-local characterEvents = ReplicatedStorage:FindFirstChild("CharacterEvents")
-local ragdollRemote = characterEvents and characterEvents:FindFirstChild("RagdollRemote")
-
--- State Connections
-local noclipConn = nil
+-- Global Connections
+local autoFlingConn = nil
 local antiGrabConn = nil
 local antiRagdollConn = nil
-local flyConn = nil
+local speedConn = nil
+local jumpConn = nil
 
 return {
     Name = "Fling Things and People",
 
     Render = function(tab)
         ------------------------------------------------------------------------
-        -- 1. لوحة معلومات خفيفة ومبتكرة
+        -- 1. حالة الجلسة
         ------------------------------------------------------------------------
-        tab:AddParagraph("Cryptic Hub | FTAP", "نظام الحماية والتحكم المتقدم بالجلسة")
+        tab:AddParagraph("Cryptic Hub | FTAP", "نظام الحماية والمحرك المطور")
 
-        local statusLabel = tab:AddLabel("الحالة: جاري التحميل...")
+        local statusLabel = tab:AddLabel("الحالة: جاري المراقبة...")
 
         local function updateStatus()
             local char = LocalPlayer.Character
@@ -38,43 +31,81 @@ return {
             local hp = hum and math.floor(hum.Health) or 0
             local maxHp = hum and math.floor(hum.MaxHealth) or 100
             
-            local spawnedToys = Workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
-            local toyCount = spawnedToys and #spawnedToys:GetChildren() or 0
-
-            statusLabel:SetText(string.format("الصحة: %d/%d | الألعاب المفعّلة: %d | اللاعبين: %d", hp, maxHp, toyCount, #Players:GetPlayers()))
+            statusLabel:SetText(string.format("الصحة: %d/%d | اللاعبون: %d", hp, maxHp, #Players:GetPlayers()))
         end
 
         ------------------------------------------------------------------------
-        -- 2. ميزات الحماية والتصدي (Self Defense & Anti-Tools)
+        -- 2. التطيير الخارق التلقائي (Auto Super Fling Toggle)
         ------------------------------------------------------------------------
-        tab:AddParagraph("الحماية الشخصية / Protection", "تفعيل الحمايات ضد اللاعبين الآخرين")
+        tab:AddParagraph("ميزات التطيير / Fling System", "تفعيل التطيير التلقائي لأي جسم ممسوك")
 
-        -- Anti-Grab: تدمير أي لحام (Weld) يربط شخصيتك بأي لاعب أو جسم خيالي
-        tab:AddToggle("منع المسك والتطيير / Anti-Grab", false, function(enabled)
+        local autoFlingEnabled = false
+        tab:AddToggle("تطيير خارق تلقائي / Auto Super Fling", false, function(enabled)
+            autoFlingEnabled = enabled
+            if enabled then
+                if not autoFlingConn then
+                    autoFlingConn = RunService.Heartbeat:Connect(function()
+                        if not autoFlingEnabled then return end
+                        
+                        local grabParts = Workspace:FindFirstChild("GrabParts")
+                        if grabParts then
+                            for _, grab in ipairs(grabParts:GetChildren()) do
+                                local weld = grab:FindFirstChildOfClass("WeldConstraint") or grab:FindFirstChildOfClass("Weld")
+                                if weld and weld.Part1 then
+                                    local targetPart = weld.Part1
+                                    local char = LocalPlayer.Character
+                                    -- التأكد من أن الجسم الممسوك لا يتبع لشخصيتك
+                                    if not (char and targetPart:IsDescendantOf(char)) then
+                                        targetPart.AssemblyLinearVelocity = Vector3.new(0, 35000, 0)
+                                        targetPart.AssemblyAngularVelocity = Vector3.new(15000, 15000, 15000)
+                                    end
+                                end
+                            end
+                        end
+                    end)
+                end
+            elseif autoFlingConn then
+                autoFlingConn:Disconnect()
+                autoFlingConn = nil
+            end
+        end)
+
+        ------------------------------------------------------------------------
+        -- 3. إصلاح الحمايات (Anti-Grab & Anti-Ragdoll)
+        ------------------------------------------------------------------------
+        tab:AddParagraph("الحماية المتقدمة / Advanced Protections", "إصلاح كامل لآليات المسك والسقوط")
+
+        -- منع المسك الحقيقي (Anti-Grab)
+        tab:AddToggle("منع المسك / Anti-Grab (Fixed)", false, function(enabled)
             if enabled then
                 if not antiGrabConn then
                     antiGrabConn = RunService.Heartbeat:Connect(function()
                         local char = LocalPlayer.Character
                         if not char then return end
 
-                        -- فحص الأجسام الممسوكة في الماب
+                        -- 1. تدمير روابط المسك في مجلد GrabParts
                         local grabParts = Workspace:FindFirstChild("GrabParts")
                         if grabParts then
                             for _, grab in ipairs(grabParts:GetChildren()) do
-                                for _, weld in ipairs(grab:GetDescendants()) do
-                                    if weld:IsA("WeldConstraint") or weld:IsA("Weld") then
-                                        if (weld.Part0 and weld.Part0:IsDescendantOf(char)) or (weld.Part1 and weld.Part1:IsDescendantOf(char)) then
-                                            weld:Destroy()
+                                for _, constraint in ipairs(grab:GetDescendants()) do
+                                    if constraint:IsA("WeldConstraint") or constraint:IsA("Weld") or constraint:IsA("RopeConstraint") then
+                                        if (constraint.Part0 and constraint.Part0:IsDescendantOf(char)) or 
+                                           (constraint.Part1 and constraint.Part1:IsDescendantOf(char)) then
+                                            constraint:Destroy()
                                         end
                                     end
                                 end
                             end
                         end
 
-                        -- فحص أي ملحقات دخلت الشخصية
-                        for _, item in ipairs(char:GetDescendants()) do
-                            if item:IsA("WeldConstraint") or item:IsA("RopeConstraint") then
-                                item:Destroy()
+                        -- 2. إزالة أي قيود حركية خارجية مجبرة على الشخصية
+                        for _, obj in ipairs(char:GetDescendants()) do
+                            if obj:IsA("WeldConstraint") or obj:IsA("RopeConstraint") or obj:IsA("NoCollisionConstraint") then
+                                local p0 = obj.Part0
+                                local p1 = obj.Part1
+                                if (p0 and not p0:IsDescendantOf(char)) or (p1 and not p1:IsDescendantOf(char)) then
+                                    obj:Destroy()
+                                end
                             end
                         end
                     end)
@@ -85,16 +116,33 @@ return {
             end
         end)
 
-        -- Anti-Ragdoll: إلغاء حظر الحركة والتساقط
-        tab:AddToggle("منع السقوط / Anti-Ragdoll", false, function(enabled)
+        -- منع السقوط والـ Ragdoll (Anti-Ragdoll)
+        tab:AddToggle("منع السقوط / Anti-Ragdoll (Fixed)", false, function(enabled)
             if enabled then
                 if not antiRagdollConn then
                     antiRagdollConn = RunService.Stepped:Connect(function()
                         local char = LocalPlayer.Character
-                        local hum = char and char:FindFirstChildOfClass("Humanoid")
+                        if not char then return end
+
+                        local hum = char:FindFirstChildOfClass("Humanoid")
                         if hum then
+                            hum:ChangeState(Enum.HumanoidStateType.GettingUp)
                             hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
                             hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+                            hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
+                        end
+
+                        -- استعادة مفاصل الجسم الأصليّة وتعطيل قيود السقوط
+                        for _, desc in ipairs(char:GetDescendants()) do
+                            if desc:IsA("Motor6D") then
+                                desc.Enabled = true
+                            elseif desc:IsA("BallSocketConstraint") or desc:IsA("HingeConstraint") then
+                                desc.Enabled = false
+                            elseif desc:IsA("BoolValue") or desc:IsA("StringValue") then
+                                if desc.Name:lower():find("ragdoll") or desc.Name:lower():find("stun") then
+                                    desc.Value = false
+                                end
+                            end
                         end
                     end)
                 end
@@ -106,115 +154,74 @@ return {
                 if hum then
                     hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
                     hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+                    hum:SetStateEnabled(Enum.HumanoidStateType.Physics, true)
                 end
             end
         end)
 
         ------------------------------------------------------------------------
-        -- 3. ميزات الحركة والتنقل (Mobility & Physics)
+        -- 4. إضافات قدرات جديدة (New Strong Features)
         ------------------------------------------------------------------------
-        tab:AddParagraph("الحركة والسرعة / Movement", "أدوات الانتقال والتطير في الخريطة")
+        tab:AddParagraph("قدرات إضافية / Player Boosts", "ميزات زيادة السرعة والتحرير")
 
-        -- الانتقال الفوري للأمام عبر Raycast المطور
-        tab:AddButton("انتقال لمكان النظر / TP to Look Vector", function()
-            local char = LocalPlayer.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-            local cam = Workspace.CurrentCamera
-
-            if hrp and cam then
-                local rayParams = RaycastParams.new()
-                rayParams.FilterDescendantsInstances = {char}
-                rayParams.FilterType = Enum.RaycastFilterType.Exclude
-
-                local result = Workspace:Raycast(cam.CFrame.Position, cam.CFrame.LookVector * 1000, rayParams)
-                if result then
-                    hrp.CFrame = CFrame.new(result.Position + Vector3.new(0, 3, 0))
-                end
-            end
-        end)
-
-        -- اختراق الجدران (Noclip)
-        tab:AddToggle("اختراق الجدران / Noclip", false, function(enabled)
+        -- زيادة سرعة الحركة
+        tab:AddToggle("سرعة فائقة / Speed Boost", false, function(enabled)
             if enabled then
-                if not noclipConn then
-                    noclipConn = RunService.Stepped:Connect(function()
+                if not speedConn then
+                    speedConn = RunService.Heartbeat:Connect(function()
                         local char = LocalPlayer.Character
-                        if char then
-                            for _, part in ipairs(char:GetDescendants()) do
-                                if part:IsA("BasePart") then
-                                    part.CanCollide = false
-                                end
-                            end
+                        local hum = char and char:FindFirstChildOfClass("Humanoid")
+                        if hum then
+                            hum.WalkSpeed = 35
                         end
                     end)
                 end
-            elseif noclipConn then
-                noclipConn:Disconnect()
-                noclipConn = nil
-            end
-        end)
-
-        ------------------------------------------------------------------------
-        -- 4. ميزات التحكم بالأغراض والمسك (Object & Fling Powers)
-        ------------------------------------------------------------------------
-        tab:AddParagraph("قوة المسك والرمي / Grab & Fling", "التحكم العالي بالأغراض واللاعبين")
-
-        -- تثبيت / فك تثبيت الجسم الممسوك حالياً
-        tab:AddButton("تثبيت/فك تثبيت الجسم الممسوك / Toggle Anchor Held", function()
-            local grabParts = Workspace:FindFirstChild("GrabParts")
-            if grabParts then
-                for _, grab in ipairs(grabParts:GetChildren()) do
-                    local weld = grab:FindFirstChildOfClass("WeldConstraint")
-                    if weld and weld.Part1 and not weld.Part1:IsDescendantOf(Workspace.Map) then
-                        weld.Part1.Anchored = not weld.Part1.Anchored
-                    end
+            elseif speedConn then
+                speedConn:Disconnect()
+                speedConn = nil
+                local char = LocalPlayer.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    hum.WalkSpeed = 16
                 end
             end
         end)
 
-        -- رمي/تطيير خارق للجسم الممسوك
-        tab:AddButton("تطيير خارق للجسم الممسوك / Super Fling Held", function()
-            local grabParts = Workspace:FindFirstChild("GrabParts")
-            if grabParts then
-                for _, grab in ipairs(grabParts:GetChildren()) do
-                    local weld = grab:FindFirstChildOfClass("WeldConstraint")
-                    if weld and weld.Part1 then
-                        local part = weld.Part1
-                        part.AssemblyLinearVelocity = Vector3.new(0, 10000, 0)
-                        part.AssemblyAngularVelocity = Vector3.new(5000, 5000, 5000)
-                    end
+        -- القفز اللانهائي
+        tab:AddToggle("قفز لا نهائي / Infinite Jump", false, function(enabled)
+            if enabled then
+                if not jumpConn then
+                    jumpConn = UserInputService.JumpRequest:Connect(function()
+                        local char = LocalPlayer.Character
+                        local hum = char and char:FindFirstChildOfClass("Humanoid")
+                        if hum then
+                            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+                        end
+                    end)
                 end
+            elseif jumpConn then
+                jumpConn:Disconnect()
+                jumpConn = nil
             end
         end)
 
-        ------------------------------------------------------------------------
-        -- 5. رسبنة الأدوات والقنابل (Advanced Toy Spawner)
-        ------------------------------------------------------------------------
-        tab:AddParagraph("رسبنة الألعاب القوية / Toy Spawner", "رسبنة ألعاب متطورة وقنابل فورية")
-
-        local function spawnToy(toyName)
+        -- زر التحرير الفوري
+        tab:AddButton("تحرير فوري للشخصية / Instant Break Free", function()
             local char = LocalPlayer.Character
-            local hrp = char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Head"))
-            if not hrp then return end
-
-            pcall(function()
-                if buyToyRF then buyToyRF:InvokeServer(toyName) end
-                if spawnToyRF then
-                    spawnToyRF:InvokeServer({
-                        toyName,
-                        hrp.CFrame * CFrame.new(0, 2, -5),
-                        Vector3.new(0, hrp.Orientation.Y, 0)
-                    })
+            if not char then return end
+            
+            for _, v in ipairs(char:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.Anchored = false
+                    v.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                elseif v:IsA("WeldConstraint") or v:IsA("RopeConstraint") or v:IsA("Weld") then
+                    v:Destroy()
                 end
-            end)
-        end
-
-        tab:AddButton("رسبنة قنبلة / Spawn Bomb", function() spawnToy("Bomb") end)
-        tab:AddButton("رسبنة كوناي / Spawn Ninja Kunai", function() spawnToy("NinjaKunai") end)
-        tab:AddButton("رسبنة موزة / Spawn Banana", function() spawnToy("FoodBanana") end)
+            end
+        end)
 
         ------------------------------------------------------------------------
-        -- الحلقة التكرارية لتحديث البيانات
+        -- حلقة تحديث الشاشة
         ------------------------------------------------------------------------
         task.spawn(function()
             while tab.Page and tab.Page.Parent do
