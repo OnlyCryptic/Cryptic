@@ -1,10 +1,11 @@
--- [[ Cryptic Hub - Map: Fling Things and People ]]
--- Enhanced status panel & game utilities module.
+-- [[ Cryptic Hub - Map: Fling Things and People (Optimized & Enhanced) ]]
 
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
 
 -- Remotes & References
 local menuToys = ReplicatedStorage:FindFirstChild("MenuToys")
@@ -14,127 +15,133 @@ local buyToyRF = menuToys and menuToys:FindFirstChild("BuyToyRemoteFunction")
 local characterEvents = ReplicatedStorage:FindFirstChild("CharacterEvents")
 local ragdollRemote = characterEvents and characterEvents:FindFirstChild("RagdollRemote")
 
-local function getValueObjectValue(parent, name)
-    local valueObject = parent and parent:FindFirstChild(name)
-    if not valueObject then
-        return nil
-    end
-
-    local ok, value = pcall(function()
-        return valueObject.Value
-    end)
-    if ok then
-        return value
-    end
-    return nil
-end
-
-local function formatNumber(value)
-    if type(value) == "number" then
-        return tostring(math.floor(value))
-    end
-    return "غير متاح / N/A"
-end
+-- State Connections
+local noclipConn = nil
+local antiGrabConn = nil
+local antiRagdollConn = nil
+local flyConn = nil
 
 return {
     Name = "Fling Things and People",
 
     Render = function(tab)
-        local localPlayer = Players.LocalPlayer
+        ------------------------------------------------------------------------
+        -- 1. لوحة معلومات خفيفة ومبتكرة
+        ------------------------------------------------------------------------
+        tab:AddParagraph("Cryptic Hub | FTAP", "نظام الحماية والتحكم المتقدم بالجلسة")
 
-        -- Panel 1: Map & Player Info
-        tab:AddParagraph(
-            "معلومات الماب / Map info",
-            "Fling Things and People\nPlace ID: 6961824067  |  Universal ID: 2668101271"
-        )
-        tab:AddParagraph(
-            "حالة اللاعب / Player status",
-            "معلومات للقراءة فقط وأدوات التحكم في الجلسة الحالية."
-        )
+        local statusLabel = tab:AddLabel("الحالة: جاري التحميل...")
 
-        local playerCountLabel = tab:AddLabel("اللاعبون / Players: —")
-        local plotLabel = tab:AddLabel("البلوت / Plot: —")
-        local toyCountLabel = tab:AddLabel("الألعاب المنشأة / Toys: —")
-        local characterLabel = tab:AddLabel("الشخصية / Character: —")
-        local refreshedAtLabel = tab:AddLabel("آخر تحديث / Updated: —")
-
-        local function refreshStatus()
-            local playerCount = #Players:GetPlayers()
-            local maxPlayers = Players.MaxPlayers
-            playerCountLabel:SetText(
-                "اللاعبون / Players: " .. playerCount .. " / " .. tostring(maxPlayers)
-            )
-
-            local inPlot = getValueObjectValue(localPlayer, "InPlot")
-            local plotStatus
-            if inPlot == true then
-                plotStatus = "داخل البلوت / In plot"
-            elseif inPlot == false then
-                plotStatus = "ليس داخل البلوت / Not in plot"
-            else
-                plotStatus = "غير متاح / N/A"
-            end
-            plotLabel:SetText("البلوت / Plot: " .. plotStatus)
-
-            local spawnedToys = Workspace:FindFirstChild(localPlayer.Name .. "SpawnedInToys")
+        local function updateStatus()
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            local hp = hum and math.floor(hum.Health) or 0
+            local maxHp = hum and math.floor(hum.MaxHealth) or 100
+            
+            local spawnedToys = Workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
             local toyCount = spawnedToys and #spawnedToys:GetChildren() or 0
-            local toyLimit = getValueObjectValue(localPlayer, "ToysLimitCap")
-            toyCountLabel:SetText(
-                "الألعاب المنشأة / Toys: "
-                    .. tostring(toyCount)
-                    .. " / "
-                    .. formatNumber(toyLimit)
-            )
 
-            local character = localPlayer.Character
-            local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                characterLabel:SetText(
-                    "الصحة / Health: "
-                        .. formatNumber(humanoid.Health)
-                        .. " / "
-                        .. formatNumber(humanoid.MaxHealth)
-                        .. "  |  WalkSpeed: "
-                        .. formatNumber(humanoid.WalkSpeed)
-                )
-            else
-                characterLabel:SetText("الشخصية / Character: غير متاحة / N/A")
-            end
-
-            refreshedAtLabel:SetText(
-                "آخر تحديث / Updated: " .. os.date("%H:%M:%S")
-            )
+            statusLabel:SetText(string.format("الصحة: %d/%d | الألعاب المفعّلة: %d | اللاعبين: %d", hp, maxHp, toyCount, #Players:GetPlayers()))
         end
 
-        tab:AddButton("تحديث المعلومات / Refresh status", refreshStatus)
+        ------------------------------------------------------------------------
+        -- 2. ميزات الحماية والتصدي (Self Defense & Anti-Tools)
+        ------------------------------------------------------------------------
+        tab:AddParagraph("الحماية الشخصية / Protection", "تفعيل الحمايات ضد اللاعبين الآخرين")
 
-        -- Panel 2: Movement & Player Hacks
-        tab:AddParagraph("التنقل والخصائص / Movement & Utilities", "ميزات التحكم بالشخصية والحركة")
+        -- Anti-Grab: تدمير أي لحام (Weld) يربط شخصيتك بأي لاعب أو جسم خيالي
+        tab:AddToggle("منع المسك والتطيير / Anti-Grab", false, function(enabled)
+            if enabled then
+                if not antiGrabConn then
+                    antiGrabConn = RunService.Heartbeat:Connect(function()
+                        local char = LocalPlayer.Character
+                        if not char then return end
 
-        tab:AddButton("تنقل للأمام / Teleport Forward", function()
-            local character = localPlayer.Character
-            if not character then return end
-            local camPart = character:FindFirstChild("CamPart") or Workspace.CurrentCamera
-            local hrp = character:FindFirstChild("HumanoidRootPart")
+                        -- فحص الأجسام الممسوكة في الماب
+                        local grabParts = Workspace:FindFirstChild("GrabParts")
+                        if grabParts then
+                            for _, grab in ipairs(grabParts:GetChildren()) do
+                                for _, weld in ipairs(grab:GetDescendants()) do
+                                    if weld:IsA("WeldConstraint") or weld:IsA("Weld") then
+                                        if (weld.Part0 and weld.Part0:IsDescendantOf(char)) or (weld.Part1 and weld.Part1:IsDescendantOf(char)) then
+                                            weld:Destroy()
+                                        end
+                                    end
+                                end
+                            end
+                        end
 
-            if camPart and hrp then
-                local ray = Ray.new(camPart.Position, camPart.CFrame.LookVector * 5000)
-                local hitPart, hitPos = Workspace:FindPartOnRayWithIgnoreList(ray, {character})
-                if hitPart then
-                    hrp.CFrame = CFrame.new(hitPos.X, hitPos.Y + 5, hitPos.Z)
+                        -- فحص أي ملحقات دخلت الشخصية
+                        for _, item in ipairs(char:GetDescendants()) do
+                            if item:IsA("WeldConstraint") or item:IsA("RopeConstraint") then
+                                item:Destroy()
+                            end
+                        end
+                    end)
+                end
+            elseif antiGrabConn then
+                antiGrabConn:Disconnect()
+                antiGrabConn = nil
+            end
+        end)
+
+        -- Anti-Ragdoll: إلغاء حظر الحركة والتساقط
+        tab:AddToggle("منع السقوط / Anti-Ragdoll", false, function(enabled)
+            if enabled then
+                if not antiRagdollConn then
+                    antiRagdollConn = RunService.Stepped:Connect(function()
+                        local char = LocalPlayer.Character
+                        local hum = char and char:FindFirstChildOfClass("Humanoid")
+                        if hum then
+                            hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+                            hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+                        end
+                    end)
+                end
+            elseif antiRagdollConn then
+                antiRagdollConn:Disconnect()
+                antiRagdollConn = nil
+                local char = LocalPlayer.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
+                    hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
                 end
             end
         end)
 
-        local noclipConn = nil
+        ------------------------------------------------------------------------
+        -- 3. ميزات الحركة والتنقل (Mobility & Physics)
+        ------------------------------------------------------------------------
+        tab:AddParagraph("الحركة والسرعة / Movement", "أدوات الانتقال والتطير في الخريطة")
+
+        -- الانتقال الفوري للأمام عبر Raycast المطور
+        tab:AddButton("انتقال لمكان النظر / TP to Look Vector", function()
+            local char = LocalPlayer.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            local cam = Workspace.CurrentCamera
+
+            if hrp and cam then
+                local rayParams = RaycastParams.new()
+                rayParams.FilterDescendantsInstances = {char}
+                rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
+                local result = Workspace:Raycast(cam.CFrame.Position, cam.CFrame.LookVector * 1000, rayParams)
+                if result then
+                    hrp.CFrame = CFrame.new(result.Position + Vector3.new(0, 3, 0))
+                end
+            end
+        end)
+
+        -- اختراق الجدران (Noclip)
         tab:AddToggle("اختراق الجدران / Noclip", false, function(enabled)
             if enabled then
                 if not noclipConn then
                     noclipConn = RunService.Stepped:Connect(function()
-                        local char = localPlayer.Character
+                        local char = LocalPlayer.Character
                         if char then
                             for _, part in ipairs(char:GetDescendants()) do
-                                if part:IsA("BasePart") and part.CanCollide then
+                                if part:IsA("BasePart") then
                                     part.CanCollide = false
                                 end
                             end
@@ -147,108 +154,73 @@ return {
             end
         end)
 
-        local ragdollConn = nil
-        tab:AddToggle("منع الـ Ragdoll / Anti-Ragdoll", false, function(enabled)
-            if enabled then
-                if not ragdollConn then
-                    ragdollConn = RunService.Heartbeat:Connect(function()
-                        local char = localPlayer.Character
-                        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-                        if hrp and ragdollRemote then
-                            pcall(function()
-                                ragdollRemote:FireServer(hrp, 0)
-                            end)
-                        end
-                    end)
-                end
-            elseif ragdollConn then
-                ragdollConn:Disconnect()
-                ragdollConn = nil
-            end
-        end)
+        ------------------------------------------------------------------------
+        -- 4. ميزات التحكم بالأغراض والمسك (Object & Fling Powers)
+        ------------------------------------------------------------------------
+        tab:AddParagraph("قوة المسك والرمي / Grab & Fling", "التحكم العالي بالأغراض واللاعبين")
 
-        -- Panel 3: Objects & Toys Controls
-        tab:AddParagraph("الأغراض والألعاب / Objects & Toys", "التحكم بالأغراض ورسبنة الألعاب")
-
-        tab:AddButton("تثبيت الغرض الممسوك / Anchor Held Part", function()
+        -- تثبيت / فك تثبيت الجسم الممسوك حالياً
+        tab:AddButton("تثبيت/فك تثبيت الجسم الممسوك / Toggle Anchor Held", function()
             local grabParts = Workspace:FindFirstChild("GrabParts")
-            if grabParts and grabParts:FindFirstChild("GrabPart") then
-                local weld = grabParts.GrabPart:FindFirstChild("WeldConstraint")
-                if weld and weld.Part1 then
-                    local part = weld.Part1
-                    if not part:IsDescendantOf(Workspace.Map) then
-                        part.Anchored = not part.Anchored
+            if grabParts then
+                for _, grab in ipairs(grabParts:GetChildren()) do
+                    local weld = grab:FindFirstChildOfClass("WeldConstraint")
+                    if weld and weld.Part1 and not weld.Part1:IsDescendantOf(Workspace.Map) then
+                        weld.Part1.Anchored = not weld.Part1.Anchored
                     end
                 end
             end
         end)
 
-        local function quickSpawn(toyName)
-            local char = localPlayer.Character
-            local hrp = char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("CamPart"))
+        -- رمي/تطيير خارق للجسم الممسوك
+        tab:AddButton("تطيير خارق للجسم الممسوك / Super Fling Held", function()
+            local grabParts = Workspace:FindFirstChild("GrabParts")
+            if grabParts then
+                for _, grab in ipairs(grabParts:GetChildren()) do
+                    local weld = grab:FindFirstChildOfClass("WeldConstraint")
+                    if weld and weld.Part1 then
+                        local part = weld.Part1
+                        part.AssemblyLinearVelocity = Vector3.new(0, 10000, 0)
+                        part.AssemblyAngularVelocity = Vector3.new(5000, 5000, 5000)
+                    end
+                end
+            end
+        end)
+
+        ------------------------------------------------------------------------
+        -- 5. رسبنة الأدوات والقنابل (Advanced Toy Spawner)
+        ------------------------------------------------------------------------
+        tab:AddParagraph("رسبنة الألعاب القوية / Toy Spawner", "رسبنة ألعاب متطورة وقنابل فورية")
+
+        local function spawnToy(toyName)
+            local char = LocalPlayer.Character
+            local hrp = char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Head"))
             if not hrp then return end
 
-            if buyToyRF then
-                pcall(function() buyToyRF:InvokeServer(toyName) end)
-            end
-            if spawnToyRF then
-                pcall(function()
+            pcall(function()
+                if buyToyRF then buyToyRF:InvokeServer(toyName) end
+                if spawnToyRF then
                     spawnToyRF:InvokeServer({
                         toyName,
-                        hrp.CFrame,
+                        hrp.CFrame * CFrame.new(0, 2, -5),
                         Vector3.new(0, hrp.Orientation.Y, 0)
                     })
-                end)
-            end
+                end
+            end)
         end
 
-        tab:AddButton("رسبنة كوناي / Spawn Ninja Kunai", function() quickSpawn("NinjaKunai") end)
-        tab:AddButton("رسبنة بخاخ / Spawn Spray Can", function() quickSpawn("SprayCanWD") end)
-        tab:AddButton("رسبنة موزة / Spawn Banana", function() quickSpawn("FoodBanana") end)
+        tab:AddButton("رسبنة قنبلة / Spawn Bomb", function() spawnToy("Bomb") end)
+        tab:AddButton("رسبنة كوناي / Spawn Ninja Kunai", function() spawnToy("NinjaKunai") end)
+        tab:AddButton("رسبنة موزة / Spawn Banana", function() spawnToy("FoodBanana") end)
 
-        -- Panel 4: Entity & Camera View
-        tab:AddParagraph("مراقبة الكائنات / Entity View", "التركيز والتحكم برؤية الكائنات")
-
-        tab:AddButton("التركيز على الهدف / Focus Target", function()
-            local char = localPlayer.Character
-            if not char then return end
-            local head = char:FindFirstChild("Head")
-            if not head then return end
-
-            local camera = Workspace.CurrentCamera
-            local params = RaycastParams.new()
-            params.FilterDescendantsInstances = {char}
-            params.FilterType = Enum.RaycastFilterType.Exclude
-
-            local result = Workspace:Raycast(head.Position, camera.CFrame.LookVector * 150, params)
-            if result and result.Instance then
-                local model = result.Instance:FindFirstAncestorOfClass("Model")
-                local hum = model and model:FindFirstChildOfClass("Humanoid")
-                if hum then
-                    camera.CameraSubject = hum
-                end
-            end
-        end)
-
-        tab:AddButton("إعادة الكاميرا لشخصيتك / Reset Camera", function()
-            local char = localPlayer.Character
-            local hum = char and char:FindFirstChildOfClass("Humanoid")
-            if hum then
-                Workspace.CurrentCamera.CameraSubject = hum
-            end
-        end)
-
-        -- Initial Status Refresh & Loop
-        refreshStatus()
-
+        ------------------------------------------------------------------------
+        -- الحلقة التكرارية لتحديث البيانات
+        ------------------------------------------------------------------------
         task.spawn(function()
             while tab.Page and tab.Page.Parent do
-                task.wait(2)
-                if not tab.Page or not tab.Page.Parent then
-                    break
-                end
-                pcall(refreshStatus)
+                pcall(updateStatus)
+                task.wait(1.5)
             end
         end)
-    end,
+    end
 }
