@@ -151,7 +151,9 @@ return function(TabRef, title, icon)
     -- منطق الفتح والغلق
     -- ══════════════════════════════════════════
     local function UpdateSize()
-        local contentH = InnerLayout.AbsoluteContentSize.Y
+        local contentH = TabRef.UI and TabRef.UI.GetUnscaledLayoutHeight
+            and TabRef.UI.GetUnscaledLayoutHeight(InnerLayout.AbsoluteContentSize.Y)
+            or InnerLayout.AbsoluteContentSize.Y
         if isOpen then
             local totalH = 52 + 1 + 8 + contentH + 14
             tween(Container, {Size = UDim2.new(0.97, 0, 0, totalH), BackgroundColor3 = Color3.fromRGB(20, 20, 28)}, 0.28)
@@ -174,6 +176,12 @@ return function(TabRef, title, icon)
     InnerLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         if isOpen then UpdateSize() end
     end)
+    local responsiveScale = TabRef.UI and TabRef.UI.ResponsiveScale
+    if responsiveScale then
+        responsiveScale:GetPropertyChangedSignal("Scale"):Connect(function()
+            task.defer(UpdateSize)
+        end)
+    end
 
     -- هوفر
     Header.MouseEnter:Connect(function()
