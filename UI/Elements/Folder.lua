@@ -31,7 +31,9 @@ return function(TabRef, title)
     
     local function UpdateSize()
         if isOpen then
-            local contentHeight = InnerLayout.AbsoluteContentSize.Y
+            local contentHeight = TabRef.UI and TabRef.UI.GetUnscaledLayoutHeight
+                and TabRef.UI.GetUnscaledLayoutHeight(InnerLayout.AbsoluteContentSize.Y)
+                or InnerLayout.AbsoluteContentSize.Y
             FolderContainer.Size = UDim2.new(0.95, 0, 0, 40 + contentHeight + 10)
             InnerPage.Size = UDim2.new(1, 0, 0, contentHeight + 10)
             HeaderBtn.Text = "  ▼ " .. title
@@ -49,6 +51,12 @@ return function(TabRef, title)
     InnerLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         if isOpen then UpdateSize() end
     end)
+    local responsiveScale = TabRef.UI and TabRef.UI.ResponsiveScale
+    if responsiveScale then
+        responsiveScale:GetPropertyChangedSignal("Scale"):Connect(function()
+            task.defer(UpdateSize)
+        end)
+    end
     
     -- إرجاع كائن وهمي يشتغل كأنه Tab عشان يستقبل الدوال
     local FolderTab = setmetatable({
