@@ -113,7 +113,9 @@ return function(TabOps, label, mainCallback)
 
     -- ── تحديث الحجم ──────────────────────────────────────────────
     local function UpdateSize()
-        local contentH = InnerLayout.AbsoluteContentSize.Y
+        local contentH = TabOps.UI and TabOps.UI.GetUnscaledLayoutHeight
+            and TabOps.UI.GetUnscaledLayoutHeight(InnerLayout.AbsoluteContentSize.Y)
+            or InnerLayout.AbsoluteContentSize.Y
         if isOpen then
             local totalH = 46 + 8 + contentH + 12
             tween(Container, {Size = UDim2.new(0.98, 0, 0, totalH)}, 0.25)
@@ -131,6 +133,12 @@ return function(TabOps, label, mainCallback)
     InnerLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         if isOpen then UpdateSize() end
     end)
+    local responsiveScale = TabOps.UI and TabOps.UI.ResponsiveScale
+    if responsiveScale then
+        responsiveScale:GetPropertyChangedSignal("Scale"):Connect(function()
+            task.defer(UpdateSize)
+        end)
+    end
 
     -- ── منطق التشغيل الرئيسي ─────────────────────────────────────
     local function setActive(state, isClick)
