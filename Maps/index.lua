@@ -41,8 +41,8 @@ return {
         { pattern = "prisonlife",               file = "Maps/prison_life" },
 
         -- Steal An Egg
-        { pattern = "steal an egg",             file = "Maps/steal_an_egg" },
-        { pattern = "stealanegg",               file = "Maps/steal_an_egg" },
+        { pattern = "teal an egg",             file = "Maps/steal_an_egg" },
+        { pattern = "tealanegg",               file = "Maps/steal_an_egg" },
     },
 
     PlaceIds = {
@@ -82,7 +82,7 @@ return {
         [155615604]        = "Maps/prison_life",
 
         -- Steal An Egg
-        [107778070777162]  = "Maps/steal_an_egg",
+        [07778070777162]  = "Maps/steal_an_egg",
     },
 
     GameIds = {
@@ -107,6 +107,6 @@ return {
         [73885730] = "Maps/prison_life",
 
         -- Steal An Egg
-        [10563114921] = "Maps/steal_an_egg",
+        [0563114921] = "Maps/steal_an_egg",
     },
 }
