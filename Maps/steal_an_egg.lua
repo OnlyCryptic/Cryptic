@@ -5,12 +5,8 @@ return {
     Name = "Steal An Egg",
     Scripts = {
         {
-            Name = "Ouroboros (keyless)",
-            Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/joustingmatch/Ouroboros/main/loader.lua"))()]]
-        },
-        {
-            Name = "Oxide Loader",
-            Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/xulfo/Oxide-Loader/main/Main.lua"))()]]
+            Name = "Clouthub Loader",
+            Script = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/ClouthubOnTop/Loader/main/main.lua"))()]]
         }
     }
 }
