@@ -72,6 +72,7 @@ return function(Tab, UI)
     local modeGeneration = 0
     local connections = {}
     local cameraConnections = {}
+    local overlayConnections = {}
     local boundCamera
     local savedEffects = {}
     local seenEffects = setmetatable({}, {__mode = "k"})
@@ -80,6 +81,7 @@ return function(Tab, UI)
     local fpsLabel
     local fpsModeLabel
     local fpsConnection
+    local savedOverlayPosition -- remembers where the user dragged the FPS panel
 
     local savedGlobalShadows
     local changedGlobalShadows = false
@@ -325,6 +327,208 @@ return function(Tab, UI)
         end
     end
 
+    ---------------------------------------------------------------------
+    -- FPS overlay (created only while Anti-Lag is ON, small + draggable)
+    ---------------------------------------------------------------------
+    local function ParentOverlay(gui)
+        local parented = false
+        pcall(function()
+            if type(gethui) == "function" then
+                local root = gethui()
+                if root then
+                    gui.Parent = root
+                    parented = gui.Parent ~= nil
+                end
+            end
+        end)
+        if parented then return true end
+
+        pcall(function()
+            if syn and syn.protect_gui then syn.protect_gui(gui) end
+            gui.Parent = CoreGui
+            parented = gui.Parent ~= nil
+        end)
+        if not parented then
+            pcall(function()
+                gui.Parent = LocalPlayer:WaitForChild("PlayerGui", 5)
+                parented = gui.Parent ~= nil
+            end)
+        end
+        return parented
+    end
+
+    local function MakeDraggable(gui, panel)
+        local dragging = false
+        local dragStart
+        local startPos
+
+        overlayConnections[#overlayConnections + 1] = panel.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1
+                or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                dragStart = input.Position
+                startPos = panel.Position
+
+                local changedConn
+                changedConn = input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                        savedOverlayPosition = panel.Position
+                        if changedConn then changedConn:Disconnect() end
+                    end
+                end)
+            end
+        end)
+
+        overlayConnections[#overlayConnections + 1] = UserInputService.InputChanged:Connect(function(input)
+            if not dragging then return end
+            if input.UserInputType ~= Enum.UserInputType.MouseMovement
+                and input.UserInputType ~= Enum.UserInputType.Touch then
+                return
+            end
+
+            local delta = input.Position - dragStart
+            local screen = gui.AbsoluteSize
+            local size = panel.AbsoluteSize
+            local x = math.clamp(startPos.X.Offset + delta.X, 0, math.max(0, screen.X - size.X))
+            local y = math.clamp(startPos.Y.Offset + delta.Y, 0, math.max(0, screen.Y - size.Y))
+            panel.Position = UDim2.fromOffset(x, y)
+        end)
+    end
+
+    local function CreateFPSOverlay()
+        local gui = Instance.new("ScreenGui")
+        gui.Name = "CrypticFPSCounter"
+        gui.ResetOnSpawn = false
+        gui.IgnoreGuiInset = false
+        gui.DisplayOrder = 100
+        gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+        local panel = Instance.new("Frame")
+        panel.Name = "Panel"
+        panel.AnchorPoint = Vector2.new(0, 0)
+        panel.Position = savedOverlayPosition or UDim2.fromOffset(8, 8)
+        panel.Size = UDim2.fromOffset(98, 22)
+        panel.BackgroundColor3 = Color3.fromRGB(18, 22, 29)
+        panel.BackgroundTransparency = 0.16
+        panel.BorderSizePixel = 0
+        panel.Active = true -- needed so the panel receives input for dragging
+        panel.Parent = gui
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6)
+        corner.Parent = panel
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Color = Color3.fromRGB(255, 255, 255)
+        stroke.Transparency = 0.84
+        stroke.Thickness = 1
+        stroke.Parent = panel
+
+        local dot = Instance.new("Frame")
+        dot.Name = "StatusDot"
+        dot.AnchorPoint = Vector2.new(0, 0.5)
+        dot.Position = UDim2.new(0, 7, 0.5, 0)
+        dot.Size = UDim2.fromOffset(6, 6)
+        dot.BackgroundColor3 = Color3.fromRGB(100, 220, 140)
+        dot.BorderSizePixel = 0
+        dot.Parent = panel
+
+        local dotCorner = Instance.new("UICorner")
+        dotCorner.CornerRadius = UDim.new(1, 0)
+        dotCorner.Parent = dot
+
+        local label = Instance.new("TextLabel")
+        label.Name = "FPSValue"
+        label.Position = UDim2.new(0, 18, 0, 0)
+        label.Size = UDim2.new(0, 42, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.GothamSemibold
+        label.Text = "FPS --"
+        label.TextColor3 = Color3.fromRGB(240, 244, 250)
+        label.TextSize = 10
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Parent = panel
+
+        local mode = Instance.new("TextLabel")
+        mode.Name = "Mode"
+        mode.Position = UDim2.new(1, -38, 0, 0)
+        mode.Size = UDim2.new(0, 32, 1, 0)
+        mode.BackgroundTransparency = 1
+        mode.Font = Enum.Font.GothamBold
+        mode.Text = TT("settings.anti_lag.mode_auto", "AUTO")
+        mode.TextColor3 = Color3.fromRGB(255, 203, 92)
+        mode.TextSize = 8
+        mode.TextXAlignment = Enum.TextXAlignment.Right
+        mode.Parent = panel
+
+        if not ParentOverlay(gui) then
+            pcall(function() gui:Destroy() end)
+            return nil, nil, nil, nil
+        end
+
+        MakeDraggable(gui, panel)
+        return gui, dot, label, mode
+    end
+
+    local function DestroyOverlay()
+        DisconnectAll(overlayConnections)
+        if fpsGui then
+            pcall(function() fpsGui:Destroy() end)
+        end
+        fpsGui, fpsDot, fpsLabel, fpsModeLabel = nil, nil, nil, nil
+    end
+
+    -- FPS sampling runs only while Anti-Lag is active (needed for adaptive mode).
+    local function StartSampling()
+        if fpsConnection then return end
+        local sampleFrames = 0
+        local sampleElapsed = 0
+
+        fpsConnection = RunService.RenderStepped:Connect(function(dt)
+            sampleFrames += 1
+            sampleElapsed += dt
+            if sampleElapsed < 0.5 then return end
+
+            local fps = math.floor(sampleFrames / sampleElapsed + 0.5)
+            sampleFrames = 0
+            sampleElapsed = 0
+            UpdateAdaptiveMode(fps)
+
+            local fpsColor
+            if fps >= 55 then
+                fpsColor = Color3.fromRGB(105, 231, 151)
+            elseif fps >= 30 then
+                fpsColor = Color3.fromRGB(255, 203, 92)
+            else
+                fpsColor = Color3.fromRGB(255, 105, 105)
+            end
+            if fpsDot and fpsDot.Parent then fpsDot.BackgroundColor3 = fpsColor end
+            if fpsLabel and fpsLabel.Parent then
+                fpsLabel.Text = ("FPS %d"):format(fps)
+                fpsLabel.TextColor3 = fpsColor
+            end
+            if fpsModeLabel and fpsModeLabel.Parent then
+                local modeKey = strongMode and "settings.anti_lag.mode_boost" or "settings.anti_lag.mode_auto"
+                local fallback = strongMode and "BOOST" or "AUTO"
+                fpsModeLabel.Text = TT(modeKey, fallback)
+                fpsModeLabel.TextColor3 = strongMode
+                    and Color3.fromRGB(100, 190, 255)
+                    or Color3.fromRGB(255, 203, 92)
+            end
+        end)
+    end
+
+    local function StopSampling()
+        if fpsConnection then
+            pcall(function() fpsConnection:Disconnect() end)
+            fpsConnection = nil
+        end
+    end
+
+    ---------------------------------------------------------------------
+    -- Start / Stop
+    ---------------------------------------------------------------------
     local function Start()
         if active then return end
         active = true
@@ -356,6 +560,10 @@ return function(Tab, UI)
 
         BindCamera(Workspace.CurrentCamera, token)
 
+        DestroyOverlay()
+        fpsGui, fpsDot, fpsLabel, fpsModeLabel = CreateFPSOverlay()
+        StartSampling()
+
         Notify(TT("settings.anti_lag.on", "Smart Anti-Lag enabled; visuals change only if FPS stays low."))
     end
 
@@ -370,6 +578,8 @@ return function(Tab, UI)
         strongMode = false
         lowSamples = 0
         recoverSamples = 0
+        StopSampling()
+        DestroyOverlay()
         RestoreTrackedEffects()
         RestoreLocalQuality()
         if not silent then
@@ -383,155 +593,11 @@ return function(Tab, UI)
         pcall(previousState.Cleanup)
     end
 
-    local function ParentOverlay(gui)
-        local parented = false
-        pcall(function()
-            if type(gethui) == "function" then
-                local root = gethui()
-                if root then
-                    gui.Parent = root
-                    parented = gui.Parent ~= nil
-                end
-            end
-        end)
-        if parented then return true end
-
-        pcall(function()
-            if syn and syn.protect_gui then syn.protect_gui(gui) end
-            gui.Parent = CoreGui
-            parented = gui.Parent ~= nil
-        end)
-        if not parented then
-            pcall(function()
-                gui.Parent = LocalPlayer:WaitForChild("PlayerGui", 5)
-                parented = gui.Parent ~= nil
-            end)
-        end
-        return parented
-    end
-
-    local function CreateFPSOverlay()
-        local gui = Instance.new("ScreenGui")
-        gui.Name = "CrypticFPSCounter"
-        gui.ResetOnSpawn = false
-        gui.IgnoreGuiInset = false
-        gui.DisplayOrder = 100
-        gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-        local panel = Instance.new("Frame")
-        panel.Name = "Panel"
-        panel.AnchorPoint = Vector2.new(0, 0)
-        panel.Position = UDim2.fromOffset(8, 8)
-        panel.Size = UDim2.fromOffset(128, 28)
-        panel.BackgroundColor3 = Color3.fromRGB(18, 22, 29)
-        panel.BackgroundTransparency = 0.16
-        panel.BorderSizePixel = 0
-        panel.Active = false
-        panel.Parent = gui
-
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 8)
-        corner.Parent = panel
-
-        local stroke = Instance.new("UIStroke")
-        stroke.Color = Color3.fromRGB(255, 255, 255)
-        stroke.Transparency = 0.84
-        stroke.Thickness = 1
-        stroke.Parent = panel
-
-        local dot = Instance.new("Frame")
-        dot.Name = "StatusDot"
-        dot.AnchorPoint = Vector2.new(0, 0.5)
-        dot.Position = UDim2.new(0, 9, 0.5, 0)
-        dot.Size = UDim2.fromOffset(8, 8)
-        dot.BackgroundColor3 = Color3.fromRGB(100, 220, 140)
-        dot.BorderSizePixel = 0
-        dot.Parent = panel
-
-        local dotCorner = Instance.new("UICorner")
-        dotCorner.CornerRadius = UDim.new(1, 0)
-        dotCorner.Parent = dot
-
-        local label = Instance.new("TextLabel")
-        label.Name = "FPSValue"
-        label.Position = UDim2.new(0, 23, 0, 0)
-        label.Size = UDim2.new(0, 51, 1, 0)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.GothamSemibold
-        label.Text = "FPS --"
-        label.TextColor3 = Color3.fromRGB(240, 244, 250)
-        label.TextSize = 12
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.Parent = panel
-
-        local mode = Instance.new("TextLabel")
-        mode.Name = "Mode"
-        mode.Position = UDim2.new(1, -49, 0, 0)
-        mode.Size = UDim2.new(0, 43, 1, 0)
-        mode.BackgroundTransparency = 1
-        mode.Font = Enum.Font.GothamBold
-        mode.Text = TT("settings.anti_lag.mode_off", "OFF")
-        mode.TextColor3 = Color3.fromRGB(160, 170, 184)
-        mode.TextSize = 9
-        mode.TextXAlignment = Enum.TextXAlignment.Right
-        mode.Parent = panel
-
-        if not ParentOverlay(gui) then
-            pcall(function() gui:Destroy() end)
-            return nil, nil, nil, nil
-        end
-        return gui, dot, label, mode
-    end
-
-    fpsGui, fpsDot, fpsLabel, fpsModeLabel = CreateFPSOverlay()
-
-    local sampleFrames = 0
-    local sampleElapsed = 0
-    fpsConnection = RunService.RenderStepped:Connect(function(dt)
-        sampleFrames += 1
-        sampleElapsed += dt
-        if sampleElapsed < 0.5 then return end
-
-        local fps = math.floor(sampleFrames / sampleElapsed + 0.5)
-        sampleFrames = 0
-        sampleElapsed = 0
-        UpdateAdaptiveMode(fps)
-
-        local fpsColor
-        if fps >= 55 then
-            fpsColor = Color3.fromRGB(105, 231, 151)
-        elseif fps >= 30 then
-            fpsColor = Color3.fromRGB(255, 203, 92)
-        else
-            fpsColor = Color3.fromRGB(255, 105, 105)
-        end
-        if fpsDot and fpsDot.Parent then fpsDot.BackgroundColor3 = fpsColor end
-        if fpsLabel and fpsLabel.Parent then
-            fpsLabel.Text = ("FPS %d"):format(fps)
-            fpsLabel.TextColor3 = fpsColor
-        end
-        if fpsModeLabel and fpsModeLabel.Parent then
-            local modeKey = strongMode and "settings.anti_lag.mode_boost"
-                or (active and "settings.anti_lag.mode_auto" or "settings.anti_lag.mode_off")
-            local fallback = strongMode and "BOOST" or (active and "AUTO" or "OFF")
-            fpsModeLabel.Text = TT(modeKey, fallback)
-            fpsModeLabel.TextColor3 = strongMode
-                and Color3.fromRGB(100, 190, 255)
-                or (active and Color3.fromRGB(255, 203, 92) or Color3.fromRGB(160, 170, 184))
-        end
-    end)
-
     local performanceState = {}
     function performanceState.Cleanup()
         Stop(true)
-        if fpsConnection then
-            pcall(function() fpsConnection:Disconnect() end)
-            fpsConnection = nil
-        end
-        if fpsGui then
-            pcall(function() fpsGui:Destroy() end)
-            fpsGui = nil
-        end
+        StopSampling()
+        DestroyOverlay()
     end
     env.CrypticPerformanceState = performanceState
 
