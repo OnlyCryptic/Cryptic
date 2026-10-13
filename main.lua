@@ -72,7 +72,7 @@ local function BuildStructure()
         ["target"]      = { Icon = "🎯", Key = "tab.target",   Folder = "Combat",   Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "bring_parts", "carry", "jark", "Target_follow", "target_esp", "copy_skin1", "target_emotes", "target_facesit", "info_t", "skinz"} },
         ["server"]      = { Icon = "🌐", Key = "tab.server",   Folder = "Server",   Files = {"server", "rejoin", "join_id", "players"} },
         ["teleport"]    = { Icon = "📍", Key = "tab.teleport", Folder = "Teleport", Files = {"lol", "tp_locations", "checkpoint"} },
-        ["other"]       = { Icon = "⚡", Key = "tab.other",    Folder = "Other",    Files = {"animations", "lol", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "infinite_zoom", "no_camera_clip", "anti_afk", "aimbot"} },
+        ["other"]       = { Icon = "⚡", Key = "tab.other",    Folder = "Other",    Files = {"animations", "lol", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "night", "infinite_zoom", "no_camera_clip", "anti_afk", "aimbot"} },
         ["settings"]    = { Icon = "⚙️", Key = "tab.settings", Folder = "Settings",  Files = {"transparency", "anti_lag", "ui_lock", "ui_toggle", "settings", "suggestion_box"} },
     }
     Cryptic.TabsOrder = {
@@ -389,7 +389,7 @@ local function StartCrypticHub()
                             return openTab
                         end
 
-                        RunModules(tab, data.Folder, {"lol", "animations", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "infinite_zoom", "no_camera_clip", "anti_afk", "aimbot"})
+                        RunModules(tab, data.Folder, {"lol", "animations", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "night", "infinite_zoom", "no_camera_clip", "anti_afk", "aimbot"})
 
                         local buildTab = MakeOpen(T("other.build.tab"), "🏗️")
                         local buildInit = Import("Modules/Other/build.lua")
