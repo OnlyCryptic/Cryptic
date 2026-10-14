@@ -3,6 +3,38 @@ local Players         = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
 local StarterGui      = game:GetService("StarterGui")
 local lp              = Players.LocalPlayer
+local env             = getgenv()
+
+-- ============================================================
+-- حماية التشغيل المزدوج
+-- ============================================================
+-- أي تشغيل ثاني بنفس الجلسة يوصل خلال هالمدة (ثواني) يعتبر تشغيل تلقائي مكرر
+-- (من زر إعادة دخول، تبديل سيرفر، تغيير لغة، التشغيل التلقائي...) ونتجاهله بصمت.
+local DUP_WINDOW = 20
+
+local now = tick()
+
+-- وقت آخر تشغيل تلقائي (يكتبه الكود اللي بالطابور). ما نمسحه بعد القراءة،
+-- عشان كل النسخ المكررة تشوفه
+local launchAt   = env.CrypticAutoLaunchAt
+local autoLaunch = type(launchAt) == "number" and (now - launchAt) < DUP_WINDOW
+
+-- نفس الجلسة = نفس كائن اللاعب (lp).
+-- بعد أي نقل أو إعادة دخول يتغير lp، فالعلامة القديمة ما تأثر.
+local sameSession = env.CrypticHub_Loaded == true and env.CrypticHub_Player == lp
+
+-- الجلسة بدأت قبل ثواني بس؟ إذاً هذا تشغيل مكرر مو يدوي
+local startAt     = env.CrypticHub_StartAt
+local justStarted = sameSession and type(startAt) == "number" and (now - startAt) < DUP_WINDOW
+
+if sameSession and (autoLaunch or justStarted) then return end
+
+-- نحجز الجلسة فوراً (قبل أي انتظار) عشان النسخة الثانية تلقاها محجوزة
+if not sameSession then
+    env.CrypticHub_Loaded  = true
+    env.CrypticHub_Player  = lp
+    env.CrypticHub_StartAt = now
+end
 
 local Cryptic = {
     Config = {
@@ -13,6 +45,64 @@ local Cryptic = {
     -- بملف Cryptic/Maps/index.lua لإبقاء هذا الملف نظيف.
     -- يتم تحميلها أدناه بعد تعريف Import.
 }
+
+-- ============================================================
+-- التشغيل التلقائي بعد النقل / إعادة الدخول
+-- ============================================================
+local AUTOEXEC_FILE = "CrypticAutoExec.json"
+
+-- كود يتحط بطابور النقل. conditional = true يعني: يشتغل بس لو التوغل لسا مفعّل
+local function BuildLoader(conditional)
+    local url = string.format(
+        "https://raw.githubusercontent.com/%s/%s/%s/main.lua",
+        Cryptic.Config.UserName, Cryptic.Config.RepoName, Cryptic.Config.Branch
+    )
+
+    local check = ""
+    if conditional then
+        check = string.format([[
+    local on = false
+    pcall(function()
+        on = game:GetService("HttpService"):JSONDecode(readfile(%q)).enabled == true
+    end)
+    if not on then return end
+]], AUTOEXEC_FILE)
+    end
+
+    return string.format([[
+pcall(function()
+    if not game:IsLoaded() then game.Loaded:Wait() end
+    task.wait(2)
+%s    getgenv().CrypticAutoLaunchAt = tick()
+    loadstring(game:HttpGet(%q .. "?v=" .. tick()))()
+end)
+]], check, url)
+end
+
+local function QueueOnTeleport(code)
+    local fn = queue_on_teleport
+        or (syn and syn.queue_on_teleport)
+        or (fluxus and fluxus.queue_on_teleport)
+    if not fn then return false end
+    return (pcall(fn, code))
+end
+
+local function AutoExecEnabled()
+    local ok, data = pcall(function()
+        return HttpService:JSONDecode(readfile(AUTOEXEC_FILE))
+    end)
+    return ok and type(data) == "table" and data.enabled == true
+end
+
+-- يجهّز التشغيل التلقائي مرة وحدة لكل جلسة (الطابور يشتغل بس على أول نقل،
+-- فكل ما يشتغل السكربت نجهّزه من جديد)
+local function ArmAutoExec()
+    if env.CrypticAutoExecArmed == lp then return end
+    if QueueOnTeleport(BuildLoader(true)) then
+        env.CrypticAutoExecArmed = lp
+    end
+end
+env.CrypticArmAutoExec = ArmAutoExec -- يستخدمه توغل التشغيل التلقائي
 
 -- ============================================================
 -- استيراد ملف من المستودع
@@ -73,7 +163,7 @@ local function BuildStructure()
         ["server"]      = { Icon = "🌐", Key = "tab.server",   Folder = "Server",   Files = {"server", "rejoin", "join_id", "players"} },
         ["teleport"]    = { Icon = "📍", Key = "tab.teleport", Folder = "Teleport", Files = {"lol", "tp_locations", "checkpoint"} },
         ["other"]       = { Icon = "⚡", Key = "tab.other",    Folder = "Other",    Files = {"animations", "lol", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "night", "infinite_zoom", "no_camera_clip", "anti_afk", "aimbot"} },
-        ["settings"]    = { Icon = "⚙️", Key = "tab.settings", Folder = "Settings",  Files = {"transparency", "anti_lag", "ui_lock", "ui_toggle", "settings", "suggestion_box"} },
+        ["settings"]    = { Icon = "⚙️", Key = "tab.settings", Folder = "Settings",  Files = {"transparency", "anti_lag", "ui_lock", "ui_toggle", "auto_execute", "settings", "suggestion_box"} },
     }
     Cryptic.TabsOrder = {
         "player", "tools", "target", "other", "teleport", "server", "settings"
@@ -154,24 +244,9 @@ end
 -- إعادة الدخول للسيرفر بعد تغيير اللغة
 -- ============================================================
 local function RejoinForLanguage()
-    local loaderURL = string.format(
-        "https://raw.githubusercontent.com/%s/%s/%s/main.lua",
-        Cryptic.Config.UserName, Cryptic.Config.RepoName, Cryptic.Config.Branch
-    )
-    local loader = string.format(
-        'task.wait(2); pcall(function() loadstring(game:HttpGet(%q .. "?v=" .. tick()))() end)',
-        loaderURL
-    )
-
-    pcall(function()
-        if queue_on_teleport then
-            queue_on_teleport(loader)
-        elseif syn and syn.queue_on_teleport then
-            syn.queue_on_teleport(loader)
-        elseif fluxus and fluxus.queue_on_teleport then
-            fluxus.queue_on_teleport(loader)
-        end
-    end)
+    -- بدون شرط: تغيير اللغة لازم يعيد التشغيل حتى لو التشغيل التلقائي مطفي.
+    -- ولو التشغيل التلقائي مفعّل، النسخة المكررة تتجاهل نفسها بصمت.
+    QueueOnTeleport(BuildLoader(false))
 
     local function notify(text)
         pcall(function()
@@ -421,6 +496,9 @@ end
 -- البوابة الرئيسية
 -- ============================================================
 local function Boot()
+    -- لو التشغيل التلقائي مفعّل نجهّزه للنقلة الجاية
+    if AutoExecEnabled() then ArmAutoExec() end
+
     RunInboxCheck()
 
     if not i18n then
@@ -446,7 +524,8 @@ local function Boot()
 end
 
 -- نظام الحماية من التشغيل المزدوج
-if getgenv().CrypticHub_Loaded then
+-- (الجلسة انحجزت فوق؛ هنا نسأل المستخدم بس لو هو شغّل السكربت يدوياً مرة ثانية)
+if sameSession then
     local Bindable = Instance.new("BindableFunction")
     Bindable.OnInvoke = function(buttonText)
         if buttonText == T("rerun.yes") then Boot() end
@@ -462,6 +541,5 @@ if getgenv().CrypticHub_Loaded then
         })
     end)
 else
-    getgenv().CrypticHub_Loaded = true
     Boot()
 end
