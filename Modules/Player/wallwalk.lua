@@ -623,11 +623,28 @@ return function(Tab, UI)
         return n
     end
 
+    -- لمسة بدأت داخل منطقة العصا الديناميكية (الدائرة اللي يسار) = للحركة مو للكاميرا.
+    -- نفس الفحص اللي تستخدمه كاميرا روبلوكس الأصلية.
+    local function InDynamicThumbstickArea(pos)
+        local pg = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+        local touchGui = pg and pg:FindFirstChild("TouchGui")
+        local touchFrame = touchGui and touchGui:FindFirstChild("TouchControlFrame")
+        local frame = touchFrame and touchFrame:FindFirstChild("DynamicThumbstickFrame")
+        if frame and touchGui.Enabled then
+            local tl = frame.AbsolutePosition
+            local br = tl + frame.AbsoluteSize
+            return pos.X >= tl.X and pos.Y >= tl.Y and pos.X <= br.X and pos.Y <= br.Y
+        end
+        return false
+    end
+
     local function OnInputBegan(input, processed)
         if not S.attached or processed then return end
         local t = input.UserInputType
         if t == Enum.UserInputType.Touch then
-            S.touches[input] = true
+            if not InDynamicThumbstickArea(input.Position) then
+                S.touches[input] = true
+            end
         elseif t == Enum.UserInputType.MouseButton2 then
             S.rmb = true
             if UserInputService.MouseBehavior == Enum.MouseBehavior.Default then
@@ -684,6 +701,7 @@ return function(Tab, UI)
 
     local function OnPinch(positions, scale, velocity, state, processed)
         if not S.attached or processed then return end
+        if CountTouches() < 2 then return end
         if state == Enum.UserInputState.Begin then
             S.pinchStart = S.dist
         elseif state == Enum.UserInputState.Change and S.pinchStart and scale > 0.01 then
