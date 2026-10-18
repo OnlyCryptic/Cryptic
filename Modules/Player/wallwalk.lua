@@ -1,8 +1,8 @@
--- [[ Cryptic Hub - Wall Walk (Gravity Controller) ]]
+-- [[ Cryptic Hub - Wall Walk V2 (Gravity Controller) ]]
 -- Localized via i18n. الكي: player.wallwalk.*
 --
 -- تحكّم كامل بالجاذبية: اتجاه "فوق" للشخصية = السطح اللي تمشي عليه (أرض، جدار، سقف).
--- يشمل: حركة + قفز + كاميرا خاصة (ماوس/لمس/قير) + أنيميشن. وكله يرجع طبيعي لما تطفيه.
+-- يشمل: حركة + قفز + كاميرا ناعمة (لمس/ماوس/قير) + أنيميشن. وكله يرجع طبيعي لما تطفيه.
 
 return function(Tab, UI)
     local i18n = getgenv().CrypticI18n
@@ -26,7 +26,7 @@ return function(Tab, UI)
         LAND_TOL      = 0.5,    -- مسافة الهبوط على السطح
         WALL_RAY      = 2.2,    -- أبعد مسافة لكشف جدار قدامك
         WALL_DOT      = 0.82,   -- أقل ميلان يعتبر جدار (أقل = أشد ميلاناً)
-        WALL_MIN_UP   = -0.35,  -- ما نتسلق أسطح مقلوبة أكثر من هالحد
+        WALL_MIN_UP   = -0.6,   -- ما نتسلق أسطح مقلوبة أكثر من هالحد
         WRAP_AHEAD    = 1.8,    -- كشف الحافة (الالتفاف حول الزاوية)
         WRAP_EXTRA    = 0.5,
         -- الحركة
@@ -40,17 +40,25 @@ return function(Tab, UI)
         COYOTE        = 0.15,   -- وقت سماح بعد مفارقة السطح
         AIR_RESET     = 0.7,    -- بعد كم ثانية بالهواء يرجع الاتجاه للطبيعي
         JUMP_COOLDOWN = 0.25,
+        JUMP_MAX      = 120,    -- سقف سرعة القفز (حماية)
         TERMINAL      = 250,
+        AIR_SPEED_MAX = 150,    -- سقف السرعة بالهواء (يمنع الطيران البعيد)
         TURN_RATE     = 14,
         EXIT_MAX      = 1.2,    -- أقصى وقت لرجوع الشخصية واقفة عند الإطفاء
+        TELEPORT_DIST = 25,     -- لو انتقلت أكثر من هيك بخطوة وحدة نعتبره انتقال/ارتداد
+        KEEP_AWAKE    = 0.3,    -- حركة صغيرة جداً تمنع الفيزياء من "تنويم" الشخصية
         -- الكاميرا
         MAX_PITCH     = math.rad(80),
         MOUSE_X       = 0.002 * math.pi,
         MOUSE_Y       = 0.0015 * math.pi,
-        TOUCH_X       = 0.00945 * math.pi,
-        TOUCH_Y       = 0.003375 * math.pi,
+        TOUCH_YAW     = 5.0,    -- زاوية الدوران (راديان) لسحبة بعرض الشاشة كامل
+        TOUCH_PITCH   = 2.4,    -- زاوية الدوران لسحبة بطول الشاشة كامل
+        TOUCH_SENS    = 1.0,    -- حساسية اللمس (كبّرها لو الكاميرا بطيئة)
         PAD_YAW       = 2.4,
         PAD_PITCH     = 1.6,
+        ROT_SMOOTH    = 38,     -- نعومة دوران الكاميرا (أقل = أنعم وأبطأ)
+        ZOOM_SMOOTH   = 14,
+        FOCUS_SMOOTH  = 40,     -- نعومة تتبع الكاميرا للشخصية (0 = بدون)
         FOCUS_UP      = 1.5,
         INVERT_Y      = false,  -- true = قلب اتجاه الكاميرا العمودي
     }
@@ -117,8 +125,9 @@ return function(Tab, UI)
     -- الحالة
     ----------------------------------------------------------------
     local S = {
-        enabled = false, attached = false, exiting = false, token = 0,
-        conns = {}, charConns = {}, watchConns = {},
+        enabled = false, attached = false, attaching = false, exiting = false,
+        token = 0, wdToken = 0,
+        conns = {}, charConns = {},
         errCount = 0,
     }
     local toggle
@@ -174,7 +183,7 @@ return function(Tab, UI)
     -- يرجع (x = يمين/يسار، z = ورا/قدام) مثل Humanoid:Move قبل ما يتحول للكاميرا
     local function GetMoveInput()
         if controls then
-            local ok, v = pcall(function() return controls:GetMoveVector() end)
+            local ok, v = pcall(controls.GetMoveVector, controls)
             if ok and typeof(v) == "Vector3" and not IsBad(v) then return v end
             return ZERO
         end
@@ -190,7 +199,9 @@ return function(Tab, UI)
     end
 
     ----------------------------------------------------------------
-    -- الأنيميشن (نفس أنيميشن اللعبة، مع تعطيل Animate مؤقتاً)
+    -- الأنيميشن
+    -- ما نوقف Animate الأصلي أبداً: أنيميشننا بأولوية أعلى فيغطي عليه،
+    -- ولو فشل التحميل يبقى أنيميشن اللعبة شغال (ما تصير الشخصية ثابتة).
     ----------------------------------------------------------------
     local DEFAULT_ANIM = {
         R15 = {
@@ -207,7 +218,7 @@ return function(Tab, UI)
         jump = { "jump", "JumpAnim" },   fall = { "fall", "FallAnim" },
     }
 
-    local function CleanupAnimations()
+    local function DestroyTracks()
         if S.tracks then
             for _, tr in pairs(S.tracks) do
                 pcall(function() tr:Stop(0.1) end)
@@ -217,28 +228,33 @@ return function(Tab, UI)
         if S.animObjs then
             for _, a in ipairs(S.animObjs) do pcall(function() a:Destroy() end) end
         end
-        if S.animateDisabled then
-            pcall(function() S.animateDisabled.Disabled = false end)
-        end
-        S.tracks, S.animObjs, S.animateDisabled = nil, nil, nil
-        S.animReady, S.animCurrent = false, nil
+        S.tracks, S.animObjs = nil, nil
+        S.animReady, S.animCurrent, S.animSpeed = false, nil, nil
     end
 
-    local function SetupAnimations(token)
+    local function BuildTracks(useDefault, allowCreateAnimator)
         local hum, char = S.hum, S.char
-        if not hum or not char then return end
+        if not hum or not char then return false end
+
         local animator = hum:FindFirstChildOfClass("Animator")
-        if not animator then return end
+        if not animator and allowCreateAnimator then
+            animator = Instance.new("Animator")
+            animator.Parent = hum
+        end
+        if not animator then return false end
+
         local animate = char:FindFirstChild("Animate")
         local rig = (hum.RigType == Enum.HumanoidRigType.R6) and "R6" or "R15"
 
         local tracks, objs = {}, {}
         for name, src in pairs(ANIM_SOURCE) do
             local id
-            local folder = animate and animate:FindFirstChild(src[1])
-            local child = folder and folder:FindFirstChild(src[2])
-            if child and child:IsA("Animation") and child.AnimationId ~= "" then
-                id = child.AnimationId
+            if not useDefault then
+                local folder = animate and animate:FindFirstChild(src[1])
+                local child = folder and folder:FindFirstChild(src[2])
+                if child and child:IsA("Animation") and child.AnimationId ~= "" then
+                    id = child.AnimationId
+                end
             end
             id = id or DEFAULT_ANIM[rig][name]
             local anim = Instance.new("Animation")
@@ -252,34 +268,35 @@ return function(Tab, UI)
             end
         end
 
-        local function loaded()
-            return tracks.idle and tracks.walk and tracks.idle.Length > 0 and tracks.walk.Length > 0
-        end
-
-        local t0 = os.clock()
-        while os.clock() - t0 < 2 and S.token == token and S.attached and not loaded() do
-            task.wait(0.1)
-        end
-
-        if S.token ~= token or not S.attached or not loaded() then
+        if not (tracks.idle and tracks.walk) then
             for _, tr in pairs(tracks) do pcall(function() tr:Destroy() end) end
             for _, a in ipairs(objs) do pcall(function() a:Destroy() end) end
-            return
-        end
-
-        -- نوقف Animate الأصلي بس بعد ما تأكدنا إن أنيميشننا جاهز
-        if animate and animate:IsA("LocalScript") then
-            local ok = pcall(function() animate.Disabled = true end)
-            if ok then S.animateDisabled = animate end
-        end
-        for _, tr in ipairs(animator:GetPlayingAnimationTracks()) do
-            local isOurs = false
-            for _, mine in pairs(tracks) do if mine == tr then isOurs = true end end
-            if not isOurs then pcall(function() tr:Stop(0.1) end) end
+            return false
         end
 
         S.tracks, S.animObjs = tracks, objs
-        S.animCurrent, S.animReady = nil, true
+        S.animCurrent, S.animSpeed, S.animReady = nil, nil, true
+        return true
+    end
+
+    -- يحاول يحمّل الأنيميشن ويعيد المحاولة (مهم بعد الريسبون)
+    local function AnimationLoop(token)
+        local attempt, readyAt = 0, nil
+        while S.attached and S.token == token and attempt < 40 do
+            if not S.animReady then
+                attempt = attempt + 1
+                local useDefault = S.animFallback or attempt > 6
+                if BuildTracks(useDefault, attempt > 4) then readyAt = os.clock() end
+            elseif S.tracks.idle.Length > 0 and S.tracks.walk.Length > 0 then
+                return -- تحمّلت تمام
+            elseif readyAt and os.clock() - readyAt > 3 then
+                -- أصل الأنيميشن ما حمّل: نجرّب أنيميشن روبلوكس الافتراضي
+                DestroyTracks()
+                S.animFallback = true
+                readyAt = nil
+            end
+            task.wait(0.5)
+        end
     end
 
     local function PlayAnim(name, speed)
@@ -290,8 +307,14 @@ return function(Tab, UI)
             if old then old:Stop(0.15) end
             tr:Play(0.15)
             S.animCurrent = name
+            S.animSpeed = nil
+        elseif name ~= "jump" and not tr.IsPlaying then
+            tr:Play(0.15)
         end
-        if speed then tr:AdjustSpeed(speed) end
+        if speed and (not S.animSpeed or math.abs(speed - S.animSpeed) > 0.05) then
+            tr:AdjustSpeed(speed)
+            S.animSpeed = speed
+        end
     end
 
     local function UpdateAnimation(planarSpeed, grounded, vUp)
@@ -306,10 +329,23 @@ return function(Tab, UI)
     end
 
     ----------------------------------------------------------------
+    -- التصادمات: أجزاء الشخصية (غير الجذع الرئيسي) ما تتصادم مع السطح،
+    -- عشان ما تنحشر الأرجل/الأذرع وتطيّر الشخصية وقت الدوران حول الزوايا.
+    ----------------------------------------------------------------
+    local function RestoreCollisions()
+        if S.noCollide then
+            for part in pairs(S.noCollide) do
+                pcall(function() part.CanCollide = true end)
+            end
+        end
+        S.noCollide, S.parts = nil, nil
+    end
+
+    ----------------------------------------------------------------
     -- كشف السطح
     ----------------------------------------------------------------
     -- يرجع: found, normal, position
-    local function Probe(pos, up, moveUnit, hasInput, now)
+    local function Probe(pos, up, moveUnit, hasInput, now, dt)
         if S.jumpCd > 0 then return false end
 
         local sc = S.scale
@@ -326,9 +362,15 @@ return function(Tab, UI)
             end
         end
 
-        -- 2) السطح تحتك
+        -- 2) السطح تحتك (مع مراعاة سرعة السقوط عشان ما نخترق الأرض)
         local rdir = grounded and S.surfN or up
-        local len = S.standDist + (grounded and (K.STICK * sc) or (K.LAND_TOL * sc))
+        local extra
+        if grounded then
+            extra = K.STICK * sc
+        else
+            extra = K.LAND_TOL * sc + math.max(0, -S.lastVUp) * dt * 1.5
+        end
+        local len = S.standDist + extra
         local res = workspace:Raycast(pos, -rdir * len, rayParams)
         if not res and grounded then
             res = workspace:Raycast(pos, -up * len, rayParams)
@@ -387,6 +429,8 @@ return function(Tab, UI)
             end
         end
 
+        RestoreCollisions()
+
         if hum and hum.Parent then
             pcall(function()
                 hum.PlatformStand = S.origPlatformStand or false
@@ -398,7 +442,7 @@ return function(Tab, UI)
             pcall(function() hrp.AssemblyAngularVelocity = ZERO end)
         end
 
-        CleanupAnimations()
+        DestroyTracks()
         S.char, S.hum, S.hrp = nil, nil, nil
     end
 
@@ -406,8 +450,13 @@ return function(Tab, UI)
     -- التحديث الفيزيائي (قبل كل خطوة فيزياء)
     ----------------------------------------------------------------
     local function JumpSpeed(hum)
-        if hum.UseJumpPower then return hum.JumpPower end
-        return math.sqrt(2 * workspace.Gravity * hum.JumpHeight)
+        local v
+        if hum.UseJumpPower then
+            v = hum.JumpPower
+        else
+            v = math.sqrt(2 * workspace.Gravity * hum.JumpHeight)
+        end
+        return Clamp(v, 0, K.JUMP_MAX)
     end
 
     local function Step(dt)
@@ -419,9 +468,17 @@ return function(Tab, UI)
         dt = math.min(dt, 0.1)
         local now = os.clock()
 
-        if now - S.lastIgnore > 1 then
+        if now - S.lastIgnore > 2 then
             S.lastIgnore = now
             RebuildIgnore()
+        end
+
+        -- أجزاء الشخصية ما تتصادم (ما عدا الجذع الرئيسي)
+        for part in pairs(S.parts) do
+            if part.CanCollide then
+                part.CanCollide = false
+                S.noCollide[part] = true
+            end
         end
 
         local pos = hrp.Position
@@ -432,8 +489,20 @@ return function(Tab, UI)
             S.heading = Vector3.new(0, 0, -1)
             S.face = S.heading
             S.vel = ZERO
+            S.lastPos = nil
             return
         end
+
+        -- انتقال مفاجئ (تيليبورت/ارتداد السيرفر/ريسبون): نصفّر الحالة
+        if S.lastPos and (pos - S.lastPos).Magnitude > K.TELEPORT_DIST then
+            S.vel = ZERO
+            S.lastVUp = 0
+            S.lastGround = -1e9
+            S.airTime = 0
+            S.jumpCd = 0
+            S.focus = nil
+        end
+        S.lastPos = pos
 
         -- مدخلات
         local mv = ZERO
@@ -455,7 +524,7 @@ return function(Tab, UI)
         if S.jumpCd > 0 then S.jumpCd = S.jumpCd - dt end
 
         -- كشف السطح
-        local found, N, P = Probe(pos, up, moveUnit, hasInput, now)
+        local found, N, P = Probe(pos, up, moveUnit, hasInput, now, dt)
         if found then
             S.lastGround = now
             S.surfN = N
@@ -496,7 +565,8 @@ return function(Tab, UI)
         if moveDir.Magnitude > 1 then moveDir = moveDir.Unit end
         hasInput = moveDir.Magnitude > 0.05
 
-        local targetTan = moveDir * hum.WalkSpeed
+        local walkSpeed = hum.WalkSpeed
+        local targetTan = moveDir * walkSpeed
         local vApply
         local vUpAnim = 0
 
@@ -530,7 +600,7 @@ return function(Tab, UI)
             -- بالهواء: نبني على السرعة الفعلية (عشان التصادمات تأثر)
             local meas = hrp.AssemblyLinearVelocity
             if IsBad(meas) then meas = ZERO end
-            local v = ClampMag(meas, 300)
+            local v = ClampMag(meas, K.AIR_SPEED_MAX)
             local vUp = v:Dot(up)
             local vTan = v - up * vUp
             vTan = vTan:Lerp(targetTan, 1 - math.exp(-K.ACCEL_AIR * dt))
@@ -539,8 +609,14 @@ return function(Tab, UI)
             vApply = S.vel
             vUpAnim = vUp
         end
+        S.lastVUp = vUpAnim
 
-        hrp.AssemblyLinearVelocity = vApply
+        -- حماية: سقف للسرعة المطبّقة (يمنع أي قفزة بعيدة غير متوقعة)
+        vApply = ClampMag(vApply, math.max(K.AIR_SPEED_MAX, walkSpeed * 2 + 60))
+
+        -- حركة صغيرة جداً تمنع تنويم الفيزياء
+        S.awake = -S.awake
+        hrp.AssemblyLinearVelocity = vApply + up * (K.KEEP_AWAKE * S.awake)
 
         -- اتجاه النظر (الشخصية تلتفت لجهة الحركة)
         if hasInput then
@@ -550,7 +626,11 @@ return function(Tab, UI)
         S.align.CFrame = CFrame.fromMatrix(ZERO, S.face:Cross(up), up)
 
         -- نلغي جاذبية العالم (جاذبيتنا بنحسبها بنفسنا)
-        S.force.Force = Vector3.new(0, hrp.AssemblyMass * workspace.Gravity, 0)
+        local f = hrp.AssemblyMass * workspace.Gravity
+        if math.abs(f - S.lastForce) > 0.5 then
+            S.force.Force = Vector3.new(0, f, 0)
+            S.lastForce = f
+        end
 
         UpdateAnimation(Project(vApply, up).Magnitude, grounded, vUpAnim)
 
@@ -569,6 +649,24 @@ return function(Tab, UI)
         return minD, maxD
     end
 
+    -- أقرب مسافة قبل ما تصطدم الكاميرا بشي (3 أشعة عشان ما تفلت الأشياء الرفيعة)
+    local function OcclusionDistance(focus, look, up, dist)
+        local best = dist
+        local right = NormalizeOr(look:Cross(up), Perpendicular(look))
+        local dir = -look * dist
+        for i = 1, 3 do
+            local off = ZERO
+            if i == 2 then off = right * 0.6 elseif i == 3 then off = right * -0.6 end
+            local o = focus + off
+            local res = workspace:Raycast(o, dir, camParams)
+            if res then
+                local d = (res.Position - o):Dot(-look)
+                if d < best then best = d end
+            end
+        end
+        return best
+    end
+
     local function CameraStep(dt)
         if not S.attached then return end
         local cam = workspace.CurrentCamera
@@ -582,31 +680,43 @@ return function(Tab, UI)
 
         local up = S.up
 
-        local yaw, pitchIn = S.inYaw, S.inPitch
-        S.inYaw, S.inPitch = 0, 0
+        -- دوران ناعم: ناخذ جزء من الدوران المتراكم كل فريم (يلغي الارتجاج)
+        local take = 1 - math.exp(-K.ROT_SMOOTH * dt)
+        local yaw = S.pendYaw * take
+        local pit = S.pendPitch * take
+        S.pendYaw, S.pendPitch = S.pendYaw - yaw, S.pendPitch - pit
+        if math.abs(S.pendYaw) < 1e-5 then S.pendYaw = 0 end
+        if math.abs(S.pendPitch) < 1e-5 then S.pendPitch = 0 end
+
         if math.abs(S.padX) > 0.15 then yaw = yaw + S.padX * K.PAD_YAW * dt end
-        if math.abs(S.padY) > 0.15 then pitchIn = pitchIn - S.padY * K.PAD_PITCH * dt end
+        if math.abs(S.padY) > 0.15 then pit = pit - S.padY * K.PAD_PITCH * dt end
 
         if yaw ~= 0 then
             S.heading = NormalizeOr(Project(RotateAround(S.heading, up, -yaw), up), S.heading)
         end
         local ySign = K.INVERT_Y and -1 or 1
-        S.pitch = Clamp(S.pitch - pitchIn * ySign, -K.MAX_PITCH, K.MAX_PITCH)
+        S.pitch = Clamp(S.pitch - pit * ySign, -K.MAX_PITCH, K.MAX_PITCH)
 
         local look = S.heading * math.cos(S.pitch) + up * math.sin(S.pitch)
-        local focus = hrp.Position + up * (K.FOCUS_UP * S.scale)
 
-        -- منع الكاميرا من دخول الجدران
-        local dist = S.dist
-        local d = dist
-        local res = workspace:Raycast(focus, -look * dist, camParams)
-        if res then
-            d = math.max((res.Position - focus).Magnitude - 0.3, 0.5)
-        end
-        if d < S.curDist then
-            S.curDist = d
+        -- تتبع ناعم للشخصية
+        local targetFocus = hrp.Position + up * (K.FOCUS_UP * S.scale)
+        if (not S.focus) or K.FOCUS_SMOOTH <= 0 or (S.focus - targetFocus).Magnitude > 12 then
+            S.focus = targetFocus
         else
-            S.curDist = S.curDist + (d - S.curDist) * (1 - math.exp(-6 * dt))
+            S.focus = S.focus:Lerp(targetFocus, 1 - math.exp(-K.FOCUS_SMOOTH * dt))
+        end
+        local focus = S.focus
+
+        -- زوم ناعم
+        S.zoom = S.zoom + (S.dist - S.zoom) * (1 - math.exp(-K.ZOOM_SMOOTH * dt))
+
+        -- منع الكاميرا من دخول الجدران: تقرّب فوراً وترجع بنعومة
+        local want = math.max(OcclusionDistance(focus, look, up, S.zoom) - 0.35, 0.5)
+        if want < S.curDist then
+            S.curDist = want
+        else
+            S.curDist = S.curDist + (want - S.curDist) * (1 - math.exp(-4 * dt))
         end
 
         local camPos = focus - look * S.curDist
@@ -619,7 +729,14 @@ return function(Tab, UI)
     ----------------------------------------------------------------
     local function CountTouches()
         local n = 0
-        for _ in pairs(S.touches) do n = n + 1 end
+        for input in pairs(S.touches) do
+            local st = input.UserInputState
+            if st == Enum.UserInputState.End or st == Enum.UserInputState.Cancel then
+                S.touches[input] = nil -- لمسة منتهية ما انحذفت (حماية)
+            else
+                n = n + 1
+            end
+        end
         return n
     end
 
@@ -666,14 +783,16 @@ return function(Tab, UI)
         if t == Enum.UserInputType.MouseMovement then
             if S.rmb or UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
                 local d = input.Delta
-                S.inYaw = S.inYaw + d.X * K.MOUSE_X
-                S.inPitch = S.inPitch + d.Y * K.MOUSE_Y
+                S.pendYaw = S.pendYaw + d.X * K.MOUSE_X
+                S.pendPitch = S.pendPitch + d.Y * K.MOUSE_Y
             end
         elseif t == Enum.UserInputType.Touch then
             if S.touches[input] and CountTouches() == 1 then
+                local cam = workspace.CurrentCamera
+                local vs = cam and cam.ViewportSize or Vector2.new(1000, 600)
                 local d = input.Delta
-                S.inYaw = S.inYaw + d.X * K.TOUCH_X
-                S.inPitch = S.inPitch + d.Y * K.TOUCH_Y
+                S.pendYaw = S.pendYaw + (d.X / math.max(vs.X, 1)) * K.TOUCH_YAW * K.TOUCH_SENS
+                S.pendPitch = S.pendPitch + (d.Y / math.max(vs.Y, 1)) * K.TOUCH_PITCH * K.TOUCH_SENS
             end
         elseif t == Enum.UserInputType.MouseWheel then
             if not processed then
@@ -737,14 +856,21 @@ return function(Tab, UI)
         if S.attached then Detach() end
         S.token = S.token + 1
         local token = S.token
+        local function stale()
+            return S.token ~= token or not S.enabled or LocalPlayer.Character ~= char
+        end
 
         local hum = char:FindFirstChildOfClass("Humanoid") or char:WaitForChild("Humanoid", 5)
         local hrp = char:FindFirstChild("HumanoidRootPart") or char:WaitForChild("HumanoidRootPart", 5)
         if not hum or not hrp then return end
 
         ResolveControls() -- ممكن ينتظر شوي
+        if stale() then return end
 
-        if S.token ~= token or not S.enabled or LocalPlayer.Character ~= char then return end
+        -- نخلي اللعبة تكمّل تجهيز الشخصية (مهم بعد الريسبون)
+        task.wait(0.4)
+        if stale() then return end
+        if not char:IsDescendantOf(workspace) then return end
         if hum.Health <= 0 or hum.SeatPart then return end
         local cam = workspace.CurrentCamera
         if not cam then return end
@@ -782,12 +908,14 @@ return function(Tab, UI)
         S.scale, S.standDist = sc, standDist
         S.up, S.targetUp, S.surfN = Y_AXIS, Y_AXIS, Y_AXIS
         S.heading, S.face = heading, hrpFlat
-        S.pitch, S.dist, S.curDist = pitch, d0, d0
+        S.pitch, S.dist, S.zoom, S.curDist = pitch, d0, d0, d0
+        S.focus = nil
         S.vel = hrp.AssemblyLinearVelocity
         S.lastGround = wasGrounded and os.clock() or -1e9
-        S.airTime, S.jumpCd = 0, 0
+        S.airTime, S.jumpCd, S.lastVUp = 0, 0, 0
+        S.lastPos, S.awake, S.lastForce = nil, 1, -1
         S.prevJump, S.jumpQueued = false, false
-        S.inYaw, S.inPitch, S.padX, S.padY = 0, 0, 0, 0
+        S.pendYaw, S.pendPitch, S.padX, S.padY = 0, 0, 0, 0
         S.touches, S.rmb, S.mouseSet, S.pinchStart = {}, false, false, nil
         S.exiting = false
         S.lastIgnore = os.clock()
@@ -795,6 +923,13 @@ return function(Tab, UI)
         S.origAutoRotate = hum.AutoRotate
         S.origCamType = cam.CameraType
         S.errCount = 0
+        S.animFallback = false
+
+        -- أجزاء الشخصية اللي نطفي تصادمها (كل شي ما عدا الجذع الرئيسي)
+        S.parts, S.noCollide = {}, {}
+        for _, d in ipairs(char:GetDescendants()) do
+            if d:IsA("BasePart") and d ~= hrp then S.parts[d] = true end
+        end
 
         -- أدوات الفيزياء: نلغي جاذبية العالم + نثبّت الاتجاه
         local att = Instance.new("Attachment")
@@ -806,7 +941,8 @@ return function(Tab, UI)
         force.Attachment0 = att
         force.RelativeTo = Enum.ActuatorRelativeTo.World
         force.ApplyAtCenterOfMass = true
-        force.Force = Vector3.new(0, hrp.AssemblyMass * workspace.Gravity, 0)
+        S.lastForce = hrp.AssemblyMass * workspace.Gravity
+        force.Force = Vector3.new(0, S.lastForce, 0)
         force.Parent = hrp
 
         local align = Instance.new("AlignOrientation")
@@ -815,8 +951,8 @@ return function(Tab, UI)
         align.Attachment0 = att
         align.RigidityEnabled = false
         align.ReactionTorqueEnabled = false
-        align.MaxTorque = 1e9
-        align.Responsiveness = 200
+        align.MaxTorque = 1e7
+        align.Responsiveness = 50
         pcall(function() align.MaxAngularVelocity = math.huge end)
         local cf0 = hrp.CFrame
         align.CFrame = CFrame.fromMatrix(ZERO, cf0.RightVector, cf0.UpVector)
@@ -845,26 +981,44 @@ return function(Tab, UI)
         conns[#conns + 1] = char.AncestryChanged:Connect(function()
             if not char:IsDescendantOf(game) then Detach() end
         end)
+        conns[#conns + 1] = char.DescendantAdded:Connect(function(d)
+            if S.parts and d:IsA("BasePart") and d ~= hrp then S.parts[d] = true end
+        end)
+        conns[#conns + 1] = char.DescendantRemoving:Connect(function(d)
+            if S.parts then S.parts[d] = nil end
+            if S.noCollide then S.noCollide[d] = nil end
+        end)
         S.conns = conns
         S.attached = true
 
-        task.spawn(SetupAnimations, token)
+        task.spawn(AnimationLoop, token)
     end
 
-    local function WatchCharacter(char)
-        DisconnectList(S.watchConns)
+    -- يركّب التحكم على الشخصية (مرة وحدة بنفس الوقت)
+    local function TryAttach(char)
+        if S.attaching or S.attached or not S.enabled then return end
+        S.attaching = true
+        local ok, err = pcall(Attach, char)
+        S.attaching = false
+        if not ok then warn("Cryptic Hub: Wall Walk attach failed - " .. tostring(err)) end
+    end
+
+    -- حارس: لو لأي سبب انفصل التحكم (ريسبون، كرسي، حدث فات) يرجّعه
+    local function StartWatchdog()
+        S.wdToken = S.wdToken + 1
+        local mine = S.wdToken
         task.spawn(function()
-            local hum = char:FindFirstChildOfClass("Humanoid") or char:WaitForChild("Humanoid", 10)
-            if not hum or not S.enabled or LocalPlayer.Character ~= char then return end
-
-            -- لو نزل من الكرسي نرجّع التحكم
-            S.watchConns[#S.watchConns + 1] = hum:GetPropertyChangedSignal("SeatPart"):Connect(function()
-                if S.enabled and not S.attached and not hum.SeatPart then
-                    task.spawn(Attach, char)
+            while S.enabled and S.wdToken == mine do
+                task.wait(0.5)
+                if S.enabled and not S.attached and not S.attaching then
+                    local char = LocalPlayer.Character
+                    local hum = char and char:FindFirstChildOfClass("Humanoid")
+                    if char and hum and hum.Health > 0 and not hum.SeatPart
+                        and char:FindFirstChild("HumanoidRootPart") then
+                        task.spawn(TryAttach, char)
+                    end
                 end
-            end)
-
-            if not hum.SeatPart then Attach(char) end
+            end
         end)
     end
 
@@ -874,16 +1028,20 @@ return function(Tab, UI)
     local function Enable()
         if S.enabled then return end
         S.enabled = true
+        if S.attached then Detach() end -- لو كان لسا بحالة إطفاء
         DisconnectList(S.charConns)
-        S.charConns[#S.charConns + 1] = LocalPlayer.CharacterAdded:Connect(WatchCharacter)
-        if LocalPlayer.Character then WatchCharacter(LocalPlayer.Character) end
+        S.charConns[#S.charConns + 1] = LocalPlayer.CharacterAdded:Connect(function(char)
+            task.spawn(TryAttach, char)
+        end)
+        if LocalPlayer.Character then task.spawn(TryAttach, LocalPlayer.Character) end
+        StartWatchdog()
     end
 
     local function Disable()
         if not S.enabled then return end
         S.enabled = false
+        S.wdToken = S.wdToken + 1
         DisconnectList(S.charConns)
-        DisconnectList(S.watchConns)
         S.token = S.token + 1 -- يلغي أي تركيب لسا ما خلص
         if S.attached then
             if S.up:Dot(Y_AXIS) > 0.998 then
@@ -897,8 +1055,8 @@ return function(Tab, UI)
 
     env.CrypticWallWalkCleanup = function()
         S.enabled = false
+        S.wdToken = S.wdToken + 1
         DisconnectList(S.charConns)
-        DisconnectList(S.watchConns)
         Detach()
         env.CrypticWallWalkCleanup = nil
     end
