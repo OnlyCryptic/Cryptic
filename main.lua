@@ -8,28 +8,19 @@ local env             = getgenv()
 -- ============================================================
 -- حماية التشغيل المزدوج
 -- ============================================================
--- أي تشغيل ثاني بنفس الجلسة يوصل خلال هالمدة (ثواني) يعتبر تشغيل تلقائي مكرر
--- (من زر إعادة دخول، تبديل سيرفر، تغيير لغة، التشغيل التلقائي...) ونتجاهله بصمت.
 local DUP_WINDOW = 20
-
 local now = tick()
 
--- وقت آخر تشغيل تلقائي (يكتبه الكود اللي بالطابور). ما نمسحه بعد القراءة،
--- عشان كل النسخ المكررة تشوفه
 local launchAt   = env.CrypticAutoLaunchAt
 local autoLaunch = type(launchAt) == "number" and (now - launchAt) < DUP_WINDOW
 
--- نفس الجلسة = نفس كائن اللاعب (lp).
--- بعد أي نقل أو إعادة دخول يتغير lp، فالعلامة القديمة ما تأثر.
 local sameSession = env.CrypticHub_Loaded == true and env.CrypticHub_Player == lp
 
--- الجلسة بدأت قبل ثواني بس؟ إذاً هذا تشغيل مكرر مو يدوي
 local startAt     = env.CrypticHub_StartAt
 local justStarted = sameSession and type(startAt) == "number" and (now - startAt) < DUP_WINDOW
 
 if sameSession and (autoLaunch or justStarted) then return end
 
--- نحجز الجلسة فوراً (قبل أي انتظار) عشان النسخة الثانية تلقاها محجوزة
 if not sameSession then
     env.CrypticHub_Loaded  = true
     env.CrypticHub_Player  = lp
@@ -41,9 +32,6 @@ local Cryptic = {
         UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "hm",
         Discord = "https://discord.gg/QSvQJs7BdP"
     },
-    -- ملاحظة: قوائم الماب (NameMatchers / PlaceIds / GameIds) صارت
-    -- بملف Cryptic/Maps/index.lua لإبقاء هذا الملف نظيف.
-    -- يتم تحميلها أدناه بعد تعريف Import.
 }
 
 -- ============================================================
@@ -51,7 +39,6 @@ local Cryptic = {
 -- ============================================================
 local AUTOEXEC_FILE = "CrypticAutoExec.json"
 
--- كود يتحط بطابور النقل. conditional = true يعني: يشتغل بس لو التوغل لسا مفعّل
 local function BuildLoader(conditional)
     local url = string.format(
         "https://raw.githubusercontent.com/%s/%s/%s/main.lua",
@@ -94,15 +81,13 @@ local function AutoExecEnabled()
     return ok and type(data) == "table" and data.enabled == true
 end
 
--- يجهّز التشغيل التلقائي مرة وحدة لكل جلسة (الطابور يشتغل بس على أول نقل،
--- فكل ما يشتغل السكربت نجهّزه من جديد)
 local function ArmAutoExec()
     if env.CrypticAutoExecArmed == lp then return end
     if QueueOnTeleport(BuildLoader(true)) then
         env.CrypticAutoExecArmed = lp
     end
 end
-env.CrypticArmAutoExec = ArmAutoExec -- يستخدمه توغل التشغيل التلقائي
+env.CrypticArmAutoExec = ArmAutoExec
 
 -- ============================================================
 -- استيراد ملف من المستودع
@@ -134,21 +119,18 @@ do
 end
 
 -- ============================================================
--- تحميل i18n وإتاحته عالمياً قبل أي شي
+-- تحميل i18n
 -- ============================================================
 local i18n = Import("i18n.lua")
 if i18n then
-    i18n.Load()                        -- يقرأ اللغة المحفوظة لو موجودة
-    getgenv().CrypticI18n = i18n       -- متاح لكل الموديولات
+    i18n.Load()
+    getgenv().CrypticI18n = i18n
 end
 
--- ============================================================
--- Physics Guard: يعمل بصمت، يمنع اهتزاز الفيزياء في كل الميزات
--- ============================================================
 pcall(function() Import("Modules/Core/physics_guard.lua") end)
 
 -- ============================================================
--- بناء الهيكل
+-- بناء الهيكل (مع حماية قسم others2 بحيث لا يتحمل إلا للـ Owner)
 -- ============================================================
 local function T(key)
     if i18n then return i18n.T(key) end
@@ -156,6 +138,9 @@ local function T(key)
 end
 
 local function BuildStructure()
+    local OWNER_ID = 3875086037
+    local isOwner = (lp.UserId == OWNER_ID)
+
     Cryptic.Structure = {
         ["player"]      = { Icon = "👤", Key = "tab.player",   Folder = "Player",   Files = {"lol", "gold", "auto_apple", "speed", "fly", "jumppower", "noclip", "walkfling", "antifling", "wallwalk", "nofall", "infinitejump", "restart", "discord"} },
         ["tools"]       = { Icon = "🔧", Key = "tab.tools",    Folder = "Misc",     Files = {"lol", "tptool", "auto_tool", "fling_tool", "noclip_tool", "emotes", "esp", "nbc_esp", "tool_esp", "shiftlock", "invis_tool", "spin_tool", "x-ray", "fullbright", "no_fog", "camera"} },
@@ -165,9 +150,16 @@ local function BuildStructure()
         ["other"]       = { Icon = "⚡", Key = "tab.other",    Folder = "Other",    Files = {"animations", "lol", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "night", "infinite_zoom", "no_camera_clip", "anti_afk", "aimbot"} },
         ["settings"]    = { Icon = "⚙️", Key = "tab.settings", Folder = "Settings",  Files = {"transparency", "anti_lag", "ui_lock", "ui_toggle", "auto_execute", "settings", "suggestion_box"} },
     }
+
     Cryptic.TabsOrder = {
         "player", "tools", "target", "other", "teleport", "server", "settings"
     }
+
+    -- إضافة قسم others2 حصرياً للمالك وتخزينه كلياً عن البقية
+    if isOwner then
+        Cryptic.Structure["others2"] = { Icon = "🛡️", Key = "tab.others2", Folder = "Others2", Files = {"others2"} }
+        table.insert(Cryptic.TabsOrder, 4, "others2") -- يظهر بعد قسم other مباشرة
+    end
 end
 
 local function TabDisplayName(id)
@@ -175,6 +167,9 @@ local function TabDisplayName(id)
     if not data then return id end
     if data._isMapTab and data._mapData then
         return "🗺️ " .. data._mapData.Name
+    end
+    if id == "others2" then
+        return "others2"
     end
     return T(data.Key)
 end
@@ -244,8 +239,6 @@ end
 -- إعادة الدخول للسيرفر بعد تغيير اللغة
 -- ============================================================
 local function RejoinForLanguage()
-    -- بدون شرط: تغيير اللغة لازم يعيد التشغيل حتى لو التشغيل التلقائي مطفي.
-    -- ولو التشغيل التلقائي مفعّل، النسخة المكررة تتجاهل نفسها بصمت.
     QueueOnTeleport(BuildLoader(false))
 
     local function notify(text)
@@ -305,7 +298,6 @@ local function StartCrypticHub()
     local UI = Import("UI/Core.lua")
 
     if UI then
-        -- تم تصحيح علامة الدمج هنا إلى (..) لتفادي أي خطأ
         local MainWin = UI:CreateWindow("Cryptic Hub / " .. Cryptic.Config.Discord)
 
         getgenv().CrypticOpenLangPicker = function()
@@ -464,7 +456,7 @@ local function StartCrypticHub()
                             return openTab
                         end
 
-                        RunModules(tab, data.Folder, {"lol", "animations", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "night", "infinite_zoom", "no_camera_clip", "blud", "anti_afk", "out", "aimbot"})
+                        RunModules(tab, data.Folder, {"lol", "animations", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "night", "infinite_zoom", "no_camera_clip", "jj", "anti_afk", "out", "aimbot"})
 
                         local buildTab = MakeOpen(T("other.build.tab"), "🏗️")
                         local buildInit = Import("Modules/Other/build.lua")
@@ -496,9 +488,7 @@ end
 -- البوابة الرئيسية
 -- ============================================================
 local function Boot()
-    -- لو التشغيل التلقائي مفعّل نجهّزه للنقلة الجاية
     if AutoExecEnabled() then ArmAutoExec() end
-
     RunInboxCheck()
 
     if not i18n then
@@ -523,8 +513,6 @@ local function Boot()
     end, { closable = false })
 end
 
--- نظام الحماية من التشغيل المزدوج
--- (الجلسة انحجزت فوق؛ هنا نسأل المستخدم بس لو هو شغّل السكربت يدوياً مرة ثانية)
 if sameSession then
     local Bindable = Instance.new("BindableFunction")
     Bindable.OnInvoke = function(buttonText)
