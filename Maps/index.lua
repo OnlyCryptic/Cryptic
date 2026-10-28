@@ -20,15 +20,15 @@ return {
         { pattern = "growagarden2",             file = "Maps/gag2" },
 
         { pattern = "murder mystery 2",         file = "Maps/djn_mm2" },
-        { pattern = "murdermystery2",            file = "Maps/djn_mm2" },
-        { pattern = "mm2",                       file = "Maps/djn_mm2" },
+        { pattern = "murdermystery2",           file = "Maps/djn_mm2" },
+        { pattern = "mm2",                      file = "Maps/djn_mm2" },
 
         { pattern = "+1 speed keyboard escape", file = "Maps/speed_keyboard_escape" },
         { pattern = "speed keyboard escape",    file = "Maps/speed_keyboard_escape" },
 
         { pattern = "survive 99 nights",        file = "Maps/99_nights" },
         { pattern = "99 nights in the forest",  file = "Maps/99_nights" },
-        { pattern = "99 nights",                 file = "Maps/99_nights" },
+        { pattern = "99 nights",                file = "Maps/99_nights" },
 
         { pattern = "sell lemons",              file = "Maps/sell_lemons" },
         { pattern = "selllemons",               file = "Maps/sell_lemons" },
@@ -43,6 +43,13 @@ return {
         -- Steal An Egg
         { pattern = "steal an egg",             file = "Maps/steal_an_egg" },
         { pattern = "stealanegg",               file = "Maps/steal_an_egg" },
+
+        -- صيد الضبّان
+        { pattern = "صيد الضبان",               file = "Maps/صيد_الضبان" },
+
+        -- Fling Things and People
+        { pattern = "fling things and people",  file = "Maps/fling_things_and_people" },
+        { pattern = "flingthingsandpeople",     file = "Maps/fling_things_and_people" },
     },
 
     PlaceIds = {
@@ -83,6 +90,12 @@ return {
 
         -- Steal An Egg
         [107778070777162]  = "Maps/steal_an_egg",
+
+        -- صيد الضبّان
+        [82347957379349]   = "Maps/صيد_الضبان",
+
+        -- Fling Things and People
+        [6961824067]       = "Maps/fling_things_and_people",
     },
 
     GameIds = {
@@ -94,11 +107,11 @@ return {
 
         [10200395747] = "Maps/gag2",
 
-        [9584852943] = "Maps/speed_keyboard_escape",
+        [9584852943]  = "Maps/speed_keyboard_escape",
 
-        [7326934954] = "Maps/99_nights",
+        [7326934954]  = "Maps/99_nights",
 
-        [7395930870] = "Maps/sell_lemons",
+        [7395930870]  = "Maps/sell_lemons",
 
         -- The Animal Hospital
         [10148749921] = "Maps/the_animal_hospital",
@@ -108,5 +121,11 @@ return {
 
         -- Steal An Egg
         [10563114921] = "Maps/steal_an_egg",
+
+        -- صيد الضبّان
+        [10769149947] = "Maps/صيد_الضبان",
+
+        -- Fling Things and People
+        [2668101271] = "Maps/fling_things_and_people",
     },
 }
