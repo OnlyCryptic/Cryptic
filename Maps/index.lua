@@ -16,36 +16,40 @@ return {
 
         { pattern = "wizard alchemy",           file = "Maps/wizard_alchemy" },
 
-        { pattern = "grow a garden 2",           file = "Maps/gag2" },
-        { pattern = "growagarden2",              file = "Maps/gag2" },
+        { pattern = "grow a garden 2",          file = "Maps/gag2" },
+        { pattern = "growagarden2",             file = "Maps/gag2" },
 
-        { pattern = "murder mystery 2",          file = "Maps/djn_mm2" },
-        { pattern = "murdermystery2",            file = "Maps/djn_mm2" },
-        { pattern = "mm2",                       file = "Maps/djn_mm2" },
+        { pattern = "murder mystery 2",         file = "Maps/djn_mm2" },
+        { pattern = "murdermystery2",           file = "Maps/djn_mm2" },
+        { pattern = "mm2",                      file = "Maps/djn_mm2" },
 
-        { pattern = "+1 speed keyboard escape",  file = "Maps/speed_keyboard_escape" },
-        { pattern = "speed keyboard escape",     file = "Maps/speed_keyboard_escape" },
+        { pattern = "+1 speed keyboard escape", file = "Maps/speed_keyboard_escape" },
+        { pattern = "speed keyboard escape",    file = "Maps/speed_keyboard_escape" },
 
-        { pattern = "survive 99 nights",         file = "Maps/99_nights" },
-        { pattern = "99 nights in the forest",   file = "Maps/99_nights" },
-        { pattern = "99 nights",                 file = "Maps/99_nights" },
+        { pattern = "survive 99 nights",        file = "Maps/99_nights" },
+        { pattern = "99 nights in the forest",  file = "Maps/99_nights" },
+        { pattern = "99 nights",                file = "Maps/99_nights" },
 
-        { pattern = "sell lemons",               file = "Maps/sell_lemons" },
-        { pattern = "selllemons",                file = "Maps/sell_lemons" },
+        { pattern = "sell lemons",              file = "Maps/sell_lemons" },
+        { pattern = "selllemons",               file = "Maps/sell_lemons" },
 
-        { pattern = "the animal hospital",       file = "Maps/the_animal_hospital" },
-        { pattern = "animal hospital",           file = "Maps/the_animal_hospital" },
+        { pattern = "the animal hospital",      file = "Maps/the_animal_hospital" },
+        { pattern = "animal hospital",          file = "Maps/the_animal_hospital" },
 
         -- Prison Life
-        { pattern = "prison life",               file = "Maps/prison_life" },
-        { pattern = "prisonlife",                file = "Maps/prison_life" },
+        { pattern = "prison life",              file = "Maps/prison_life" },
+        { pattern = "prisonlife",               file = "Maps/prison_life" },
 
         -- Steal An Egg
-        { pattern = "steal an egg",              file = "Maps/steal_an_egg" },
-        { pattern = "stealanegg",                 file = "Maps/steal_an_egg" },
+        { pattern = "steal an egg",             file = "Maps/steal_an_egg" },
+        { pattern = "stealanegg",               file = "Maps/steal_an_egg" },
 
         -- صيد الضبّان
-        { pattern = "صيد الضبان",                file = "Maps/صيد_الضبان" },
+        { pattern = "صيد الضبان",               file = "Maps/صيد_الضبان" },
+
+        -- Fling Things and People
+        { pattern = "fling things and people",  file = "Maps/fling_pp" },
+        { pattern = "flingthingsandpeople",     file = "Maps/fling_pp" },
     },
 
     PlaceIds = {
@@ -89,6 +93,9 @@ return {
 
         -- صيد الضبّان
         [82347957379349]   = "Maps/صيد_الضبان",
+
+        -- Fling Things and People
+        [6961824067]       = "Maps/fling_pp",
     },
 
     GameIds = {
@@ -117,5 +124,8 @@ return {
 
         -- صيد الضبّان
         [10769149947] = "Maps/صيد_الضبان",
+
+        -- Fling Things and People
+        [2668101271] = "Maps/fling_pp",
     },
 }
