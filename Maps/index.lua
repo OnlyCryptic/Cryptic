@@ -50,6 +50,10 @@ return {
         -- Fling Things and People
         { pattern = "fling things and people",  file = "Maps/fling_pp" },
         { pattern = "flingthingsandpeople",     file = "Maps/fling_pp" },
+
+        -- Flee the Facility
+        { pattern = "flee the facility",        file = "Maps/flee_the_facility" },
+        { pattern = "fleethefacility",          file = "Maps/flee_the_facility" },
     },
 
     PlaceIds = {
@@ -96,6 +100,9 @@ return {
 
         -- Fling Things and People
         [6961824067]       = "Maps/fling_pp",
+
+        -- Flee the Facility
+        [893973440]        = "Maps/flee_the_facility",
     },
 
     GameIds = {
@@ -127,5 +134,8 @@ return {
 
         -- Fling Things and People
         [2668101271] = "Maps/fling_pp",
+
+        -- Flee the Facility
+        [372226183] = "Maps/flee_the_facility",
     },
 }
