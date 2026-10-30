@@ -1,4 +1,4 @@
--- [[ Cryptic Hub - Element: Toggle (with optional Version Selector) ]]
+-- [[ Cryptic Hub - Element: VersionToggle (Toggle + Version Selector) ]]
 
 return function(TabOps, label, callback, versions)
     local TweenService = game:GetService("TweenService")
