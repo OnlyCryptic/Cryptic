@@ -1,4 +1,4 @@
--- [[ Cryptic Hub - Element: Toggle (with optional Version Selector) ]]
+-- [[ Cryptic Hub - Element: VersionToggle (Toggle + Version Selector) ]]
 
 return function(TabOps, label, callback, versions)
     local TweenService = game:GetService("TweenService")
@@ -6,7 +6,9 @@ return function(TabOps, label, callback, versions)
         TweenService:Create(obj, TweenInfo.new(t or 0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props):Play()
     end
 
-    TabOps.Order = TabOps.Order + 1
+    TabOps.Order = (TabOps.Order or 0) + 1
+    local Cfg = (TabOps.UI and TabOps.UI.ConfigData) or {}
+    local TabName = tostring(TabOps.TabName or "Tab")
 
     local ACCENT = Color3.fromRGB(0, 255, 150)
     local ACCENT2 = Color3.fromRGB(0, 150, 255)
@@ -26,13 +28,15 @@ return function(TabOps, label, callback, versions)
     Grad.Color = ColorSequence.new{ ColorSequenceKeypoint.new(0, ACCENT), ColorSequenceKeypoint.new(1, ACCENT2) }
     Grad.Rotation = 45
 
+    local isActive = false -- لازم يكون فوق عشان القائمة المنسدلة تشوفه
+
     -- ========== Version Selector (اختياري) ==========
     local hasVersions = typeof(versions) == "table" and #versions > 0
     local currentVersion = versions and versions[1] or nil
-    local versionKey = TabOps.TabName .. "_" .. label .. "_Version"
+    local versionKey = TabName .. "_" .. label .. "_Version"
 
-    if hasVersions and TabOps.UI.ConfigData[versionKey] then
-        currentVersion = TabOps.UI.ConfigData[versionKey]
+    if hasVersions and Cfg[versionKey] then
+        currentVersion = Cfg[versionKey]
     end
 
     local VersionBtn
@@ -49,6 +53,7 @@ return function(TabOps, label, callback, versions)
         VersionBtn.Font = Enum.Font.GothamSemibold
         VersionBtn.TextSize = 11
         VersionBtn.AutoButtonColor = false
+        VersionBtn.ZIndex = 10 -- فوق الزر الشفاف اللي يغطي الصف
         Instance.new("UICorner", VersionBtn).CornerRadius = UDim.new(0, 8)
 
         local VStroke = Instance.new("UIStroke", VersionBtn)
@@ -100,14 +105,23 @@ return function(TabOps, label, callback, versions)
             opt.MouseButton1Click:Connect(function()
                 currentVersion = ver
                 VersionBtn.Text = ver .. "  ▼"
-                TabOps.UI.ConfigData[versionKey] = ver
+                Cfg[versionKey] = ver
                 DropdownFrame.Visible = false
                 pcall(callback, isActive, ver) -- يمرر الإصدار كمان
             end)
         end
 
+        -- الضغط على الزر يبدّل النسخة بالدور (v2 -> v1 -> v2 ...)
         VersionBtn.MouseButton1Click:Connect(function()
-            DropdownFrame.Visible = not DropdownFrame.Visible
+            local idx = 1
+            for i, v in ipairs(versions) do
+                if v == currentVersion then idx = i break end
+            end
+            local ver = versions[(idx % #versions) + 1]
+            currentVersion = ver
+            VersionBtn.Text = ver .. "  ▼"
+            Cfg[versionKey] = ver
+            pcall(callback, isActive, ver)
         end)
     end
 
@@ -139,17 +153,16 @@ return function(TabOps, label, callback, versions)
     Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
 
     local B = Instance.new("TextButton", R)
-    B.Size = UDim2.new(1, 0, 1, 0)
+    B.Size = UDim2.new(1, hasVersions and -120 or 0, 1, 0) -- ما يغطي زر النسخة
     B.BackgroundTransparency = 1
     B.Text = ""
     B.AutoButtonColor = false
     B.ZIndex = 2
 
-    local isActive = false
-    local configKey = TabOps.TabName .. "_" .. label
+    local configKey = TabName .. "_" .. label
 
-    if TabOps.UI.ConfigData[configKey] \~= nil then
-        isActive = TabOps.UI.ConfigData[configKey]
+    if Cfg[configKey] ~= nil then
+        isActive = Cfg[configKey]
     end
 
     local function setState(state, isClick)
@@ -163,7 +176,7 @@ return function(TabOps, label, callback, versions)
             Tw(Knob,  {Position = UDim2.new(0, 3, 0.5, -8), BackgroundColor3 = Color3.fromRGB(200,200,215)}, 0.18)
             Tw(Stroke, {Transparency = 0.55}, 0.18)
         end
-        TabOps.UI.ConfigData[configKey] = isActive
+        Cfg[configKey] = isActive
         pcall(callback, isActive, currentVersion)
         if isClick and TabOps.LogAction then
             TabOps.LogAction("⚙️ تفعيل/إيقاف ميزة", label, isActive and "مفعل ✅" or "معطل ❌", isActive and 5763719 or 15548997)
@@ -188,6 +201,20 @@ return function(TabOps, label, callback, versions)
     B.MouseButton1Click:Connect(function()
         setState(not isActive, true)
     end)
+
+    -- منطقة المفتاح نفسه (يمين زر النسخة)
+    if hasVersions then
+        local B2 = Instance.new("TextButton", R)
+        B2.Size = UDim2.new(0, 60, 1, 0)
+        B2.Position = UDim2.new(1, -60, 0, 0)
+        B2.BackgroundTransparency = 1
+        B2.Text = ""
+        B2.AutoButtonColor = false
+        B2.ZIndex = 2
+        B2.MouseButton1Click:Connect(function()
+            setState(not isActive, true)
+        end)
+    end
 
     return {
         SetState = function(self, state)
