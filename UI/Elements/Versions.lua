@@ -153,7 +153,7 @@ return function(TabOps, label, callback, versions)
     Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
 
     local B = Instance.new("TextButton", R)
-    B.Size = UDim2.new(1, 0, 1, 0)
+    B.Size = UDim2.new(1, hasVersions and -120 or 0, 1, 0) -- ما يغطي زر النسخة
     B.BackgroundTransparency = 1
     B.Text = ""
     B.AutoButtonColor = false
@@ -201,6 +201,20 @@ return function(TabOps, label, callback, versions)
     B.MouseButton1Click:Connect(function()
         setState(not isActive, true)
     end)
+
+    -- منطقة المفتاح نفسه (يمين زر النسخة)
+    if hasVersions then
+        local B2 = Instance.new("TextButton", R)
+        B2.Size = UDim2.new(0, 60, 1, 0)
+        B2.Position = UDim2.new(1, -60, 0, 0)
+        B2.BackgroundTransparency = 1
+        B2.Text = ""
+        B2.AutoButtonColor = false
+        B2.ZIndex = 2
+        B2.MouseButton1Click:Connect(function()
+            setState(not isActive, true)
+        end)
+    end
 
     return {
         SetState = function(self, state)
