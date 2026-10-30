@@ -53,6 +53,7 @@ return function(TabOps, label, callback, versions)
         VersionBtn.Font = Enum.Font.GothamSemibold
         VersionBtn.TextSize = 11
         VersionBtn.AutoButtonColor = false
+        VersionBtn.ZIndex = 10 -- فوق الزر الشفاف اللي يغطي الصف
         Instance.new("UICorner", VersionBtn).CornerRadius = UDim.new(0, 8)
 
         local VStroke = Instance.new("UIStroke", VersionBtn)
@@ -110,8 +111,17 @@ return function(TabOps, label, callback, versions)
             end)
         end
 
+        -- الضغط على الزر يبدّل النسخة بالدور (v2 -> v1 -> v2 ...)
         VersionBtn.MouseButton1Click:Connect(function()
-            DropdownFrame.Visible = not DropdownFrame.Visible
+            local idx = 1
+            for i, v in ipairs(versions) do
+                if v == currentVersion then idx = i break end
+            end
+            local ver = versions[(idx % #versions) + 1]
+            currentVersion = ver
+            VersionBtn.Text = ver .. "  ▼"
+            Cfg[versionKey] = ver
+            pcall(callback, isActive, ver)
         end)
     end
 
