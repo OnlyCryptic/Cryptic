@@ -1,141 +1,19 @@
--- [[ Cryptic Hub - سجل الماب الرئيسي ]]
--- كل ماب جديد يضاف هنا (وليس في main.lua) لإبقاء main نظيف.
-
 return {
-    NameMatchers = {
-        { pattern = "blox fruits",              file = "Maps/bloxfruits" },
-        { pattern = "bloxfruits",               file = "Maps/bloxfruits" },
-
-        { pattern = "sailor piece",             file = "Maps/sailor_piece" },
-        { pattern = "sailorpiece",              file = "Maps/sailor_piece" },
-
-        { pattern = "blade ball",               file = "Maps/BB" },
-
-        { pattern = "slime rng",                file = "Maps/Slime_RNG" },
-        { pattern = "slimerng",                 file = "Maps/Slime_RNG" },
-
-        { pattern = "wizard alchemy",           file = "Maps/wizard_alchemy" },
-
-        { pattern = "grow a garden 2",          file = "Maps/gag2" },
-        { pattern = "growagarden2",             file = "Maps/gag2" },
-
-        { pattern = "murder mystery 2",         file = "Maps/djn_mm2" },
-        { pattern = "murdermystery2",           file = "Maps/djn_mm2" },
-        { pattern = "mm2",                      file = "Maps/djn_mm2" },
-
-        { pattern = "+1 speed keyboard escape", file = "Maps/speed_keyboard_escape" },
-        { pattern = "speed keyboard escape",    file = "Maps/speed_keyboard_escape" },
-
-        { pattern = "survive 99 nights",        file = "Maps/99_nights" },
-        { pattern = "99 nights in the forest",  file = "Maps/99_nights" },
-        { pattern = "99 nights",                file = "Maps/99_nights" },
-
-        { pattern = "sell lemons",              file = "Maps/sell_lemons" },
-        { pattern = "selllemons",               file = "Maps/sell_lemons" },
-
-        { pattern = "the animal hospital",      file = "Maps/the_animal_hospital" },
-        { pattern = "animal hospital",          file = "Maps/the_animal_hospital" },
-
-        -- Prison Life
-        { pattern = "prison life",              file = "Maps/prison_life" },
-        { pattern = "prisonlife",               file = "Maps/prison_life" },
-
-        -- Steal An Egg
-        { pattern = "steal an egg",             file = "Maps/steal_an_egg" },
-        { pattern = "stealanegg",               file = "Maps/steal_an_egg" },
-
-        -- صيد الضبّان
-        { pattern = "صيد الضبان",               file = "Maps/صيد_الضبان" },
-
-        -- Fling Things and People
-        { pattern = "fling things and people",  file = "Maps/fling_pp" },
-        { pattern = "flingthingsandpeople",     file = "Maps/fling_pp" },
-
-        -- Flee the Facility
-        { pattern = "flee the facility",        file = "Maps/flee_the_facility" },
-        { pattern = "fleethefacility",          file = "Maps/flee_the_facility" },
-    },
-
-    PlaceIds = {
-        [2753915549]       = "Maps/bloxfruits",
-        [4442272183]       = "Maps/bloxfruits",
-        [7449423635]       = "Maps/bloxfruits",
-        [100117331123089]  = "Maps/bloxfruits",
-        [73902483975735]   = "Maps/bloxfruits",
-        [85211729168715]   = "Maps/bloxfruits",
-        [79091703265657]   = "Maps/bloxfruits",
-
-        [118821269826806]  = "Maps/wizard_alchemy",
-
-        [92416421522960]   = "Maps/Slime_RNG",
-
-        [13772394625]      = "Maps/BB",
-
-        [142823291]        = "Maps/djn_mm2",
-
-        [97598239454123]   = "Maps/gag2",
-
-        [95082159892680]   = "Maps/speed_keyboard_escape",
-        [118941584817777]  = "Maps/speed_keyboard_escape",
-        [75012837977315]   = "Maps/speed_keyboard_escape",
-        [93411036959889]   = "Maps/speed_keyboard_escape",
-
-        [126509999114328]  = "Maps/99_nights",
-        [79546208627805]   = "Maps/99_nights",
-
-        [79268393072444]   = "Maps/sell_lemons",
-
-        -- The Animal Hospital
-        [78515283254292]   = "Maps/the_animal_hospital",
-        [104522435597696]  = "Maps/the_animal_hospital",
-
-        -- Prison Life
-        [155615604]        = "Maps/prison_life",
-
-        -- Steal An Egg
-        [107778070777162]  = "Maps/steal_an_egg",
-
-        -- صيد الضبّان
-        [82347957379349]   = "Maps/صيد_الضبان",
-
-        -- Fling Things and People
-        [6961824067]       = "Maps/fling_pp",
-
-        -- Flee the Facility
-        [893973440]        = "Maps/flee_the_facility",
-    },
-
     GameIds = {
-        [2923187244]  = "Maps/bloxfruits",
-        [4777817887]  = "Maps/BB",
+        [994732206]   = "Maps/bloxfruits",
+        [66654135]    = "Maps/djn_mm2",
         [9792947201]  = "Maps/Slime_RNG",
         [10006104044] = "Maps/wizard_alchemy",
         [9186719164]  = "Maps/sailor_piece",
-
         [10200395747] = "Maps/gag2",
-
         [9584852943]  = "Maps/speed_keyboard_escape",
-
         [7326934954]  = "Maps/99_nights",
-
         [7395930870]  = "Maps/sell_lemons",
-
-        -- The Animal Hospital
         [10148749921] = "Maps/the_animal_hospital",
-
-        -- Prison Life
-        [73885730] = "Maps/prison_life",
-
-        -- Steal An Egg
+        [73885730]    = "Maps/prison_life",
         [10563114921] = "Maps/steal_an_egg",
-
-        -- صيد الضبّان
         [10769149947] = "Maps/صيد_الضبان",
-
-        -- Fling Things and People
-        [2668101271] = "Maps/fling_pp",
-
-        -- Flee the Facility
-        [372226183] = "Maps/flee_the_facility",
+        [2668101271]  = "Maps/fling_pp",
+        [372226183]   = "Maps/flee_the_facility",
     },
 }
