@@ -157,7 +157,7 @@ end
 
 local function BuildStructure()
     Cryptic.Structure = {
-        ["player"]      = { Icon = "👤", Key = "tab.player",   Folder = "Player",   Files = {"lol", "blox", "gold", "auto_apple", "speed", "fly", "jumppower", "noclip", "antifling", "walkfling", "flyfling", "wallwalk", "nofall", "infinitejump", "3d", "restart", "out", "discord", "di2"} },
+        ["player"]      = { Icon = "👤", Key = "tab.player",   Folder = "Player",   Files = {"lol", "so", "blox", "gold", "auto_apple", "speed", "fly", "jumppower", "noclip", "antifling", "walkfling", "flyfling", "wallwalk", "nofall", "infinitejump", "3d", "restart", "out", "discord", "di2"} },
         ["tools"]       = { Icon = "🔧", Key = "tab.tools",    Folder = "Misc",     Files = {"lol", "tptool", "auto_tool", "fling_tool", "noclip_tool", "emotes", "esp", "nbc_esp", "tool_esp", "shiftlock", "invis_tool", "spin_tool", "x-ray", "fullbright", "no_fog", "camera"} },
         ["target"]      = { Icon = "🎯", Key = "tab.target",   Folder = "Combat",   Files = {"target_select", "target_tp", "target_spectate", "target_aimbot", "target_sit", "target_mimic", "target_fling", "bring_parts", "carry", "jark", "Target_follow", "target_esp", "copy_skin1", "target_emotes", "target_facesit", "info_t", "skinz"} },
         ["server"]      = { Icon = "🌐", Key = "tab.server",   Folder = "Server",   Files = {"server", "rejoin", "join_id", "players"} },
@@ -464,7 +464,7 @@ local function StartCrypticHub()
                             return openTab
                         end
 
-                        RunModules(tab, data.Folder, {"lol", "animations", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "night", "infinite_zoom", "no_camera_clip", "blud", "anti_afk", "aimbot"})
+                        RunModules(tab, data.Folder, {"lol", "animations", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "night", "infinite_zoom", "no_camera_clip", "anti_afk", "aimbot"})
 
                         local buildTab = MakeOpen(T("other.build.tab"), "🏗️")
                         local buildInit = Import("Modules/Other/build.lua")
