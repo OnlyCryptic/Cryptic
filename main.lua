@@ -41,9 +41,9 @@ local Cryptic = {
         UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "hm",
         Discord = "https://discord.gg/QSvQJs7BdP"
     },
-    -- ملاحظة: قوائم الماب (NameMatchers / PlaceIds / GameIds) صارت
-    -- بملف Cryptic/Maps/index.lua لإبقاء هذا الملف نظيف.
-    -- يتم تحميلها أدناه بعد تعريف Import.
+    -- ملاحظة: سجل الماب (GameIds بالـ Universe ID) موجود في
+    -- Cryptic/Maps/index.lua لإبقاء هذا الملف نظيف.
+    -- يتم تحميله أدناه بعد تعريف Import.
 }
 
 -- ============================================================
@@ -123,13 +123,9 @@ end
 do
     local registry = Import("Maps/index.lua")
     if type(registry) == "table" then
-        Cryptic.MapNameMatchers = registry.NameMatchers or {}
-        Cryptic.Maps            = registry.PlaceIds     or {}
-        Cryptic.GameIds         = registry.GameIds      or {}
+        Cryptic.GameIds = registry.GameIds or {}
     else
-        Cryptic.MapNameMatchers = {}
-        Cryptic.Maps            = {}
-        Cryptic.GameIds         = {}
+        Cryptic.GameIds = {}
     end
 end
 
@@ -203,33 +199,9 @@ local function LoadElement(elementName)
     return nil
 end
 
+-- التعرف على الماب بالـ Universe ID فقط (game.GameId)
 local function InjectMapTab()
-    local mapFilePath
-
-    if Cryptic.MapNameMatchers then
-        local placeName
-        pcall(function()
-            placeName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
-        end)
-        if placeName and placeName ~= "" then
-            local lower = string.lower(placeName)
-            for _, m in ipairs(Cryptic.MapNameMatchers) do
-                if m.pattern and m.file and string.find(lower, m.pattern, 1, true) then
-                    mapFilePath = m.file
-                    break
-                end
-            end
-        end
-    end
-
-    if not mapFilePath and Cryptic.Maps then
-        mapFilePath = Cryptic.Maps[game.PlaceId]
-    end
-
-    if not mapFilePath and Cryptic.GameIds then
-        mapFilePath = Cryptic.GameIds[game.GameId]
-    end
-
+    local mapFilePath = Cryptic.GameIds and Cryptic.GameIds[game.GameId]
     if not mapFilePath then return end
 
     local mapData = Import(mapFilePath .. ".lua")
