@@ -18,5 +18,6 @@ return {
         [10766972131] = "Maps/throw_food_for_animals",
         [6035872082]  = "Maps/rivals",
         [10769957062] = "Maps/bug_evolution",
+        [3808081382]  = "Maps/the_strongest_battlegrounds",
     },
 }
