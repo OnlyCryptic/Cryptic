@@ -15,5 +15,6 @@ return {
         [10769149947] = "Maps/صيد_الضبان",
         [2668101271]  = "Maps/fling_pp",
         [372226183]   = "Maps/flee_the_facility",
+        [10766972131] = "Maps/throw_food_for_animals",
     },
 }
