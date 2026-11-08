@@ -1,211 +1,230 @@
--- [[ Cryptic Hub - UI Element: Open (V2 - Enhanced Design) ]]
+-- [[ Cryptic Hub - UI Element: Open (V2 API + V3 Design) ]]
+-- نفس شكل v3 (كرت + شريط ملون + أيقونة داخل مربع + سهم + هوفر) 
+-- مع الحفاظ على كل شي في v2:
+--   * نفس التوقيع:  Open(TabRef, title, icon)
+--   * نفس الأوامر:  Open() / Close() / Toggle()   (تشتغل بنقطة أو نقطتين)
+--   * TabName = TabRef.TabName .. "_" .. title
+--   * metatable __index = TabRef (أي شي بالتاب الأصلي يوصله)
+--   * Page / Order / LogAction / UI
+-- إضافات من v3 (ما تأثر على أي ملف): SetOpen / IsOpen / Accent / ثيم احتياطي / لون حسب العنوان
+
+-- تحكم البيسي (إضافة): 
+--   كليك يسار = فتح/غلق | Shift + كليك = افتح هذا واقفل الباقي
+--   كليك يمين = افتح/اقفل كل أقسام نفس التاب | Enter وانت واقف بالماوس عليه = فتح/غلق
+-- كلها تشتغل بدون ما تغير أي شي بالملفات الثانية. الجوال يظل نفس الشي (لمس عادي).
+local Registry = setmetatable({}, { __mode = "k" }) -- الأقسام حسب التاب
 
 return function(TabRef, title, icon)
-    TabRef.Order = TabRef.Order + 1
-    icon = icon or "📂"
-
     local TweenService = game:GetService("TweenService")
-    local isOpen = false
+    local isTouch = game:GetService("UserInputService").TouchEnabled
 
-    local function tween(obj, props, t, style, dir)
-        TweenService:Create(
-            obj,
-            TweenInfo.new(t or 0.25, style or Enum.EasingStyle.Quint, dir or Enum.EasingDirection.Out),
-            props
-        ):Play()
+    local UI = TabRef.UI or {}
+    local THEME = UI.Theme or {
+        BgChip = Color3.fromRGB(22, 25, 34), Stroke = Color3.fromRGB(35, 38, 50),
+        Text = Color3.fromRGB(235, 238, 245), TextDim = Color3.fromRGB(160, 165, 180),
+        AccentA = Color3.fromRGB(0, 255, 150),
+    }
+
+    local function New(class, parent, props)
+        local inst = Instance.new(class)
+        for k, v in pairs(props or {}) do inst[k] = v end
+        inst.Parent = parent
+        return inst
     end
 
-    -- ══════════════════════════════════════════
-    -- الإطار الخارجي
-    -- ══════════════════════════════════════════
-    local Container = Instance.new("Frame", TabRef.Page)
-    Container.LayoutOrder = TabRef.Order
-    Container.Size = UDim2.new(0.97, 0, 0, 52)
-    Container.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
-    Container.ClipsDescendants = true
-    Container.BorderSizePixel = 0
-    local ContCorner = Instance.new("UICorner", Container)
-    ContCorner.CornerRadius = UDim.new(0, 12)
+    local function unscaled(px)
+        if UI.GetUnscaledLayoutHeight then return UI.GetUnscaledLayoutHeight(px) end
+        return px
+    end
 
-    -- ظل/توهج خارجي (محاكاة بـ stroke متدرج)
-    local Stroke = Instance.new("UIStroke", Container)
-    Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    Stroke.Thickness = 1.5
-    Stroke.Transparency = 0.55
-    local StrokeGrad = Instance.new("UIGradient", Stroke)
-    StrokeGrad.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0,   Color3.fromRGB(0,  220, 140)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(30, 120, 255)),
-        ColorSequenceKeypoint.new(1,   Color3.fromRGB(0,  220, 140)),
-    }
-    StrokeGrad.Rotation = 90
+    title = tostring(title or "Section")
+    icon = icon or "📂"
+    local accent = (UI.AccentFor and UI.AccentFor(title)) or THEME.AccentA
+    local HEAD_H = isTouch and 54 or 48
 
-    -- خلفية تدرج داخلية خفية (shimmer)
-    local BgGrad = Instance.new("UIGradient", Container)
-    BgGrad.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0,   Color3.fromRGB(22, 22, 30)),
-        ColorSequenceKeypoint.new(1,   Color3.fromRGB(14, 14, 20)),
-    }
-    BgGrad.Rotation = 135
+    TabRef.Order = TabRef.Order + 1
 
     -- ══════════════════════════════════════════
-    -- الهيدر (زر الفتح)
+    -- الكرت
     -- ══════════════════════════════════════════
-    local Header = Instance.new("TextButton", Container)
-    Header.Size = UDim2.new(1, 0, 0, 52)
-    Header.BackgroundTransparency = 1
-    Header.Text = ""
-    Header.AutoButtonColor = false
-    Header.ZIndex = 3
+    local Card = New("Frame", TabRef.Page, {
+        Name = "OpenSection_" .. title,
+        LayoutOrder = TabRef.Order,
+        Size = UDim2.new(0.98, 0, 0, HEAD_H),
+        BackgroundColor3 = THEME.BgChip,
+        BackgroundTransparency = 0.3,
+        BorderSizePixel = 0,
+        ClipsDescendants = true,
+    })
+    New("UICorner", Card, { CornerRadius = UDim.new(0, 12) })
+    local cardStroke = New("UIStroke", Card, { Thickness = 1, Color = THEME.Stroke, Transparency = 0.3 })
 
-    -- شريط لوني على اليسار (accent bar)
-    local AccentBar = Instance.new("Frame", Header)
-    AccentBar.Size = UDim2.new(0, 3, 0, 26)
-    AccentBar.Position = UDim2.new(0, 10, 0.5, -13)
-    AccentBar.BorderSizePixel = 0
-    AccentBar.BackgroundColor3 = Color3.fromRGB(0, 220, 140)
-    local AccentCorner = Instance.new("UICorner", AccentBar)
-    AccentCorner.CornerRadius = UDim.new(1, 0)
-    local AccentGrad = Instance.new("UIGradient", AccentBar)
-    AccentGrad.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 160)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 140, 255)),
-    }
-    AccentGrad.Rotation = 90
+    -- الشريط الملون + مربع الأيقونة + العنوان + السهم
+    local Strip = New("Frame", Card, {
+        Size = UDim2.new(0, 3, 0, HEAD_H - 24), Position = UDim2.new(0, 0, 0, 12),
+        BackgroundColor3 = accent, BorderSizePixel = 0,
+    })
+    New("UICorner", Strip, { CornerRadius = UDim.new(0, 2) })
 
-    -- أيقونة القسم
-    local IconLbl = Instance.new("TextLabel", Header)
-    IconLbl.Size = UDim2.new(0, 30, 0, 30)
-    IconLbl.Position = UDim2.new(0, 20, 0.5, -15)
-    IconLbl.BackgroundTransparency = 1
-    IconLbl.Text = icon
-    IconLbl.TextSize = 18
-    IconLbl.Font = Enum.Font.GothamBold
-    IconLbl.TextXAlignment = Enum.TextXAlignment.Center
-    IconLbl.ZIndex = 3
+    local IconChip = New("Frame", Card, {
+        Size = UDim2.new(0, 32, 0, 32), Position = UDim2.new(0, 14, 0, (HEAD_H - 32) / 2),
+        BackgroundColor3 = accent:Lerp(Color3.new(0, 0, 0), 0.7), BorderSizePixel = 0,
+    })
+    New("UICorner", IconChip, { CornerRadius = UDim.new(0, 9) })
+    New("UIStroke", IconChip, { Thickness = 1, Color = accent, Transparency = 0.6 })
+    New("TextLabel", IconChip, {
+        Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Text = tostring(icon),
+        TextSize = 17, Font = Enum.Font.GothamBold, TextColor3 = Color3.new(1, 1, 1),
+    })
 
-    -- اسم القسم
-    local TitleLbl = Instance.new("TextLabel", Header)
-    TitleLbl.Size = UDim2.new(1, -100, 1, 0)
-    TitleLbl.Position = UDim2.new(0, 56, 0, 0)
-    TitleLbl.BackgroundTransparency = 1
-    TitleLbl.Text = title
-    TitleLbl.TextColor3 = Color3.fromRGB(215, 215, 225)
-    TitleLbl.Font = Enum.Font.GothamBold
-    TitleLbl.TextSize = 13
-    TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
-    TitleLbl.ZIndex = 3
+    New("TextLabel", Card, {
+        Position = UDim2.new(0, 56, 0, 0), Size = UDim2.new(1, -100, 0, HEAD_H), BackgroundTransparency = 1,
+        Text = title, TextColor3 = THEME.Text, Font = Enum.Font.GothamBold, TextSize = isTouch and 15 or 14,
+        TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd,
+    })
 
-    -- دائرة خلفية للسهم
-    local ArrowCircle = Instance.new("Frame", Header)
-    ArrowCircle.Size = UDim2.new(0, 26, 0, 26)
-    ArrowCircle.Position = UDim2.new(1, -38, 0.5, -13)
-    ArrowCircle.BackgroundColor3 = Color3.fromRGB(0, 200, 120)
-    ArrowCircle.BackgroundTransparency = 0.75
-    ArrowCircle.BorderSizePixel = 0
-    local ACircleCorner = Instance.new("UICorner", ArrowCircle)
-    ACircleCorner.CornerRadius = UDim.new(1, 0)
-    ArrowCircle.ZIndex = 3
+    local Chevron = New("TextLabel", Card, {
+        AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(1, -24, 0, HEAD_H / 2), Size = UDim2.new(0, 22, 0, 22),
+        BackgroundTransparency = 1, Text = "▼", TextSize = 11, Font = Enum.Font.GothamBold, TextColor3 = accent,
+    })
 
-    -- سهم داخل الدائرة
-    local Arrow = Instance.new("TextLabel", ArrowCircle)
-    Arrow.Size = UDim2.new(1, 0, 1, 0)
-    Arrow.BackgroundTransparency = 1
-    Arrow.Text = "▶"
-    Arrow.TextColor3 = Color3.fromRGB(0, 255, 150)
-    Arrow.Font = Enum.Font.GothamBold
-    Arrow.TextSize = 10
-    Arrow.TextXAlignment = Enum.TextXAlignment.Center
-    Arrow.ZIndex = 4
+    local Divider = New("Frame", Card, {
+        Position = UDim2.new(0.04, 0, 0, HEAD_H), Size = UDim2.new(0.92, 0, 0, 1),
+        BackgroundColor3 = THEME.Stroke, BackgroundTransparency = 1, BorderSizePixel = 0,
+    })
 
     -- ══════════════════════════════════════════
-    -- خط فاصل
+    -- المحتوى الداخلي (هذا هو Page حق التاب الفرعي)
     -- ══════════════════════════════════════════
-    local Divider = Instance.new("Frame", Container)
-    Divider.Size = UDim2.new(0.88, 0, 0, 1)
-    Divider.Position = UDim2.new(0.06, 0, 0, 52)
-    Divider.BorderSizePixel = 0
-    Divider.BackgroundColor3 = Color3.fromRGB(0, 200, 120)
-    Divider.BackgroundTransparency = 1
-    local DivCorner = Instance.new("UICorner", Divider)
-    DivCorner.CornerRadius = UDim.new(1, 0)
-
-    -- ══════════════════════════════════════════
-    -- منطقة المحتوى الداخلي
-    -- ══════════════════════════════════════════
-    local Inner = Instance.new("Frame", Container)
-    Inner.Position = UDim2.new(0, 5, 0, 58)
-    Inner.Size = UDim2.new(1, -10, 0, 0)
-    Inner.BackgroundTransparency = 1
-
-    local InnerLayout = Instance.new("UIListLayout", Inner)
-    InnerLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    InnerLayout.Padding = UDim.new(0, 6)
-    InnerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-
-    local InnerPad = Instance.new("UIPadding", Inner)
-    InnerPad.PaddingBottom = UDim.new(0, 10)
-    InnerPad.PaddingTop = UDim.new(0, 4)
+    local Inner = New("Frame", Card, {
+        Name = "Body", Position = UDim2.new(0, 0, 0, HEAD_H + 8), Size = UDim2.new(1, 0, 0, 0),
+        BackgroundTransparency = 1, BorderSizePixel = 0,
+    })
+    local InnerLayout = New("UIListLayout", Inner, {
+        Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder,
+        HorizontalAlignment = Enum.HorizontalAlignment.Center,
+    })
 
     -- ══════════════════════════════════════════
     -- منطق الفتح والغلق
     -- ══════════════════════════════════════════
-    local function UpdateSize()
-        local contentH = TabRef.UI and TabRef.UI.GetUnscaledLayoutHeight
-            and TabRef.UI.GetUnscaledLayoutHeight(InnerLayout.AbsoluteContentSize.Y)
-            or InnerLayout.AbsoluteContentSize.Y
-        if isOpen then
-            local totalH = 52 + 1 + 8 + contentH + 14
-            tween(Container, {Size = UDim2.new(0.97, 0, 0, totalH), BackgroundColor3 = Color3.fromRGB(20, 20, 28)}, 0.28)
-            tween(Arrow, {Rotation = 90, TextColor3 = Color3.fromRGB(0, 255, 160)}, 0.22)
-            tween(ArrowCircle, {BackgroundTransparency = 0.55}, 0.22)
-            tween(TitleLbl, {TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.2)
-            tween(Divider, {BackgroundTransparency = 0.6}, 0.2)
-            tween(Stroke, {Transparency = 0.25}, 0.2)
-            Inner.Size = UDim2.new(1, -10, 0, contentH + 18)
+    local isOpen = false
+    local currentTween
+
+    local function targetHeight()
+        if not isOpen then return HEAD_H end
+        return HEAD_H + 8 + unscaled(InnerLayout.AbsoluteContentSize.Y) + 14
+    end
+
+    local function refresh(animate)
+        if currentTween then currentTween:Cancel(); currentTween = nil end
+        local size = UDim2.new(Card.Size.X.Scale, Card.Size.X.Offset, 0, targetHeight())
+        if animate then
+            currentTween = TweenService:Create(Card, TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = size })
+            currentTween:Play()
         else
-            tween(Container, {Size = UDim2.new(0.97, 0, 0, 52), BackgroundColor3 = Color3.fromRGB(18, 18, 24)}, 0.25)
-            tween(Arrow, {Rotation = 0, TextColor3 = Color3.fromRGB(130, 130, 150)}, 0.22)
-            tween(ArrowCircle, {BackgroundTransparency = 0.85}, 0.22)
-            tween(TitleLbl, {TextColor3 = Color3.fromRGB(215, 215, 225)}, 0.2)
-            tween(Divider, {BackgroundTransparency = 1}, 0.18)
-            tween(Stroke, {Transparency = 0.55}, 0.2)
+            Card.Size = size
         end
     end
 
     InnerLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        if isOpen then UpdateSize() end
+        if isOpen then refresh(false) end
     end)
-    local responsiveScale = TabRef.UI and TabRef.UI.ResponsiveScale
-    if responsiveScale then
-        responsiveScale:GetPropertyChangedSignal("Scale"):Connect(function()
-            task.defer(UpdateSize)
+
+    if UI.ResponsiveScale then
+        UI.ResponsiveScale:GetPropertyChangedSignal("Scale"):Connect(function()
+            task.defer(function() if isOpen then refresh(false) end end)
         end)
     end
 
-    -- هوفر
+    local function setOpen(state, animate)
+        isOpen = state and true or false
+        TweenService:Create(Chevron, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { Rotation = isOpen and 180 or 0 }):Play()
+        TweenService:Create(Divider, TweenInfo.new(0.2), { BackgroundTransparency = isOpen and 0.5 or 1 }):Play()
+        TweenService:Create(cardStroke, TweenInfo.new(0.2), {
+            Color = isOpen and accent or THEME.Stroke, Transparency = isOpen and 0.35 or 0.3,
+        }):Play()
+        refresh(animate ~= false)
+    end
+
+    -- زر الهيدر + الهوفر
+    local Header = New("TextButton", Card, {
+        Size = UDim2.new(1, 0, 0, HEAD_H), BackgroundTransparency = 1, Text = "", AutoButtonColor = false, ZIndex = 5,
+    })
+    -- ── تحكم البيسي ──
+    local UserInputService = game:GetService("UserInputService")
+    local hovering = false
+
+    local siblings = Registry[TabRef.Page]
+    if not siblings then
+        siblings = {}
+        Registry[TabRef.Page] = siblings
+    end
+    local me = { set = setOpen, isOpen = function() return isOpen end }
+    table.insert(siblings, me)
+
+    local function setAll(state)
+        for _, s in ipairs(siblings) do s.set(state, true) end
+    end
+    local function openOnlyMe()
+        for _, s in ipairs(siblings) do s.set(s == me, true) end
+    end
+    local function shiftDown()
+        return UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
+            or UserInputService:IsKeyDown(Enum.KeyCode.RightShift)
+    end
+
     Header.MouseEnter:Connect(function()
-        if not isOpen then
-            tween(Container, {BackgroundColor3 = Color3.fromRGB(22, 22, 30)}, 0.15)
-            tween(Stroke, {Transparency = 0.35}, 0.15)
-            tween(AccentBar, {BackgroundColor3 = Color3.fromRGB(0, 255, 170)}, 0.15)
-        end
+        hovering = true
+        TweenService:Create(Card, TweenInfo.new(0.12), { BackgroundTransparency = 0.15 }):Play()
     end)
     Header.MouseLeave:Connect(function()
-        if not isOpen then
-            tween(Container, {BackgroundColor3 = Color3.fromRGB(18, 18, 24)}, 0.2)
-            tween(Stroke, {Transparency = 0.55}, 0.2)
-            tween(AccentBar, {BackgroundColor3 = Color3.fromRGB(0, 220, 140)}, 0.2)
+        hovering = false
+        TweenService:Create(Card, TweenInfo.new(0.15), { BackgroundTransparency = 0.3 }):Play()
+    end)
+
+    -- إحساس الضغط
+    if not isTouch then
+        Header.MouseButton1Down:Connect(function()
+            TweenService:Create(Card, TweenInfo.new(0.08), { BackgroundTransparency = 0.05 }):Play()
+        end)
+        Header.MouseButton1Up:Connect(function()
+            TweenService:Create(Card, TweenInfo.new(0.12), { BackgroundTransparency = hovering and 0.15 or 0.3 }):Play()
+        end)
+    end
+
+    Header.MouseButton1Click:Connect(function()
+        if not isTouch and shiftDown() then
+            openOnlyMe()
+        else
+            setOpen(not isOpen, true)
         end
     end)
 
-    Header.MouseButton1Click:Connect(function()
-        isOpen = not isOpen
-        UpdateSize()
+    -- كليك يمين: افتح/اقفل الكل
+    Header.MouseButton2Click:Connect(function()
+        setAll(not isOpen)
+    end)
+
+    -- Enter وهو واقف بالماوس على الهيدر
+    local keyConn = UserInputService.InputBegan:Connect(function(input, processed)
+        if processed or not hovering then return end
+        if input.KeyCode == Enum.KeyCode.Return or input.KeyCode == Enum.KeyCode.KeypadEnter then
+            setOpen(not isOpen, true)
+        end
+    end)
+
+    -- تنظيف لو انحذف الكرت
+    Card.Destroying:Connect(function()
+        keyConn:Disconnect()
+        for i, s in ipairs(siblings) do
+            if s == me then table.remove(siblings, i) break end
+        end
+        if #siblings == 0 then Registry[TabRef.Page] = nil end
     end)
 
     -- ══════════════════════════════════════════
-    -- كائن OpenTab
+    -- كائن OpenTab (نفس v2 + إضافات v3)
     -- ══════════════════════════════════════════
     local OpenTab = setmetatable({
         Page    = Inner,
@@ -214,19 +233,25 @@ return function(TabRef, title, icon)
         LogAction = TabRef.LogAction,
         UI      = TabRef.UI,
 
+        -- من v3 (إضافات فقط)
+        Accent         = accent,
+        _IsOpenSection = true,
+
+        -- من v2 (نفس السلوك، تشتغل بنقطة أو نقطتين)
         Open = function()
-            isOpen = true
-            UpdateSize()
+            setOpen(true, true)
         end,
         Close = function()
-            isOpen = false
-            UpdateSize()
+            setOpen(false, true)
         end,
         Toggle = function()
-            isOpen = not isOpen
-            UpdateSize()
+            setOpen(not isOpen, true)
         end,
     }, { __index = TabRef })
+
+    -- من v3
+    function OpenTab:SetOpen(state) setOpen(state, true) end
+    function OpenTab:IsOpen() return isOpen end
 
     return OpenTab
 end
