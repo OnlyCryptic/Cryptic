@@ -32,15 +32,27 @@ return function(TabRef, title, icon)
         return inst
     end
 
-    local function unscaled(px)
-        if UI.GetUnscaledLayoutHeight then return UI.GetUnscaledLayoutHeight(px) end
-        return px
-    end
-
     title = tostring(title or "Section")
     icon = icon or "📂"
     local accent = (UI.AccentFor and UI.AccentFor(title)) or THEME.AccentA
     local HEAD_H = isTouch and 54 or 48
+
+    -- مقياس الواجهة الحقيقي: الهيدر ارتفاعه ثابت (HEAD_H) فنقيس منه المقياس الفعلي.
+    -- AbsoluteContentSize يرجع بالبكسل بعد التصغير، فنقسمه على المقياس عشان
+    -- الكرت ياخذ الارتفاع الكامل بأي حجم واجهة (بدون ما نعتمد على دالة خارجية).
+    local Header
+    local function currentScale()
+        -- المصدر الأساسي: UIScale حق Core (نفس اللي يستخدمه Core لحساب الكانفس)
+        local rs = UI.ResponsiveScale
+        if rs and rs.Scale > 0 then return rs.Scale end
+        -- احتياطي لو Core قديم: نقيس من الهيدر الثابت
+        local h = Header and Header.AbsoluteSize.Y or 0
+        if h > 0 then return h / HEAD_H end
+        return 1
+    end
+    local function unscaled(px)
+        return px / currentScale()
+    end
 
     TabRef.Order = TabRef.Order + 1
 
@@ -148,7 +160,7 @@ return function(TabRef, title, icon)
     end
 
     -- زر الهيدر + الهوفر
-    local Header = New("TextButton", Card, {
+    Header = New("TextButton", Card, {
         Size = UDim2.new(1, 0, 0, HEAD_H), BackgroundTransparency = 1, Text = "", AutoButtonColor = false, ZIndex = 5,
     })
     -- ── تحكم البيسي ──
@@ -226,6 +238,19 @@ return function(TabRef, title, icon)
     -- ══════════════════════════════════════════
     -- كائن OpenTab (نفس v2 + إضافات v3)
     -- ══════════════════════════════════════════
+    -- لو تغير المقياس الفعلي (تصغير/تكبير الواجهة) أعد حساب الارتفاع
+    Header:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+        if isOpen then refresh(false) end
+    end)
+
+    -- Core يطلق ScaleSettled بعد ما تلحق التخطيطات المقياس الجديد (يعالج التأخير)
+    if UI.ScaleSettled then
+        local settledConn = UI.ScaleSettled:Connect(function()
+            if isOpen then refresh(false) end
+        end)
+        Card.Destroying:Connect(function() settledConn:Disconnect() end)
+    end
+
     local OpenTab = setmetatable({
         Page    = Inner,
         Order   = 0,
