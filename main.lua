@@ -199,6 +199,22 @@ local function LoadElement(elementName)
     return nil
 end
 
+-- يعرض MakeOpen لباقي الملفات (مثل aimbot.lua) عشان تستخدم نفس كرت Open
+-- تبع قسم Target و Build. ما يستخدمه إلا من يناديه.
+getgenv().CrypticMakeOpen = function(parentTab, title, icon)
+    local openFunc = LoadElement("Open")
+    if not openFunc then return nil end
+    local openTab = openFunc(parentTab, title, icon)
+    local els = {"Button", "Toggle", "LockedToggle", "ExclusiveToggle", "TimedToggle", "Input", "LargeInput", "SpeedControl", "Dropdown", "PlayerSelector", "ProfileCard", "Label", "Paragraph", "Folder", "Line"}
+    for _, el in ipairs(els) do
+        openTab["Add" .. el] = function(self, ...)
+            local f = LoadElement(el)
+            if f then return f(self, ...) end
+        end
+    end
+    return openTab
+end
+
 -- التعرف على الماب بالـ Universe ID فقط (game.GameId)
 local function InjectMapTab()
     local mapFilePath = Cryptic.GameIds and Cryptic.GameIds[game.GameId]
