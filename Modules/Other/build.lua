@@ -1,5 +1,7 @@
 -- [[ Cryptic Hub - Building System V3.1 ]]
 -- Floating HUD + D-Pad | Auto Grid | Stack blocks | Global i18n
+-- V3.2: MakeSection heights are scale-aware (UI.Unscale) so sections stay fully
+--       visible when the UI is shrunk (phones / grip resize).
 
 return function(Tab, UI)
     local Players      = game:GetService("Players")
@@ -32,6 +34,17 @@ return function(Tab, UI)
         }
         g.Rotation = 45
         return s
+    end
+
+    -- يحوّل ارتفاع AbsoluteContentSize (بكسل بعد التصغير) لوحدات الواجهة الحقيقية.
+    -- يستخدم دوال Core لو موجودة، وإلا يرجع الرقم كما هو (السلوك القديم).
+    local function Unscale(px)
+        local u = Tab.UI or UI
+        if u then
+            if u.Unscale then return u.Unscale(px) end
+            if u.GetUnscaledLayoutHeight then return u.GetUnscaledLayoutHeight(px) end
+        end
+        return px
     end
 
     local SHAPE_KEYS = {"Part","WedgePart","CornerWedgePart","Cylinder","Sphere","TrussPart"}
@@ -393,11 +406,13 @@ return function(Tab, UI)
         LP.PaddingTop = UDim.new(0, 5); LP.PaddingBottom = UDim.new(0, 5)
 
         local isOpen = defaultOpen or false
+        -- الارتفاع بوحدات الواجهة الحقيقية (يمر على Unscale)
+        local function contentHeight() return Unscale(LL.AbsoluteContentSize.Y) + 12 end
+
         local function setOpen(v)
             isOpen = v
-            local h = LL.AbsoluteContentSize.Y + 12
             if isOpen then
-                Tw(Cont, {Size = UDim2.new(0.98, 0, 0, h)}, 0.25)
+                Tw(Cont, {Size = UDim2.new(0.98, 0, 0, contentHeight())}, 0.25)
                 Tw(Arr, {Rotation = 90, TextColor3 = ACCENT}, 0.2)
             else
                 Tw(Cont, {Size = UDim2.new(0.98, 0, 0, 0)}, 0.22)
@@ -405,8 +420,18 @@ return function(Tab, UI)
             end
         end
         LL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            if isOpen then Cont.Size = UDim2.new(0.98, 0, 0, LL.AbsoluteContentSize.Y + 12) end
+            if isOpen then Cont.Size = UDim2.new(0.98, 0, 0, contentHeight()) end
         end)
+
+        -- بعد تغيير مقياس الواجهة: أعد القياس لما تلحق التخطيطات
+        local u = Tab.UI or UI
+        if u and u.ScaleSettled then
+            local settledConn = u.ScaleSettled:Connect(function()
+                if isOpen then Cont.Size = UDim2.new(0.98, 0, 0, contentHeight()) end
+            end)
+            Cont.Destroying:Connect(function() settledConn:Disconnect() end)
+        end
+
         if defaultOpen then task.defer(function() setOpen(true) end) end
         Hdr.MouseEnter:Connect(function() Tw(Hdr, {BackgroundTransparency = 0.6}, 0.15) end)
         Hdr.MouseLeave:Connect(function() Tw(Hdr, {BackgroundTransparency = 0.1}, 0.15) end)
