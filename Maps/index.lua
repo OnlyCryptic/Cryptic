@@ -19,5 +19,6 @@ return {
         [6035872082]  = "Maps/rivals",
         [10769957062] = "Maps/bug_evolution",
         [3808081382]  = "Maps/the_strongest_battlegrounds",
+        [4658598196]  = "Maps/training_grounds",
     },
 }
