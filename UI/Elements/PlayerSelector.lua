@@ -37,7 +37,7 @@ return function(TabOps, label, placeholder, callback)
 
     local function TT(k)
         local i = env.CrypticI18n
-        if i and i.T then -- لو أضفت المفتاح combat.select.<k> في i18n يستخدمه أول
+        if i and i.T then
             local ok, v = pcall(i.T, "combat.select." .. k)
             if ok and type(v) == "string" and v ~= "combat.select." .. k then return v end
         end
@@ -192,10 +192,10 @@ return function(TabOps, label, placeholder, callback)
     ClearBtn.Position = UDim2.new(1, -30, 0.5, -13)
     ClearBtn.BackgroundColor3 = Color3.fromRGB(50, 30, 34)
     ClearBtn.BackgroundTransparency = 0.3
-    ClearBtn.Text = "✕"
+    ClearBtn.Text = "X"
     ClearBtn.TextColor3 = Color3.fromRGB(255, 110, 115)
     ClearBtn.Font = Enum.Font.GothamBold
-    ClearBtn.TextSize = 11
+    ClearBtn.TextSize = 12
     ClearBtn.AutoButtonColor = false
     ClearBtn.Visible = false
     corner(ClearBtn, 7)
@@ -270,7 +270,7 @@ return function(TabOps, label, placeholder, callback)
     EmptyLbl.Position = UDim2.new(0, 12, 0, LIST_Y)
     EmptyLbl.BackgroundColor3 = Color3.fromRGB(18, 20, 28)
     EmptyLbl.BackgroundTransparency = 0.2
-    EmptyLbl.Text = TT("no_players") -- استخدام الترجمة الجديدة
+    EmptyLbl.Text = TT("no_players")
     EmptyLbl.TextColor3 = DIM
     EmptyLbl.Font = Enum.Font.Gotham
     EmptyLbl.TextSize = 11
@@ -288,9 +288,7 @@ return function(TabOps, label, placeholder, callback)
     local visibleCount = 0
 
     local function updateBtnText()
-        local base = isOpen
-            and TT("hide_list") -- استخدام الترجمة الجديدة
-            or  TT("show_list") -- استخدام الترجمة الجديدة
+        local base = isOpen and TT("hide_list") or TT("show_list")
         BtnText.Text = base .. "  (" .. totalPlayers .. ")"
         Tw(BtnArrow, { Rotation = isOpen and 180 or 0 }, 0.18)
     end
@@ -382,7 +380,6 @@ return function(TabOps, label, placeholder, callback)
         end)
 
         for index, p in ipairs(sorted) do
-            -- حساب تاريخ إنشاء الحساب
             local creationDate = "??/??/????"
             if p.AccountAge then
                 local success, dateStr = pcall(function()
@@ -439,7 +436,6 @@ return function(TabOps, label, placeholder, callback)
             ULabel.TextSize = 10
             ULabel.TextTruncate = Enum.TextTruncate.AtEnd
 
-            -- إضافة تاريخ إنشاء الحساب
             local DateLabel = Instance.new("TextLabel", PItem)
             DateLabel.Size = UDim2.new(0, 80, 0, 14)
             DateLabel.Position = UDim2.new(1, -120, 0, 24)
@@ -450,12 +446,12 @@ return function(TabOps, label, placeholder, callback)
             DateLabel.Font = Enum.Font.Gotham
             DateLabel.TextSize = 10
 
-            -- تحويل علامة الصح إلى زر X أحمر
+            -- زر X العادي
             local Check = Instance.new("TextButton", PItem)
             Check.Size = UDim2.new(0, 28, 1, 0)
             Check.Position = UDim2.new(1, -34, 0, 0)
             Check.BackgroundTransparency = 1
-            Check.Text = "✕"
+            Check.Text = "X"  -- تم التعديل هنا: حرف X عادي
             Check.TextColor3 = Color3.fromRGB(255, 80, 80)
             Check.Font = Enum.Font.GothamBold
             Check.TextSize = 14
