@@ -65,7 +65,7 @@ return function(Tab, UI)
     end
 
     -- نفس اسم التوقل الأصلي عشان يبان مكانه
-    toggleRef = Tab:AddLockedToggle("Global script chat ui", TT("locked"), function(active)
+    toggleRef = Tab:AddLockedToggle("Global script chat", TT("locked"), function(active)
         -- احتياط: لو أي تعديل في الـ UI فتحه بالغلط، نرجعه مقفول
         if active then
             Notify(TT("notify"))
