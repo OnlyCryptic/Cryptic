@@ -5,54 +5,6 @@ local StarterGui      = game:GetService("StarterGui")
 local lp              = Players.LocalPlayer
 local env             = getgenv()
 
-local Cryptic = {
-    Config = {
-        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "hm",
-        Discord = "https://discord.gg/QSvQJs7BdP"
-    },
-    -- ملاحظة: سجل الماب (GameIds بالـ Universe ID) موجود في
-    -- Cryptic/Maps/index.lua لإبقاء هذا الملف نظيف.
-    -- يتم تحميله أدناه بعد تعريف Import.
-}
-
--- ============================================================
--- استيراد ملف من المستودع
--- ============================================================
-local function Import(path)
-    local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. "?v=" .. tick()
-    local s, r = pcall(game.HttpGet, game, url)
-    if s and r then
-        local f = loadstring(r)
-        if f then return f() end
-    end
-    return nil
-end
-
--- ============================================================
--- البلاك ليست (ملف مستقل: Blacklist.lua)
--- ============================================================
--- لو اللاعب محظور نوقف السكربت فوراً قبل أي تحميل أو حجز جلسة.
--- لو فشل تحميل الملف (إنترنت/GitHub) نكمل عادي عشان ما نقفل على الكل.
-do
-    local ok, blocked = pcall(function()
-        local list = Import("Blacklist.lua")
-        if type(list) ~= "table" or type(list.UserIds) ~= "table" then return false end
-        for _, id in ipairs(list.UserIds) do
-            if tonumber(id) == lp.UserId then return true end
-        end
-        return false
-    end)
-
-    if ok and blocked then
-        pcall(function()
-            StarterGui:SetCore("SendNotification", {
-                Title = "Cryptic Hub", Text = "You are blacklisted 🚫", Duration = 6,
-            })
-        end)
-        return
-    end
-end
-
 -- ============================================================
 -- حماية التشغيل المزدوج
 -- ============================================================
@@ -83,6 +35,16 @@ if not sameSession then
     env.CrypticHub_Player  = lp
     env.CrypticHub_StartAt = now
 end
+
+local Cryptic = {
+    Config = {
+        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "hm",
+        Discord = "https://discord.gg/QSvQJs7BdP"
+    },
+    -- ملاحظة: سجل الماب (GameIds بالـ Universe ID) موجود في
+    -- Cryptic/Maps/index.lua لإبقاء هذا الملف نظيف.
+    -- يتم تحميله أدناه بعد تعريف Import.
+}
 
 -- ============================================================
 -- التشغيل التلقائي بعد النقل / إعادة الدخول
@@ -141,6 +103,19 @@ local function ArmAutoExec()
     end
 end
 env.CrypticArmAutoExec = ArmAutoExec -- يستخدمه توغل التشغيل التلقائي
+
+-- ============================================================
+-- استيراد ملف من المستودع
+-- ============================================================
+local function Import(path)
+    local url = "https://raw.githubusercontent.com/" .. Cryptic.Config.UserName .. "/" .. Cryptic.Config.RepoName .. "/" .. Cryptic.Config.Branch .. "/" .. path .. "?v=" .. tick()
+    local s, r = pcall(game.HttpGet, game, url)
+    if s and r then
+        local f = loadstring(r)
+        if f then return f() end
+    end
+    return nil
+end
 
 -- ============================================================
 -- تحميل سجل الماب من Cryptic/Maps/index.lua
