@@ -128,24 +128,33 @@ end
 -- ============================================================
 -- أي تشغيل ثاني بنفس الجلسة يوصل خلال هالمدة (ثواني) يعتبر تشغيل تلقائي مكرر
 -- (من زر إعادة دخول، تبديل سيرفر، تغيير لغة، التشغيل التلقائي...) ونتجاهله بصمت.
-local DUP_WINDOW = 20 -- يحتفظ به للتوافق مع إعدادات الإصدارات السابقة؛ القفل لم يعد ينتهي زمنيًا.
+local DUP_WINDOW = 20
 local now = Now()
+
+-- وقت آخر تشغيل تلقائي (يكتبه الكود اللي بالطابور). ما نمسحه بعد القراءة،
+-- عشان كل النسخ المكررة تشوفه
+local launchAt   = env.CrypticAutoLaunchAt
+local autoLaunch = type(launchAt) == "number" and (now - launchAt) < DUP_WINDOW
+
+-- نفس الجلسة = نفس كائن اللاعب (lp). بعد أي نقل أو إعادة دخول يتغير lp.
 local sameSession = env.CrypticHub_Loaded == true and env.CrypticHub_Player == lp
 
--- القفل مرتبط بكائن اللاعب/الجلسة وليس بمهلة زمنية، فلا تبدأ واجهتان بعد 20 ثانية.
-if sameSession then
-    pcall(function()
-        StarterGui:SetCore("SendNotification", {
-            Title = "Cryptic Hub", Text = "Cryptic Hub is already running in this session.", Duration = 5
-        })
-    end)
-    return
-end
+-- الجلسة بدأت قبل ثواني بس؟ إذاً هذا تشغيل مكرر (تلقائي) مو يدوي
+local startAt     = env.CrypticHub_StartAt
+local justStarted = sameSession and type(startAt) == "number" and (now - startAt) < DUP_WINDOW
 
-env.CrypticHub_Loaded  = true
-env.CrypticHub_Player  = lp
-env.CrypticHub_StartAt = now
-env.CrypticHub_Booting = true
+if sameSession and (autoLaunch or justStarted) then return end
+
+-- تشغيل يدوي ثاني بنفس الجلسة: نسأل المستخدم في آخر الملف (بعد ما تتحمل الترجمة)
+local RerunRequested = sameSession
+
+-- نحجز الجلسة فوراً (قبل أي انتظار) عشان النسخة الثانية تلقاها محجوزة
+if not sameSession then
+    env.CrypticHub_Loaded  = true
+    env.CrypticHub_Player  = lp
+    env.CrypticHub_StartAt = now
+    env.CrypticHub_Booting = true
+end
 
 -- ============================================================
 -- 3) الإعدادات
@@ -965,14 +974,10 @@ end
 -- ============================================================
 local function StartCrypticHub()
     if env.CrypticHub_UIStarted then return end
+    -- أي نافذة قديمة (مثلاً من تشغيل سابق) نحاول نقفلها، ولو ما قدرنا نكمل عادي
     if env.CrypticHub_Window then
         local existing = env.CrypticHub_Window
-        local destroyed = false
-        pcall(function() if IsFn(existing.Destroy) then existing:Destroy(); destroyed = true end end)
-        if not destroyed then
-            Notify("Cryptic Hub window is already open")
-            return
-        end
+        pcall(function() if IsFn(existing.Destroy) then existing:Destroy() end end)
         env.CrypticHub_Window = nil
     end
     InjectMapTab()
@@ -1112,7 +1117,35 @@ local function Boot()
     if not okPick then StartCrypticHub() end
 end
 
--- القفل حُجز في بداية الملف. لا ننشئ واجهة ثانية في الجلسة نفسها.
-if env.CrypticHub_Booting then
+-- نظام الحماية من التشغيل المزدوج
+-- (الجلسة انحجزت فوق؛ هنا نسأل المستخدم بس لو هو شغّل السكربت يدوياً مرة ثانية)
+if RerunRequested then
+    local function DoRerun()
+        if env.CrypticHub_Booting then
+            Notify("Cryptic Hub is still loading, please wait")
+            return
+        end
+        env.CrypticHub_UIStarted = false
+        env.CrypticHub_Booting   = true
+        env.CrypticHub_StartAt   = Now()
+        Boot()
+    end
+
+    local okPrompt = pcall(function()
+        local Bindable = Instance.new("BindableFunction")
+        Bindable.OnInvoke = function(buttonText)
+            if buttonText == T("rerun.yes") then DoRerun() end
+        end
+        StarterGui:SetCore("SendNotification", {
+            Title    = T("rerun.title") .. " ⚠️",
+            Text     = T("rerun.text"),
+            Duration = 15,
+            Button1  = T("rerun.yes"),
+            Button2  = T("rerun.cancel"),
+            Callback = Bindable
+        })
+    end)
+    if not okPrompt then Notify("Cryptic Hub is already running in this session.") end
+elseif env.CrypticHub_Booting then
     Boot()
 end
