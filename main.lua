@@ -651,7 +651,7 @@ local function BuildStructure()
         ["server"]   = { Icon = "🌐", Key = "tab.server",   Folder = "Server",   Files = {"server", "rejoin", "join_id", "players"} },
         ["teleport"] = { Icon = "📍", Key = "tab.teleport", Folder = "Teleport", Files = {"lol", "tp_locations", "checkpoint"} },
         ["other"]    = { Icon = "⚡", Key = "tab.other",    Folder = "Other",    Files = OTHER_LIST },
-        ["settings"] = { Icon = "⚙️", Key = "tab.settings", Folder = "Settings", Files = {"transparency", "anti_lag", "ui_lock", "ui_toggle", "auto_execute", "settings", "suggestion_box"} },
+        ["settings"] = { Icon = "⚙️", Key = "tab.settings", Folder = "Settings", Files = {"transparency", "anti_lag", "UILock", "ui_toggle", "auto_execute", "settings", "suggestion_box"} },
     }
     Cryptic.TabsOrder = {
         "player", "tools", "target", "other", "teleport", "server", "settings"
