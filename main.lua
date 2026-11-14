@@ -168,7 +168,7 @@ env.CrypticHub_Booting = true
 -- ============================================================
 local Cryptic = {
     Config = {
-        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "hm",
+        UserName = "OnlyCryptic", RepoName = "Cryptic", Branch = "gm",
         Discord = "https://discord.gg/QSvQJs7BdP"
     },
     -- ملاحظة: سجل الماب (GameIds بالـ Universe ID) موجود في
