@@ -1,8 +1,8 @@
 -- [[ Cryptic Hub - UI Lock ]]
 -- تثبيت موضع النافذة وزر الفتح/الإغلاق
 --
--- الحفظ: "Cryptic/CrypticHub_UILock.dat" — داخل مجلد Cryptic (لو الـexecutor ما يدعم
---   المجلدات يرجع للجذر). لو لقى ملف قديم في الجذر ينقله للمجلد ويحذف القديم.
+-- الحفظ: "Cryptic/CrypticHub_ScreenPin.dat" — داخل مجلد Cryptic (لو الـexecutor ما يدعم
+--   المجلدات يرجع للجذر). الملف القديم CrypticHub_UILock.dat يتحذف تلقائياً بدون ما يُقرأ.
 --   يحفظ: { enabled, timestamp, موضع النافذة, موضع زر الفتح }
 --   ينكتب فوراً عند التفعيل/الإيقاف
 --   ينتهي تلقائياً بعد 3 أيام من تفعيله (إجراء احترازي)
@@ -25,7 +25,8 @@ return function(Tab, UI)
     --  مسار الملف (مجلد Cryptic)
     -- ─────────────────────────────────────────────────────────────────── --
     local DATA_FOLDER = "Cryptic"
-    local DAT_NAME    = "CrypticHub_UILock.dat"
+    local DAT_NAME    = "CrypticHub_ScreenPin.dat"      -- الاسم الجديد
+    local OLD_DAT     = "CrypticHub_UILock.dat"         -- الاسم القديم (يتحذف بدون ما يُقرأ)
 
     local function ensureFolder()
         if type(isfolder) ~= "function" or type(makefolder) ~= "function" then return false end
@@ -75,17 +76,12 @@ return function(Tab, UI)
     local function loadState()
         local d = readFileData(DAT_FILE)
 
-        -- نقل لمرة وحدة: ملف قديم في الجذر → مجلد Cryptic
-        if DAT_FILE ~= DAT_NAME and isfile then
-            local okRoot, rootExists = pcall(isfile, DAT_NAME)
-            if okRoot and rootExists then
-                if d == nil then
-                    d = readFileData(DAT_NAME)
-                    if d and writefile then
-                        pcall(writefile, DAT_FILE, HttpService:JSONEncode(d))
-                    end
-                end
-                if delfile then pcall(delfile, DAT_NAME) end
+        -- تنظيف لمرة وحدة: احذف ملف القفل القديم (الجذر + مجلد Cryptic) بدون ما نقرأه،
+        -- عشان أي قفل قديم عالق عند المستخدمين ينفك وما ينتقل للنسخة الجديدة.
+        if delfile and isfile then
+            for _, path in ipairs({ OLD_DAT, DATA_FOLDER .. "/" .. OLD_DAT }) do
+                local okOld, oldExists = pcall(isfile, path)
+                if okOld and oldExists then pcall(delfile, path) end
             end
         end
 
