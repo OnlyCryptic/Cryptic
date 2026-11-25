@@ -20,6 +20,7 @@ return {
         [10769957062] = "Maps/bug_evolution",
         [3808081382]  = "Maps/the_strongest_battlegrounds",
         [4658598196]  = "Maps/training_grounds",
-        [10774552072]    = "Maps/djn_mm2",
+        [10774552072] = "Maps/djn_mm2",
+        [7436755782]  = "Maps/gag",
     },
 }
