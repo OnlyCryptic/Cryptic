@@ -22,5 +22,6 @@ return {
         [4658598196]  = "Maps/training_grounds",
         [10774552072] = "Maps/djn_mm2",
         [7436755782]  = "Maps/gag",
+        [383310974]   = "Maps/adopt_me",
     },
 }
