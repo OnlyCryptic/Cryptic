@@ -641,7 +641,7 @@ local TARGET_MAIN   = {"target_select"}
 local TARGET_SPY    = {"target_spectate", "target_tp", "Target_follow", "target_esp", "skinz", "info_t"}
 local TARGET_FUN    = {"bang", "target_facesit", "jark", "target_hug", "target_sit", "backpack", "carry", "target_dee", "lkm", "target_shit"}
 local TARGET_TRICKS = {"target_fling", "bring_parts", "target_mimic", "copy_walk", "target_aimbot", "target_emotes"}
-local OTHER_LIST    = {"lol", "animations", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "night", "infinite_zoom", "no_camera_clip", "anti_afk", "aimbot"}
+local OTHER_LIST    = {"lol", "animations", "dragon", "vfly", "zero_gravity", "anti_block", "anti_sit", "fling_all", "night", "infinite_zoom", "no_camera_clip", "anti_afk", "aimbot"}
 
 local function BuildStructure()
     Cryptic.Structure = {
